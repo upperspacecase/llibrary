@@ -24,14 +24,12 @@ export const en = {
 
   // How it works
   "how.title": "How it works",
-  "how.s1.title": "Share your land",
-  "how.s1.desc": "Walk through our guided form to contribute what you know about your property.",
-  "how.s2.title": "We enrich it",
-  "how.s2.desc": "Open data about weather, soil, bioregion and fire risk is pulled in automatically.",
-  "how.s3.title": "Get your Passport",
-  "how.s3.desc": "Your property gets a Land Passport \u2014 a living profile you can share.",
-  "how.s4.title": "Join the directory",
-  "how.s4.desc": "Your land becomes part of a growing knowledge base of bioregional data.",
+  "how.s1.title": "Tell us about your land",
+  "how.s1.desc": "Walk through a guided intake that captures your property\u2019s story \u2014 from soil to species.",
+  "how.s2.title": "We enrich it with useful data",
+  "how.s2.desc": "We pull in satellite imagery, weather data, soil surveys, and bioregion classification \u2014 automatically.",
+  "how.s3.title": "Get your Land Passport",
+  "how.s3.desc": "A living profile page that combines your knowledge with public data into one shareable document.",
 
   // CTA
   "cta.title": "Ready to map your land?",
