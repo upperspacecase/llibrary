@@ -1,29 +1,31 @@
-const STORE_KEY = 'lll-properties';
+const API_BASE = '/api/properties';
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
-
-export function getAllProperties() {
+export async function getAllProperties() {
   try {
-    return JSON.parse(localStorage.getItem(STORE_KEY)) || [];
+    const res = await fetch(API_BASE);
+    if (!res.ok) return [];
+    return await res.json();
   } catch {
     return [];
   }
 }
 
-export function getProperty(id) {
-  return getAllProperties().find(p => p.id === id) || null;
+export async function getProperty(id) {
+  try {
+    const res = await fetch(`${API_BASE}/${id}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
 }
 
-export function saveProperty(data) {
-  const properties = getAllProperties();
-  const property = {
-    id: generateId(),
-    created: new Date().toISOString(),
-    ...data
-  };
-  properties.push(property);
-  localStorage.setItem(STORE_KEY, JSON.stringify(properties));
-  return property;
+export async function saveProperty(data) {
+  const res = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error('Failed to save property');
+  return await res.json();
 }

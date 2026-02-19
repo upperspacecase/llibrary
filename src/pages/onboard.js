@@ -91,7 +91,7 @@ function geocodeAddress(query) {
         setMapLocation(parseFloat(results[0].lat), parseFloat(results[0].lon));
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 function getFormData() {
@@ -121,32 +121,44 @@ function buildReview() {
   const container = document.getElementById('review-content');
 
   const sections = [
-    { label: t('review.basics'), rows: [
-      [t('onboard.s1.name'), data.propertyName],
-      [t('onboard.s1.owner'), data.ownerName],
-      [t('onboard.s1.email'), data.email || '\u2014'],
-    ]},
-    { label: t('review.location'), rows: [
-      [t('onboard.s2.address'), data.address || '\u2014'],
-      [t('onboard.s2.lat') + ' / ' + t('onboard.s2.lng'), data.lat && data.lng ? `${data.lat}, ${data.lng}` : '\u2014'],
-    ]},
-    { label: t('review.land'), rows: [
-      [t('onboard.s3.area'), data.area ? `${data.area} ${data.areaUnit}` : '\u2014'],
-      [t('onboard.s3.landuse'), data.landUse.length ? data.landUse.join(', ') : '\u2014'],
-    ]},
-    { label: t('review.soil_water'), rows: [
-      [t('onboard.s4.soil'), data.soil || '\u2014'],
-      [t('onboard.s4.water'), data.water || '\u2014'],
-    ]},
-    { label: t('review.ecology'), rows: [
-      [t('onboard.s5.flora'), data.flora || '\u2014'],
-      [t('onboard.s5.fauna'), data.fauna || '\u2014'],
-      [t('onboard.s5.fire'), data.fire || '\u2014'],
-    ]},
-    { label: t('review.challenges_goals'), rows: [
-      [t('onboard.s6.challenges'), data.challenges.length ? data.challenges.join(', ') : '\u2014'],
-      [t('onboard.s6.goals'), data.goals.length ? data.goals.join(', ') : '\u2014'],
-    ]},
+    {
+      label: t('review.basics'), rows: [
+        [t('onboard.s1.name'), data.propertyName],
+        [t('onboard.s1.owner'), data.ownerName],
+        [t('onboard.s1.email'), data.email || '\u2014'],
+      ]
+    },
+    {
+      label: t('review.location'), rows: [
+        [t('onboard.s2.address'), data.address || '\u2014'],
+        [t('onboard.s2.lat') + ' / ' + t('onboard.s2.lng'), data.lat && data.lng ? `${data.lat}, ${data.lng}` : '\u2014'],
+      ]
+    },
+    {
+      label: t('review.land'), rows: [
+        [t('onboard.s3.area'), data.area ? `${data.area} ${data.areaUnit}` : '\u2014'],
+        [t('onboard.s3.landuse'), data.landUse.length ? data.landUse.join(', ') : '\u2014'],
+      ]
+    },
+    {
+      label: t('review.soil_water'), rows: [
+        [t('onboard.s4.soil'), data.soil || '\u2014'],
+        [t('onboard.s4.water'), data.water || '\u2014'],
+      ]
+    },
+    {
+      label: t('review.ecology'), rows: [
+        [t('onboard.s5.flora'), data.flora || '\u2014'],
+        [t('onboard.s5.fauna'), data.fauna || '\u2014'],
+        [t('onboard.s5.fire'), data.fire || '\u2014'],
+      ]
+    },
+    {
+      label: t('review.challenges_goals'), rows: [
+        [t('onboard.s6.challenges'), data.challenges.length ? data.challenges.join(', ') : '\u2014'],
+        [t('onboard.s6.goals'), data.goals.length ? data.goals.join(', ') : '\u2014'],
+      ]
+    },
   ];
 
   container.innerHTML = sections.map((s) => `
@@ -174,12 +186,21 @@ function validateStep(idx) {
   return true;
 }
 
-btnNext.addEventListener('click', () => {
+btnNext.addEventListener('click', async () => {
   if (!validateStep(currentStep)) return;
   if (currentStep === TOTAL_STEPS - 1) {
     const data = getFormData();
-    const property = saveProperty(data);
-    window.location.href = `passport.html?id=${property.id}`;
+    btnNext.disabled = true;
+    btnNext.textContent = 'Saving…';
+    try {
+      const property = await saveProperty(data);
+      window.location.href = `passport.html?id=${property.id}`;
+    } catch (err) {
+      console.error('Save failed:', err);
+      btnNext.disabled = false;
+      btnNext.textContent = t('onboard.nav.submit');
+      alert('Failed to save. Please try again.');
+    }
   } else {
     showStep(currentStep + 1);
   }

@@ -23,16 +23,22 @@ const container = document.getElementById('passport-content');
 const params = new URLSearchParams(window.location.search);
 const propertyId = params.get('id');
 
-if (!propertyId || !getProperty(propertyId)) {
-  showNotFound();
-} else {
-  const property = getProperty(propertyId);
+(async () => {
+  if (!propertyId) {
+    showNotFound();
+    return;
+  }
+  const property = await getProperty(propertyId);
+  if (!property) {
+    showNotFound();
+    return;
+  }
   document.title = `${property.propertyName} \u2014 Land Passport \u2014 lllibrary of Earth`;
   renderPassport(property);
   if (property.lat && property.lng) {
     fetchOpenData(parseFloat(property.lat), parseFloat(property.lng));
   }
-}
+})();
 
 function showNotFound() {
   container.innerHTML = `
@@ -111,8 +117,8 @@ function renderPassport(p) {
       </div>
       <div class="data-grid" id="auto-data-grid">
         ${hasLocation
-          ? '<p style="color:#555;font-size:14px;grid-column:1/-1;">Loading open data...</p>'
-          : '<p style="color:#555;font-size:14px;grid-column:1/-1;">No location set \u2014 open data requires coordinates.</p>'}
+      ? '<p style="color:#555;font-size:14px;grid-column:1/-1;">Loading open data...</p>'
+      : '<p style="color:#555;font-size:14px;grid-column:1/-1;">No location set \u2014 open data requires coordinates.</p>'}
       </div>
     </div>
 

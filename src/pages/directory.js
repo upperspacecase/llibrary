@@ -26,8 +26,8 @@ const viewBtns = document.querySelectorAll('.view-toggle button');
 
 let dirMap = null;
 
-function render(filter) {
-  const properties = getAllProperties();
+async function render(filter) {
+  const properties = await getAllProperties();
   const query = (filter || '').toLowerCase();
   const filtered = properties.filter((p) => {
     if (!query) return true;
@@ -71,14 +71,15 @@ function render(filter) {
   if (dirMap) updateMapMarkers(filtered);
 }
 
-function initMap() {
+async function initMap() {
   if (dirMap) return;
   dirMap = L.map('dir-map').setView([39.5, -8.0], 5);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
     maxZoom: 19,
   }).addTo(dirMap);
-  updateMapMarkers(getAllProperties());
+  const allProps = await getAllProperties();
+  updateMapMarkers(allProps);
 }
 
 function updateMapMarkers(properties) {
