@@ -5,12 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Directory — lllibrary of Earth</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <a href="index.html" class="logo">
     <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
@@ -48,18 +45,12 @@
     </div>
   </div>
 
-  <div class="directory-map" id="dir-map-wrap">
-    <div id="dir-map"></div>
-  </div>
-
-  <div class="directory-list" id="dir-list">
-    <!-- Populated by JS -->
-  </div>
+  <div class="directory-map" id="dir-map-wrap"><div id="dir-map"></div></div>
+  <div class="directory-list" id="dir-list"></div>
 
 </div>
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
@@ -75,15 +66,9 @@
       <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
     </div>
   </div>
-  <div class="footer-bottom">
-    <div>lllibrary of Earth</div>
-    <div>EN / PT</div>
-  </div>
+  <div class="footer-bottom"><div>lllibrary of Earth</div><div>EN / PT</div></div>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/store.js"></script>
-<script src="js/directory.js"></script>
+<script type="module" src="/src/pages/directory.js"></script>
 </body>
 </html>

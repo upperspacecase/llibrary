@@ -508,10 +508,6 @@ a { color: var(--black); }
 
 .chip-group input { display: none; }
 
-.chip-group input:checked + span {
-  /* handled via parent */
-}
-
 .chip-group label:has(input:checked) {
   background: var(--green);
   border-color: var(--green);
@@ -548,8 +544,7 @@ a { color: var(--black); }
   position: relative;
 }
 
-.map-container #onboard-map,
-.map-container #passport-map {
+.map-container #onboard-map {
   width: 100%;
   height: 100%;
   border-radius: var(--radius);
@@ -625,13 +620,6 @@ a { color: var(--black); }
 .data-item .data-value {
   font-size: 17px;
   font-family: 'DM Serif Display', serif;
-}
-
-.data-item .data-detail {
-  font-size: 14px;
-  color: var(--muted);
-  margin-top: 4px;
-  line-height: 1.5;
 }
 
 .auto-data-banner {
@@ -746,10 +734,6 @@ a { color: var(--black); }
   margin-bottom: 60px;
 }
 
-.directory-list.grid-view {
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-}
-
 .property-card {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
@@ -831,7 +815,6 @@ a { color: var(--black); }
 }
 
 .review-group h3 {
-  font-size: 16px;
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   margin-bottom: 12px;

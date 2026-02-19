@@ -5,12 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Add Property — lllibrary of Earth</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- HEADER -->
 <header class="header">
   <a href="index.html" class="logo">
     <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
@@ -35,20 +32,12 @@
 <div class="page-body">
 <div class="onboard-container">
 
-  <!-- PROGRESS -->
   <div class="progress-bar" id="progress">
-    <div class="pip active"></div>
-    <div class="pip"></div>
-    <div class="pip"></div>
-    <div class="pip"></div>
-    <div class="pip"></div>
-    <div class="pip"></div>
-    <div class="pip"></div>
+    <div class="pip active"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
   </div>
 
   <form id="onboard-form" autocomplete="off">
 
-    <!-- STEP 1: BASICS -->
     <div class="form-step active" data-step="0">
       <h2 data-i18n="onboard.s1.title">Property basics</h2>
       <p class="step-desc" data-i18n="onboard.s1.desc">Let's start with the name of your property and your contact details.</p>
@@ -67,7 +56,6 @@
       </div>
     </div>
 
-    <!-- STEP 2: LOCATION -->
     <div class="form-step" data-step="1">
       <h2 data-i18n="onboard.s2.title">Location</h2>
       <p class="step-desc" data-i18n="onboard.s2.desc">Enter an address or place the pin on the map to mark your property location.</p>
@@ -75,42 +63,23 @@
         <label data-i18n="onboard.s2.address">Address or place name</label>
         <input type="text" name="address" id="address-input" data-i18n="onboard.s2.address.hint">
       </div>
-      <div class="map-container">
-        <div id="onboard-map"></div>
-      </div>
+      <div class="map-container"><div id="onboard-map"></div></div>
       <div class="field-row">
-        <div class="field">
-          <label data-i18n="onboard.s2.lat">Latitude</label>
-          <input type="text" name="lat" id="lat-input" readonly>
-        </div>
-        <div class="field">
-          <label data-i18n="onboard.s2.lng">Longitude</label>
-          <input type="text" name="lng" id="lng-input" readonly>
-        </div>
+        <div class="field"><label data-i18n="onboard.s2.lat">Latitude</label><input type="text" name="lat" id="lat-input" readonly></div>
+        <div class="field"><label data-i18n="onboard.s2.lng">Longitude</label><input type="text" name="lng" id="lng-input" readonly></div>
       </div>
     </div>
 
-    <!-- STEP 3: LAND DETAILS -->
     <div class="form-step" data-step="2">
       <h2 data-i18n="onboard.s3.title">Land details</h2>
       <p class="step-desc" data-i18n="onboard.s3.desc">Tell us about the size and current use of your land.</p>
       <div class="field-row">
-        <div class="field">
-          <label data-i18n="onboard.s3.area">Approximate area</label>
-          <input type="number" name="area" min="0" step="any">
-        </div>
-        <div class="field">
-          <label data-i18n="onboard.s3.unit">Unit</label>
-          <select name="areaUnit">
-            <option value="hectares" data-i18n="onboard.s3.hectares">Hectares</option>
-            <option value="acres" data-i18n="onboard.s3.acres">Acres</option>
-            <option value="sqm" data-i18n="onboard.s3.sqm">m&sup2;</option>
-          </select>
-        </div>
+        <div class="field"><label data-i18n="onboard.s3.area">Approximate area</label><input type="number" name="area" min="0" step="any"></div>
+        <div class="field"><label data-i18n="onboard.s3.unit">Unit</label><select name="areaUnit"><option value="hectares">Hectares</option><option value="acres">Acres</option><option value="sqm">m&sup2;</option></select></div>
       </div>
       <div class="field">
         <label data-i18n="onboard.s3.landuse">Current land use</label>
-        <div class="chip-group" id="landuse-chips">
+        <div class="chip-group">
           <label><input type="checkbox" name="landUse" value="forest"><span data-i18n="onboard.s3.lu.forest">Forest</span></label>
           <label><input type="checkbox" name="landUse" value="pasture"><span data-i18n="onboard.s3.lu.pasture">Pasture</span></label>
           <label><input type="checkbox" name="landUse" value="crops"><span data-i18n="onboard.s3.lu.crops">Crops</span></label>
@@ -124,39 +93,21 @@
       </div>
     </div>
 
-    <!-- STEP 4: SOIL & WATER -->
     <div class="form-step" data-step="3">
       <h2 data-i18n="onboard.s4.title">Soil &amp; water</h2>
       <p class="step-desc" data-i18n="onboard.s4.desc">What do you know about the soil and water on your property?</p>
-      <div class="field">
-        <label data-i18n="onboard.s4.soil">Soil type or description</label>
-        <textarea name="soil" data-i18n="onboard.s4.soil.hint"></textarea>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s4.water">Water sources</label>
-        <textarea name="water" data-i18n="onboard.s4.water.hint"></textarea>
-      </div>
+      <div class="field"><label data-i18n="onboard.s4.soil">Soil type or description</label><textarea name="soil" data-i18n="onboard.s4.soil.hint"></textarea></div>
+      <div class="field"><label data-i18n="onboard.s4.water">Water sources</label><textarea name="water" data-i18n="onboard.s4.water.hint"></textarea></div>
     </div>
 
-    <!-- STEP 5: ECOLOGY & FIRE -->
     <div class="form-step" data-step="4">
       <h2 data-i18n="onboard.s5.title">Ecology &amp; fire</h2>
       <p class="step-desc" data-i18n="onboard.s5.desc">What lives on your land, and what's your fire situation?</p>
-      <div class="field">
-        <label data-i18n="onboard.s5.flora">Known flora</label>
-        <textarea name="flora" data-i18n="onboard.s5.flora.hint"></textarea>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s5.fauna">Known fauna</label>
-        <textarea name="fauna" data-i18n="onboard.s5.fauna.hint"></textarea>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s5.fire">Fire history &amp; preparedness</label>
-        <textarea name="fire" data-i18n="onboard.s5.fire.hint"></textarea>
-      </div>
+      <div class="field"><label data-i18n="onboard.s5.flora">Known flora</label><textarea name="flora" data-i18n="onboard.s5.flora.hint"></textarea></div>
+      <div class="field"><label data-i18n="onboard.s5.fauna">Known fauna</label><textarea name="fauna" data-i18n="onboard.s5.fauna.hint"></textarea></div>
+      <div class="field"><label data-i18n="onboard.s5.fire">Fire history &amp; preparedness</label><textarea name="fire" data-i18n="onboard.s5.fire.hint"></textarea></div>
     </div>
 
-    <!-- STEP 6: CHALLENGES & GOALS -->
     <div class="form-step" data-step="5">
       <h2 data-i18n="onboard.s6.title">Challenges &amp; goals</h2>
       <p class="step-desc" data-i18n="onboard.s6.desc">What are you facing, and what do you hope for your land?</p>
@@ -188,14 +139,12 @@
       </div>
     </div>
 
-    <!-- STEP 7: REVIEW -->
     <div class="form-step" data-step="6">
       <h2 data-i18n="onboard.s7.title">Review &amp; submit</h2>
       <p class="step-desc" data-i18n="onboard.s7.desc">Check your details below. You can go back to edit any section.</p>
       <div id="review-content"></div>
     </div>
 
-    <!-- NAVIGATION -->
     <div class="form-nav">
       <button type="button" class="btn-back" id="btn-back" data-i18n="onboard.nav.back" style="visibility:hidden;">Back</button>
       <button type="button" class="btn-primary" id="btn-next" data-i18n="onboard.nav.next">Continue</button>
@@ -205,7 +154,6 @@
 </div>
 </div>
 
-<!-- FOOTER -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
@@ -221,15 +169,9 @@
       <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
     </div>
   </div>
-  <div class="footer-bottom">
-    <div>lllibrary of Earth</div>
-    <div>EN / PT</div>
-  </div>
+  <div class="footer-bottom"><div>lllibrary of Earth</div><div>EN / PT</div></div>
 </footer>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="js/i18n.js"></script>
-<script src="js/store.js"></script>
-<script src="js/onboard.js"></script>
+<script type="module" src="/src/pages/onboard.js"></script>
 </body>
 </html>
