@@ -3,712 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Together, we can solve the climate crisis | One Earth</title>
+<title>lllibrary of Earth — Your land, understood.</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --cream: #FFFCED;
-  --coral: #EB5F54;
-  --black: #000000;
-  --green: #7FCD80;
-  --blue: #8ECAFF;
-  --white: #FFFFFF;
-}
-body {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--cream);
-  color: var(--black);
-  overflow-x: hidden;
-}
-/* HEADER */
-.header {
-  position: fixed;
-  top: 0; left: 0; right: 0;
-  height: 96px;
-  background: var(--cream);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 40px;
-  z-index: 100;
-}
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--black);
-}
-.logo-icon { width: 48px; height: 48px; }
-.logo-text {
-  font-family: 'DM Serif Display', serif;
-  font-size: 20px;
-  line-height: 1.1;
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.donate-btn {
-  background: var(--coral);
-  color: var(--cream);
-  border: none;
-  padding: 12px 28px;
-  border-radius: 40px;
-  font-size: 16px;
-  font-family: 'DM Serif Display', serif;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
-}
-.menu-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
-  padding: 10px;
-  background: none;
-  border: none;
-}
-.menu-btn span {
-  width: 28px; height: 2.5px;
-  background: var(--black);
-  border-radius: 2px;
-  display: block;
-}
-/* HERO */
-.hero {
-  margin-top: 96px;
-  height: calc(100vh - 96px);
-  min-height: 600px;
-  background: linear-gradient(180deg, rgba(0,60,60,0.2) 0%, rgba(0,30,15,0.55) 100%),
-    url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80') center/cover no-repeat;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 60px;
-  color: var(--cream);
-  position: relative;
-}
-.hero-rotating {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(40px, 6vw, 75px);
-  line-height: 1.1;
-  margin-bottom: 60px;
-  max-width: 700px;
-}
-.hero-sub {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(20px, 2.5vw, 28px);
-  font-weight: 400;
-  font-style: italic;
-  max-width: 400px;
-  line-height: 1.3;
-  margin-bottom: 20px;
-}
-.hero-text {
-  font-size: 16px;
-  max-width: 400px;
-  line-height: 1.6;
-}
-.join-btn {
-  display: inline-block;
-  color: var(--cream);
-  border: 1.5px solid var(--cream);
-  padding: 14px 32px;
-  border-radius: 40px;
-  text-decoration: none;
-  font-size: 13px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  font-weight: 600;
-  position: absolute;
-  bottom: 60px;
-  right: 60px;
-}
-/* SHARED */
-.section-label {
-  font-size: 13px;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  margin-bottom: 16px;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-}
-.outlined-btn {
-  display: block;
-  width: fit-content;
-  margin: 0 auto;
-  padding: 14px 32px;
-  border: 1.5px solid var(--black);
-  border-radius: 40px;
-  text-decoration: none;
-  color: var(--black);
-  font-size: 15px;
-  font-family: 'DM Serif Display', serif;
-}
-/* SOLUTIONS FRAMEWORK */
-.framework {
-  padding: 100px 40px 80px;
-}
-.framework h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(30px, 3.5vw, 42px);
-  font-weight: 400;
-  margin-bottom: 16px;
-}
-.framework-desc {
-  font-size: 17px;
-  line-height: 1.55;
-  max-width: 600px;
-  margin-bottom: 50px;
-}
-.pillars {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 50px;
-}
-.pillar-card {
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  height: 480px;
-  padding: 30px;
-  color: var(--white);
-  text-decoration: none;
-  display: block;
-}
-.pillar-card:nth-child(1) {
-  background: linear-gradient(180deg, rgba(80,60,100,0.3), rgba(15,5,30,0.75)),
-    url('https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=800&q=80') center/cover;
-}
-.pillar-card:nth-child(2) {
-  background: linear-gradient(180deg, rgba(0,50,30,0.2), rgba(0,60,50,0.65)),
-    url('https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=80') center/cover;
-}
-.pillar-card:nth-child(3) {
-  background: linear-gradient(180deg, rgba(50,70,10,0.2), rgba(30,50,5,0.65)),
-    url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&q=80') center/cover;
-}
-.pillar-label {
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  opacity: 0.85;
-  font-weight: 500;
-}
-.pillar-card h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  font-weight: 400;
-}
-/* NEW REPORT */
-.new-report {
-  padding: 80px 40px;
-  border-top: 1px solid #e0dcc8;
-}
-.report-inner {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 50px;
-  align-items: center;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-.report-card {
-  background: var(--green);
-  border-radius: 16px;
-  padding: 50px 40px;
-}
-.report-card .rl {
-  font-weight: 700;
-  font-style: italic;
-  font-family: 'DM Serif Display', serif;
-  font-size: 16px;
-  margin-bottom: 16px;
-}
-.report-card h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(28px, 3.5vw, 42px);
-  font-weight: 400;
-  line-height: 1.15;
-  margin-bottom: 20px;
-}
-.report-card p {
-  font-size: 17px;
-  line-height: 1.55;
-}
-.report-right h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 24px;
-  font-weight: 400;
-  margin-bottom: 16px;
-}
-.report-link {
-  font-family: 'DM Serif Display', serif;
-  font-size: 18px;
-  color: var(--black);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-/* OUR TOOLS */
-.tools {
-  padding: 100px 40px 80px;
-  border-top: 1px solid #e0dcc8;
-}
-.tools h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(30px, 3.5vw, 42px);
-  font-weight: 400;
-  margin-bottom: 50px;
-  max-width: 520px;
-}
-.tools-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-.tool-card {
-  border: 1px solid #d0ccb8;
-  border-radius: 16px;
-  padding: 40px;
-  position: relative;
-  min-height: 300px;
-}
-.tool-card h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 32px;
-  font-weight: 400;
-  margin-bottom: 16px;
-  line-height: 1.15;
-}
-.tool-card p {
-  font-size: 15px;
-  line-height: 1.65;
-  margin-bottom: 24px;
-  max-width: 380px;
-  color: #333;
-}
-.tool-icon {
-  position: absolute;
-  top: 30px;
-  right: 30px;
-  font-size: 52px;
-}
-.tool-link {
-  display: inline-block;
-  padding: 10px 22px;
-  border: 1.5px solid var(--black);
-  border-radius: 40px;
-  text-decoration: none;
-  color: var(--black);
-  font-size: 14px;
-  font-family: 'DM Serif Display', serif;
-}
-/* OUR IMPACT */
-.impact {
-  padding: 100px 40px;
-  border-top: 1px solid #e0dcc8;
-  background: var(--cream);
-}
-.impact h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(30px, 3.5vw, 42px);
-  font-weight: 400;
-  margin-bottom: 16px;
-}
-.impact-desc {
-  font-size: 17px;
-  line-height: 1.6;
-  max-width: 600px;
-  margin-bottom: 60px;
-}
-.stat-row {
-  display: grid;
-  grid-template-columns: 220px 1fr 1fr;
-  padding: 24px 0;
-  border-top: 1.5px solid var(--black);
-  align-items: center;
-}
-.stat-number {
-  font-family: 'DM Serif Display', serif;
-  font-size: 48px;
-  font-weight: 400;
-}
-.stat-label { font-size: 16px; font-weight: 500; }
-.stat-tagline { font-size: 15px; color: #555; }
-/* OUR NETWORK */
-.network {
-  padding: 100px 40px;
-  border-top: 1px solid #e0dcc8;
-}
-.network h2 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(30px, 3.5vw, 42px);
-  font-weight: 400;
-  margin-bottom: 16px;
-  max-width: 600px;
-}
-.network-desc {
-  font-size: 17px;
-  line-height: 1.6;
-  max-width: 600px;
-  margin-bottom: 50px;
-}
-.testimonials {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
-  margin-bottom: 50px;
-}
-.testimonial {
-  font-style: italic;
-  font-size: 15px;
-  line-height: 1.65;
-}
-.testimonial-author {
-  font-style: normal;
-  font-weight: 600;
-  margin-top: 16px;
-  font-size: 14px;
-}
-/* CTA BAND */
-.cta-band {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  background: linear-gradient(90deg, #7FCD80, #8ECAFF 50%, #FF805F);
-}
-.cta-section {
-  padding: 60px 40px;
-}
-.cta-section h3 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 28px;
-  margin-bottom: 20px;
-}
-.cta-pill {
-  display: inline-block;
-  padding: 8px 16px;
-  border: 1.5px solid var(--black);
-  border-radius: 40px;
-  text-decoration: none;
-  color: var(--black);
-  font-size: 14px;
-  margin: 4px 4px 4px 0;
-}
-/* FOOTER */
-.footer {
-  background: linear-gradient(180deg, rgba(0,35,18,0.88), rgba(0,18,8,0.95)),
-    url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80') center/cover;
-  color: var(--cream);
-  padding: 80px 40px 30px;
-}
-.footer-top {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 60px;
-}
-.footer-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 24px;
-}
-.footer-tagline {
-  font-family: 'DM Serif Display', serif;
-  font-size: 26px;
-  font-style: italic;
-  line-height: 1.3;
-  margin-bottom: 16px;
-}
-.footer-desc {
-  font-size: 14px;
-  line-height: 1.6;
-  opacity: 0.8;
-}
-.footer-col h4 {
-  font-family: 'DM Serif Display', serif;
-  font-size: 20px;
-  margin-bottom: 16px;
-}
-.footer-col a {
-  display: block;
-  color: var(--cream);
-  text-decoration: none;
-  font-size: 14px;
-  margin-bottom: 10px;
-  opacity: 0.8;
-}
-.footer-col a:hover { opacity: 1; }
-.footer-badges {
-  display: flex;
-  gap: 30px;
-  align-items: center;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
-}
-.footer-badge {
-  width: 100px; height: 65px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  text-align: center;
-  padding: 8px;
-  opacity: 0.7;
-}
-.footer-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid rgba(255,255,255,0.2);
-  padding-top: 20px;
-  font-size: 13px;
-  opacity: 0.7;
-}
-.footer-bottom a {
-  color: var(--cream);
-  text-decoration: none;
-  margin: 0 5px;
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
 <!-- HEADER -->
 <header class="header">
-  <a href="#" class="logo">
-    <svg class="logo-icon" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
       <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
       <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
       <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
     </svg>
-    <div class="logo-text">one<br>earth</div>
+    <div class="logo-text">lllibrary<br>of Earth</div>
   </a>
-  <div class="header-right">
-    <a href="#" class="donate-btn">Donate</a>
-    <button class="menu-btn" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+  <div class="header-nav">
+    <a href="index.html" class="active" data-i18n="nav.home">Home</a>
+    <a href="directory.html" data-i18n="nav.directory">Directory</a>
+    <a href="onboard.html" class="hide-mobile" data-i18n="nav.add">Add Property</a>
+    <div class="lang-toggle">
+      <button data-lang="en">EN</button>
+      <button data-lang="pt">PT</button>
+    </div>
   </div>
 </header>
-<!-- MAIN CONTENT -->
+
+<div class="page-body">
 <main>
+
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-rotating">From symptoms &rarr;<br>solutions</div>
-  <h2 class="hero-sub">Turning climate knowledge into global climate action.</h2>
-  <p class="hero-text">The solutions to the climate crisis already exist.<br>The next step is coordinated action&mdash;local to global.</p>
-  <a href="#" class="join-btn">JOIN THE MOVEMENT</a>
-</section>
-<!-- SOLUTIONS FRAMEWORK -->
-<section class="framework">
-  <div class="section-label">Our Solutions Framework</div>
-  <h2>One Earth. Three Pillars.</h2>
-  <p class="framework-desc">A science-based roadmap for building a stable and thriving planet. Our framework outlines 75+ climate solutions across three pillars of action that center nature and equity.</p>
-  <div class="pillars">
-    <a href="#" class="pillar-card">
-      <div class="pillar-label">PILLAR I</div>
-      <h3>Energy Transition</h3>
-    </a>
-    <a href="#" class="pillar-card">
-      <div class="pillar-label">PILLAR II</div>
-      <h3>Nature Conservation</h3>
-    </a>
-    <a href="#" class="pillar-card">
-      <div class="pillar-label">PILLAR III</div>
-      <h3>Regenerative Agriculture</h3>
-    </a>
+  <h1 class="hero-tagline" data-i18n="hero.tagline">Your land, understood.</h1>
+  <h2 class="hero-sub" data-i18n="hero.sub">The bioregional platform that gives landowners a living digital profile of their property.</h2>
+  <p class="hero-text" data-i18n="hero.text">Combine what you know about your land with publicly available data — soil, weather, fire risk, bioregion context — all in one place.</p>
+  <div class="hero-actions">
+    <a href="onboard.html" class="btn-primary" data-i18n="hero.cta.add">Add Your Property</a>
+    <a href="directory.html" class="btn-outline light" data-i18n="hero.cta.browse">Browse Directory</a>
   </div>
-  <a href="#" class="outlined-btn">Explore the Framework</a>
 </section>
-<!-- NEW REPORT -->
-<section class="new-report">
-  <div class="report-inner">
-    <div class="report-card">
-      <div class="rl">New Report</div>
-      <h2>Minding the Gaps: One Earth's Climate Finance Report</h2>
-      <p>Explore our 2025 report, which reveals the solutions that are well-resourced, what is being overlooked, and where the greatest opportunities for impact exist.</p>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="section-label" data-i18n="features.label">What is lllibrary?</div>
+  <h2 data-i18n="features.title">A living profile for every piece of land</h2>
+  <p class="features-desc" data-i18n="features.desc">lllibrary combines landowner knowledge with open data to create a Land Passport — a shareable, evolving portrait of any property.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--coral);">&#9997;</div>
+      <h3 data-i18n="feat.onboard.title">Guided Onboarding</h3>
+      <p data-i18n="feat.onboard.desc">A step-by-step intake walks you through contributing your property data — land use, soil, water, ecology, challenges and goals.</p>
     </div>
-    <div class="report-right">
-      <h3>Discover the gaps and opportunities</h3>
-      <a href="#" class="report-link">View the Report &nbsp;&longrightarrow;</a>
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--blue);">&#9730;</div>
+      <h3 data-i18n="feat.data.title">Open Data Layer</h3>
+      <p data-i18n="feat.data.desc">For each property location, we auto-aggregate weather, soil type, bioregion classification, fire risk, elevation and more from public sources.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--green);">&#9883;</div>
+      <h3 data-i18n="feat.passport.title">Land Passport</h3>
+      <p data-i18n="feat.passport.desc">Each property gets a single, shareable page that displays owner-contributed data alongside auto-aggregated open data and seasonal guidance.</p>
     </div>
   </div>
 </section>
-<!-- OUR TOOLS -->
-<section class="tools">
-  <div class="section-label">Our Tools</div>
-  <h2>Together, we can solve the climate crisis.</h2>
-  <div class="tools-grid">
-    <div class="tool-card">
-      <div class="tool-icon" style="color:#7FCD80;">&#10022;</div>
-      <h3>Solutions<br>Hub</h3>
-      <p>Dive into stories, science, and projects that bring climate solutions to life. Our Solutions Hub is designed to inspire action and connect you to a worldwide movement of people creating change.</p>
-      <a href="#" class="tool-link">Explore the Hub</a>
+
+<!-- HOW IT WORKS -->
+<section class="how-it-works">
+  <h2 data-i18n="how.title">How it works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <h3 data-i18n="how.s1.title">Share your land</h3>
+      <p data-i18n="how.s1.desc">Walk through our guided form to contribute what you know about your property.</p>
     </div>
-    <div class="tool-card">
-      <div class="tool-icon" style="color:#EB5F54;">&#10022;</div>
-      <h3>One Earth<br>Navigator</h3>
-      <p>Global transformation takes root locally. By caring for your home, you join a worldwide movement to protect our planet. Discover how your bioregion connects you to the Earth's web of life.</p>
-      <a href="#" class="tool-link">Discover your Bioregion</a>
+    <div class="step">
+      <div class="step-num">2</div>
+      <h3 data-i18n="how.s2.title">We enrich it</h3>
+      <p data-i18n="how.s2.desc">Open data about weather, soil, bioregion and fire risk is pulled in automatically.</p>
     </div>
-    <div class="tool-card">
-      <div class="tool-icon" style="color:#8ECAFF;">&#10022;</div>
-      <h3>Global<br>Safety Net</h3>
-      <p>The blueprint of priority lands and oceans that we most urgently need to protect and restore. Learn more about the science and explore where conservation efforts will have the greatest impact.</p>
-      <a href="#" class="tool-link">Start Exploring</a>
+    <div class="step">
+      <div class="step-num">3</div>
+      <h3 data-i18n="how.s3.title">Get your Passport</h3>
+      <p data-i18n="how.s3.desc">Your property gets a Land Passport — a living profile you can share.</p>
     </div>
-    <div class="tool-card">
-      <div class="tool-icon" style="color:#c0b8a0;">&#10022;</div>
-      <h3>Solutions<br>Finance Tracker</h3>
-      <p>A powerful new tool built with our partners at Vibrant Data Labs that maps how billions in climate funding is flowing to solutions across Energy Transition, Nature Conservation, and Regenerative Agriculture.</p>
-      <a href="#" class="tool-link">Discover the Data</a>
+    <div class="step">
+      <div class="step-num">4</div>
+      <h3 data-i18n="how.s4.title">Join the directory</h3>
+      <p data-i18n="how.s4.desc">Your land becomes part of a growing knowledge base of bioregional data.</p>
     </div>
   </div>
-</section>
-<!-- OUR IMPACT -->
-<section class="impact">
-  <div class="section-label">Our Impact</div>
-  <h2>Turning knowledge into action</h2>
-  <p class="impact-desc">By identifying and elevating the most effective climate and biodiversity solutions we are helping shape policy, guide investments, support grassroots organizations, and galvanize a global movement dedicated to regenerating our one Earth.</p>
-  <div>
-    <div class="stat-row">
-      <div class="stat-number">210</div>
-      <div class="stat-label">Project supported</div>
-      <div class="stat-tagline">Real change happens from the ground up</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-number">50</div>
-      <div class="stat-label">Reports produced and supported</div>
-      <div class="stat-tagline">Knowledge rooted in leading science and data</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-number">$16M+</div>
-      <div class="stat-label">Raised for solutions</div>
-      <div class="stat-tagline">Investing in the future we know is possible</div>
-    </div>
-    <div class="stat-row">
-      <div class="stat-number">Millions</div>
-      <div class="stat-label">Reached through solutions-based storytelling</div>
-      <div class="stat-tagline">Shaping a new narrative of hope and possibility</div>
-    </div>
+  <div style="text-align:center;">
+    <a href="onboard.html" class="btn-primary" data-i18n="hero.cta.add">Add Your Property</a>
   </div>
-  <a href="#" class="outlined-btn" style="margin-top:50px;">See our impact</a>
 </section>
-<!-- OUR NETWORK -->
-<section class="network">
-  <div class="section-label">Our Network</div>
-  <h2>Nature doesn't work in silos, and neither do we</h2>
-  <p class="network-desc">Lasting solutions emerge when scientists, Indigenous stewards, community and business leaders, policymakers, philanthropists, and citizens unite with a common purpose&mdash;turning fragmented efforts into coordinated action for the planet.</p>
-  <div class="testimonials">
-    <div class="testimonial">
-      &ldquo;One Earth is a shining example of what can be achieved when passion and purpose converge.&rdquo;
-      <div class="testimonial-author">&mdash;Akashinga</div>
-    </div>
-    <div class="testimonial">
-      &ldquo;One Earth is on the cutting edge of climate and biodiversity science, and is one of the most enlightened organizations around.&rdquo;
-      <div class="testimonial-author">&mdash; Jamison Ervin, Manager of UNDP's Global Nature for Development Program</div>
-    </div>
-    <div class="testimonial">
-      &ldquo;Perhaps the most amazing benefit of working with One Earth is the degree to which this team lives its values.&rdquo;
-      <div class="testimonial-author">&mdash; Shira Abramowitz, Founder, Summit Impact</div>
-    </div>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 data-i18n="cta.title">Ready to map your land?</h2>
+  <p data-i18n="cta.desc">No account needed. Contribute your property data and get your Land Passport in minutes.</p>
+  <div class="cta-actions">
+    <a href="onboard.html" class="btn-primary" data-i18n="cta.add">Add Your Property</a>
+    <a href="directory.html" class="btn-outline" data-i18n="cta.browse">Browse Directory</a>
   </div>
-  <a href="#" class="outlined-btn">Explore our Network</a>
 </section>
+
 </main>
-<!-- CTA BAND -->
-<section class="cta-band">
-  <div class="cta-section">
-    <h3>Donate</h3>
-    <a href="#" class="cta-pill">Donate Now</a>
-    <a href="#" class="cta-pill">Donate Crypto</a>
-    <a href="#" class="cta-pill">Donate Stock</a>
-    <a href="#" class="cta-pill">Give Through DAF</a>
-    <a href="#" class="cta-pill">More Ways</a>
-  </div>
-  <div class="cta-section" style="text-align:center;">
-    <h3>Subscribe</h3>
-    <a href="#" class="cta-pill">The One Earth Newsletter</a>
-  </div>
-  <div class="cta-section">
-    <h3>Connect</h3>
-    <a href="#" class="cta-pill">Instagram</a>
-    <a href="#" class="cta-pill">Facebook</a>
-    <a href="#" class="cta-pill">Bluesky</a>
-    <a href="#" class="cta-pill">LinkedIn</a>
-    <a href="#" class="cta-pill">TikTok</a>
-    <a href="#" class="cta-pill">YouTube</a>
-    <a href="#" class="cta-pill">Medium</a>
-    <a href="#" class="cta-pill">Threads</a>
-  </div>
-</section>
+</div>
+
 <!-- FOOTER -->
 <footer class="footer">
-  <div class="footer-top">
-    <div>
-      <div class="footer-logo">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="index.html" class="logo">
+        <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
           <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
           <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
           <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
           <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
         </svg>
-        <div class="logo-text" style="color:var(--cream);">one<br>earth</div>
-      </div>
-      <div class="footer-tagline">Creating momentum with solutions, strategy, and storytelling.</div>
-      <p class="footer-desc">One Earth provides tools and resources to help philanthropists, investors, policymakers, and everyday citizens create impact where it matters most.</p>
+        <div class="logo-text" style="color:var(--cream);">lllibrary<br>of Earth</div>
+      </a>
+      <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
     </div>
-    <div class="footer-col">
-      <h4>About</h4>
-      <a href="#">Mission &amp; Vision</a>
-      <a href="#">Our Team</a>
-      <a href="#">Advisors</a>
-      <a href="#">Our Network</a>
-      <a href="#">Solutions Framework</a>
-      <a href="#">Reports &amp; Financials</a>
-      <a href="#">Press</a>
-      <a href="#">Careers</a>
+    <div class="footer-links">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="directory.html" data-i18n="nav.directory">Directory</a>
+      <a href="onboard.html" data-i18n="nav.add">Add Property</a>
     </div>
-    <div class="footer-col">
-      <h4>Explore</h4>
-      <a href="#">Explore Solutions Hub</a>
-      <a href="#">Explore Bioregions</a>
-      <a href="#">Read Stories</a>
-      <a href="#">Watch Videos</a>
-      <a href="#">Books &amp; Film List</a>
-      <a href="#">Research Database</a>
-      <a href="#">View Reports</a>
-      <a href="#">Glossary</a>
-    </div>
-    <div class="footer-col">
-      <h4>Take Action</h4>
-      <a href="#">Join the Movement</a>
-      <a href="#">Discover your Bioregion</a>
-      <a href="#">101 Home Climate Solutions</a>
-      <a href="#">Contact Us</a>
-    </div>
-  </div>
-  <div class="footer-badges">
-    <div class="footer-badge">Charity Navigator Four-Star 2026</div>
-    <div class="footer-badge">Platinum Transparency 2026 Candid</div>
-    <div class="footer-badge">1% For The Planet</div>
-    <div class="footer-badge">Fast Company World Changing Ideas</div>
-    <div class="footer-badge">UN Decade on Ecosystem Restoration</div>
   </div>
   <div class="footer-bottom">
-    <div><a href="#">Sitemap</a> | <a href="#">Contact</a></div>
-    <div>&copy;One Earth | EIN: 85-2588841</div>
-    <div><a href="#">Terms</a> | <a href="#">Policies</a></div>
+    <div>lllibrary of Earth</div>
+    <div>EN / PT</div>
   </div>
 </footer>
+
+<script src="js/i18n.js"></script>
 </body>
 </html>

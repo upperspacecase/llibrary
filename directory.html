@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directory — lllibrary of Earth</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a href="index.html" class="logo">
+    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
+      <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
+      <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
+      <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
+    </svg>
+    <div class="logo-text">lllibrary<br>of Earth</div>
+  </a>
+  <div class="header-nav">
+    <a href="index.html" data-i18n="nav.home">Home</a>
+    <a href="directory.html" class="active" data-i18n="nav.directory">Directory</a>
+    <a href="onboard.html" class="hide-mobile" data-i18n="nav.add">Add Property</a>
+    <div class="lang-toggle">
+      <button data-lang="en">EN</button>
+      <button data-lang="pt">PT</button>
+    </div>
+  </div>
+</header>
+
+<div class="page-body">
+<div class="container">
+
+  <div class="directory-header">
+    <h1 data-i18n="dir.title">Land Passport Directory</h1>
+    <p data-i18n="dir.desc">Browse all contributed properties and their Land Passports.</p>
+  </div>
+
+  <div class="directory-toolbar">
+    <input type="text" class="search-input" id="dir-search" data-i18n="dir.search" placeholder="Search properties...">
+    <div class="view-toggle">
+      <button class="active" data-view="list" data-i18n="dir.list">List</button>
+      <button data-view="map" data-i18n="dir.map">Map</button>
+    </div>
+  </div>
+
+  <div class="directory-map" id="dir-map-wrap">
+    <div id="dir-map"></div>
+  </div>
+
+  <div class="directory-list" id="dir-list">
+    <!-- Populated by JS -->
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="index.html" class="logo">
+        <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
+          <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
+          <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
+          <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
+        </svg>
+        <div class="logo-text" style="color:var(--cream);">lllibrary<br>of Earth</div>
+      </a>
+      <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div>lllibrary of Earth</div>
+    <div>EN / PT</div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/store.js"></script>
+<script src="js/directory.js"></script>
+</body>
+</html>
