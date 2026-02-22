@@ -3,25 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LandLibrary — Your land, understood.</title>
+<title>Libraries — Know your land. Know your neighbors.</title>
+<meta name="description" content="A bioregional wiki and private land passport for the Odemira region. Free public knowledge, private land reports.">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <header class="header">
-  <a href="index.html" class="logo">
+  <a href="/" class="logo">
     <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
       <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
       <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
       <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
       <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
     </svg>
-    <div class="logo-text">Land<br>Library</div>
+    <div class="logo-text">Libraries</div>
   </a>
   <div class="header-nav">
-    <a href="index.html" class="active" data-i18n="nav.home">Home</a>
-    <a href="directory.html" data-i18n="nav.directory">Directory</a>
-    <a href="onboard.html" class="hide-mobile" data-i18n="nav.add">Add Property</a>
+    <a href="/" class="active">Home</a>
+    <a href="/wiki">Wiki</a>
+    <a href="/chat" class="hide-mobile">Chat</a>
+    <a href="/create" class="hide-mobile">Create Landbook</a>
     <div class="lang-toggle">
       <button data-lang="en">EN</button>
       <button data-lang="pt">PT</button>
@@ -33,68 +35,110 @@
 <main>
 
 <section class="hero">
-  <h1 class="hero-tagline" data-i18n="hero.tagline">Your land, understood.</h1>
-  <h2 class="hero-sub" data-i18n="hero.sub">The bioregional platform that gives landowners a living digital profile of their property.</h2>
-  <p class="hero-text" data-i18n="hero.text">Combine what you know about your land with publicly available data — soil, weather, fire risk, bioregion context — all in one place.</p>
+  <h1 class="hero-tagline">Know your land.<br>Know your neighbors.</h1>
+  <h2 class="hero-sub">A bioregional platform for Odemira, Portugal — free public wiki, private land reports.</h2>
+  <p class="hero-text">Everything you need to become a good neighbor quickly. The land, the water, the weather, the species, the people, the history, the rules — all in one place. Plus a private data vault for your own parcel.</p>
   <div class="hero-actions">
-    <a href="onboard.html" class="btn-primary" data-i18n="hero.cta.add">Add Your Property</a>
-    <a href="directory.html" class="btn-outline light" data-i18n="hero.cta.browse">Browse Directory</a>
+    <a href="/wiki" class="btn-primary">Explore the Wiki</a>
+    <a href="/create" class="btn-outline light">Create Your Landbook</a>
   </div>
 </section>
 
-<section class="features">
-  <div class="section-label" data-i18n="features.label">What is LandLibrary?</div>
-  <h2 data-i18n="features.title">A living profile for every piece of land</h2>
-  <p class="features-desc" data-i18n="features.desc">LandLibrary combines landowner knowledge with open data to create a Landbook — a shareable, evolving portrait of any property.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--coral);">&#9997;</div>
-      <h3 data-i18n="feat.onboard.title">Guided Onboarding</h3>
-      <p data-i18n="feat.onboard.desc">A step-by-step intake walks you through contributing your property data — land use, soil, water, ecology, challenges and goals.</p>
+<section class="products">
+  <div class="section-label">Two products, one platform</div>
+  <h2>Public knowledge. Private land reports.</h2>
+  <p class="products-desc">Libraries combines a free bioregional wiki with a paid private land passport. The wiki is for everyone — the landbook is yours alone.</p>
+  <div class="products-grid">
+    <div class="product-card">
+      <div class="product-icon">&#127758;</div>
+      <div class="product-type">Free &amp; Public</div>
+      <h3>Bioregional Wiki</h3>
+      <p>If you were to move to Odemira, what's all the information you'd need to become a good neighbor quickly? That's the wiki. Short, scannable articles about everything from soil types to local festivals — with a chat interface so you can just ask questions.</p>
+      <ul>
+        <li>The Land — geology, boundaries, elevation</li>
+        <li>The Water — rivers, springs, water quality</li>
+        <li>The Weather — climate, fire risk, growing seasons</li>
+        <li>What Lives Here — biodiversity, species lists</li>
+        <li>What Grows Here — agriculture, land use</li>
+        <li>Who's Here — communities, experts</li>
+        <li>The Story — history, culture, festivals</li>
+        <li>The Rules — zoning, planning, protected areas</li>
+      </ul>
+      <a href="/wiki" class="btn-outline">Explore the Wiki</a>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--blue);">&#9730;</div>
-      <h3 data-i18n="feat.data.title">Open Data Layer</h3>
-      <p data-i18n="feat.data.desc">For each property location, we auto-aggregate weather, soil type, bioregion classification, fire risk, elevation and more from public sources.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--green);">&#9883;</div>
-      <h3 data-i18n="feat.passport.title">Landbook</h3>
-      <p data-i18n="feat.passport.desc">Each property gets a single, shareable page that displays owner-contributed data alongside auto-aggregated open data and seasonal guidance.</p>
+    <div class="product-card">
+      <div class="product-icon">&#128218;</div>
+      <div class="product-type">Private &amp; Paid</div>
+      <h3>Landbook</h3>
+      <p>A private data vault for your specific land parcel. Draw your boundary on the map and we'll generate a comprehensive report — soil type, elevation, fire risk, species likely present, zoning, seasonal guidance. Then add your own knowledge on top.</p>
+      <ul>
+        <li>Draw your boundary — we calculate area &amp; perimeter</li>
+        <li>Auto-generated report from EU open data</li>
+        <li>Soil, weather, elevation, biodiversity</li>
+        <li>Fire risk, drought risk, flood risk</li>
+        <li>Zoning and protected area overlays</li>
+        <li>Add your own data — challenges, goals</li>
+        <li>Optional title deed upload (secure)</li>
+        <li>Seasonal growing calendar</li>
+      </ul>
+      <a href="/create" class="btn-outline">Create Your Landbook</a>
     </div>
   </div>
 </section>
 
 <section class="how-it-works">
-  <h2 data-i18n="how.title">How it works</h2>
+  <h2>How the Landbook works</h2>
   <div class="steps">
     <div class="step">
       <div class="step-num">01</div>
-      <h3 data-i18n="how.s1.title">Tell us about your land</h3>
-      <p data-i18n="how.s1.desc">Walk through a guided intake that captures your property's story — from soil to species.</p>
+      <h3>Find your land on the map</h3>
+      <p>Search for your location and draw an estimated boundary around your parcel. That's all we need to start.</p>
     </div>
     <div class="step">
       <div class="step-num">02</div>
-      <h3 data-i18n="how.s2.title">We enrich it with useful data</h3>
-      <p data-i18n="how.s2.desc">We pull in satellite imagery, weather data, soil surveys, and bioregion classification — automatically.</p>
+      <h3>We show you the data first</h3>
+      <p>We pull soil, weather, elevation, biodiversity, fire risk, and zoning data from EU open sources — automatically.</p>
     </div>
     <div class="step">
       <div class="step-num">03</div>
-      <h3 data-i18n="how.s3.title">Get your Landbook</h3>
-      <p data-i18n="how.s3.desc">A living profile page that combines your knowledge with public data into one shareable document.</p>
+      <h3>Then you add what you know</h3>
+      <p>What do you use the land for? What are your challenges and goals? What have you figured out that might help the neighbors?</p>
     </div>
   </div>
   <div style="text-align:center;">
-    <a href="onboard.html" class="btn-primary" data-i18n="hero.cta.add">Add Your Property</a>
+    <a href="/create" class="btn-primary">Create Your Landbook</a>
+  </div>
+</section>
+
+<section class="features">
+  <div class="section-label">Powered by open data</div>
+  <h2>Real data from real sources</h2>
+  <p class="features-desc">Every data point comes from verified EU and Portuguese open data sources — satellite imagery, soil surveys, weather stations, biodiversity databases.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--coral);">&#9730;</div>
+      <h3>Open-Meteo</h3>
+      <p>Weather forecasts, historical climate data, temperature, rainfall, wind — from global weather models and nearby stations.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--blue);">&#127793;</div>
+      <h3>GBIF + iNaturalist</h3>
+      <p>Species occurrence data from the world's largest biodiversity databases. Know what lives near you.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="color:var(--green);">&#9883;</div>
+      <h3>SoilGrids + Copernicus</h3>
+      <p>Soil type, organic carbon, land cover, and satellite data from ISRIC and EU Copernicus services.</p>
+    </div>
   </div>
 </section>
 
 <section class="cta-section">
-  <h2 data-i18n="cta.title">Ready to map your land?</h2>
-  <p data-i18n="cta.desc">No account needed. Contribute your property data and get your Landbook in minutes.</p>
+  <h2>Start with the wiki. It's free.</h2>
+  <p>Browse what we know about Odemira. Ask the chat anything. Then decide if you want a private landbook.</p>
   <div class="cta-actions">
-    <a href="onboard.html" class="btn-primary" data-i18n="cta.add">Add Your Property</a>
-    <a href="directory.html" class="btn-outline" data-i18n="cta.browse">Browse Directory</a>
+    <a href="/wiki" class="btn-primary">Explore Odemira Wiki</a>
+    <a href="/chat" class="btn-outline">Ask a Question</a>
   </div>
 </section>
 
@@ -104,25 +148,26 @@
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <a href="index.html" class="logo">
+      <a href="/" class="logo">
         <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
           <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
           <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
           <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
           <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
         </svg>
-        <div class="logo-text" style="color:var(--cream);">Land<br>Library</div>
+        <div class="logo-text" style="color:var(--cream);">Libraries</div>
       </a>
-      <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
+      <div class="footer-tagline">Know your land. Know your neighbors.</div>
     </div>
     <div class="footer-links">
-      <a href="index.html" data-i18n="nav.home">Home</a>
-      <a href="directory.html" data-i18n="nav.directory">Directory</a>
-      <a href="onboard.html" data-i18n="nav.add">Add Property</a>
+      <a href="/">Home</a>
+      <a href="/wiki">Wiki</a>
+      <a href="/chat">Chat</a>
+      <a href="/create">Create Landbook</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <div>LandLibrary</div>
+    <div>Libraries — Odemira, Portugal</div>
     <div>EN / PT</div>
   </div>
 </footer>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odemira Wiki — Libraries</title>
+<meta name="description" content="Everything you need to know about the Odemira bioregion.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="header">
+  <a href="/" class="logo">
+    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
+      <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
+      <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
+      <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
+    </svg>
+    <div class="logo-text">Libraries</div>
+  </a>
+  <div class="header-nav">
+    <a href="/">Home</a>
+    <a href="/wiki" class="active">Wiki</a>
+    <a href="/chat" class="hide-mobile">Chat</a>
+    <a href="/create" class="hide-mobile">Create Landbook</a>
+    <div class="lang-toggle">
+      <button data-lang="en">EN</button>
+      <button data-lang="pt">PT</button>
+    </div>
+  </div>
+</header>
+
+<div class="page-body">
+  <div class="wiki-layout">
+    <aside class="wiki-sidebar" id="wiki-sidebar"></aside>
+    <main class="wiki-content" id="wiki-content"></main>
+  </div>
+</div>
+
+<script type="module" src="/src/pages/wiki.js"></script>
+</body>
+</html>
