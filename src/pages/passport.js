@@ -27,7 +27,7 @@ if (!propertyId || !getProperty(propertyId)) {
   showNotFound();
 } else {
   const property = getProperty(propertyId);
-  document.title = `${property.propertyName} \u2014 Land Passport \u2014 lllibrary of Earth`;
+  document.title = `${property.propertyName} \u2014 Landbook \u2014 LandLibrary`;
   renderPassport(property);
   if (property.lat && property.lng) {
     fetchOpenData(parseFloat(property.lat), parseFloat(property.lng));
@@ -38,7 +38,7 @@ function showNotFound() {
   container.innerHTML = `
     <div class="empty-state" style="padding-top:120px;">
       <h3 data-i18n="passport.notfound">Property not found</h3>
-      <p data-i18n="passport.notfound.desc">This Land Passport doesn\u2019t exist or may have been removed.</p>
+      <p data-i18n="passport.notfound.desc">This Landbook doesn\u2019t exist or may have been removed.</p>
       <a href="onboard.html" class="btn-primary" data-i18n="hero.cta.add">Add Your Property</a>
     </div>
   `;
@@ -68,7 +68,7 @@ function renderPassport(p) {
 
   container.innerHTML = `
     <div class="passport-header">
-      <div class="section-label">Land Passport</div>
+      <div class="section-label">Landbook</div>
       <h1>${escapeHtml(p.propertyName)}</h1>
       <div class="passport-meta">
         <span><strong data-i18n="passport.owner">Owner</strong>: ${escapeHtml(p.ownerName)}</span>
@@ -124,7 +124,7 @@ function renderPassport(p) {
     </div>
 
     <div style="text-align:center;padding:40px 0 60px;">
-      <button class="btn-outline" id="share-btn" data-i18n="passport.share">Share this Passport</button>
+      <button class="btn-outline" id="share-btn" data-i18n="passport.share">Share this Landbook</button>
     </div>
   `;
 

@@ -43,7 +43,7 @@ function render(filter) {
     listEl.innerHTML = `
       <div class="empty-state">
         <h3 data-i18n="dir.empty.title">No properties yet</h3>
-        <p data-i18n="dir.empty.desc">Be the first to create a Land Passport and start building the knowledge base.</p>
+        <p data-i18n="dir.empty.desc">Be the first to create a Landbook and start building the knowledge base.</p>
         <a href="onboard.html" class="btn-primary" data-i18n="dir.empty.cta">Add Your Property</a>
       </div>
     `;
@@ -93,7 +93,7 @@ function updateMapMarkers(properties) {
       const lat = parseFloat(p.lat);
       const lng = parseFloat(p.lng);
       const m = L.marker([lat, lng]).addTo(dirMap);
-      m.bindPopup(`<strong>${escapeHtml(p.propertyName)}</strong><br><a href="passport.html?id=${p.id}">View Passport</a>`);
+      m.bindPopup(`<strong>${escapeHtml(p.propertyName)}</strong><br><a href="passport.html?id=${p.id}">View Landbook</a>`);
       bounds.push([lat, lng]);
     }
   });

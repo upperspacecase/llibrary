@@ -9,14 +9,14 @@ export const pt = {
   "hero.cta.add": "Adicionar Propriedade",
   "hero.cta.browse": "Ver Diret\u00F3rio",
 
-  "features.label": "O que \u00E9 a lllibrary?",
+  "features.label": "O que \u00E9 a LandLibrary?",
   "features.title": "Um perfil vivo para cada peda\u00E7o de terra",
-  "features.desc": "A lllibrary combina o conhecimento do propriet\u00E1rio com dados abertos para criar um Passaporte da Terra \u2014 um retrato partilh\u00E1vel e em evolu\u00E7\u00E3o de qualquer propriedade.",
+  "features.desc": "A LandLibrary combina o conhecimento do propriet\u00E1rio com dados abertos para criar um Landbook \u2014 um retrato partilh\u00E1vel e em evolu\u00E7\u00E3o de qualquer propriedade.",
   "feat.onboard.title": "Registo Guiado",
   "feat.onboard.desc": "Um processo passo a passo guia-o na contribui\u00E7\u00E3o dos dados da sua propriedade \u2014 uso do solo, \u00E1gua, ecologia, desafios e objetivos.",
   "feat.data.title": "Dados Abertos",
   "feat.data.desc": "Para cada localiza\u00E7\u00E3o, agregamos automaticamente clima, tipo de solo, classifica\u00E7\u00E3o bioregional, risco de inc\u00EAndio e muito mais.",
-  "feat.passport.title": "Passaporte da Terra",
+  "feat.passport.title": "Landbook",
   "feat.passport.desc": "Cada propriedade recebe uma p\u00E1gina partilh\u00E1vel que mostra os dados contribu\u00EDdos junto com dados abertos e orienta\u00E7\u00E3o sazonal.",
 
   "how.title": "Como funciona",
@@ -24,11 +24,11 @@ export const pt = {
   "how.s1.desc": "Percorra um registo guiado que captura a hist\u00F3ria da sua propriedade \u2014 do solo \u00E0s esp\u00E9cies.",
   "how.s2.title": "N\u00F3s enriquecemos com dados \u00FAteis",
   "how.s2.desc": "Agregamos imagens de sat\u00E9lite, dados meteorol\u00F3gicos, levantamentos de solo e classifica\u00E7\u00E3o bioregional \u2014 automaticamente.",
-  "how.s3.title": "Receba o seu Passaporte da Terra",
+  "how.s3.title": "Receba o seu Landbook",
   "how.s3.desc": "Uma p\u00E1gina de perfil vivo que combina o seu conhecimento com dados p\u00FAblicos num documento partilh\u00E1vel.",
 
   "cta.title": "Pronto para mapear a sua terra?",
-  "cta.desc": "Sem necessidade de conta. Contribua os dados da sua propriedade e receba o seu Passaporte da Terra em minutos.",
+  "cta.desc": "Sem necessidade de conta. Contribua os dados da sua propriedade e receba o seu Landbook em minutos.",
   "cta.add": "Adicionar Propriedade",
   "cta.browse": "Ver Diret\u00F3rio",
 
@@ -109,7 +109,7 @@ export const pt = {
 
   "onboard.nav.back": "Voltar",
   "onboard.nav.next": "Continuar",
-  "onboard.nav.submit": "Criar Passaporte da Terra",
+  "onboard.nav.submit": "Criar Landbook",
 
   "review.basics": "Dados b\u00E1sicos",
   "review.location": "Localiza\u00E7\u00E3o",
@@ -138,16 +138,16 @@ export const pt = {
   "passport.elevation": "Eleva\u00E7\u00E3o",
   "passport.bioregion": "Bioregi\u00E3o",
   "passport.seasonal": "Orienta\u00E7\u00E3o sazonal",
-  "passport.share": "Partilhar este Passaporte",
+  "passport.share": "Partilhar este Landbook",
   "passport.notfound": "Propriedade n\u00E3o encontrada",
-  "passport.notfound.desc": "Este Passaporte da Terra n\u00E3o existe ou pode ter sido removido.",
+  "passport.notfound.desc": "Este Landbook n\u00E3o existe ou pode ter sido removido.",
 
-  "dir.title": "Diret\u00F3rio de Passaportes da Terra",
-  "dir.desc": "Explore todas as propriedades contribu\u00EDdas e os seus Passaportes da Terra.",
+  "dir.title": "Diret\u00F3rio de Landbooks",
+  "dir.desc": "Explore todas as propriedades contribu\u00EDdas e os seus Landbooks.",
   "dir.search": "Pesquisar propriedades...",
   "dir.list": "Lista",
   "dir.map": "Mapa",
   "dir.empty.title": "Ainda sem propriedades",
-  "dir.empty.desc": "Seja o primeiro a criar um Passaporte da Terra e a construir a base de conhecimento.",
+  "dir.empty.desc": "Seja o primeiro a criar um Landbook e a construir a base de conhecimento.",
   "dir.empty.cta": "Adicionar Propriedade",
 };

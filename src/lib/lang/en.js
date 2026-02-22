@@ -12,14 +12,14 @@ export const en = {
   "hero.cta.browse": "Browse Directory",
 
   // Features
-  "features.label": "What is lllibrary?",
+  "features.label": "What is LandLibrary?",
   "features.title": "A living profile for every piece of land",
-  "features.desc": "lllibrary combines landowner knowledge with open data to create a Land Passport \u2014 a shareable, evolving portrait of any property.",
+  "features.desc": "LandLibrary combines landowner knowledge with open data to create a Landbook \u2014 a shareable, evolving portrait of any property.",
   "feat.onboard.title": "Guided Onboarding",
   "feat.onboard.desc": "A step-by-step intake walks you through contributing your property data \u2014 land use, soil, water, ecology, challenges and goals.",
   "feat.data.title": "Open Data Layer",
   "feat.data.desc": "For each property location, we auto-aggregate weather, soil type, bioregion classification, fire risk, elevation and more from public sources.",
-  "feat.passport.title": "Land Passport",
+  "feat.passport.title": "Landbook",
   "feat.passport.desc": "Each property gets a single, shareable page that displays owner-contributed data alongside auto-aggregated open data and seasonal guidance.",
 
   // How it works
@@ -28,12 +28,12 @@ export const en = {
   "how.s1.desc": "Walk through a guided intake that captures your property\u2019s story \u2014 from soil to species.",
   "how.s2.title": "We enrich it with useful data",
   "how.s2.desc": "We pull in satellite imagery, weather data, soil surveys, and bioregion classification \u2014 automatically.",
-  "how.s3.title": "Get your Land Passport",
+  "how.s3.title": "Get your Landbook",
   "how.s3.desc": "A living profile page that combines your knowledge with public data into one shareable document.",
 
   // CTA
   "cta.title": "Ready to map your land?",
-  "cta.desc": "No account needed. Contribute your property data and get your Land Passport in minutes.",
+  "cta.desc": "No account needed. Contribute your property data and get your Landbook in minutes.",
   "cta.add": "Add Your Property",
   "cta.browse": "Browse Directory",
 
@@ -116,7 +116,7 @@ export const en = {
 
   "onboard.nav.back": "Back",
   "onboard.nav.next": "Continue",
-  "onboard.nav.submit": "Create Land Passport",
+  "onboard.nav.submit": "Create Landbook",
 
   // Review labels
   "review.basics": "Property basics",
@@ -147,17 +147,17 @@ export const en = {
   "passport.elevation": "Elevation",
   "passport.bioregion": "Bioregion",
   "passport.seasonal": "Seasonal guidance",
-  "passport.share": "Share this Passport",
+  "passport.share": "Share this Landbook",
   "passport.notfound": "Property not found",
-  "passport.notfound.desc": "This Land Passport doesn\u2019t exist or may have been removed.",
+  "passport.notfound.desc": "This Landbook doesn\u2019t exist or may have been removed.",
 
   // Directory
-  "dir.title": "Land Passport Directory",
-  "dir.desc": "Browse all contributed properties and their Land Passports.",
+  "dir.title": "Landbook Directory",
+  "dir.desc": "Browse all contributed properties and their Landbooks.",
   "dir.search": "Search properties...",
   "dir.list": "List",
   "dir.map": "Map",
   "dir.empty.title": "No properties yet",
-  "dir.empty.desc": "Be the first to create a Land Passport and start building the knowledge base.",
+  "dir.empty.desc": "Be the first to create a Landbook and start building the knowledge base.",
   "dir.empty.cta": "Add Your Property",
 };
