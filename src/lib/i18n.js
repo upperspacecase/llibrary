@@ -29,6 +29,10 @@ export function applyTranslations() {
       el.textContent = val;
     }
   });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.dataset.i18nHtml;
+    el.innerHTML = t(key);
+  });
 }
 
 export function initI18n() {

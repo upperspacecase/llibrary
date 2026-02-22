@@ -19,10 +19,10 @@
     <div class="logo-text">Libraries</div>
   </a>
   <div class="header-nav">
-    <a href="/">Home</a>
-    <a href="/wiki">Wiki</a>
-    <a href="/chat" class="hide-mobile">Chat</a>
-    <a href="/create" class="active">Create Landbook</a>
+    <a href="/" data-i18n="nav.home">Home</a>
+    <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
+    <a href="/chat" class="hide-mobile" data-i18n="nav.chat">Chat</a>
+    <a href="/create" class="active" data-i18n="nav.create">Create Landbook</a>
     <div class="lang-toggle">
       <button data-lang="en">EN</button>
       <button data-lang="pt">PT</button>
@@ -34,37 +34,37 @@
   <div class="create-layout">
     <div class="create-map-area">
       <div id="create-map"></div>
-      <div class="create-map-instructions" id="map-instructions">Click on the map to start drawing your land boundary</div>
+      <div class="create-map-instructions" id="map-instructions" data-i18n="create.instructions">Click on the map to start drawing your land boundary</div>
       <div class="create-map-toolbar" id="map-toolbar" style="display:none;">
-        <button class="btn-small" id="btn-undo">Undo</button>
-        <button class="btn-small" id="btn-clear">Clear</button>
-        <button class="btn-small active" id="btn-close">Close Boundary</button>
+        <button class="btn-small" id="btn-undo" data-i18n="create.undo">Undo</button>
+        <button class="btn-small" id="btn-clear" data-i18n="create.clear">Clear</button>
+        <button class="btn-small active" id="btn-close" data-i18n="create.close">Close Boundary</button>
       </div>
     </div>
     <div class="create-sidebar">
-      <div class="section-label">Private Land Passport</div>
-      <h2>Create Your Landbook</h2>
-      <p class="create-desc">Search for your location, then click on the map to draw your land boundary. We'll calculate the area and generate your report.</p>
+      <div class="section-label" data-i18n="create.label">Private Land Passport</div>
+      <h2 data-i18n="create.title">Create Your Landbook</h2>
+      <p class="create-desc" data-i18n="create.desc">Search for your location, then click on the map to draw your land boundary. We'll calculate the area and generate your report.</p>
       <div class="create-search">
-        <input type="text" id="search-input" placeholder="Search location...">
-        <button class="btn-small" id="btn-search">Go</button>
+        <input type="text" id="search-input" data-i18n="create.search" placeholder="Search location...">
+        <button class="btn-small" id="btn-search" data-i18n="create.go">Go</button>
       </div>
       <div class="create-stats" id="boundary-stats">
-        <div class="create-stat"><span class="stat-label">Points</span><span class="stat-value" id="stat-points">0</span></div>
-        <div class="create-stat"><span class="stat-label">Area</span><span class="stat-value" id="stat-area">&mdash;</span></div>
-        <div class="create-stat"><span class="stat-label">Perimeter</span><span class="stat-value" id="stat-perimeter">&mdash;</span></div>
-        <div class="create-stat"><span class="stat-label">Center</span><span class="stat-value" id="stat-center">&mdash;</span></div>
-        <div class="create-stat"><span class="stat-label">Address</span><span class="stat-value" id="stat-address">&mdash;</span></div>
+        <div class="create-stat"><span class="stat-label" data-i18n="create.points">Points</span><span class="stat-value" id="stat-points">0</span></div>
+        <div class="create-stat"><span class="stat-label" data-i18n="create.area">Area</span><span class="stat-value" id="stat-area">&mdash;</span></div>
+        <div class="create-stat"><span class="stat-label" data-i18n="create.perimeter">Perimeter</span><span class="stat-value" id="stat-perimeter">&mdash;</span></div>
+        <div class="create-stat"><span class="stat-label" data-i18n="create.center">Center</span><span class="stat-value" id="stat-center">&mdash;</span></div>
+        <div class="create-stat"><span class="stat-label" data-i18n="create.address">Address</span><span class="stat-value" id="stat-address">&mdash;</span></div>
       </div>
       <div style="margin-bottom:24px;">
         <div class="deed-upload" id="deed-upload">
-          <p>Upload title deed (optional)</p>
-          <p class="deed-optional">PDF, JPG, or PNG — marked as "pending" until verified</p>
+          <p data-i18n="create.deed">Upload title deed (optional)</p>
+          <p class="deed-optional" data-i18n="create.deed.hint">PDF, JPG, or PNG — marked as "pending" until verified</p>
         </div>
       </div>
       <div class="create-actions">
-        <button class="btn-primary" id="btn-create" disabled style="width:100%;text-align:center;">Generate Landbook</button>
-        <p style="font-size:12px;color:var(--muted);text-align:center;">Your data is stored locally and stays private.</p>
+        <button class="btn-primary" id="btn-create" disabled style="width:100%;text-align:center;" data-i18n="create.submit">Generate Landbook</button>
+        <p style="font-size:12px;color:var(--muted);text-align:center;" data-i18n="create.privacy">Your data is stored locally and stays private.</p>
       </div>
     </div>
   </div>
