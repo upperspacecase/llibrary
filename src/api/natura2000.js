@@ -1,7 +1,9 @@
 /**
- * Natura 2000 & Protected Areas — EEA / ICNF data
+ * Natura 2000 & Protected Areas
  * WMS services free and public. No API key needed.
  * https://www.eea.europa.eu/data-and-maps/data/natura-14
+ *
+ * Dynamic queries via Overpass API for protected areas near any coordinate.
  */
 
 // EEA Natura 2000 WMS
@@ -17,48 +19,90 @@ export function getNatura2000WmsParams() {
   };
 }
 
-// Protected areas relevant to Odemira region
-export const ODEMIRA_PROTECTED_AREAS = [
-  {
-    name: 'Parque Natural do Sudoeste Alentejano e Costa Vicentina',
-    nameEn: 'Southwest Alentejo and Vicentine Coast Natural Park',
-    type: 'Natural Park',
-    designation: 'IUCN Category V',
-    area: '131.4 km²',
-    established: 1995,
-    description: 'One of the best-preserved coastal stretches in Europe. Extends along 100km of coastline from Porto Covo to Burgau. Rich in endemic plant species and important for migratory birds.',
-    coordinates: [37.5, -8.8],
-    relevance: 'Covers the western coastline of Odemira municipality. Strict building and land use regulations apply within park boundaries.',
-  },
-  {
-    name: 'Costa Sudoeste',
-    nameEn: 'Southwest Coast',
-    type: 'Natura 2000 SCI',
-    designation: 'Sites of Community Importance',
-    siteCode: 'PTCON0012',
-    description: 'Designated for its habitats directive species and habitat types. Includes coastal cliffs, sand dunes, temporary Mediterranean ponds, and maquis shrubland.',
-    coordinates: [37.55, -8.82],
-  },
-  {
-    name: 'Costa Sudoeste',
-    nameEn: 'Southwest Coast SPA',
-    type: 'Natura 2000 SPA',
-    designation: 'Special Protection Area (Birds Directive)',
-    siteCode: 'PTZPE0015',
-    description: 'Important bird area. Breeding site for white stork, Bonelli\'s eagle, peregrine falcon, and many coastal seabirds. Key stopover for migratory species.',
-    coordinates: [37.55, -8.82],
-  },
-  {
-    name: 'Ribeira do Torgal',
-    nameEn: 'Torgal Stream',
-    type: 'Natura 2000 SCI',
-    siteCode: 'PTCON0065',
-    description: 'Important freshwater habitat. Home to endemic fish species and otter populations.',
-    coordinates: [37.55, -8.65],
-  },
-];
+/**
+ * Dynamically fetch protected areas near a coordinate using Overpass API.
+ * Queries: nature_reserve, national_park, protected_area, natural parks.
+ * @param {number} lat
+ * @param {number} lng
+ * @param {number} radiusKm
+ * @returns {Promise<Object[]>} Array of protected area objects
+ */
+export async function getProtectedAreas(lat, lng, radiusKm = 25) {
+  const radiusM = radiusKm * 1000;
+  const query = `
+    [out:json][timeout:20];
+    (
+      way["boundary"="protected_area"](around:${radiusM},${lat},${lng});
+      relation["boundary"="protected_area"](around:${radiusM},${lat},${lng});
+      way["leisure"="nature_reserve"](around:${radiusM},${lat},${lng});
+      relation["leisure"="nature_reserve"](around:${radiusM},${lat},${lng});
+      way["boundary"="national_park"](around:${radiusM},${lat},${lng});
+      relation["boundary"="national_park"](around:${radiusM},${lat},${lng});
+    );
+    out tags;
+  `;
 
-// Conservation status categories
+  try {
+    const res = await fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: `data=${encodeURIComponent(query)}`,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
+    const data = await res.json();
+
+    const seen = new Set();
+    return (data.elements || [])
+      .filter(el => {
+        const name = el.tags?.name || el.tags?.['name:en'];
+        if (!name || seen.has(name)) return false;
+        seen.add(name);
+        return true;
+      })
+      .map(el => ({
+        name: el.tags?.name || 'Unnamed',
+        nameEn: el.tags?.['name:en'] || el.tags?.name || 'Unnamed',
+        type: classifyProtectedArea(el.tags),
+        designation: el.tags?.designation || el.tags?.protect_class || '',
+        protectClass: el.tags?.protect_class || '',
+        operator: el.tags?.operator || '',
+        website: el.tags?.website || el.tags?.url || '',
+        wikidata: el.tags?.wikidata || '',
+        description: buildProtectedDescription(el.tags),
+      }))
+      .slice(0, 10);
+  } catch (err) {
+    console.warn('Protected areas query failed:', err.message);
+    return [];
+  }
+}
+
+function classifyProtectedArea(tags) {
+  if (!tags) return 'Protected Area';
+  const pc = tags.protect_class || '';
+  const type = tags.boundary || tags.leisure || '';
+  const desig = (tags.designation || '').toLowerCase();
+
+  if (desig.includes('natura 2000') || desig.includes('sac') || desig.includes('sci')) return 'Natura 2000 SCI';
+  if (desig.includes('spa') || desig.includes('zpe')) return 'Natura 2000 SPA';
+  if (type === 'national_park' || desig.includes('national park')) return 'National Park';
+  if (type === 'nature_reserve' || desig.includes('nature reserve')) return 'Nature Reserve';
+  if (desig.includes('natural park') || desig.includes('parque natural')) return 'Natural Park';
+  if (pc === '1' || pc === '2') return 'Strict Reserve';
+  if (pc === '5') return 'Protected Landscape';
+  return 'Protected Area';
+}
+
+function buildProtectedDescription(tags) {
+  if (!tags) return '';
+  const parts = [];
+  if (tags.designation) parts.push(tags.designation);
+  if (tags.protect_class) parts.push(`IUCN Category ${tags.protect_class}`);
+  if (tags.operator) parts.push(`Managed by ${tags.operator}`);
+  return parts.join('. ') || 'Protected area.';
+}
+
+// Conservation status categories (static reference — not location-specific)
 export const CONSERVATION_STATUS = {
   CR: { label: 'Critically Endangered', color: '#CC3333' },
   EN: { label: 'Endangered', color: '#CC6633' },
@@ -69,20 +113,7 @@ export const CONSERVATION_STATUS = {
   NE: { label: 'Not Evaluated', color: '#CCCCCC' },
 };
 
-// Key species in the Odemira / Vicentine Coast region
-export const KEY_SPECIES = [
-  { name: 'White Stork', scientific: 'Ciconia ciconia', group: 'Birds', status: 'LC', notes: 'Nests on sea cliffs — unusual globally. The Vicentine Coast has the only known cliff-nesting white stork population.' },
-  { name: 'Iberian Lynx', scientific: 'Lynx pardinus', group: 'Mammals', status: 'EN', notes: 'Recovering species. Occasionally sighted in the Odemira hinterland near Monchique.' },
-  { name: 'Eurasian Otter', scientific: 'Lutra lutra', group: 'Mammals', status: 'NT', notes: 'Present in Rio Mira and tributary streams. Indicator of water quality.' },
-  { name: 'Bonelli\'s Eagle', scientific: 'Aquila fasciata', group: 'Birds', status: 'LC', notes: 'Breeds in the inland areas. Sensitive to habitat disturbance.' },
-  { name: 'Iberian Midwife Toad', scientific: 'Alytes cisternasii', group: 'Amphibians', status: 'LC', notes: 'Iberian endemic. Found in temporary ponds and streams.' },
-  { name: 'Mediterranean Chameleon', scientific: 'Chamaeleo chamaeleon', group: 'Reptiles', status: 'LC', notes: 'Found in coastal scrub and pine forests. Increasingly rare due to habitat loss.' },
-  { name: 'Cistus ladanifer', scientific: 'Cistus ladanifer', group: 'Plants', status: 'LC', notes: 'Dominant shrub in Mediterranean scrubland (maquis). Produces aromatic resin (labdanum).' },
-  { name: 'Cork Oak', scientific: 'Quercus suber', group: 'Plants', status: 'LC', notes: 'Keystone species of the montado ecosystem. Economically important for cork production.' },
-  { name: 'Portuguese Sundew', scientific: 'Drosera intermedia', group: 'Plants', status: 'LC', notes: 'Carnivorous plant found in wet heathlands. Indicator of pristine boggy habitats.' },
-];
-
-// Zoning designations in Portuguese planning system
+// Zoning designations — static reference for Portuguese planning system (applies nationwide)
 export const PT_ZONING = {
   REN: {
     name: 'Reserva Ecológica Nacional',

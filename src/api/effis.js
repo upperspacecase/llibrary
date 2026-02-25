@@ -77,15 +77,3 @@ export function estimateFireRisk(lat, lng, tempMax, recentPrecip, month) {
   if (risk >= 1) return { level: 'Low', color: '#FFFF00', score: risk };
   return { level: 'Very Low', color: '#008000', score: risk };
 }
-
-// Historical fire data for Odemira region
-export const ODEMIRA_FIRE_HISTORY = {
-  majorEvents: [
-    { year: 2003, description: 'Severe fire season across Portugal. Significant burned area in Alentejo.' },
-    { year: 2012, description: 'Multiple fires in Odemira municipality affecting agricultural and forest land.' },
-    { year: 2017, description: 'Catastrophic fire season in Portugal. Odemira affected by regional fires.' },
-    { year: 2018, description: 'Fire near Monchique spread into southern Odemira municipality.' },
-    { year: 2023, description: 'Post-fire flooding and erosion events following vegetation loss from previous fires.' },
-  ],
-  context: 'Fire risk in Odemira is shaped by Mediterranean summers (hot, dry), eucalyptus monoculture, and the proximity to Serra de Monchique. Post-fire flooding is an increasing concern as burnt hillsides lose their ability to absorb rainfall.',
-};

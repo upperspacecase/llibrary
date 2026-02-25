@@ -17,8 +17,8 @@ import { getWaterFeatures, getInfrastructure, extractNodes, extractWays } from '
 import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '../api/inaturalist.js';
 import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
 import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams, WORLDCOVER_WMS, getWorldCoverWmsParams } from '../api/copernicus.js';
-import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk, ODEMIRA_FIRE_HISTORY } from '../api/effis.js';
-import { NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES, PT_ZONING } from '../api/natura2000.js';
+import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk } from '../api/effis.js';
+import { NATURA2000_WMS, getNatura2000WmsParams, getProtectedAreas, PT_ZONING } from '../api/natura2000.js';
 import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
 import { getForecast as getIpmaForecast, getDroughtIndex, interpretDrought, WEATHER_TYPES } from '../api/ipma.js';
 import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
@@ -313,10 +313,8 @@ function renderReport(lb) {
   // Init map
   if (boundary.length) initMap(boundary, center);
 
-  // Render static sections immediately
-  renderProtected();
 
-  // Fetch live data in parallel
+  // Fetch live data in parallel (protected areas are now dynamic too)
   if (center) fetchAllData(lb, center[0], center[1], boundary);
 }
 
@@ -431,6 +429,7 @@ function fetchAllData(lb, lat, lng, boundary) {
     { key: 'infrastructure', fn: () => bounds ? getInfrastructure(bounds) : Promise.resolve(null) },
     { key: 'geology', fn: () => getGeology(lat, lng) },
     { key: 'admin', fn: () => getAdminUnit(lat, lng) },
+    { key: 'protectedAreas', fn: () => getProtectedAreas(lat, lng, 25) },
   ];
 
   const results = {};
@@ -460,6 +459,7 @@ function renderDataSection(key, results, lat, lng) {
     case 'infrastructure': renderInfrastructure(results, lat, lng); break;
     case 'geology': renderGeology(results); break;
     case 'admin': renderAdminUnit(results); break;
+    case 'protectedAreas': renderProtected(results); break;
   }
 }
 
@@ -719,12 +719,13 @@ function renderBiodiversity(results) {
     html += errorBlock('Could not fetch biodiversity data.');
   }
 
+  // iNaturalist threatened species as notable species (replaces hardcoded KEY_SPECIES)
   if (rt.ok) {
-    const threatened = summarizeSpeciesCounts(rt.data);
-    if (threatened.total > 0) {
-      html += `<h3>Threatened Species (10 km)</h3>
+    const topThreatened = summarizeSpeciesCounts(rt.data);
+    if (topThreatened.species && topThreatened.species.length > 0) {
+      html += `<h3>Notable Species (Threatened, 10 km)</h3>
         <div class="species-grid">
-          ${threatened.species.slice(0, 8).map(sp => `<div class="species-card">
+          ${topThreatened.species.slice(0, 8).map(sp => `<div class="species-card">
             ${sp.photoUrl ? `<img class="species-photo" src="${sp.photoUrl}" alt="${esc(sp.name)}" loading="lazy">` : '<div class="species-photo"></div>'}
             <div class="species-info">
               <div class="species-name">${esc(sp.name)}</div>
@@ -735,13 +736,6 @@ function renderBiodiversity(results) {
           </div>`).join('')}
         </div>`;
     }
-  }
-
-  if (KEY_SPECIES && KEY_SPECIES.length) {
-    html += `<h3>Notable Regional Species</h3>
-      <div class="data-grid cols-3">
-        ${KEY_SPECIES.map(sp => dataCard(sp.name, sp.scientific, `${sp.group} \u2014 ${sp.notes}`)).join('')}
-      </div>`;
   }
 
   // GBIF occurrences (if available)
@@ -781,7 +775,6 @@ function renderFireRisk(results, lat, lng) {
     }
   }
 
-  const history = ODEMIRA_FIRE_HISTORY;
   el.innerHTML = `
     <div class="risk-grid">
       <div class="risk-card" style="background:${fire.color}20;border:2px solid ${fire.color};">
@@ -789,29 +782,29 @@ function renderFireRisk(results, lat, lng) {
         <div class="risk-label">Estimated Fire Risk</div>
         <div class="data-detail" style="margin-top:8px;">Based on temperature, precipitation, location, and season</div>
       </div>
-    </div>
-    <h3 style="margin-top:24px;">Regional Fire History</h3>
-    <p style="font-size:14px;line-height:1.65;color:#333;margin-bottom:16px;">${esc(history.context)}</p>
-    <div class="data-grid">
-      ${history.majorEvents.map(e => dataCard(String(e.year), e.description)).join('')}
     </div>`;
 }
 
-function renderProtected() {
+function renderProtected(results) {
   const el = document.getElementById('data-protected');
   if (!el || el.dataset.rendered) return;
+  const r = results.protectedAreas;
+  if (!r) return;
   el.dataset.rendered = 'true';
 
   let html = '';
-  if (ODEMIRA_PROTECTED_AREAS && ODEMIRA_PROTECTED_AREAS.length) {
+
+  if (r.ok && r.data && r.data.length > 0) {
     html += `<h3>Nearby Protected Areas</h3>
       <div class="data-grid">
-        ${ODEMIRA_PROTECTED_AREAS.map(pa => `<div class="data-item">
+        ${r.data.map(pa => `<div class="data-item">
           <div class="data-label">${esc(pa.type)}</div>
           <div class="data-value">${esc(pa.nameEn || pa.name)}</div>
           <div class="data-detail">${esc(pa.description)}</div>
         </div>`).join('')}
       </div>`;
+  } else {
+    html += '<p style="color:var(--muted);">No protected areas found within 25 km.</p>';
   }
 
   html += `<h3 style="margin-top:24px;">Portuguese Zoning</h3>

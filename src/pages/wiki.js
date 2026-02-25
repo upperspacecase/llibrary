@@ -36,11 +36,11 @@ import { getSpeciesCounts, summarizeSpeciesCounts } from '../api/inaturalist.js'
 import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams, CORINE_CLASSES } from '../api/copernicus.js';
 
 // API — EFFIS
-import { EFFIS_WMS, getFireDangerWmsParams, ODEMIRA_FIRE_HISTORY } from '../api/effis.js';
+import { EFFIS_WMS, getFireDangerWmsParams } from '../api/effis.js';
 
 // API — Natura 2000
 import {
-  NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES,
+  NATURA2000_WMS, getNatura2000WmsParams,
 } from '../api/natura2000.js';
 
 // ---- Initialise i18n ----
@@ -652,13 +652,8 @@ async function loadWeatherData(container) {
     </div>
     <div class="wiki-data-grid" style="margin-top:1rem;">
       <div class="wiki-data-card wiki-data-card-wide">
-        <h3>Fire History</h3>
-        <p>${ODEMIRA_FIRE_HISTORY.context}</p>
-        <ul>
-          ${ODEMIRA_FIRE_HISTORY.majorEvents.map(e =>
-    `<li><strong>${e.year}</strong>: ${e.description}</li>`
-  ).join('')}
-        </ul>
+        <h3>Fire Risk Factors</h3>
+        <p>Fire risk in this region is shaped by Mediterranean summers (hot, dry conditions), vegetation type, and proximity to forested areas. The EFFIS Fire Weather Index layer on the map shows current fire danger levels across Europe.</p>
       </div>
     </div>
   `;
