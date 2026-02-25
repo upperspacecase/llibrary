@@ -2,7 +2,7 @@ export const en = {
   // Navigation (shared across all pages)
   "nav.home": "Home",
   "nav.wiki": "Wiki",
-  "nav.chat": "Chat",
+  "nav.chat": "Chat with Land",
   "nav.create": "Create Landbook",
   "nav.directory": "Directory",
   "nav.add": "Add Property",

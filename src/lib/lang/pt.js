@@ -2,7 +2,7 @@ export const pt = {
   // Navega\u00E7\u00E3o (partilhada em todas as p\u00E1ginas)
   "nav.home": "In\u00EDcio",
   "nav.wiki": "Wiki",
-  "nav.chat": "Chat",
+  "nav.chat": "Chat com a Terra",
   "nav.create": "Criar Landbook",
   "nav.directory": "Diret\u00F3rio",
   "nav.add": "Adicionar Propriedade",
