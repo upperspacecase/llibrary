@@ -16,7 +16,7 @@ import { getSoilProperties, getSoilClassification, parseSoilProperties, parseSoi
 import { getWaterFeatures, getInfrastructure, extractNodes, extractWays } from '../api/overpass.js';
 import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '../api/inaturalist.js';
 import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
-import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams } from '../api/copernicus.js';
+import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams, WORLDCOVER_WMS, getWorldCoverWmsParams } from '../api/copernicus.js';
 import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk, ODEMIRA_FIRE_HISTORY } from '../api/effis.js';
 import { NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES, PT_ZONING } from '../api/natura2000.js';
 import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
@@ -24,7 +24,7 @@ import { getForecast as getIpmaForecast, getDroughtIndex, interpretDrought, WEAT
 import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
 import { calculateDistances, categorizeAmenities } from '../api/openrouteservice.js';
 import { getGeology, parseGeology, getGeologyDescription } from '../api/macrostrat.js';
-import { getAdminUnit, formatAdminUnit } from '../api/dgt.js';
+import { getAdminUnit, formatAdminUnit, COS_WMS, getCosWmsParams } from '../api/dgt.js';
 
 initI18n();
 
@@ -354,6 +354,22 @@ function initMap(boundary, center) {
     wmsLayers.natura = addWmsLayer(map, NATURA2000_WMS, getNatura2000WmsParams(), {
       sourceId: 'wms-natura', opacity: 0.5, visible: false,
     });
+    // Phase 5B: New WMS layers
+    wmsLayers.worldcover = addWmsLayer(map, WORLDCOVER_WMS, getWorldCoverWmsParams(), {
+      sourceId: 'wms-worldcover', opacity: 0.6, visible: false,
+    });
+    wmsLayers.cos = addWmsLayer(map, COS_WMS, getCosWmsParams(), {
+      sourceId: 'wms-cos', opacity: 0.6, visible: false,
+    });
+    wmsLayers.geology = addWmsLayer(map, 'https://sig.lneg.pt/server/services/CGP500K/MapServer/WMSServer', {
+      layers: '0', format: 'image/png', transparent: true, version: '1.1.1',
+    }, { sourceId: 'wms-geology', opacity: 0.5, visible: false });
+    wmsLayers.flood = addWmsLayer(map, 'https://globalfloods.eu/geoserver/wms', {
+      layers: 'flood_hazard:T100', format: 'image/png', transparent: true, version: '1.1.1',
+    }, { sourceId: 'wms-flood', opacity: 0.5, visible: false });
+    wmsLayers.drought = addWmsLayer(map, 'https://drought.emergency.copernicus.eu/api/wms', {
+      layers: 'CDI', format: 'image/png', transparent: true, version: '1.1.1',
+    }, { sourceId: 'wms-drought', opacity: 0.5, visible: false });
 
     renderLayerToggles(map);
   });
@@ -364,9 +380,14 @@ function renderLayerToggles(map) {
   if (!el) return;
 
   const layers = [
-    { key: 'corine', label: 'CORINE Land Cover' },
-    { key: 'fire', label: 'EFFIS Fire Danger' },
-    { key: 'natura', label: 'Natura 2000' },
+    { key: 'corine', label: 'CORINE Land Cover', group: 'Land' },
+    { key: 'worldcover', label: 'ESA WorldCover 10m', group: 'Land' },
+    { key: 'cos', label: 'DGT COS (Portugal)', group: 'Land' },
+    { key: 'geology', label: 'LNEG Geology', group: 'Terrain' },
+    { key: 'fire', label: 'EFFIS Fire Danger', group: 'Risk' },
+    { key: 'flood', label: 'JRC Flood Hazard (100yr)', group: 'Risk' },
+    { key: 'drought', label: 'EDO Drought Index', group: 'Risk' },
+    { key: 'natura', label: 'Natura 2000', group: 'Protected' },
   ];
 
   el.innerHTML = layers.map(l => `
