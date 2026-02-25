@@ -1,180 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Libraries — Know your land. Know your neighbors.</title>
-<meta name="description" content="A bioregional wiki and private land passport for the Odemira region. Free public knowledge, private land reports.">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LandLibrary — Your land is worth more than you know.</title>
+  <meta name="description"
+    content="LandLibrary analyzes market trends, regional dynamics, and environmental data from over 45 verified sources — giving you an accurate view of your land's value.">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
 
-<header class="header">
-  <a href="/" class="logo">
-    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
-      <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
-      <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
-      <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
-    </svg>
-    <div class="logo-text">Libraries</div>
-  </a>
-  <div class="header-nav">
-    <a href="/" class="active" data-i18n="nav.home">Home</a>
-    <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
-    <a href="#" class="hide-mobile coming-soon-link" data-i18n="nav.chat" onclick="event.preventDefault();showComingSoon()">Chat</a>
-    <a href="/create" class="hide-mobile" data-i18n="nav.create">Create Landbook</a>
-    <div class="lang-toggle">
-      <button data-lang="en">EN</button>
-      <button data-lang="pt">PT</button>
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <a href="/" class="logo">
+      <img src="/logo.svg" alt="LandLibrary" class="logo-img">
+    </a>
+    <div class="header-nav">
+      <a href="#landbook">LandBook</a>
+      <a href="/wiki">The Commons</a>
+      <a href="#pricing">Pricing</a>
+      <div class="lang-toggle">
+        <button data-lang="en" class="active">EN</button>
+        <button data-lang="pt">PT</button>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<div class="page-body">
-<main>
-
-<section class="hero">
-  <h1 class="hero-tagline" data-i18n-html="hero.tagline">Know your land.<br>Know your neighbors.</h1>
-  <h2 class="hero-sub" data-i18n="hero.sub">A bioregional platform for Odemira, Portugal — free public wiki, private land reports.</h2>
-  <p class="hero-text" data-i18n="hero.text">Everything you need to become a good neighbor quickly. The land, the water, the weather, the species, the people, the history, the rules — all in one place. Plus a private data vault for your own parcel.</p>
-  <div class="hero-actions">
-    <a href="/wiki" class="btn-primary" data-i18n="hero.cta.wiki">Explore the Wiki</a>
-    <a href="/create" class="btn-outline light" data-i18n="hero.cta.create">Create Your Landbook</a>
-  </div>
-</section>
-
-<section class="products">
-  <div class="section-label" data-i18n="products.label">Two products, one platform</div>
-  <h2 data-i18n="products.title">Public knowledge. Private land reports.</h2>
-  <p class="products-desc" data-i18n="products.desc">Libraries combines a free bioregional wiki with a paid private land passport. The wiki is for everyone — the landbook is yours alone.</p>
-  <div class="products-grid">
-    <div class="product-card">
-      <div class="product-icon">&#127758;</div>
-      <div class="product-type" data-i18n="products.wiki.type">Free &amp; Public</div>
-      <h3 data-i18n="products.wiki.title">Bioregional Wiki</h3>
-      <p data-i18n="products.wiki.desc">If you were to move to Odemira, what's all the information you'd need to become a good neighbor quickly? That's the wiki. Short, scannable articles about everything from soil types to local festivals — with a chat interface so you can just ask questions.</p>
-      <ul>
-        <li data-i18n="products.wiki.li1">The Land — geology, boundaries, elevation</li>
-        <li data-i18n="products.wiki.li2">The Water — rivers, springs, water quality</li>
-        <li data-i18n="products.wiki.li3">The Weather — climate, fire risk, growing seasons</li>
-        <li data-i18n="products.wiki.li4">What Lives Here — biodiversity, species lists</li>
-        <li data-i18n="products.wiki.li5">What Grows Here — agriculture, land use</li>
-        <li data-i18n="products.wiki.li6">Who's Here — communities, experts</li>
-        <li data-i18n="products.wiki.li7">The Story — history, culture, festivals</li>
-        <li data-i18n="products.wiki.li8">The Rules — zoning, planning, protected areas</li>
-      </ul>
-      <a href="/wiki" class="btn-outline" data-i18n="products.wiki.cta">Explore the Wiki</a>
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-bg">
+      <img src="/LandLibrary__281_29.svg" alt="" class="hero-bg-img">
     </div>
-    <div class="product-card">
-      <div class="product-icon">&#128218;</div>
-      <div class="product-type" data-i18n="products.landbook.type">Private &amp; Paid</div>
-      <h3 data-i18n="products.landbook.title">Landbook</h3>
-      <p data-i18n="products.landbook.desc">A private data vault for your specific land parcel. Draw your boundary on the map and we'll generate a comprehensive report — soil type, elevation, fire risk, species likely present, zoning, seasonal guidance. Then add your own knowledge on top.</p>
-      <ul>
-        <li data-i18n="products.landbook.li1">Draw your boundary — we calculate area &amp; perimeter</li>
-        <li data-i18n="products.landbook.li2">Auto-generated report from EU open data</li>
-        <li data-i18n="products.landbook.li3">Soil, weather, elevation, biodiversity</li>
-        <li data-i18n="products.landbook.li4">Fire risk, drought risk, flood risk</li>
-        <li data-i18n="products.landbook.li5">Zoning and protected area overlays</li>
-        <li data-i18n="products.landbook.li6">Add your own data — challenges, goals</li>
-        <li data-i18n="products.landbook.li7">Optional title deed upload (secure)</li>
-        <li data-i18n="products.landbook.li8">Seasonal growing calendar</li>
-      </ul>
-      <a href="/create" class="btn-outline" data-i18n="products.landbook.cta">Create Your Landbook</a>
-    </div>
-  </div>
-</section>
-
-<section class="how-it-works">
-  <h2 data-i18n="how.title">How the Landbook works</h2>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">01</div>
-      <h3 data-i18n="how.s1.title">Find your land on the map</h3>
-      <p data-i18n="how.s1.desc">Search for your location and draw an estimated boundary around your parcel. That's all we need to start.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">02</div>
-      <h3 data-i18n="how.s2.title">We show you the data first</h3>
-      <p data-i18n="how.s2.desc">We pull soil, weather, elevation, biodiversity, fire risk, and zoning data from EU open sources — automatically.</p>
-    </div>
-    <div class="step">
-      <div class="step-num">03</div>
-      <h3 data-i18n="how.s3.title">Then you add what you know</h3>
-      <p data-i18n="how.s3.desc">What do you use the land for? What are your challenges and goals? What have you figured out that might help the neighbors?</p>
-    </div>
-  </div>
-  <div style="text-align:center;">
-    <a href="/create" class="btn-primary" data-i18n="how.cta">Create Your Landbook</a>
-  </div>
-</section>
-
-<section class="features">
-  <div class="section-label" data-i18n="data.label">Powered by open data</div>
-  <h2 data-i18n="data.title">Real data from real sources</h2>
-  <p class="features-desc" data-i18n="data.desc">Every data point comes from verified EU and Portuguese open data sources — satellite imagery, soil surveys, weather stations, biodiversity databases.</p>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--coral);">&#9730;</div>
-      <h3 data-i18n="data.weather.title">Open-Meteo</h3>
-      <p data-i18n="data.weather.desc">Weather forecasts, historical climate data, temperature, rainfall, wind — from global weather models and nearby stations.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--blue);">&#127793;</div>
-      <h3 data-i18n="data.bio.title">GBIF + iNaturalist</h3>
-      <p data-i18n="data.bio.desc">Species occurrence data from the world's largest biodiversity databases. Know what lives near you.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon" style="color:var(--green);">&#9883;</div>
-      <h3 data-i18n="data.soil.title">SoilGrids + Copernicus</h3>
-      <p data-i18n="data.soil.desc">Soil type, organic carbon, land cover, and satellite data from ISRIC and EU Copernicus services.</p>
-    </div>
-  </div>
-</section>
-
-<section class="cta-section">
-  <h2 data-i18n="cta.title">Start with the wiki. It's free.</h2>
-  <p data-i18n="cta.desc">Browse what we know about Odemira. Ask the chat anything. Then decide if you want a private landbook.</p>
-  <div class="cta-actions">
-    <a href="/wiki" class="btn-primary" data-i18n="cta.wiki">Explore Odemira Wiki</a>
-    <a href="#" class="btn-outline coming-soon-link" data-i18n="cta.chat" onclick="event.preventDefault();showComingSoon()">Ask a Question</a>
-  </div>
-</section>
-
-</main>
-</div>
-
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <a href="/" class="logo">
-        <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
-          <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
-          <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
-          <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-tagline">Your land is worth more<br>than you know.</h1>
+      <p class="hero-sub">LandLibrary analyzes market trends, regional dynamics, and environmental data from over 45
+        verified sources — giving you an accurate view of your land's value.</p>
+      <div class="hero-actions">
+        <a href="#landbook" class="btn-pill-primary">Discover My Land's Value</a>
+        <a href="/wiki" class="btn-pill-outline">Explore the Commons</a>
+      </div>
+      <div class="hero-scroll-hint">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 4v12M4 10l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
-        <div class="logo-text" style="color:var(--cream);">Libraries</div>
-      </a>
-      <div class="footer-tagline" data-i18n="footer.tagline">Know your land. Know your neighbors.</div>
+      </div>
     </div>
-    <div class="footer-links">
-      <a href="/" data-i18n="nav.home">Home</a>
-      <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
-      <a href="#" class="coming-soon-link" data-i18n="nav.chat" onclick="event.preventDefault();showComingSoon()">Chat</a>
-      <a href="/create" data-i18n="nav.create">Create Landbook</a>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div>Libraries — Odemira, Portugal</div>
-    <div>EN / PT</div>
-  </div>
-</footer>
+  </section>
 
-<script>
-function showComingSoon(){var o=document.createElement('div');o.className='coming-soon-overlay';o.innerHTML='<div class="coming-soon-card"><div class="coming-soon-icon">&#128172;</div><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>';o.addEventListener('click',function(e){if(e.target===o)o.remove()});document.body.appendChild(o)}
-</script>
-<script type="module" src="/src/pages/home.js"></script>
+  <!-- ===== TWO PRODUCTS ===== -->
+  <section class="products" id="products">
+    <div class="products-grid">
+      <div class="product-card">
+        <div class="product-type">Individual Assessment</div>
+        <h3>LandBook</h3>
+        <p class="product-tagline">Reveal your land's potential. Individual assessment with regional context. 25 layers
+          of knowledge.</p>
+        <a href="#landbook" class="btn-pill-primary btn-small-pill">Get Your LandBook</a>
+      </div>
+      <div class="product-card">
+        <div class="product-type">Open to All</div>
+        <h3>The Commons</h3>
+        <p class="product-tagline">Bio-regional knowledge. Community-contributed, continuously improved.</p>
+        <a href="/wiki" class="btn-pill-outline btn-small-pill dark">Explore</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LANDBOOK SECTION ===== -->
+  <section class="landbook-section" id="landbook">
+    <div class="container">
+      <div class="section-label">LandBook</div>
+      <h2>Complete land intelligence. One report.</h2>
+      <p class="section-desc">We process terabytes of data about soils, water, climate, crops, taxes, interest rates,
+        and market prices to calculate the estimated value. Satellite to soil to AI. Twenty-five categories. Delivered
+        in 48 hours.</p>
+
+      <!-- Process -->
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="step-num">01</div>
+          <h3>Upload</h3>
+          <p>Land deed or coordinates</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">02</div>
+          <h3>Analyze</h3>
+          <p>Assessment from space and soil databases</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">03</div>
+          <h3>Receive</h3>
+          <p>Comprehensive LandBook (PDF + digital record)</p>
+        </div>
+      </div>
+
+      <!-- Includes -->
+      <div class="includes-grid">
+        <div class="include-card">
+          <h4>Profile</h4>
+          <p>Location, parcel, zoning. Soil health, water rights.</p>
+        </div>
+        <div class="include-card">
+          <h4>Valuations</h4>
+          <p>Land, infrastructure, carbon, soil, water, biodiversity.</p>
+        </div>
+        <div class="include-card">
+          <h4>Comparables</h4>
+          <p>Regional sales, market positioning.</p>
+        </div>
+        <div class="include-card">
+          <h4>Access</h4>
+          <p>Water, energy, education, infrastructure.</p>
+        </div>
+        <div class="include-card">
+          <h4>Risks</h4>
+          <p>Fire, flood, drought assessment.</p>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="benefits-row">
+        <div class="benefit">
+          <h4>Transact</h4>
+          <p>Buyer confidence, faster closes, fair price.</p>
+        </div>
+        <div class="benefit">
+          <h4>Monetize</h4>
+          <p>Carbon credits, stewardship payments, new revenue.</p>
+        </div>
+        <div class="benefit">
+          <h4>Manage</h4>
+          <p>Risk awareness, improvement tracking, compliance ready.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRICING ===== -->
+  <section class="pricing-section" id="pricing">
+    <div class="container">
+      <div class="section-label">Pricing</div>
+      <h2>Choose your depth</h2>
+      <p class="section-desc">LandBook pays for itself if it finds &euro;1,000 in hidden value. It typically finds
+        &euro;15,000.</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-tier">Preview</div>
+          <div class="pricing-price">&euro;0</div>
+          <p class="pricing-desc">Value estimate. 3 pages. Instant.</p>
+          <a href="#" class="btn-pill-outline dark btn-small-pill" onclick="event.preventDefault();showComingSoon()">Get
+            Preview</a>
+        </div>
+        <div class="pricing-card featured">
+          <div class="pricing-tier">LandBook</div>
+          <div class="pricing-price">&euro;250</div>
+          <p class="pricing-desc">Full assessment. 25 pages. Permanent record.</p>
+          <a href="#" class="btn-pill-primary btn-small-pill" onclick="event.preventDefault();showComingSoon()">Order
+            LandBook</a>
+        </div>
+        <div class="pricing-card">
+          <div class="pricing-tier">Steward</div>
+          <div class="pricing-price">&euro;29<span class="pricing-period">/month</span></div>
+          <p class="pricing-desc">Ongoing monitoring. Market alerts. Digital vault.</p>
+          <a href="#" class="btn-pill-outline dark btn-small-pill"
+            onclick="event.preventDefault();showComingSoon()">Start Steward</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="/" class="logo">
+          <img src="/logo.svg" alt="LandLibrary" class="logo-img" style="filter:invert(1);">
+        </a>
+        <div class="footer-tagline">Your land is worth more than you know.</div>
+      </div>
+      <div class="footer-links">
+        <a href="/">Home</a>
+        <a href="/wiki">The Commons</a>
+        <a href="#landbook">LandBook</a>
+        <a href="#pricing">Pricing</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>LandLibrary</div>
+      <div>EN / PT</div>
+    </div>
+  </footer>
+
+  <script>
+    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>LandBook ordering is under development. Leave your email and we\'ll notify you when it launches.</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
+  </script>
+  <script type="module" src="/src/pages/home.js"></script>
 </body>
+
 </html>
