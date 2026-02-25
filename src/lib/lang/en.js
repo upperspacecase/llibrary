@@ -1,44 +1,106 @@
 export const en = {
-  // Header
+  // Navigation (shared across all pages)
   "nav.home": "Home",
+  "nav.wiki": "Wiki",
+  "nav.chat": "Chat",
+  "nav.create": "Create Landbook",
   "nav.directory": "Directory",
   "nav.add": "Add Property",
 
-  // Hero
-  "hero.tagline": "Your land, understood.",
-  "hero.sub": "The bioregional platform that gives landowners a living digital profile of their property.",
-  "hero.text": "Combine what you know about your land with publicly available data \u2014 soil, weather, fire risk, bioregion context \u2014 all in one place.",
-  "hero.cta.add": "Add Your Property",
-  "hero.cta.browse": "Browse Directory",
-
-  // Features
-  "features.label": "What is lllibrary?",
-  "features.title": "A living profile for every piece of land",
-  "features.desc": "lllibrary combines landowner knowledge with open data to create a Land Passport \u2014 a shareable, evolving portrait of any property.",
-  "feat.onboard.title": "Guided Onboarding",
-  "feat.onboard.desc": "A step-by-step intake walks you through contributing your property data \u2014 land use, soil, water, ecology, challenges and goals.",
-  "feat.data.title": "Open Data Layer",
-  "feat.data.desc": "For each property location, we auto-aggregate weather, soil type, bioregion classification, fire risk, elevation and more from public sources.",
-  "feat.passport.title": "Land Passport",
-  "feat.passport.desc": "Each property gets a single, shareable page that displays owner-contributed data alongside auto-aggregated open data and seasonal guidance.",
-
-  // How it works
-  "how.title": "How it works",
-  "how.s1.title": "Tell us about your land",
-  "how.s1.desc": "Walk through a guided intake that captures your property\u2019s story \u2014 from soil to species.",
-  "how.s2.title": "We enrich it with useful data",
-  "how.s2.desc": "We pull in satellite imagery, weather data, soil surveys, and bioregion classification \u2014 automatically.",
-  "how.s3.title": "Get your Land Passport",
-  "how.s3.desc": "A living profile page that combines your knowledge with public data into one shareable document.",
-
-  // CTA
-  "cta.title": "Ready to map your land?",
-  "cta.desc": "No account needed. Contribute your property data and get your Land Passport in minutes.",
-  "cta.add": "Add Your Property",
-  "cta.browse": "Browse Directory",
-
   // Footer
-  "footer.tagline": "Your land, understood.",
+  "footer.tagline": "Know your land. Know your neighbors.",
+
+  // Homepage — Hero
+  "hero.tagline": "Know your land.<br>Know your neighbors.",
+  "hero.sub": "A bioregional platform for Odemira, Portugal \u2014 free public wiki, private land reports.",
+  "hero.text": "Everything you need to become a good neighbor quickly. The land, the water, the weather, the species, the people, the history, the rules \u2014 all in one place. Plus a private data vault for your own parcel.",
+  "hero.cta.wiki": "Explore the Wiki",
+  "hero.cta.create": "Create Your Landbook",
+
+  // Homepage — Products
+  "products.label": "Two products, one platform",
+  "products.title": "Public knowledge. Private land reports.",
+  "products.desc": "Libraries combines a free bioregional wiki with a paid private land passport. The wiki is for everyone \u2014 the landbook is yours alone.",
+  "products.wiki.type": "Free & Public",
+  "products.wiki.title": "Bioregional Wiki",
+  "products.wiki.desc": "If you were to move to Odemira, what\u2019s all the information you\u2019d need to become a good neighbor quickly? That\u2019s the wiki. Short, scannable articles about everything from soil types to local festivals \u2014 with a chat interface so you can just ask questions.",
+  "products.wiki.li1": "The Land \u2014 geology, boundaries, elevation",
+  "products.wiki.li2": "The Water \u2014 rivers, springs, water quality",
+  "products.wiki.li3": "The Weather \u2014 climate, fire risk, growing seasons",
+  "products.wiki.li4": "What Lives Here \u2014 biodiversity, species lists",
+  "products.wiki.li5": "What Grows Here \u2014 agriculture, land use",
+  "products.wiki.li6": "Who\u2019s Here \u2014 communities, experts",
+  "products.wiki.li7": "The Story \u2014 history, culture, festivals",
+  "products.wiki.li8": "The Rules \u2014 zoning, planning, protected areas",
+  "products.wiki.cta": "Explore the Wiki",
+  "products.landbook.type": "Private & Paid",
+  "products.landbook.title": "Landbook",
+  "products.landbook.desc": "A private data vault for your specific land parcel. Draw your boundary on the map and we\u2019ll generate a comprehensive report \u2014 soil type, elevation, fire risk, species likely present, zoning, seasonal guidance. Then add your own knowledge on top.",
+  "products.landbook.li1": "Draw your boundary \u2014 we calculate area & perimeter",
+  "products.landbook.li2": "Auto-generated report from EU open data",
+  "products.landbook.li3": "Soil, weather, elevation, biodiversity",
+  "products.landbook.li4": "Fire risk, drought risk, flood risk",
+  "products.landbook.li5": "Zoning and protected area overlays",
+  "products.landbook.li6": "Add your own data \u2014 challenges, goals",
+  "products.landbook.li7": "Optional title deed upload (secure)",
+  "products.landbook.li8": "Seasonal growing calendar",
+  "products.landbook.cta": "Create Your Landbook",
+
+  // Homepage — How it works
+  "how.title": "How the Landbook works",
+  "how.s1.title": "Find your land on the map",
+  "how.s1.desc": "Search for your location and draw an estimated boundary around your parcel. That\u2019s all we need to start.",
+  "how.s2.title": "We show you the data first",
+  "how.s2.desc": "We pull soil, weather, elevation, biodiversity, fire risk, and zoning data from EU open sources \u2014 automatically.",
+  "how.s3.title": "Then you add what you know",
+  "how.s3.desc": "What do you use the land for? What are your challenges and goals? What have you figured out that might help the neighbors?",
+  "how.cta": "Create Your Landbook",
+
+  // Homepage — Data sources
+  "data.label": "Powered by open data",
+  "data.title": "Real data from real sources",
+  "data.desc": "Every data point comes from verified EU and Portuguese open data sources \u2014 satellite imagery, soil surveys, weather stations, biodiversity databases.",
+  "data.weather.title": "Open-Meteo",
+  "data.weather.desc": "Weather forecasts, historical climate data, temperature, rainfall, wind \u2014 from global weather models and nearby stations.",
+  "data.bio.title": "GBIF + iNaturalist",
+  "data.bio.desc": "Species occurrence data from the world\u2019s largest biodiversity databases. Know what lives near you.",
+  "data.soil.title": "SoilGrids + Copernicus",
+  "data.soil.desc": "Soil type, organic carbon, land cover, and satellite data from ISRIC and EU Copernicus services.",
+
+  // Homepage — CTA
+  "cta.title": "Start with the wiki. It\u2019s free.",
+  "cta.desc": "Browse what we know about Odemira. Ask the chat anything. Then decide if you want a private landbook.",
+  "cta.wiki": "Explore Odemira Wiki",
+  "cta.chat": "Ask a Question",
+
+  // Chat page
+  "chat.title": "Ask about Odemira",
+  "chat.desc": "Ask anything about the region \u2014 land, water, weather, biodiversity, agriculture, community, history, or governance.",
+  "chat.placeholder": "Ask about Odemira...",
+  "chat.send": "Send",
+
+  // Create page
+  "create.label": "Private Land Passport",
+  "create.title": "Create Your Landbook",
+  "create.desc": "Search for your location, then click on the map to draw your land boundary. We\u2019ll calculate the area and generate your report.",
+  "create.search": "Search location...",
+  "create.go": "Go",
+  "create.instructions": "Click on the map to start drawing your land boundary",
+  "create.undo": "Undo",
+  "create.clear": "Clear",
+  "create.close": "Close Boundary",
+  "create.points": "Points",
+  "create.area": "Area",
+  "create.perimeter": "Perimeter",
+  "create.center": "Center",
+  "create.address": "Address",
+  "create.deed": "Upload title deed (optional)",
+  "create.deed.hint": "PDF, JPG, or PNG \u2014 marked as \u201Cpending\u201D until verified",
+  "create.submit": "Generate Landbook",
+  "create.privacy": "Your data is stored locally and stays private.",
+
+  // Landbook page
+  "landbook.loading": "Loading your landbook...",
 
   // Onboarding steps
   "onboard.s1.title": "Property basics",
@@ -116,7 +178,7 @@ export const en = {
 
   "onboard.nav.back": "Back",
   "onboard.nav.next": "Continue",
-  "onboard.nav.submit": "Create Land Passport",
+  "onboard.nav.submit": "Create Landbook",
 
   // Review labels
   "review.basics": "Property basics",
@@ -126,7 +188,7 @@ export const en = {
   "review.ecology": "Ecology & fire",
   "review.challenges_goals": "Challenges & goals",
 
-  // Passport
+  // Passport / Landbook display
   "passport.owner": "Owner",
   "passport.location": "Location",
   "passport.area": "Area",
@@ -147,17 +209,17 @@ export const en = {
   "passport.elevation": "Elevation",
   "passport.bioregion": "Bioregion",
   "passport.seasonal": "Seasonal guidance",
-  "passport.share": "Share this Passport",
+  "passport.share": "Share this Landbook",
   "passport.notfound": "Property not found",
-  "passport.notfound.desc": "This Land Passport doesn\u2019t exist or may have been removed.",
+  "passport.notfound.desc": "This Landbook doesn\u2019t exist or may have been removed.",
 
   // Directory
-  "dir.title": "Land Passport Directory",
-  "dir.desc": "Browse all contributed properties and their Land Passports.",
+  "dir.title": "Landbook Directory",
+  "dir.desc": "Browse all contributed properties and their Landbooks.",
   "dir.search": "Search properties...",
   "dir.list": "List",
   "dir.map": "Map",
   "dir.empty.title": "No properties yet",
-  "dir.empty.desc": "Be the first to create a Land Passport and start building the knowledge base.",
+  "dir.empty.desc": "Be the first to create a Landbook and start building the knowledge base.",
   "dir.empty.cta": "Add Your Property",
 };
