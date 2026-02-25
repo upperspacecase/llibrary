@@ -21,7 +21,7 @@ export async function getAdminUnit(lat, lng) {
 
     try {
         const res = await fetch(
-            `${OGC_BASE}/collections/caop-freguesias/items?bbox=${bbox}&limit=1&f=json`
+            `${OGC_BASE}/collections/freguesias/items?bbox=${bbox}&limit=1&f=json`
         );
         if (!res.ok) throw new Error(`DGT CAOP error: ${res.status}`);
         const data = await res.json();
@@ -29,11 +29,13 @@ export async function getAdminUnit(lat, lng) {
         if (data.features && data.features.length > 0) {
             const props = data.features[0].properties || {};
             return {
-                parish: props.Freguesia || props.freguesia || props.DTMNFR || null,
-                municipality: props.Municipio || props.municipio || props.Concelho || null,
-                district: props.Distrito || props.distrito || null,
-                dicofre: props.DICOFRE || props.dicofre || null,
-                area: props.Area_Ha || null,
+                parish: props.freguesia || props.designacao_simplificada || null,
+                municipality: props.municipio || null,
+                district: props.distrito_ilha || null,
+                nuts3: props.nuts3 || null,
+                nuts2: props.nuts2 || null,
+                dicofre: props.dtmnfr || null,
+                area: props.area_ha || null,
             };
         }
     } catch (err) {
@@ -45,7 +47,7 @@ export async function getAdminUnit(lat, lng) {
         const delta2 = 0.01;
         const bbox2 = `${lng - delta2},${lat - delta2},${lng + delta2},${lat + delta2}`;
         const res = await fetch(
-            `${OGC_BASE}/collections/caop-municipios/items?bbox=${bbox2}&limit=1&f=json`
+            `${OGC_BASE}/collections/municipios/items?bbox=${bbox2}&limit=1&f=json`
         );
         if (!res.ok) return null;
         const data = await res.json();
@@ -54,10 +56,12 @@ export async function getAdminUnit(lat, lng) {
             const props = data.features[0].properties || {};
             return {
                 parish: null,
-                municipality: props.Municipio || props.municipio || props.Concelho || null,
-                district: props.Distrito || props.distrito || null,
+                municipality: props.municipio || null,
+                district: props.distrito_ilha || null,
+                nuts3: props.nuts3 || null,
+                nuts2: props.nuts2 || null,
                 dicofre: null,
-                area: props.Area_Ha || null,
+                area: props.area_ha || null,
             };
         }
     } catch (err) {

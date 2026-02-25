@@ -17,14 +17,18 @@ const BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
  * @returns {Promise<Object[]>} Array of fire detections
  */
 export async function getActiveFires(bbox, days = 2) {
+    const key = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIRMS_KEY) || '';
+    if (!key) {
+        console.warn('NASA FIRMS: No MAP_KEY set (VITE_FIRMS_KEY). Skipping fire detections.');
+        return [];
+    }
+
     const [south, west, north, east] = bbox;
-    // Use the open NRT endpoint (no key, limited to recent data)
-    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/VIIRS_SNPP_NRT/${west},${south},${east},${north}/${days}`;
+    const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/VIIRS_SNPP_NRT/${west},${south},${east},${north}/${days}`;
 
     const res = await fetch(url);
     if (!res.ok) {
-        // Fallback: FIRMS may require MAP_KEY — return empty
-        console.warn(`NASA FIRMS returned ${res.status}. Register for MAP_KEY for production use.`);
+        console.warn(`NASA FIRMS returned ${res.status}.`);
         return [];
     }
 

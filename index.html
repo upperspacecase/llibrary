@@ -18,10 +18,13 @@
     <a href="/" class="logo">
       <img src="/logo.svg" alt="LandLibrary" class="logo-img">
     </a>
+    <button class="mobile-menu-btn" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="header-nav">
-      <a href="#landbook">LandBook</a>
-      <a href="/wiki">The Commons</a>
-      <a href="#pricing">Pricing</a>
+      <a href="#landbook" data-i18n="nav.landbook">LandBook</a>
+      <a href="/wiki" data-i18n="nav.commons">The Commons</a>
+      <a href="#pricing" data-i18n="nav.pricing">Pricing</a>
       <div class="lang-toggle">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="pt">PT</button>
@@ -36,12 +39,13 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1 class="hero-tagline">Your land is worth more<br>than you know.</h1>
-      <p class="hero-sub">LandLibrary analyzes market trends, regional dynamics, and environmental data from over 45
+      <h1 class="hero-tagline" data-i18n-html="landing.hero.tagline">Your land is worth more<br>than you know.</h1>
+      <p class="hero-sub" data-i18n="landing.hero.sub">LandLibrary analyzes market trends, regional dynamics, and
+        environmental data from over 45
         verified sources — giving you an accurate view of your land's value.</p>
       <div class="hero-actions">
-        <a href="#landbook" class="btn-pill-primary">Discover My Land's Value</a>
-        <a href="/wiki" class="btn-pill-outline">Explore the Commons</a>
+        <a href="#landbook" class="btn-pill-primary" data-i18n="landing.hero.cta.primary">Discover My Land's Value</a>
+        <a href="/wiki" class="btn-pill-outline" data-i18n="landing.hero.cta.secondary">Explore the Commons</a>
       </div>
       <div class="hero-scroll-hint">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -56,17 +60,21 @@
   <section class="products" id="products">
     <div class="products-grid">
       <div class="product-card">
-        <div class="product-type">Individual Assessment</div>
-        <h3>LandBook</h3>
-        <p class="product-tagline">Reveal your land's potential. Individual assessment with regional context. 25 layers
+        <div class="product-type" data-i18n="landing.products.type.individual">Individual Assessment</div>
+        <h3 data-i18n="landing.products.landbook.title">LandBook</h3>
+        <p class="product-tagline" data-i18n="landing.products.landbook.desc">Reveal your land's potential. Individual
+          assessment with regional context. 25 layers
           of knowledge.</p>
-        <a href="#landbook" class="btn-pill-primary btn-small-pill">Get Your LandBook</a>
+        <a href="#landbook" class="btn-pill-primary btn-small-pill" data-i18n="landing.products.landbook.cta">Get Your
+          LandBook</a>
       </div>
       <div class="product-card">
-        <div class="product-type">Open to All</div>
-        <h3>The Commons</h3>
-        <p class="product-tagline">Bio-regional knowledge. Community-contributed, continuously improved.</p>
-        <a href="/wiki" class="btn-pill-outline btn-small-pill dark">Explore</a>
+        <div class="product-type" data-i18n="landing.products.type.open">Open to All</div>
+        <h3 data-i18n="landing.products.commons.title">The Commons</h3>
+        <p class="product-tagline" data-i18n="landing.products.commons.desc">Bio-regional knowledge.
+          Community-contributed, continuously improved.</p>
+        <a href="/wiki" class="btn-pill-outline btn-small-pill dark"
+          data-i18n="landing.products.commons.cta">Explore</a>
       </div>
     </div>
   </section>
@@ -74,9 +82,10 @@
   <!-- ===== LANDBOOK SECTION ===== -->
   <section class="landbook-section" id="landbook">
     <div class="container">
-      <div class="section-label">LandBook</div>
-      <h2>Complete land intelligence. One report.</h2>
-      <p class="section-desc">We process terabytes of data about soils, water, climate, crops, taxes, interest rates,
+      <div class="section-label" data-i18n="landing.lb.label">LandBook</div>
+      <h2 data-i18n="landing.lb.title">Complete land intelligence. One report.</h2>
+      <p class="section-desc" data-i18n="landing.lb.desc">We process terabytes of data about soils, water, climate,
+        crops, taxes, interest rates,
         and market prices to calculate the estimated value. Satellite to soil to AI. Twenty-five categories. Delivered
         in 48 hours.</p>
 
@@ -84,58 +93,58 @@
       <div class="process-steps">
         <div class="process-step">
           <div class="step-num">01</div>
-          <h3>Upload</h3>
-          <p>Land deed or coordinates</p>
+          <h3 data-i18n="landing.lb.step1.title">Upload</h3>
+          <p data-i18n="landing.lb.step1.desc">Land deed or coordinates</p>
         </div>
         <div class="process-step">
           <div class="step-num">02</div>
-          <h3>Analyze</h3>
-          <p>Assessment from space and soil databases</p>
+          <h3 data-i18n="landing.lb.step2.title">Analyze</h3>
+          <p data-i18n="landing.lb.step2.desc">Assessment from space and soil databases</p>
         </div>
         <div class="process-step">
           <div class="step-num">03</div>
-          <h3>Receive</h3>
-          <p>Comprehensive LandBook (PDF + digital record)</p>
+          <h3 data-i18n="landing.lb.step3.title">Receive</h3>
+          <p data-i18n="landing.lb.step3.desc">Comprehensive LandBook (PDF + digital record)</p>
         </div>
       </div>
 
       <!-- Includes -->
       <div class="includes-grid">
         <div class="include-card">
-          <h4>Profile</h4>
-          <p>Location, parcel, zoning. Soil health, water rights.</p>
+          <h4 data-i18n="landing.lb.inc.profile">Profile</h4>
+          <p data-i18n="landing.lb.inc.profile.desc">Location, parcel, zoning. Soil health, water rights.</p>
         </div>
         <div class="include-card">
-          <h4>Valuations</h4>
-          <p>Land, infrastructure, carbon, soil, water, biodiversity.</p>
+          <h4 data-i18n="landing.lb.inc.valuations">Valuations</h4>
+          <p data-i18n="landing.lb.inc.valuations.desc">Land, infrastructure, carbon, soil, water, biodiversity.</p>
         </div>
         <div class="include-card">
-          <h4>Comparables</h4>
-          <p>Regional sales, market positioning.</p>
+          <h4 data-i18n="landing.lb.inc.comparables">Comparables</h4>
+          <p data-i18n="landing.lb.inc.comparables.desc">Regional sales, market positioning.</p>
         </div>
         <div class="include-card">
-          <h4>Access</h4>
-          <p>Water, energy, education, infrastructure.</p>
+          <h4 data-i18n="landing.lb.inc.access">Access</h4>
+          <p data-i18n="landing.lb.inc.access.desc">Water, energy, education, infrastructure.</p>
         </div>
         <div class="include-card">
-          <h4>Risks</h4>
-          <p>Fire, flood, drought assessment.</p>
+          <h4 data-i18n="landing.lb.inc.risks">Risks</h4>
+          <p data-i18n="landing.lb.inc.risks.desc">Fire, flood, drought assessment.</p>
         </div>
       </div>
 
       <!-- Benefits -->
       <div class="benefits-row">
         <div class="benefit">
-          <h4>Transact</h4>
-          <p>Buyer confidence, faster closes, fair price.</p>
+          <h4 data-i18n="landing.lb.ben.transact">Transact</h4>
+          <p data-i18n="landing.lb.ben.transact.desc">Buyer confidence, faster closes, fair price.</p>
         </div>
         <div class="benefit">
-          <h4>Monetize</h4>
-          <p>Carbon credits, stewardship payments, new revenue.</p>
+          <h4 data-i18n="landing.lb.ben.monetize">Monetize</h4>
+          <p data-i18n="landing.lb.ben.monetize.desc">Carbon credits, stewardship payments, new revenue.</p>
         </div>
         <div class="benefit">
-          <h4>Manage</h4>
-          <p>Risk awareness, improvement tracking, compliance ready.</p>
+          <h4 data-i18n="landing.lb.ben.manage">Manage</h4>
+          <p data-i18n="landing.lb.ben.manage.desc">Risk awareness, improvement tracking, compliance ready.</p>
         </div>
       </div>
     </div>
@@ -144,31 +153,36 @@
   <!-- ===== PRICING ===== -->
   <section class="pricing-section" id="pricing">
     <div class="container">
-      <div class="section-label">Pricing</div>
-      <h2>Choose your depth</h2>
-      <p class="section-desc">LandBook pays for itself if it finds &euro;1,000 in hidden value. It typically finds
+      <div class="section-label" data-i18n="landing.pricing.label">Pricing</div>
+      <h2 data-i18n="landing.pricing.title">Choose your depth</h2>
+      <p class="section-desc" data-i18n="landing.pricing.desc">LandBook pays for itself if it finds &euro;1,000 in
+        hidden value. It typically finds
         &euro;15,000.</p>
 
       <div class="pricing-grid">
         <div class="pricing-card">
-          <div class="pricing-tier">Preview</div>
+          <div class="pricing-tier" data-i18n="landing.pricing.preview.tier">Preview</div>
           <div class="pricing-price">&euro;0</div>
-          <p class="pricing-desc">Value estimate. 3 pages. Instant.</p>
-          <a href="#" class="btn-pill-outline dark btn-small-pill" onclick="event.preventDefault();showComingSoon()">Get
+          <p class="pricing-desc" data-i18n="landing.pricing.preview.desc">Value estimate. 3 pages. Instant.</p>
+          <a href="#" class="btn-pill-outline dark btn-small-pill" data-i18n="landing.pricing.preview.cta"
+            onclick="event.preventDefault();showComingSoon()">Get
             Preview</a>
         </div>
         <div class="pricing-card featured">
-          <div class="pricing-tier">LandBook</div>
+          <div class="pricing-tier" data-i18n="landing.pricing.landbook.tier">LandBook</div>
           <div class="pricing-price">&euro;250</div>
-          <p class="pricing-desc">Full assessment. 25 pages. Permanent record.</p>
-          <a href="#" class="btn-pill-primary btn-small-pill" onclick="event.preventDefault();showComingSoon()">Order
+          <p class="pricing-desc" data-i18n="landing.pricing.landbook.desc">Full assessment. 25 pages. Permanent record.
+          </p>
+          <a href="#" class="btn-pill-primary btn-small-pill" data-i18n="landing.pricing.landbook.cta"
+            onclick="event.preventDefault();showComingSoon()">Order
             LandBook</a>
         </div>
         <div class="pricing-card">
-          <div class="pricing-tier">Steward</div>
+          <div class="pricing-tier" data-i18n="landing.pricing.steward.tier">Steward</div>
           <div class="pricing-price">&euro;29<span class="pricing-period">/month</span></div>
-          <p class="pricing-desc">Ongoing monitoring. Market alerts. Digital vault.</p>
-          <a href="#" class="btn-pill-outline dark btn-small-pill"
+          <p class="pricing-desc" data-i18n="landing.pricing.steward.desc">Ongoing monitoring. Market alerts. Digital
+            vault.</p>
+          <a href="#" class="btn-pill-outline dark btn-small-pill" data-i18n="landing.pricing.steward.cta"
             onclick="event.preventDefault();showComingSoon()">Start Steward</a>
         </div>
       </div>
@@ -182,17 +196,17 @@
         <a href="/" class="logo">
           <img src="/logo.svg" alt="LandLibrary" class="logo-img" style="filter:invert(1);">
         </a>
-        <div class="footer-tagline">Your land is worth more than you know.</div>
+        <div class="footer-tagline" data-i18n="footer.tagline">Your land is worth more than you know.</div>
       </div>
       <div class="footer-links">
-        <a href="/">Home</a>
-        <a href="/wiki">The Commons</a>
-        <a href="#landbook">LandBook</a>
-        <a href="#pricing">Pricing</a>
+        <a href="/" data-i18n="footer.home">Home</a>
+        <a href="/wiki" data-i18n="footer.commons">The Commons</a>
+        <a href="#landbook" data-i18n="footer.landbook">LandBook</a>
+        <a href="#pricing" data-i18n="footer.pricing">Pricing</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <div>LandLibrary</div>
+      <div data-i18n="footer.brand">LandLibrary</div>
       <div>EN / PT</div>
     </div>
   </footer>
