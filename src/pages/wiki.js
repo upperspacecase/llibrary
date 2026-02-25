@@ -356,14 +356,14 @@ function renderSection(sectionId) {
 async function initSectionMap(sectionId, map) {
   try {
     switch (sectionId) {
-      case 'land': await initLandMap(map); break;
-      case 'water': await initWaterMap(map); break;
-      case 'weather': initWeatherMap(map); break;
-      case 'biodiversity': initBiodiversityMap(map); break;
-      case 'agriculture': initAgricultureMap(map); break;
+      case 'bioregion': await initLandMap(map); break;
+      case 'ecology': initBiodiversityMap(map); break;
+      case 'landuse': initAgricultureMap(map); break;
+      case 'cultural': await initHistoryMap(map); break;
+      case 'intelligence': initGovernanceMap(map); break;
+      case 'planning': initGovernanceMap(map); break;
+      case 'threats': await initWaterMap(map); break;
       case 'community': await initCommunityMap(map); break;
-      case 'history': await initHistoryMap(map); break;
-      case 'governance': initGovernanceMap(map); break;
     }
   } catch (err) {
     console.error(`Map init error [${sectionId}]:`, err);
@@ -515,14 +515,14 @@ async function loadSectionData(sectionId) {
 
   try {
     switch (sectionId) {
-      case 'land': await loadLandData(container); break;
-      case 'water': await loadWaterData(container); break;
-      case 'weather': await loadWeatherData(container); break;
-      case 'biodiversity': await loadBiodiversityData(container); break;
-      case 'agriculture': loadAgricultureData(container); break;
+      case 'bioregion': await loadLandData(container); await loadWeatherData(container); break;
+      case 'ecology': await loadBiodiversityData(container); break;
+      case 'landuse': loadAgricultureData(container); break;
+      case 'cultural': await loadHistoryData(container); break;
+      case 'intelligence': loadGovernanceData(container); break;
+      case 'planning': loadGovernanceData(container); break;
+      case 'threats': await loadWaterData(container); break;
       case 'community': await loadCommunityData(container); break;
-      case 'history': await loadHistoryData(container); break;
-      case 'governance': loadGovernanceData(container); break;
       default:
         container.innerHTML = '<h2>Live Data</h2><p>No live data available for this section.</p>';
     }
