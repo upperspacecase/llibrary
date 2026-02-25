@@ -287,19 +287,65 @@ function renderSection(sectionId) {
       `).join('')}
     </section>
 
+    <!-- Community Contributions -->
+    <section class="wiki-contributions" id="wiki-contributions">
+      <h2>Community Contributions</h2>
+      <p class="wiki-contributions-desc">Knowledge shared by the community. Have something to add? Use the form below.</p>
+      <div class="wiki-contributions-list" id="contributions-list">
+        <div class="loading-block"><span class="loading-spinner"></span> Loading contributions...</div>
+      </div>
+    </section>
+
+    <!-- Contribute Form -->
+    <section class="wiki-contribute-form" id="wiki-contribute-form">
+      <h2>Share Your Knowledge</h2>
+      <p class="wiki-contribute-desc">Help build the wiki. Share a story, tip, event, place, or resource about this topic.</p>
+      <form id="contribution-form" data-section="${sectionId}">
+        <div class="field-row">
+          <div class="field">
+            <label for="contrib-type">Type</label>
+            <select id="contrib-type" name="type" required>
+              <option value="">Select type...</option>
+              <option value="story">Story / Experience</option>
+              <option value="tip">Practical Tip</option>
+              <option value="event">Event / Gathering</option>
+              <option value="place">Place / Location</option>
+              <option value="resource">Resource / Link</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="contrib-author">Your Name (optional)</label>
+            <input type="text" id="contrib-author" name="author" placeholder="Anonymous">
+          </div>
+        </div>
+        <div class="field">
+          <label for="contrib-title">Title</label>
+          <input type="text" id="contrib-title" name="title" placeholder="A short title for your contribution" required>
+        </div>
+        <div class="field">
+          <label for="contrib-content">Content</label>
+          <textarea id="contrib-content" name="content" rows="5" placeholder="Share what you know..." required></textarea>
+        </div>
+        <button type="submit" class="btn-primary" id="submit-contribution">Submit Contribution</button>
+        <div id="contrib-feedback" style="margin-top:12px;font-size:14px;"></div>
+      </form>
+    </section>
+
     <section class="wiki-data-section" id="wiki-data-section">
       <h2>Live Data</h2>
       ${loadingSkeleton(6)}
     </section>
   `;
 
-  // Initialise map and live data after DOM insertion
+  // Initialise map, live data, and contributions after DOM insertion
   setTimeout(() => {
     currentMap = createBaseMap('wiki-section-map');
     currentMap.on('load', () => {
       initSectionMap(sectionId, currentMap);
     });
     loadSectionData(sectionId);
+    loadContributions(sectionId);
+    setupContributionForm(sectionId);
   }, 0);
 }
 
@@ -869,6 +915,122 @@ function loadGovernanceData(container) {
       </div>
     </div>
   `;
+}
+
+// ---------------------------------------------------------------------------
+// Community Contributions
+// ---------------------------------------------------------------------------
+
+const CONTRIBUTION_TYPE_LABELS = {
+  story: { label: 'Story', color: '#8B4789' },
+  tip: { label: 'Tip', color: '#2E8B57' },
+  event: { label: 'Event', color: '#E8A317' },
+  place: { label: 'Place', color: '#2B7BB9' },
+  resource: { label: 'Resource', color: '#4A708B' },
+};
+
+async function loadContributions(sectionId) {
+  const listEl = document.getElementById('contributions-list');
+  if (!listEl) return;
+
+  try {
+    const res = await fetch(`/api/wiki/contributions?section=${sectionId}`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    const contributions = await res.json();
+
+    if (contributions.length === 0) {
+      listEl.innerHTML = `
+        <div class="wiki-contributions-empty">
+          <p>No community contributions yet for this section. Be the first to share!</p>
+        </div>`;
+      return;
+    }
+
+    listEl.innerHTML = contributions.map(c => {
+      const typeInfo = CONTRIBUTION_TYPE_LABELS[c.type] || { label: c.type, color: '#999' };
+      const date = new Date(c.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `
+        <div class="wiki-contribution-card">
+          <div class="wiki-contribution-header">
+            <span class="wiki-contribution-badge" style="background:${typeInfo.color};">${typeInfo.label}</span>
+            <span class="wiki-contribution-meta">${c.author || 'Anonymous'} &middot; ${date}</span>
+          </div>
+          ${c.title ? `<h3 class="wiki-contribution-title">${c.title}</h3>` : ''}
+          <p class="wiki-contribution-content">${c.content}</p>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    console.error('Failed to load contributions:', err);
+    listEl.innerHTML = `
+      <div class="wiki-contributions-empty">
+        <p>Unable to load contributions. They will appear once connected to the server.</p>
+      </div>`;
+  }
+}
+
+function setupContributionForm(sectionId) {
+  const form = document.getElementById('contribution-form');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const btn = document.getElementById('submit-contribution');
+    const feedback = document.getElementById('contrib-feedback');
+    const type = form.querySelector('[name="type"]').value;
+    const author = form.querySelector('[name="author"]').value.trim();
+    const title = form.querySelector('[name="title"]').value.trim();
+    const content = form.querySelector('[name="content"]').value.trim();
+
+    if (!type || !content) {
+      if (feedback) feedback.innerHTML = '<span style="color:var(--coral);">Please select a type and write some content.</span>';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting\u2026';
+
+    try {
+      const res = await fetch('/api/wiki/contributions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          section: sectionId,
+          type,
+          title,
+          content,
+          author: author || 'Anonymous',
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to submit');
+      }
+
+      // Reset form
+      form.reset();
+      if (feedback) {
+        feedback.innerHTML = '<span style="color:var(--green);font-weight:600;">Thank you! Your contribution has been added.</span>';
+        setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+      }
+
+      // Refresh contributions list
+      await loadContributions(sectionId);
+
+      // Scroll to contributions section
+      const contribSection = document.getElementById('wiki-contributions');
+      if (contribSection) contribSection.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      console.error('Submit failed:', err);
+      if (feedback) {
+        feedback.innerHTML = `<span style="color:var(--coral);">Failed to submit: ${err.message}. Please try again.</span>`;
+      }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Submit Contribution';
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------

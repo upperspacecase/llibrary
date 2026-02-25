@@ -26,13 +26,24 @@
     </div>
   </header>
 
-  <div class="page-body">
-    <div class="landbook-container" id="landbook-content">
+  <div class="landbook-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="landbook-sidebar" id="landbook-sidebar">
+      <nav class="landbook-nav" id="landbook-nav">
+        <!-- JS populates -->
+      </nav>
+      <div class="landbook-sidebar-actions" id="landbook-sidebar-actions">
+        <!-- Share + Export buttons populated by JS -->
+      </div>
+    </aside>
+
+    <!-- Main Report Content -->
+    <main class="landbook-main" id="landbook-content">
       <div class="loading-block">
         <div class="loading-spinner"></div>
         <span data-i18n="landbook.loading">Loading your landbook...</span>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>

@@ -1458,13 +1458,200 @@ a {
   border-color: var(--green);
 }
 
-/* ========================================
-   LANDBOOK REPORT
-   ======================================== */
+/* ---- LANDBOOK LAYOUT (SIDEBAR + CONTENT) ---- */
+.landbook-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 72px);
+}
+
+.landbook-sidebar {
+  position: sticky;
+  top: 72px;
+  height: calc(100vh - 72px);
+  border-right: 1px solid var(--border);
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.landbook-nav {
+  flex: 1;
+  padding: 0 20px;
+}
+
+.landbook-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: all 0.2s;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+
+.landbook-nav-link:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--black);
+}
+
+.landbook-nav-link.active {
+  background: var(--green);
+  color: var(--black);
+  font-weight: 600;
+}
+
+.landbook-nav-link .nav-icon {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.landbook-nav-link .nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.landbook-nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 20px;
+}
+
+.landbook-sidebar-actions {
+  padding: 16px 20px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.landbook-sidebar-actions .btn-sidebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--black);
+  transition: all 0.2s;
+}
+
+.landbook-sidebar-actions .btn-sidebar:hover {
+  border-color: var(--green);
+  background: rgba(127, 205, 128, 0.08);
+}
+
+.landbook-sidebar-actions .btn-sidebar .btn-icon {
+  font-size: 16px;
+}
+
+/* Main content */
+.landbook-main {
+  max-width: 900px;
+  padding: 0 40px 100px;
+}
+
 .landbook-container {
   max-width: 900px;
   margin: 0 auto;
   padding: 0 40px 100px;
+}
+
+/* Section pagination */
+.section-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.section-pagination .btn-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--pill);
+  background: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.section-pagination .btn-page:hover {
+  border-color: var(--green);
+  background: rgba(127, 205, 128, 0.08);
+}
+
+.section-pagination .btn-page.hidden {
+  visibility: hidden;
+}
+
+.section-pagination .page-indicator {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* Mobile: collapse sidebar */
+@media (max-width: 900px) {
+  .landbook-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .landbook-sidebar {
+    position: relative;
+    top: initial;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
+  }
+
+  .landbook-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 0 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .landbook-nav-link {
+    white-space: nowrap;
+    padding: 8px 12px;
+  }
+
+  .landbook-nav-divider {
+    display: none;
+  }
+
+  .landbook-sidebar-actions {
+    flex-direction: row;
+    padding: 12px 16px 0;
+    border-top: none;
+  }
+
+  .landbook-main {
+    padding: 0 20px 80px;
+  }
 }
 
 .landbook-header {
@@ -2168,4 +2355,113 @@ a {
   .landbook-container {
     padding: 0 20px 60px;
   }
+}
+
+/* ========================================
+   WIKI COMMUNITY CONTRIBUTIONS
+   ======================================== */
+.wiki-contributions {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 2px solid var(--border);
+}
+
+.wiki-contributions h2 {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.wiki-contributions-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.wiki-contributions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wiki-contributions-empty {
+  padding: 32px;
+  text-align: center;
+  background: var(--white);
+  border: 1.5px dashed var(--card-border);
+  border-radius: var(--radius-lg);
+}
+
+.wiki-contributions-empty p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.wiki-contribution-card {
+  background: var(--white);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  transition: border-color 0.2s;
+}
+
+.wiki-contribution-card:hover {
+  border-color: var(--green);
+}
+
+.wiki-contribution-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.wiki-contribution-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: var(--pill);
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wiki-contribution-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.wiki-contribution-title {
+  font-size: 16px;
+  margin-bottom: 6px;
+  margin-top: 0;
+}
+
+.wiki-contribution-content {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #333;
+  margin: 0;
+}
+
+/* Contribute form section */
+.wiki-contribute-form {
+  margin-top: 40px;
+  padding: 32px;
+  background: rgba(127, 205, 128, 0.06);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-lg);
+}
+
+.wiki-contribute-form h2 {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.wiki-contribute-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
 }
