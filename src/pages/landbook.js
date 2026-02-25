@@ -13,11 +13,18 @@ import { formatArea, formatDistance, polygonBounds, expandBounds, sqmToHectares 
 
 import { getForecast, getClimateAverages, getElevation, getWeatherDescription, estimateFrostDates } from '../api/open-meteo.js';
 import { getSoilProperties, getSoilClassification, parseSoilProperties, parseSoilClassification, getSoilDescription } from '../api/soilgrids.js';
-import { getWaterFeatures, extractNodes, extractWays } from '../api/overpass.js';
+import { getWaterFeatures, getInfrastructure, extractNodes, extractWays } from '../api/overpass.js';
 import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '../api/inaturalist.js';
+import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
 import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams } from '../api/copernicus.js';
 import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk, ODEMIRA_FIRE_HISTORY } from '../api/effis.js';
 import { NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES, PT_ZONING } from '../api/natura2000.js';
+import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
+import { getForecast as getIpmaForecast, getDroughtIndex, interpretDrought, WEATHER_TYPES } from '../api/ipma.js';
+import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
+import { calculateDistances, categorizeAmenities } from '../api/openrouteservice.js';
+import { getGeology, parseGeology, getGeologyDescription } from '../api/macrostrat.js';
+import { getAdminUnit, formatAdminUnit } from '../api/dgt.js';
 
 initI18n();
 
@@ -224,6 +231,8 @@ function renderReport(lb) {
           ${perimeter ? `<span><strong>Perimeter</strong>: ${formatDistance(perimeter)}</span>` : ''}
           ${center ? `<span><strong>Center</strong>: ${center[0].toFixed(5)}, ${center[1].toFixed(5)}</span>` : ''}
         </div>
+        <div id="data-admin" class="data-sub-section"></div>
+        <div id="data-infrastructure" class="data-sub-section"></div>
       </div>
       ${pagination(0)}
     </div>
@@ -242,6 +251,7 @@ function renderReport(lb) {
     <div class="landbook-section" id="section-elevation">
       <h2>Elevation &amp; Terrain</h2>
       ${skeleton('data-elevation')}
+      <div id="data-geology" class="data-sub-section"></div>
       ${pagination(2)}
     </div>
 
@@ -256,6 +266,7 @@ function renderReport(lb) {
     <div class="landbook-section" id="section-water">
       <h2>Water Features</h2>
       ${skeleton('data-water')}
+      <div id="data-flood" class="data-sub-section"></div>
       ${pagination(4)}
     </div>
 
@@ -263,6 +274,8 @@ function renderReport(lb) {
     <div class="landbook-section" id="section-weather">
       <h2>Weather &amp; Climate</h2>
       ${skeleton('data-weather')}
+      <div id="data-ipma" class="data-sub-section"></div>
+      <div id="data-drought" class="data-sub-section"></div>
       ${pagination(5)}
     </div>
 
@@ -277,6 +290,7 @@ function renderReport(lb) {
     <div class="landbook-section" id="section-fire">
       <h2>Fire Risk</h2>
       ${skeleton('data-fire')}
+      <div id="data-active-fires" class="data-sub-section"></div>
       ${pagination(7)}
     </div>
 
@@ -387,6 +401,15 @@ function fetchAllData(lb, lat, lng, boundary) {
     { key: 'species', fn: () => getSpeciesCounts(lat, lng, 5) },
     { key: 'threatened', fn: () => getThreatenedSpecies(lat, lng, 10) },
     { key: 'water', fn: () => bounds ? getWaterFeatures(bounds) : Promise.resolve(null) },
+    // Phase 5A: New data sources
+    { key: 'gbif', fn: () => getSpeciesOccurrences(lat, lng, 10) },
+    { key: 'activeFires', fn: () => getActiveFiresNearby(lat, lng, 50) },
+    { key: 'ipmaForecast', fn: () => getIpmaForecast().catch(() => null) },
+    { key: 'drought', fn: () => getDroughtIndex().catch(() => null) },
+    { key: 'flood', fn: () => getFloodForecastWithHistory(lat, lng) },
+    { key: 'infrastructure', fn: () => bounds ? getInfrastructure(bounds) : Promise.resolve(null) },
+    { key: 'geology', fn: () => getGeology(lat, lng) },
+    { key: 'admin', fn: () => getAdminUnit(lat, lng) },
   ];
 
   const results = {};
@@ -406,8 +429,16 @@ function renderDataSection(key, results, lat, lng) {
     case 'soilProps':
     case 'soilClass': renderSoil(results); break;
     case 'species':
-    case 'threatened': renderBiodiversity(results); break;
+    case 'threatened':
+    case 'gbif': renderBiodiversity(results); break;
     case 'water': renderWater(results); break;
+    case 'flood': renderFloodData(results); break;
+    case 'activeFires': renderActiveFires(results); break;
+    case 'ipmaForecast': renderIpmaForecast(results); break;
+    case 'drought': renderDrought(results); break;
+    case 'infrastructure': renderInfrastructure(results, lat, lng); break;
+    case 'geology': renderGeology(results); break;
+    case 'admin': renderAdminUnit(results); break;
   }
 }
 
@@ -692,6 +723,25 @@ function renderBiodiversity(results) {
       </div>`;
   }
 
+  // GBIF occurrences (if available)
+  const rg = results.gbif;
+  if (rg && rg.ok && rg.data) {
+    const gbifSummary = summarizeOccurrences(rg.data);
+    if (gbifSummary.total > 0) {
+      html += `<h3>GBIF Records (10 km)</h3>
+        <div class="auto-data-banner">
+          <span class="icon">\u{1F4CA}</span>
+          <span><strong>${gbifSummary.total.toLocaleString()}</strong> occurrence records in GBIF</span>
+        </div>`;
+      const kingdoms = Object.entries(gbifSummary.kingdoms).sort((a, b) => b[1] - a[1]);
+      if (kingdoms.length) {
+        html += `<div class="data-grid cols-3">
+          ${kingdoms.map(([k, c]) => dataCard(k, String(c), 'records')).join('')}
+        </div>`;
+      }
+    }
+  }
+
   el.innerHTML = html;
 }
 
@@ -753,6 +803,235 @@ function renderProtected() {
     </div>`;
 
   el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 5A: New renderer functions
+// ---------------------------------------------------------------------------
+
+function renderAdminUnit(results) {
+  const el = document.getElementById('data-admin');
+  if (!el) return;
+  const r = results.admin;
+  if (!r || !r.ok || !r.data) return;
+
+  const admin = formatAdminUnit(r.data);
+  if (!admin) return;
+
+  el.innerHTML = `<div class="admin-unit">${esc(admin.label)}, ${esc(admin.country)}</div>`;
+}
+
+function renderGeology(results) {
+  const el = document.getElementById('data-geology');
+  if (!el || el.dataset.rendered) return;
+  const r = results.geology;
+  if (!r) return;
+  el.dataset.rendered = 'true';
+
+  if (!r.ok || !r.data) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">Geology data unavailable.</p>';
+    return;
+  }
+
+  const geo = parseGeology(r.data);
+  if (!geo || !geo.primary) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">No geological data for this location.</p>';
+    return;
+  }
+
+  const p = geo.primary;
+  el.innerHTML = `
+    <h3>Geology</h3>
+    <div class="data-grid cols-3">
+      ${dataCard('Bedrock', p.lithology || 'Unknown', p.age || '')}
+      ${dataCard('Formation', p.name || 'Unnamed', p.period || '')}
+      ${dataCard('Environment', p.environment || 'Unknown', '')}
+    </div>
+    <p style="font-size:14px;line-height:1.65;color:#555;margin-top:12px;">${esc(getGeologyDescription(geo))}</p>
+    ${geo.count > 1 ? `<p style="font-size:13px;color:var(--muted);">${geo.count} geological units mapped at this point.</p>` : ''}
+  `;
+}
+
+function renderActiveFires(results) {
+  const el = document.getElementById('data-active-fires');
+  if (!el || el.dataset.rendered) return;
+  const r = results.activeFires;
+  if (!r) return;
+  el.dataset.rendered = 'true';
+
+  if (!r.ok) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">Active fire detection unavailable (NASA FIRMS).</p>';
+    return;
+  }
+
+  const fires = r.data || [];
+  const summary = summarizeFireDetections(fires);
+
+  if (summary.count === 0) {
+    el.innerHTML = `
+      <h3>Active Fire Detections</h3>
+      <div class="auto-data-banner" style="border-color:#00CC00;">
+        <span class="icon">\\u{2705}</span>
+        <span>No active fires detected within 50 km in the last 48 hours (NASA VIIRS)</span>
+      </div>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <h3>Active Fire Detections</h3>
+    <div class="auto-data-banner" style="border-color:#FF3300;background:rgba(255,51,0,0.05);">
+      <span class="icon">\\u{1F525}</span>
+      <span><strong>${summary.count} fire detection${summary.count > 1 ? 's' : ''}</strong> within 50 km (NASA VIIRS, last 48h)</span>
+    </div>
+    <div class="data-grid cols-3">
+      ${dataCard('High Confidence', String(summary.highConfidence), 'detections')}
+      ${dataCard('Max FRP', summary.maxFrp + ' MW', 'fire radiative power')}
+      ${dataCard('Dates', summary.dates.join(', '), '')}
+    </div>
+  `;
+}
+
+function renderIpmaForecast(results) {
+  const el = document.getElementById('data-ipma');
+  if (!el || el.dataset.rendered) return;
+  const r = results.ipmaForecast;
+  if (!r) return;
+  el.dataset.rendered = 'true';
+
+  if (!r.ok || !r.data || !Array.isArray(r.data) || r.data.length === 0) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">IPMA forecast unavailable.</p>';
+    return;
+  }
+
+  const days = r.data.slice(0, 5);
+  el.innerHTML = `
+    <h3>Portuguese Official Forecast (IPMA)</h3>
+    <div class="data-grid cols-5">
+      ${days.map(d => {
+    const weatherDesc = WEATHER_TYPES[d.idWeatherType] || 'Unknown';
+    return dataCard(
+      d.forecastDate ? d.forecastDate.split('T')[0] : '—',
+      `${d.tMin || '—'}° – ${d.tMax || '—'}°C`,
+      weatherDesc
+    );
+  }).join('')}
+    </div>
+  `;
+}
+
+function renderDrought(results) {
+  const el = document.getElementById('data-drought');
+  if (!el || el.dataset.rendered) return;
+  const r = results.drought;
+  if (!r) return;
+  el.dataset.rendered = 'true';
+
+  if (!r.ok || !r.data) {
+    return; // Silent fail — drought data is supplementary
+  }
+
+  // IPMA drought data varies in format; try to extract PDSI
+  let pdsi = null;
+  if (Array.isArray(r.data) && r.data.length > 0) {
+    const latest = r.data[r.data.length - 1];
+    pdsi = latest.value || latest.pdsi || latest.mpdsi;
+  } else if (typeof r.data === 'object') {
+    pdsi = r.data.value || r.data.pdsi;
+  }
+
+  if (pdsi == null) return;
+
+  const drought = interpretDrought(parseFloat(pdsi));
+  el.innerHTML = `
+    <h3>Drought Status (PDSI)</h3>
+    <div class="risk-grid">
+      <div class="risk-card" style="background:${drought.color}20;border:2px solid ${drought.color};">
+        <div class="risk-level" style="color:${drought.color};">${esc(drought.level)}</div>
+        <div class="risk-label">Palmer Drought Severity Index</div>
+        <div class="data-detail" style="margin-top:8px;">PDSI value: ${parseFloat(pdsi).toFixed(2)} — Source: IPMA</div>
+      </div>
+    </div>
+  `;
+}
+
+let _floodRendered = false;
+function renderFloodData(results) {
+  const el = document.getElementById('data-flood');
+  if (!el || _floodRendered) return;
+  const r = results.flood;
+  if (!r) return;
+  _floodRendered = true;
+
+  if (!r.ok || !r.data) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">Flood discharge data unavailable.</p>';
+    return;
+  }
+
+  const analysis = analyzeFloodRisk(r.data);
+  el.innerHTML = `
+    <h3>River Discharge (GloFAS)</h3>
+    <div class="data-grid cols-3">
+      ${dataCard('Current', analysis.current + ' m³/s', 'river discharge')}
+      ${dataCard('30-day Average', analysis.average + ' m³/s', '')}
+      ${dataCard('Status', analysis.level, `ratio: ${analysis.ratio}x average`)}
+    </div>
+  `;
+}
+
+function renderInfrastructure(results, lat, lng) {
+  const el = document.getElementById('data-infrastructure');
+  if (!el || el.dataset.rendered) return;
+  const r = results.infrastructure;
+  if (!r) return;
+  el.dataset.rendered = 'true';
+
+  if (!r.ok || !r.data) return;
+
+  const nodes = extractNodes(r.data);
+  if (nodes.length === 0) return;
+
+  const amenities = nodes.map(n => ({
+    lat: n.lat,
+    lng: n.lon,
+    name: n.tags?.name || n.tags?.amenity || n.tags?.shop || n.tags?.tourism || 'Unnamed',
+    type: n.tags?.amenity || n.tags?.shop || n.tags?.tourism || 'other',
+    tags: n.tags,
+  }));
+
+  const withDistances = calculateDistances([lat, lng], amenities);
+  const categories = categorizeAmenities(amenities);
+
+  // Show nearest in each category
+  const nearestByCategory = {};
+  withDistances.forEach(a => {
+    const cat = getCategoryKey(a);
+    if (!nearestByCategory[cat] || a.distanceKm < nearestByCategory[cat].distanceKm) {
+      nearestByCategory[cat] = a;
+    }
+  });
+
+  const items = Object.entries(nearestByCategory).slice(0, 6);
+  if (items.length === 0) return;
+
+  el.innerHTML = `
+    <h3 style="margin-top:16px;">Nearest Services</h3>
+    <div class="data-grid cols-3">
+      ${items.map(([cat, a]) =>
+    dataCard(esc(a.name), `${a.distanceKm.toFixed(1)} km`, cat)
+  ).join('')}
+    </div>
+  `;
+}
+
+function getCategoryKey(amenity) {
+  const type = amenity.type || '';
+  if (['hospital', 'pharmacy', 'doctors', 'clinic'].includes(type)) return 'Health';
+  if (['school', 'university', 'library'].includes(type)) return 'Education';
+  if (['supermarket', 'convenience'].includes(type)) return 'Shopping';
+  if (['post_office', 'bank', 'community_centre'].includes(type)) return 'Services';
+  if (['hotel', 'guest_house', 'camp_site'].includes(type)) return 'Tourism';
+  return 'Other';
 }
 
 // ---------------------------------------------------------------------------
