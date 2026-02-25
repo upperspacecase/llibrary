@@ -337,12 +337,11 @@ a {
   position: relative;
   z-index: 2;
   padding: 0 80px 80px;
-  max-width: 700px;
 }
 
 .hero-tagline {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(80px, 11vw, 136px);
+  font-size: clamp(64px, 8.8vw, 109px);
   line-height: 1.02;
   margin-bottom: 24px;
   color: var(--white);
