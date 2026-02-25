@@ -47,7 +47,7 @@
   </div>
 
   <script>
-    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><div class="coming-soon-icon">&#128172;</div><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
+    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
   </script>
   <script type="module" src="/src/pages/landbook.js"></script>
 </body>

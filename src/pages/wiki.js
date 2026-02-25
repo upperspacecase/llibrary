@@ -198,13 +198,11 @@ function renderSidebar(activeId) {
   sidebar.innerHTML = `
     <nav class="wiki-sidebar-nav">
       <a href="#hub" class="wiki-nav-link ${activeId === 'hub' ? 'active' : ''}">
-        <span class="wiki-nav-icon">&#127968;</span>
         <span class="wiki-nav-title">Wiki Hub</span>
       </a>
       <hr>
       ${sections.map(s => `
         <a href="#${s.id}" class="wiki-nav-link ${activeId === s.id ? 'active' : ''}">
-          <span class="wiki-nav-icon">${s.icon}</span>
           <span class="wiki-nav-title">${s.title}</span>
         </a>
       `).join('')}
@@ -235,7 +233,6 @@ function renderHub() {
     <div class="wiki-hub-grid">
       ${sections.map(s => `
         <a href="#${s.id}" class="wiki-hub-card" style="border-top: 4px solid ${s.color}">
-          <span class="wiki-hub-card-icon">${s.icon}</span>
           <h3>${s.title}</h3>
           <p>${s.subtitle}</p>
         </a>
@@ -269,8 +266,7 @@ function renderSection(sectionId) {
   if (!section) { renderHub(); return; }
 
   content.innerHTML = `
-    <section class="wiki-hero" style="border-left: 5px solid ${section.color}">
-      <div class="wiki-hero-icon">${section.icon}</div>
+    <section class="wiki-hero">
       <h1>${section.title}</h1>
       <p class="wiki-hero-subtitle">${section.subtitle}</p>
       <p class="wiki-intro">${section.intro}</p>

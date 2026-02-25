@@ -865,7 +865,6 @@ a {
   color: var(--black);
   opacity: 0.65;
   transition: all 0.2s;
-  border-left: 3px solid transparent;
 }
 
 .wiki-sidebar a:hover {
@@ -876,7 +875,6 @@ a {
 .wiki-sidebar a.active {
   opacity: 1;
   font-weight: 600;
-  border-left-color: var(--coral);
   background: rgba(0, 0, 0, 0.03);
 }
 
@@ -1396,7 +1394,7 @@ a {
   background: #e8e5d8;
 }
 
-.create-map-area>div {
+.create-map-area>div:first-child {
   width: 100%;
   height: 100%;
 }

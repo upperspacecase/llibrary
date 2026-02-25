@@ -22,7 +22,6 @@ export const SECTIONS = {
     id: 'bioregion',
     title: 'Bioregion Profile',
     subtitle: 'Boundaries, geography, climate & soils',
-    icon: '&#127758;',
     color: '#8B6914',
     intro: `Odemira municipality covers 1,720.6 km², making it the largest in Portugal by area. Ecologically, the bioregion is structured around the Mira River basin, from the Santa Clara dam to the estuary at Vila Nova de Milfontes. Much of the coastline falls within the Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), and the Natura 2000 site "Costa Sudoeste" (PTCON0012) protects 118,267 ha including 47 habitat types and 110 directive species.`,
     articles: [
@@ -50,7 +49,6 @@ export const SECTIONS = {
     id: 'ecology',
     title: 'Ecology',
     subtitle: 'Ecosystems, species & ecological dynamics',
-    icon: '&#127793;',
     color: '#2E8B57',
     intro: `Odemira's bioregion spans a particularly rich gradient of ecosystems, from coastal cliffs and dunes to montado woodlands and irrigated agricultural mosaics. The Natura 2000 site "Costa Sudoeste" includes 47 habitat types, and botanical inventories record about 750 plant species including at least 12 worldwide endemics. Marine biodiversity within PNSACV counts 1,889 recorded species.`,
     articles: [
@@ -78,7 +76,6 @@ export const SECTIONS = {
     id: 'landuse',
     title: 'Land Use',
     subtitle: 'Historical patterns, current use & pressures',
-    icon: '&#127806;',
     color: '#6B8E23',
     intro: `Odemira's agricultural story is one of dramatic transformation. Traditional dryland farming, montado and pastoralism dominated for centuries. The construction of the Mira irrigation scheme in the 1960s–70s was a turning point, and since the 2000s, greenhouse berry production has expanded rapidly — the area of covered crops almost tripled between 2013 and 2021, transforming the landscape, economy and demographics.`,
     articles: [
@@ -106,7 +103,6 @@ export const SECTIONS = {
     id: 'cultural',
     title: 'Cultural',
     subtitle: 'History, communities, traditions & knowledge',
-    icon: '&#128220;',
     color: '#B8860B',
     intro: `Odemira's human history mirrors broader southwest Iberian trajectories: prehistoric occupation, Roman settlement, medieval consolidation, and centuries of agrarian estates. The montado landscape is the product of centuries of human management. Since the 1990s–2000s, integration into EU agricultural markets has driven a shift toward export-oriented horticulture, reshaping demographic and social patterns — the 2021 census recorded 5,623 residents born in Asia & Oceania.`,
     articles: [
@@ -134,7 +130,6 @@ export const SECTIONS = {
     id: 'intelligence',
     title: 'Land Intelligence',
     subtitle: 'Data, GIS layers & spatial analysis',
-    icon: '&#128752;',
     color: '#4682B4',
     intro: `Key spatial datasets relevant to the Odemira bioregion include CORINE Land Cover (1990–2018), Natura 2000 boundaries (PTCON0012 "Costa Sudoeste"), PDM planning maps, Mira Irrigation Perimeter boundaries and canal networks, and elevation models from Copernicus. These support analyses of land-cover change, habitat fragmentation, zoning conflicts and suitability mapping.`,
     articles: [
@@ -162,7 +157,6 @@ export const SECTIONS = {
     id: 'planning',
     title: 'Planning & Management',
     subtitle: 'Governance, policies & conservation',
-    icon: '&#9878;',
     color: '#4A708B',
     intro: `Understanding how land is governed in Odemira means navigating layers of Portuguese and EU regulation: the PDM municipal plan, national protections (REN, RAN), EU Natura 2000 designations, and the PNSACV Natural Park authority (ICNF). A particularly contentious regulation is RCM 179/2019, which created a special regime allowing greenhouse expansion within the protected area.`,
     articles: [
@@ -190,7 +184,6 @@ export const SECTIONS = {
     id: 'threats',
     title: 'Threats & Resilience',
     subtitle: 'Climate, water & environmental challenges',
-    icon: '&#9888;',
     color: '#CC6633',
     intro: `Water scarcity is perhaps the most acute and visible threat: Santa Clara reservoir has fallen to 36–37% of capacity. Climate projections indicate rising temperatures, more frequent droughts and higher wildfire risk. Intensive agriculture has driven a "sea of plastic" along ~40 km of coast, while social and cultural erosion strains community cohesion. Emerging responses include water governance negotiations and regenerative agriculture initiatives.`,
     articles: [
@@ -218,7 +211,6 @@ export const SECTIONS = {
     id: 'community',
     title: 'Community',
     subtitle: 'Initiatives, citizen science & collaboration',
-    icon: '&#128101;',
     color: '#8B4789',
     intro: `Several community-driven and regenerative initiatives illustrate alternative trajectories for Odemira. Citizen movements (Juntos pelo Sudoeste, SOS Rio Mira) function as de facto monitoring networks, collecting data on greenhouse expansion and water scarcity. Regenerative cooperatives and eco-farms demonstrate practical pathways for ecological and social regeneration. This section is open for community contributions — share your stories, tips, events and resources.`,
     articles: [
