@@ -2281,12 +2281,10 @@ a {
   .wiki-sidebar a {
     white-space: nowrap;
     padding: 8px 16px;
-    border-left: none;
     border-bottom: 3px solid transparent;
   }
 
   .wiki-sidebar a.active {
-    border-left-color: transparent;
     border-bottom-color: var(--coral);
   }
 
