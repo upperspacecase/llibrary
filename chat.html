@@ -1,52 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ask About Odemira — Libraries</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ask About Odemira — Libraries</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
 
-<header class="header">
-  <a href="/" class="logo">
-    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
-      <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
-      <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
-      <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
-    </svg>
-    <div class="logo-text">Libraries</div>
-  </a>
-  <div class="header-nav">
-    <a href="/" data-i18n="nav.home">Home</a>
-    <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
-    <a href="/chat" class="active" data-i18n="nav.chat">Chat</a>
-    <a href="/create" class="hide-mobile" data-i18n="nav.create">Create Landbook</a>
-    <div class="lang-toggle">
-      <button data-lang="en">EN</button>
-      <button data-lang="pt">PT</button>
+  <header class="header">
+    <a href="/" class="logo">
+      <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none" />
+        <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none" />
+        <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5" />
+        <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5" />
+      </svg>
+      <div class="logo-text">Libraries</div>
+    </a>
+    <div class="header-nav">
+      <a href="/" data-i18n="nav.home">Home</a>
+      <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
+      <a href="#" class="active coming-soon-link" data-i18n="nav.chat"
+        onclick="event.preventDefault();showComingSoon()">Chat</a>
+      <a href="/create" class="hide-mobile" data-i18n="nav.create">Create Landbook</a>
+      <div class="lang-toggle">
+        <button data-lang="en">EN</button>
+        <button data-lang="pt">PT</button>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<div class="page-body">
-  <div class="chat-layout">
-    <div class="chat-header">
-      <h1 data-i18n="chat.title">Ask about Odemira</h1>
-      <p data-i18n="chat.desc">Ask anything about the region — land, water, weather, biodiversity, agriculture, community, history, or governance.</p>
-    </div>
-    <div class="chat-messages" id="chat-messages"></div>
-    <div class="chat-input-area">
-      <div class="chat-suggestions" id="chat-suggestions"></div>
-      <div class="chat-input-row">
-        <textarea class="chat-input" id="chat-input" data-i18n="chat.placeholder" placeholder="Ask about Odemira..." rows="1"></textarea>
-        <button class="chat-send" id="chat-send" data-i18n="chat.send">Send</button>
+  <div class="page-body">
+    <div class="chat-layout" style="align-items:center;justify-content:center;">
+      <div style="text-align:center;padding:40px;">
+        <div style="font-size:64px;margin-bottom:20px;">&#128172;</div>
+        <h1 style="margin-bottom:8px;">Coming Soon</h1>
+        <p style="color:var(--muted);font-size:16px;max-width:400px;margin:0 auto 24px;">Chat with your land is under
+          development. Check back soon!</p>
+        <a href="/" class="btn-outline">Go Home</a>
       </div>
     </div>
   </div>
-</div>
 
-<script type="module" src="/src/pages/chat.js"></script>
+  <script>
+    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><div class="coming-soon-icon">&#128172;</div><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
+  </script>
 </body>
+
 </html>

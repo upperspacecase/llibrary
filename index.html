@@ -22,7 +22,7 @@
   <div class="header-nav">
     <a href="/" class="active" data-i18n="nav.home">Home</a>
     <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
-    <a href="/chat" class="hide-mobile" data-i18n="nav.chat">Chat</a>
+    <a href="#" class="hide-mobile coming-soon-link" data-i18n="nav.chat" onclick="event.preventDefault();showComingSoon()">Chat</a>
     <a href="/create" class="hide-mobile" data-i18n="nav.create">Create Landbook</a>
     <div class="lang-toggle">
       <button data-lang="en">EN</button>
@@ -138,7 +138,7 @@
   <p data-i18n="cta.desc">Browse what we know about Odemira. Ask the chat anything. Then decide if you want a private landbook.</p>
   <div class="cta-actions">
     <a href="/wiki" class="btn-primary" data-i18n="cta.wiki">Explore Odemira Wiki</a>
-    <a href="/chat" class="btn-outline" data-i18n="cta.chat">Ask a Question</a>
+    <a href="#" class="btn-outline coming-soon-link" data-i18n="cta.chat" onclick="event.preventDefault();showComingSoon()">Ask a Question</a>
   </div>
 </section>
 
@@ -162,7 +162,7 @@
     <div class="footer-links">
       <a href="/" data-i18n="nav.home">Home</a>
       <a href="/wiki" data-i18n="nav.wiki">Wiki</a>
-      <a href="/chat" data-i18n="nav.chat">Chat</a>
+      <a href="#" class="coming-soon-link" data-i18n="nav.chat" onclick="event.preventDefault();showComingSoon()">Chat</a>
       <a href="/create" data-i18n="nav.create">Create Landbook</a>
     </div>
   </div>
@@ -172,6 +172,9 @@
   </div>
 </footer>
 
+<script>
+function showComingSoon(){var o=document.createElement('div');o.className='coming-soon-overlay';o.innerHTML='<div class="coming-soon-card"><div class="coming-soon-icon">&#128172;</div><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>';o.addEventListener('click',function(e){if(e.target===o)o.remove()});document.body.appendChild(o)}
+</script>
 <script type="module" src="/src/pages/home.js"></script>
 </body>
 </html>
