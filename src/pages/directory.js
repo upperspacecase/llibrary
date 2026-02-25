@@ -1,21 +1,8 @@
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, mapboxgl, addMarker } from '../lib/mapbox.js';
 import { initI18n, applyTranslations } from '../lib/i18n.js';
 import { getAllProperties } from '../lib/store.js';
 import { escapeHtml } from '../lib/utils.js';
-
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 
 initI18n();
 
@@ -25,6 +12,7 @@ const mapWrap = document.getElementById('dir-map-wrap');
 const viewBtns = document.querySelectorAll('.view-toggle button');
 
 let dirMap = null;
+let markers = [];
 
 async function render(filter) {
   const properties = await getAllProperties();
@@ -73,34 +61,45 @@ async function render(filter) {
 
 async function initMap() {
   if (dirMap) return;
-  dirMap = L.map('dir-map').setView([39.5, -8.0], 5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19,
-  }).addTo(dirMap);
-  const allProps = await getAllProperties();
-  updateMapMarkers(allProps);
+  dirMap = createMap('dir-map', {
+    center: [-8.0, 39.5],
+    zoom: 5,
+  });
+  dirMap.on('load', async () => {
+    const allProps = await getAllProperties();
+    updateMapMarkers(allProps);
+  });
 }
 
 function updateMapMarkers(properties) {
   if (!dirMap) return;
-  dirMap.eachLayer((layer) => {
-    if (layer instanceof L.Marker) dirMap.removeLayer(layer);
-  });
 
-  const bounds = [];
+  // Remove existing markers
+  markers.forEach(m => m.remove());
+  markers = [];
+
+  const bounds = new mapboxgl.LngLatBounds();
+  let hasBounds = false;
+
   properties.forEach((p) => {
     if (p.lat && p.lng) {
       const lat = parseFloat(p.lat);
       const lng = parseFloat(p.lng);
-      const m = L.marker([lat, lng]).addTo(dirMap);
-      m.bindPopup(`<strong>${escapeHtml(p.propertyName)}</strong><br><a href="passport.html?id=${p.id}">View Landbook</a>`);
-      bounds.push([lat, lng]);
+
+      const popup = new mapboxgl.Popup({ offset: 25 })
+        .setHTML(`<strong>${escapeHtml(p.propertyName)}</strong><br><a href="passport.html?id=${p.id}">View Landbook</a>`);
+
+      const marker = addMarker(dirMap, [lng, lat]);
+      marker.setPopup(popup);
+      markers.push(marker);
+
+      bounds.extend([lng, lat]);
+      hasBounds = true;
     }
   });
 
-  if (bounds.length > 0) {
-    dirMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 12 });
+  if (hasBounds) {
+    dirMap.fitBounds(bounds, { padding: 40, maxZoom: 12 });
   }
 }
 
@@ -112,9 +111,8 @@ function setView(view) {
     listEl.style.display = 'none';
     if (!dirMap) {
       initMap();
-      setTimeout(() => dirMap.invalidateSize(), 200);
     } else {
-      dirMap.invalidateSize();
+      dirMap.resize();
     }
   } else {
     mapWrap.classList.remove('visible');

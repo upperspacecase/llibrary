@@ -1,21 +1,8 @@
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, addMarker } from '../lib/mapbox.js';
 import { initI18n, t, applyTranslations } from '../lib/i18n.js';
 import { getProperty } from '../lib/store.js';
 import { escapeHtml } from '../lib/utils.js';
-
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 
 initI18n();
 
@@ -23,16 +10,19 @@ const container = document.getElementById('passport-content');
 const params = new URLSearchParams(window.location.search);
 const propertyId = params.get('id');
 
-if (!propertyId || !getProperty(propertyId)) {
-  showNotFound();
-} else {
-  const property = getProperty(propertyId);
-  document.title = `${property.propertyName} \u2014 Landbook \u2014 LandLibrary`;
-  renderPassport(property);
-  if (property.lat && property.lng) {
-    fetchOpenData(parseFloat(property.lat), parseFloat(property.lng));
+(async () => {
+  const property = propertyId ? await getProperty(propertyId) : null;
+
+  if (!property) {
+    showNotFound();
+  } else {
+    document.title = `${property.propertyName} \u2014 Landbook \u2014 LandLibrary`;
+    renderPassport(property);
+    if (property.lat && property.lng) {
+      fetchOpenData(parseFloat(property.lat), parseFloat(property.lng));
+    }
   }
-}
+})();
 
 function showNotFound() {
   container.innerHTML = `
@@ -111,8 +101,8 @@ function renderPassport(p) {
       </div>
       <div class="data-grid" id="auto-data-grid">
         ${hasLocation
-          ? '<p style="color:#555;font-size:14px;grid-column:1/-1;">Loading open data...</p>'
-          : '<p style="color:#555;font-size:14px;grid-column:1/-1;">No location set \u2014 open data requires coordinates.</p>'}
+      ? '<p style="color:#555;font-size:14px;grid-column:1/-1;">Loading open data...</p>'
+      : '<p style="color:#555;font-size:14px;grid-column:1/-1;">No location set \u2014 open data requires coordinates.</p>'}
       </div>
     </div>
 
@@ -143,12 +133,13 @@ function renderPassport(p) {
     setTimeout(() => {
       const lat = parseFloat(p.lat);
       const lng = parseFloat(p.lng);
-      const pMap = L.map('passport-map').setView([lat, lng], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(pMap);
-      L.marker([lat, lng]).addTo(pMap);
+      const pMap = createMap('passport-map', {
+        center: [lng, lat],
+        zoom: 14,
+      });
+      pMap.on('load', () => {
+        addMarker(pMap, [lng, lat]);
+      });
     }, 100);
   }
 }

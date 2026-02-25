@@ -1,20 +1,7 @@
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, mapboxgl, addMarker } from '../lib/mapbox.js';
 import { initI18n, t, applyTranslations } from '../lib/i18n.js';
 import { saveProperty } from '../lib/store.js';
-
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
 
 initI18n();
 
@@ -47,13 +34,14 @@ function showStep(idx) {
 }
 
 function initMap() {
-  map = L.map('onboard-map').setView([39.5, -8.0], 6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19,
-  }).addTo(map);
+  map = createMap('onboard-map', {
+    center: [-8.0, 39.5],
+    zoom: 6,
+  });
 
-  map.on('click', (e) => setMapLocation(e.latlng.lat, e.latlng.lng));
+  map.on('load', () => {
+    map.on('click', (e) => setMapLocation(e.lngLat.lat, e.lngLat.lng));
+  });
 
   const addressInput = document.getElementById('address-input');
   let debounceTimer;
@@ -62,7 +50,8 @@ function initMap() {
     debounceTimer = setTimeout(() => geocodeAddress(this.value), 600);
   });
 
-  setTimeout(() => map.invalidateSize(), 200);
+  // MapBox handles resize automatically, but trigger it just in case
+  setTimeout(() => map.resize(), 200);
 }
 
 function setMapLocation(lat, lng) {
@@ -70,16 +59,16 @@ function setMapLocation(lat, lng) {
   document.getElementById('lng-input').value = lng.toFixed(6);
 
   if (marker) {
-    marker.setLatLng([lat, lng]);
+    marker.setLngLat([lng, lat]);
   } else {
-    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    marker = addMarker(map, [lng, lat], { draggable: true });
     marker.on('dragend', () => {
-      const pos = marker.getLatLng();
+      const pos = marker.getLngLat();
       document.getElementById('lat-input').value = pos.lat.toFixed(6);
       document.getElementById('lng-input').value = pos.lng.toFixed(6);
     });
   }
-  map.setView([lat, lng], 13);
+  map.flyTo({ center: [lng, lat], zoom: 13 });
 }
 
 function geocodeAddress(query) {
@@ -191,7 +180,7 @@ btnNext.addEventListener('click', async () => {
   if (currentStep === TOTAL_STEPS - 1) {
     const data = getFormData();
     btnNext.disabled = true;
-    btnNext.textContent = 'Saving…';
+    btnNext.textContent = 'Saving\u2026';
     try {
       const property = await saveProperty(data);
       window.location.href = `passport.html?id=${property.id}`;

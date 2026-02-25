@@ -1,132 +1,212 @@
 /**
- * Data persistence — localStorage-based store for landbooks.
- * Updated for new data model: polygon boundaries, auto-data, user-reported data.
+ * store.js — Data persistence via MongoDB API routes.
+ * All functions are async and return Promises.
+ *
+ * Language preference (i18n.js) remains in localStorage — it's client-only
+ * and doesn't need server persistence.
  */
 
-const LANDBOOK_KEY = 'libraries-landbooks';
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
 
-function generateId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-}
+const API_BASE = '/api';
 
-// ---- Landbook CRUD ----
-
-export function getAllLandbooks() {
-  try {
-    return JSON.parse(localStorage.getItem(LANDBOOK_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
-
-export function getLandbook(id) {
-  return getAllLandbooks().find(lb => lb.id === id) || null;
-}
-
-export function saveLandbook(data) {
-  const landbooks = getAllLandbooks();
-  const landbook = {
-    id: generateId(),
-    created: new Date().toISOString(),
-    updated: new Date().toISOString(),
-    // Core identity
-    boundary: data.boundary || [],     // Array of [lat, lng] pairs
-    center: data.center || null,       // [lat, lng] centroid
-    area: data.area || null,           // square meters
-    perimeter: data.perimeter || null, // meters
-    address: data.address || '',       // reverse-geocoded address
-    // Auto-populated data (filled after creation)
-    autoData: data.autoData || null,
-    // User-reported data (filled by landowner)
-    userReported: data.userReported || null,
-    // Title deed
-    titleDeed: data.titleDeed || null, // { status: 'pending' | 'uploaded', fileName?: string }
-  };
-  landbooks.push(landbook);
-  localStorage.setItem(LANDBOOK_KEY, JSON.stringify(landbooks));
-  return landbook;
-}
-
-export function updateLandbook(id, updates) {
-  const landbooks = getAllLandbooks();
-  const idx = landbooks.findIndex(lb => lb.id === id);
-  if (idx === -1) return null;
-  landbooks[idx] = {
-    ...landbooks[idx],
-    ...updates,
-    updated: new Date().toISOString(),
-  };
-  localStorage.setItem(LANDBOOK_KEY, JSON.stringify(landbooks));
-  return landbooks[idx];
-}
-
-export function deleteLandbook(id) {
-  const landbooks = getAllLandbooks().filter(lb => lb.id !== id);
-  localStorage.setItem(LANDBOOK_KEY, JSON.stringify(landbooks));
-}
-
-// ---- Auto-data structure ----
+// ---------------------------------------------------------------------------
+// Landbook data factories (unchanged — pure data, no IO)
+// ---------------------------------------------------------------------------
 
 export function createAutoData() {
   return {
     elevation: null,
-    soil: null,
-    soilClassification: null,
     weather: null,
     climate: null,
+    soil: null,
     biodiversity: null,
-    landCover: null,
-    fireRisk: null,
+    water: null,
+    fire: null,
     protectedAreas: null,
-    waterFeatures: null,
-    zoning: null,
-    fetchedAt: null,
+    lastUpdated: null,
   };
 }
-
-// ---- User-reported data structure ----
 
 export function createUserReported() {
   return {
     primaryUse: '',
     secondaryUse: '',
     challenges: [],
-    goals: {
-      oneYear: '',
-      threeYear: '',
-      fiveYear: '',
-    },
-    infrastructure: {
-      irrigation: '',
-      energy: '',
-      waterSources: '',
-      buildings: '',
-    },
+    goals: { oneYear: '', threeYear: '', fiveYear: '' },
+    infrastructure: { irrigation: '', energy: '', waterSources: '', buildings: '' },
     sharing: '',
     history: '',
-    documents: [],
     notes: '',
   };
 }
 
-// ---- Backward-compatible property access (for old data) ----
+// ---------------------------------------------------------------------------
+// Landbook CRUD — via /api/landbooks
+// ---------------------------------------------------------------------------
 
-export function getAllProperties() {
+/**
+ * Get all landbooks.
+ * @returns {Promise<Array>}
+ */
+export async function getAllLandbooks() {
+  const res = await fetch(`${API_BASE}/landbooks`);
+  if (!res.ok) throw new Error(`Failed to fetch landbooks: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Get a single landbook by ID.
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function getLandbook(id) {
+  if (!id) return null;
   try {
-    return JSON.parse(localStorage.getItem('lll-properties')) || [];
-  } catch {
-    return [];
+    const res = await fetch(`${API_BASE}/landbooks/${id}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Failed to fetch landbook: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    console.error('getLandbook error:', err);
+    return null;
   }
 }
 
-export function getProperty(id) {
-  return getAllProperties().find(p => p.id === id) || null;
+/**
+ * Create a new landbook.
+ * @param {object} data - { boundary, center, area, perimeter, address }
+ * @returns {Promise<object>} - the saved landbook document
+ */
+export async function saveLandbook(data) {
+  const doc = {
+    id: crypto.randomUUID(),
+    boundary: data.boundary || [],
+    center: data.center || null,
+    area: data.area || null,
+    perimeter: data.perimeter || null,
+    address: data.address || '',
+    autoData: createAutoData(),
+    userReported: createUserReported(),
+    created: new Date().toISOString(),
+  };
+
+  const res = await fetch(`${API_BASE}/landbooks`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(doc),
+  });
+
+  if (!res.ok) throw new Error(`Failed to save landbook: ${res.status}`);
+  return res.json();
 }
 
-export function saveProperty(data) {
-  const props = getAllProperties();
-  const prop = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8), created: new Date().toISOString(), ...data };
-  props.push(prop);
-  localStorage.setItem('lll-properties', JSON.stringify(props));
-  return prop;
+/**
+ * Update a landbook by ID with partial data.
+ * @param {string} id
+ * @param {object} updates
+ * @returns {Promise<object>}
+ */
+export async function updateLandbook(id, updates) {
+  const res = await fetch(`${API_BASE}/landbooks/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) throw new Error(`Failed to update landbook: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Delete a landbook by ID.
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export async function deleteLandbook(id) {
+  const res = await fetch(`${API_BASE}/landbooks/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Failed to delete landbook: ${res.status}`);
+}
+
+// ---------------------------------------------------------------------------
+// Property CRUD — via /api/properties
+// ---------------------------------------------------------------------------
+
+/**
+ * Get all properties.
+ * @returns {Promise<Array>}
+ */
+export async function getAllProperties() {
+  const res = await fetch(`${API_BASE}/properties`);
+  if (!res.ok) throw new Error(`Failed to fetch properties: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Get a single property by ID.
+ * @param {string} id
+ * @returns {Promise<object|null>}
+ */
+export async function getProperty(id) {
+  if (!id) return null;
+  try {
+    const res = await fetch(`${API_BASE}/properties/${id}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(`Failed to fetch property: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    console.error('getProperty error:', err);
+    return null;
+  }
+}
+
+/**
+ * Create a new property.
+ * @param {object} data
+ * @returns {Promise<object>}
+ */
+export async function saveProperty(data) {
+  const doc = {
+    id: crypto.randomUUID(),
+    ...data,
+    created: new Date().toISOString(),
+  };
+
+  const res = await fetch(`${API_BASE}/properties`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(doc),
+  });
+
+  if (!res.ok) throw new Error(`Failed to save property: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Update a property by ID.
+ * @param {string} id
+ * @param {object} updates
+ * @returns {Promise<object>}
+ */
+export async function updateProperty(id, updates) {
+  const res = await fetch(`${API_BASE}/properties/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates),
+  });
+
+  if (!res.ok) throw new Error(`Failed to update property: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Delete a property by ID.
+ * @param {string} id
+ * @returns {Promise<void>}
+ */
+export async function deleteProperty(id) {
+  const res = await fetch(`${API_BASE}/properties/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error(`Failed to delete property: ${res.status}`);
 }

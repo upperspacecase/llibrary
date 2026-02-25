@@ -2,33 +2,34 @@ import { getCollection } from '../_db.js';
 
 export default async function handler(req, res) {
     const { id } = req.query;
-    const properties = await getCollection('properties');
+    const landbooks = await getCollection('landbooks');
 
     if (req.method === 'GET') {
-        const property = await properties.findOne({ id });
-        if (!property) return res.status(404).json({ error: 'Property not found' });
-        return res.status(200).json(property);
+        const landbook = await landbooks.findOne({ id });
+        if (!landbook) return res.status(404).json({ error: 'Landbook not found' });
+        return res.status(200).json(landbook);
     }
 
     if (req.method === 'PUT') {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
         const updates = { ...body, updated: new Date().toISOString() };
+        // Remove _id from updates to avoid MongoDB error
         delete updates._id;
         delete updates.id;
 
-        const result = await properties.findOneAndUpdate(
+        const result = await landbooks.findOneAndUpdate(
             { id },
             { $set: updates },
             { returnDocument: 'after' }
         );
 
-        if (!result) return res.status(404).json({ error: 'Property not found' });
+        if (!result) return res.status(404).json({ error: 'Landbook not found' });
         return res.status(200).json(result);
     }
 
     if (req.method === 'DELETE') {
-        const result = await properties.deleteOne({ id });
-        if (result.deletedCount === 0) return res.status(404).json({ error: 'Property not found' });
+        const result = await landbooks.deleteOne({ id });
+        if (result.deletedCount === 0) return res.status(404).json({ error: 'Landbook not found' });
         return res.status(200).json({ deleted: true });
     }
 

@@ -6,8 +6,7 @@
  */
 
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, mapboxgl, addMarker, addPolygon, addWmsLayer, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 
 import { initI18n } from '../lib/i18n.js';
 import { getLandbook, updateLandbook, createAutoData, createUserReported } from '../lib/store.js';
@@ -20,14 +19,6 @@ import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '
 import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams } from '../api/copernicus.js';
 import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk, ODEMIRA_FIRE_HISTORY } from '../api/effis.js';
 import { NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES, PT_ZONING } from '../api/natura2000.js';
-
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
 
 initI18n();
 
@@ -79,19 +70,23 @@ function formatDate(iso) {
 const container = document.getElementById('landbook-content');
 const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
-const landbook = id ? getLandbook(id) : null;
+let landbook = null;
 
-if (!landbook) {
-  container.innerHTML = `
-    <div class="empty-state" style="padding-top:120px;">
-      <h3>Landbook not found</h3>
-      <p>This landbook does not exist or may have been removed.</p>
-      <a href="create.html" class="btn-primary">Create a New Landbook</a>
-    </div>`;
-} else {
-  document.title = `${landbook.address || 'Landbook'} \u2014 Libraries`;
-  renderReport(landbook);
-}
+(async () => {
+  landbook = id ? await getLandbook(id) : null;
+
+  if (!landbook) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding-top:120px;">
+        <h3>Landbook not found</h3>
+        <p>This landbook does not exist or may have been removed.</p>
+        <a href="create.html" class="btn-primary">Create a New Landbook</a>
+      </div>`;
+  } else {
+    document.title = `${landbook.address || 'Landbook'} \u2014 Libraries`;
+    renderReport(landbook);
+  }
+})();
 
 // ---------------------------------------------------------------------------
 // Main layout render
@@ -120,7 +115,10 @@ function renderReport(lb) {
     <!-- 2. Map -->
     <div class="landbook-section">
       <h2>Map</h2>
-      ${boundary.length ? '<div class="landbook-map"><div id="landbook-map" style="width:100%;height:100%;"></div></div>' : '<p style="color:var(--muted);">No boundary data available.</p>'}
+      ${boundary.length ? `
+        <div class="landbook-map"><div id="landbook-map" style="width:100%;height:100%;"></div></div>
+        <div class="map-layer-toggles" id="map-layer-toggles"></div>
+      ` : '<p style="color:var(--muted);">No boundary data available.</p>'}
     </div>
 
     <!-- 3. Elevation & Terrain -->
@@ -188,37 +186,83 @@ function renderReport(lb) {
 // Map with WMS overlays
 // ---------------------------------------------------------------------------
 
+let wmsLayers = {};
+
 function initMap(boundary, center) {
-  const map = L.map('landbook-map', { zoomControl: true, scrollWheelZoom: true });
-
-  // Base layers
-  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
-  });
-  const sentinel = L.tileLayer(SENTINEL2_TILES, {
-    attribution: '&copy; EOX / Sentinel-2 cloudless', maxZoom: 18,
+  const map = createMap('landbook-map', {
+    center: [center[1], center[0]], // [lng, lat]
+    zoom: 14,
+    satellite: true,
+    scrollZoom: true,
   });
 
-  sentinel.addTo(map);
+  map.on('load', () => {
+    // Draw boundary polygon
+    addPolygon(map, boundary, {
+      sourceId: 'boundary',
+      fillColor: '#EB5F54',
+      fillOpacity: 0.15,
+      lineColor: '#EB5F54',
+      lineWidth: 3,
+    });
 
-  // WMS overlay layers
-  const corine = L.tileLayer.wms(CORINE_WMS, { ...getCorineWmsParams(), opacity: 0.5 });
-  const fireDanger = L.tileLayer.wms(EFFIS_WMS, { ...getFireDangerWmsParams(), opacity: 0.5 });
-  const natura = L.tileLayer.wms(NATURA2000_WMS, { ...getNatura2000WmsParams(), opacity: 0.5 });
+    fitToCoords(map, boundary);
 
-  L.control.layers(
-    { 'Satellite (Sentinel-2)': sentinel, 'Street Map': osm },
-    { 'CORINE Land Cover': corine, 'EFFIS Fire Danger': fireDanger, 'Natura 2000': natura },
-    { position: 'topright' }
-  ).addTo(map);
+    // Add WMS overlay layers (hidden by default)
+    const corineParams = getCorineWmsParams();
+    wmsLayers.corine = addWmsLayer(map, CORINE_WMS, corineParams, {
+      sourceId: 'wms-corine',
+      opacity: 0.5,
+      visible: false,
+    });
 
-  // Draw boundary polygon
-  const polygon = L.polygon(
-    boundary.map(([lat, lng]) => [lat, lng]),
-    { color: '#EB5F54', weight: 3, fillColor: '#EB5F54', fillOpacity: 0.15 }
-  ).addTo(map);
+    const fireParams = getFireDangerWmsParams();
+    wmsLayers.fire = addWmsLayer(map, EFFIS_WMS, fireParams, {
+      sourceId: 'wms-fire',
+      opacity: 0.5,
+      visible: false,
+    });
 
-  map.fitBounds(polygon.getBounds(), { padding: [40, 40] });
+    const naturaParams = getNatura2000WmsParams();
+    wmsLayers.natura = addWmsLayer(map, NATURA2000_WMS, naturaParams, {
+      sourceId: 'wms-natura',
+      opacity: 0.5,
+      visible: false,
+    });
+
+    // Render layer toggle buttons
+    renderLayerToggles(map);
+  });
+}
+
+function renderLayerToggles(map) {
+  const toggleContainer = document.getElementById('map-layer-toggles');
+  if (!toggleContainer) return;
+
+  const layers = [
+    { key: 'corine', label: 'CORINE Land Cover' },
+    { key: 'fire', label: 'EFFIS Fire Danger' },
+    { key: 'natura', label: 'Natura 2000' },
+  ];
+
+  toggleContainer.innerHTML = layers.map(l => `
+    <label class="layer-toggle">
+      <input type="checkbox" data-layer="${l.key}">
+      <span>${l.label}</span>
+    </label>
+  `).join('');
+
+  toggleContainer.addEventListener('change', (e) => {
+    const checkbox = e.target;
+    if (!checkbox.dataset.layer) return;
+    const layerInfo = wmsLayers[checkbox.dataset.layer];
+    if (!layerInfo) return;
+    map.setLayoutProperty(
+      layerInfo.layerId,
+      'visibility',
+      checkbox.checked ? 'visible' : 'none'
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -332,13 +376,13 @@ function renderWeather(results) {
           </thead>
           <tbody>
             ${times.map((date, i) => {
-              const dayName = new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-              const wDesc = getWeatherDescription(daily.weathercode ? daily.weathercode[i] : null);
-              const high = daily.temperature_2m_max ? daily.temperature_2m_max[i] : null;
-              const low = daily.temperature_2m_min ? daily.temperature_2m_min[i] : null;
-              const rain = daily.precipitation_sum ? daily.precipitation_sum[i] : null;
-              const wind = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
-              return `<tr style="border-bottom:1px solid var(--border);">
+      const dayName = new Date(date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+      const wDesc = getWeatherDescription(daily.weathercode ? daily.weathercode[i] : null);
+      const high = daily.temperature_2m_max ? daily.temperature_2m_max[i] : null;
+      const low = daily.temperature_2m_min ? daily.temperature_2m_min[i] : null;
+      const rain = daily.precipitation_sum ? daily.precipitation_sum[i] : null;
+      const wind = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
+      return `<tr style="border-bottom:1px solid var(--border);">
                 <td style="padding:10px 12px;font-weight:500;">${dayName}</td>
                 <td style="padding:10px 12px;">${esc(wDesc)}</td>
                 <td style="padding:10px 12px;">${high != null ? `${high}\u00B0C` : '\u2014'}</td>
@@ -346,7 +390,7 @@ function renderWeather(results) {
                 <td style="padding:10px 12px;">${rain != null ? `${rain} mm` : '\u2014'}</td>
                 <td style="padding:10px 12px;">${wind != null ? `${wind} km/h` : '\u2014'}</td>
               </tr>`;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>`;
@@ -390,14 +434,14 @@ function buildClimateHtml(results) {
       </div>
       <div class="chart-bars">
         ${months.map(m => {
-          const precipH = Math.round(((m.totalPrecip || 0) / maxPrecip) * 100);
-          const tempH = Math.round(((m.avgHigh || 0) / maxTemp) * 100);
-          return `
+    const precipH = Math.round(((m.totalPrecip || 0) / maxPrecip) * 100);
+    const tempH = Math.round(((m.avgHigh || 0) / maxTemp) * 100);
+    return `
             <div class="chart-bar" title="${m.month}: ${Math.round(m.totalPrecip || 0)}mm, avg high ${Math.round(m.avgHigh || 0)}\u00B0C">
               <div class="bar" style="height:${precipH}%;"></div>
               <div class="bar temp" style="height:${tempH}%;"></div>
             </div>`;
-        }).join('')}
+  }).join('')}
       </div>
       <div class="chart-labels">
         ${months.map(m => `<span>${m.month}</span>`).join('')}
@@ -415,7 +459,6 @@ function renderSoil(results) {
   if (!el) return;
   const rp = results.soilProps;
   const rc = results.soilClass;
-  // Wait until both have resolved
   if (!rp || !rc) return;
   if (_soilRendered) return;
   _soilRendered = true;
@@ -680,8 +723,8 @@ function renderUserForm(lb) {
         <label for="primary-use">Primary Land Use</label>
         <select id="primary-use" name="primaryUse">
           <option value="">Select primary use...</option>
-          ${['dryland agriculture','plantation','forest','residential','tourists','undeveloped','other']
-            .map(v => `<option value="${v}" ${ur.primaryUse === v ? 'selected' : ''}>${esc(v.charAt(0).toUpperCase() + v.slice(1))}</option>`).join('')}
+          ${['dryland agriculture', 'plantation', 'forest', 'residential', 'tourists', 'undeveloped', 'other']
+      .map(v => `<option value="${v}" ${ur.primaryUse === v ? 'selected' : ''}>${esc(v.charAt(0).toUpperCase() + v.slice(1))}</option>`).join('')}
         </select>
       </div>
 
@@ -694,10 +737,10 @@ function renderUserForm(lb) {
         <label>Current Challenges</label>
         <div class="chip-group">
           ${challengeOptions.map(ch => {
-            const val = ch.toLowerCase();
-            const checked = challenges.map(c => c.toLowerCase()).includes(val) ? 'checked' : '';
-            return `<label><input type="checkbox" name="challenges" value="${val}" ${checked}> ${esc(ch)}</label>`;
-          }).join('')}
+        const val = ch.toLowerCase();
+        const checked = challenges.map(c => c.toLowerCase()).includes(val) ? 'checked' : '';
+        return `<label><input type="checkbox" name="challenges" value="${val}" ${checked}> ${esc(ch)}</label>`;
+      }).join('')}
         </div>
       </div>
 
@@ -769,7 +812,7 @@ document.addEventListener('submit', (e) => {
   }
 });
 
-function saveUserData() {
+async function saveUserData() {
   if (!landbook) return;
   const form = document.getElementById('user-reported-form');
   if (!form) return;
@@ -798,7 +841,7 @@ function saveUserData() {
   };
 
   try {
-    updateLandbook(landbook.id, { userReported });
+    await updateLandbook(landbook.id, { userReported });
     const fb = document.getElementById('save-feedback');
     if (fb) {
       fb.innerHTML = '<span style="color:var(--green);font-weight:600;">Saved successfully.</span>';

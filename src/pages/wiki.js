@@ -7,8 +7,7 @@
  */
 
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n } from '../lib/i18n.js';
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
@@ -44,18 +43,6 @@ import {
   NATURA2000_WMS, getNatura2000WmsParams, ODEMIRA_PROTECTED_AREAS, KEY_SPECIES,
 } from '../api/natura2000.js';
 
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
-
 // ---- Initialise i18n ----
 initI18n();
 
@@ -76,9 +63,8 @@ function currentRoute() {
 }
 
 function loadingSkeleton(lines = 4) {
-  return `<div class="wiki-loading-skeleton">${
-    Array.from({ length: lines }, () => '<div class="skeleton-line"></div>').join('')
-  }</div>`;
+  return `<div class="wiki-loading-skeleton">${Array.from({ length: lines }, () => '<div class="skeleton-line"></div>').join('')
+    }</div>`;
 }
 
 function destroyMap() {
@@ -89,12 +75,10 @@ function destroyMap() {
 }
 
 function createBaseMap(containerId, zoom = 10) {
-  const map = L.map(containerId).setView(ODEMIRA.center, zoom);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors',
-    maxZoom: 19,
-  }).addTo(map);
-  return map;
+  return createMap(containerId, {
+    center: [ODEMIRA.center[1], ODEMIRA.center[0]], // [lng, lat]
+    zoom,
+  });
 }
 
 function markerColor(type) {
@@ -110,39 +94,97 @@ function markerColor(type) {
 
 function addLandmarkMarkers(map, landmarks) {
   landmarks.forEach(lm => {
-    const circle = L.circleMarker(lm.coords, {
-      radius: 7,
-      fillColor: markerColor(lm.type),
-      color: '#fff',
-      weight: 2,
-      fillOpacity: 0.85,
-    }).addTo(map);
-    circle.bindPopup(
+    const el = document.createElement('div');
+    el.style.width = '14px';
+    el.style.height = '14px';
+    el.style.borderRadius = '50%';
+    el.style.backgroundColor = markerColor(lm.type);
+    el.style.border = '2px solid #fff';
+    el.style.cursor = 'pointer';
+
+    const popup = new mapboxgl.Popup({ offset: 10 }).setHTML(
       `<strong>${lm.name}</strong><br><em>${lm.type}</em>` +
       (lm.pop ? `<br>Pop. ~${lm.pop}` : '') +
       (lm.desc ? `<br><small>${lm.desc}</small>` : '')
     );
+
+    new mapboxgl.Marker({ element: el })
+      .setLngLat([lm.coords[1], lm.coords[0]])
+      .setPopup(popup)
+      .addTo(map);
   });
 }
 
 function addOverpassNodes(map, nodes, color = '#3388ff', label = '') {
-  nodes.forEach(n => {
-    const name = (n.tags && (n.tags.name || n.tags.historic || n.tags.natural)) || label;
-    L.circleMarker([n.lat, n.lon], {
-      radius: 5,
-      fillColor: color,
-      color: '#fff',
-      weight: 1,
-      fillOpacity: 0.8,
-    }).addTo(map).bindPopup(name ? `<strong>${name}</strong>` : '');
+  if (!nodes.length) return;
+  const sourceId = 'overpass-nodes-' + Math.random().toString(36).slice(2, 6);
+  const geojson = {
+    type: 'FeatureCollection',
+    features: nodes.map(n => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [n.lon, n.lat] },
+      properties: { name: (n.tags && (n.tags.name || n.tags.historic || n.tags.natural)) || label },
+    })),
+  };
+
+  map.addSource(sourceId, { type: 'geojson', data: geojson });
+  map.addLayer({
+    id: sourceId + '-layer',
+    type: 'circle',
+    source: sourceId,
+    paint: {
+      'circle-radius': 5,
+      'circle-color': color,
+      'circle-stroke-color': '#fff',
+      'circle-stroke-width': 1,
+      'circle-opacity': 0.8,
+    },
   });
+
+  // Add popup on click
+  map.on('click', sourceId + '-layer', (e) => {
+    const name = e.features[0].properties.name;
+    if (name) {
+      new mapboxgl.Popup({ offset: 5 })
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${name}</strong>`)
+        .addTo(map);
+    }
+  });
+  map.on('mouseenter', sourceId + '-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', sourceId + '-layer', () => { map.getCanvas().style.cursor = ''; });
 }
 
 function addOverpassWays(map, ways, color = '#3388ff') {
-  ways.forEach(w => {
-    if (w.coords && w.coords.length > 1) {
-      L.polyline(w.coords, { color, weight: 2, opacity: 0.7 }).addTo(map)
-        .bindPopup(w.tags && w.tags.name ? `<strong>${w.tags.name}</strong>` : '');
+  if (!ways.length) return;
+  const sourceId = 'overpass-ways-' + Math.random().toString(36).slice(2, 6);
+  const geojson = {
+    type: 'FeatureCollection',
+    features: ways.filter(w => w.coords && w.coords.length > 1).map(w => ({
+      type: 'Feature',
+      geometry: {
+        type: 'LineString',
+        coordinates: w.coords.map(([lat, lng]) => [lng, lat]),
+      },
+      properties: { name: (w.tags && w.tags.name) || '' },
+    })),
+  };
+
+  map.addSource(sourceId, { type: 'geojson', data: geojson });
+  map.addLayer({
+    id: sourceId + '-layer',
+    type: 'line',
+    source: sourceId,
+    paint: { 'line-color': color, 'line-width': 2, 'line-opacity': 0.7 },
+  });
+
+  map.on('click', sourceId + '-layer', (e) => {
+    const name = e.features[0].properties.name;
+    if (name) {
+      new mapboxgl.Popup({ offset: 5 })
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${name}</strong>`)
+        .addTo(map);
     }
   });
 }
@@ -204,14 +246,14 @@ function renderHub() {
       <h2>Upcoming Events</h2>
       <ul class="wiki-events-list">
         ${EVENTS_CALENDAR.map(e =>
-          `<li><strong>${e.month}</strong> &mdash; ${e.name} <em>(${e.location})</em></li>`
-        ).join('')}
+    `<li><strong>${e.month}</strong> &mdash; ${e.name} <em>(${e.location})</em></li>`
+  ).join('')}
       </ul>
       <h2>Key Landmarks</h2>
       <ul class="wiki-landmarks-list">
         ${LANDMARKS.map(lm =>
-          `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
-        ).join('')}
+    `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
+  ).join('')}
       </ul>
     </section>
   `;
@@ -254,7 +296,9 @@ function renderSection(sectionId) {
   // Initialise map and live data after DOM insertion
   setTimeout(() => {
     currentMap = createBaseMap('wiki-section-map');
-    initSectionMap(sectionId, currentMap);
+    currentMap.on('load', () => {
+      initSectionMap(sectionId, currentMap);
+    });
     loadSectionData(sectionId);
   }, 0);
 }
@@ -281,16 +325,25 @@ async function initSectionMap(sectionId, map) {
 }
 
 async function initLandMap(map) {
-  L.tileLayer(SENTINEL2_TILES, {
-    attribution: 'Sentinel-2 cloudless &copy; EOX',
-    opacity: 0.45,
-  }).addTo(map);
+  // Add satellite raster tiles as overlay
+  map.addSource('sentinel-overlay', {
+    type: 'raster',
+    tiles: [SENTINEL2_TILES],
+    tileSize: 256,
+  });
+  map.addLayer({
+    id: 'sentinel-overlay-layer',
+    type: 'raster',
+    source: 'sentinel-overlay',
+    paint: { 'raster-opacity': 0.45 },
+  });
 
   try {
     const elev = await getElevation(ODEMIRA.center[0], ODEMIRA.center[1]);
     if (elev !== null) {
-      L.marker(ODEMIRA.center).addTo(map)
-        .bindPopup(`<strong>${ODEMIRA.name}</strong><br>Elevation: ${elev} m`).openPopup();
+      addMarker(map, [ODEMIRA.center[1], ODEMIRA.center[0]], {
+        popupHtml: `<strong>${ODEMIRA.name}</strong><br>Elevation: ${elev} m`,
+      });
     }
   } catch (e) { console.warn('Elevation fetch failed:', e); }
 
@@ -308,35 +361,51 @@ async function initWaterMap(map) {
 }
 
 function initWeatherMap(map) {
-  L.tileLayer.wms(EFFIS_WMS, {
-    ...getFireDangerWmsParams(),
+  addWmsLayer(map, EFFIS_WMS, getFireDangerWmsParams(), {
+    sourceId: 'wms-effis-wiki',
     opacity: 0.4,
-  }).addTo(map);
+    visible: true,
+  });
 
-  L.marker(ODEMIRA.center).addTo(map)
-    .bindPopup(`<strong>${ODEMIRA.name}</strong><br>Weather reference point`);
+  addMarker(map, [ODEMIRA.center[1], ODEMIRA.center[0]], {
+    popupHtml: `<strong>${ODEMIRA.name}</strong><br>Weather reference point`,
+  });
 }
 
 function initBiodiversityMap(map) {
-  L.tileLayer.wms(NATURA2000_WMS, {
-    ...getNatura2000WmsParams(),
+  addWmsLayer(map, NATURA2000_WMS, getNatura2000WmsParams(), {
+    sourceId: 'wms-natura-wiki',
     opacity: 0.35,
-  }).addTo(map);
+    visible: true,
+  });
 
   ODEMIRA_PROTECTED_AREAS.forEach(pa => {
-    L.circleMarker(pa.coordinates, {
-      radius: 10, fillColor: '#2E8B57', color: '#fff', weight: 2, fillOpacity: 0.6,
-    }).addTo(map).bindPopup(
+    const el = document.createElement('div');
+    el.style.width = '20px';
+    el.style.height = '20px';
+    el.style.borderRadius = '50%';
+    el.style.backgroundColor = '#2E8B57';
+    el.style.border = '2px solid #fff';
+    el.style.opacity = '0.6';
+    el.style.cursor = 'pointer';
+
+    const popup = new mapboxgl.Popup({ offset: 10 }).setHTML(
       `<strong>${pa.nameEn || pa.name}</strong><br>${pa.type}<br>${pa.description}`
     );
+
+    new mapboxgl.Marker({ element: el })
+      .setLngLat([pa.coordinates[1], pa.coordinates[0]])
+      .setPopup(popup)
+      .addTo(map);
   });
 }
 
 function initAgricultureMap(map) {
-  L.tileLayer.wms(CORINE_WMS, {
-    ...getCorineWmsParams(),
+  addWmsLayer(map, CORINE_WMS, getCorineWmsParams(), {
+    sourceId: 'wms-corine-wiki',
     opacity: 0.55,
-  }).addTo(map);
+    visible: true,
+  });
 
   addLandmarkMarkers(map, LANDMARKS.filter(l => l.type === 'town' || l.type === 'community'));
 }
@@ -361,24 +430,37 @@ async function initHistoryMap(map) {
 }
 
 function initGovernanceMap(map) {
-  L.tileLayer.wms(NATURA2000_WMS, {
-    ...getNatura2000WmsParams(),
+  addWmsLayer(map, NATURA2000_WMS, getNatura2000WmsParams(), {
+    sourceId: 'wms-natura-gov-wiki',
     opacity: 0.4,
-  }).addTo(map);
+    visible: true,
+  });
 
   ODEMIRA_PROTECTED_AREAS.forEach(pa => {
-    L.circleMarker(pa.coordinates, {
-      radius: 10, fillColor: '#4A708B', color: '#fff', weight: 2, fillOpacity: 0.6,
-    }).addTo(map).bindPopup(
+    const el = document.createElement('div');
+    el.style.width = '20px';
+    el.style.height = '20px';
+    el.style.borderRadius = '50%';
+    el.style.backgroundColor = '#4A708B';
+    el.style.border = '2px solid #fff';
+    el.style.opacity = '0.6';
+    el.style.cursor = 'pointer';
+
+    const popup = new mapboxgl.Popup({ offset: 10 }).setHTML(
       `<strong>${pa.nameEn || pa.name}</strong><br>${pa.type}` +
       (pa.siteCode ? `<br>Code: ${pa.siteCode}` : '') +
       `<br>${pa.description}`
     );
+
+    new mapboxgl.Marker({ element: el })
+      .setLngLat([pa.coordinates[1], pa.coordinates[0]])
+      .setPopup(popup)
+      .addTo(map);
   });
 }
 
 // ---------------------------------------------------------------------------
-// Section live data
+// Section live data (unchanged from original — no Leaflet dependency)
 // ---------------------------------------------------------------------------
 
 async function loadSectionData(sectionId) {
@@ -461,8 +543,8 @@ async function loadWaterData(container) {
         <h3>Rivers</h3>
         <p class="wiki-data-value">${rivers.length}</p>
         ${rivers.slice(0, 8).map(r =>
-          `<p>${(r.tags && r.tags.name) || 'Unnamed river'}</p>`
-        ).join('')}
+    `<p>${(r.tags && r.tags.name) || 'Unnamed river'}</p>`
+  ).join('')}
       </div>
       <div class="wiki-data-card">
         <h3>Streams</h3>
@@ -532,8 +614,8 @@ async function loadWeatherData(container) {
         <p>${ODEMIRA_FIRE_HISTORY.context}</p>
         <ul>
           ${ODEMIRA_FIRE_HISTORY.majorEvents.map(e =>
-            `<li><strong>${e.year}</strong>: ${e.description}</li>`
-          ).join('')}
+    `<li><strong>${e.year}</strong>: ${e.description}</li>`
+  ).join('')}
         </ul>
       </div>
     </div>
@@ -554,15 +636,15 @@ async function loadBiodiversityData(container) {
 
   const groupsHtml = inatSummary && inatSummary.groups
     ? Object.entries(inatSummary.groups)
-        .sort((a, b) => b[1] - a[1])
-        .map(([g, c]) => `<li>${g}: ${c} species</li>`).join('')
+      .sort((a, b) => b[1] - a[1])
+      .map(([g, c]) => `<li>${g}: ${c} species</li>`).join('')
     : '<li>No data</li>';
 
   const topSpecies = inatSummary && inatSummary.species
     ? inatSummary.species.slice(0, 10)
-        .map(s =>
-          `<li><strong>${s.name}</strong> <em>(${s.scientificName})</em> &mdash; ${s.observationCount} obs.</li>`
-        ).join('')
+      .map(s =>
+        `<li><strong>${s.name}</strong> <em>(${s.scientificName})</em> &mdash; ${s.observationCount} obs.</li>`
+      ).join('')
     : '';
 
   container.innerHTML = `
@@ -677,8 +759,8 @@ async function loadCommunityData(container) {
         <h3>Notable Places</h3>
         <ul>
           ${LANDMARKS.map(lm =>
-            `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
-          ).join('')}
+    `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
+  ).join('')}
         </ul>
       </div>
     </div>

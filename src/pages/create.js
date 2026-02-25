@@ -1,30 +1,14 @@
 import '../styles/main.css';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import { createMap, mapboxgl, addMarker, setGeoJSONSource, fitToCoords, toLatLng, toLngLat } from '../lib/mapbox.js';
 import { initI18n } from '../lib/i18n.js';
 import { saveLandbook } from '../lib/store.js';
 import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, formatDistance } from '../lib/geo.js';
 import { geocode, reverseGeocode } from '../api/nominatim.js';
 
-// Fix Leaflet default marker icons in bundled builds
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
-
 initI18n();
 
 // ---- State ----
 let boundaryPoints = [];       // Array of [lat, lng]
-let circleMarkers = [];        // L.circleMarker instances (one per point)
-let connectingPolyline = null; // L.polyline connecting points during drawing
-let closedPolygon = null;      // L.polygon after closing
 let isClosed = false;
 let clickEnabled = true;
 
@@ -43,58 +27,122 @@ const statAddress = document.getElementById('stat-address');
 const searchInput = document.getElementById('search-input');
 const btnSearch = document.getElementById('btn-search');
 
+// ---- Source/layer IDs ----
+const POINTS_SRC = 'draw-points';
+const POINTS_LAYER = 'draw-points-layer';
+const FIRST_POINT_SRC = 'first-point';
+const FIRST_POINT_LAYER = 'first-point-layer';
+const LINE_SRC = 'draw-line';
+const LINE_LAYER = 'draw-line-layer';
+const POLY_SRC = 'draw-polygon';
+const POLY_FILL_LAYER = 'draw-polygon-fill';
+const POLY_LINE_LAYER = 'draw-polygon-line';
+
 // ---- Map initialization ----
-const map = L.map('create-map').setView([37.5967, -8.6400], 10);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 19,
-}).addTo(map);
+const map = createMap('create-map', {
+  center: [-8.6400, 37.5967],
+  zoom: 10,
+  satellite: false,
+});
 
-setInstructions(1);
+map.on('load', () => {
+  // Add empty sources for drawing
+  map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({
+    id: POINTS_LAYER,
+    type: 'circle',
+    source: POINTS_SRC,
+    paint: {
+      'circle-radius': 6,
+      'circle-color': '#52b788',
+      'circle-stroke-color': '#2d6a4f',
+      'circle-stroke-width': 2,
+    },
+  });
 
-// ---- Map click handler ----
-map.on('click', function (e) {
-  if (!clickEnabled || isClosed) return;
+  map.addSource(FIRST_POINT_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  map.addLayer({
+    id: FIRST_POINT_LAYER,
+    type: 'circle',
+    source: FIRST_POINT_SRC,
+    paint: {
+      'circle-radius': 8,
+      'circle-color': '#40916c',
+      'circle-stroke-color': '#1b4332',
+      'circle-stroke-width': 2,
+    },
+  });
 
-  const latlng = [e.latlng.lat, e.latlng.lng];
+  map.addSource(LINE_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
+  map.addLayer({
+    id: LINE_LAYER,
+    type: 'line',
+    source: LINE_SRC,
+    paint: {
+      'line-color': '#2d6a4f',
+      'line-width': 2,
+      'line-dasharray': [6, 4],
+    },
+  });
 
-  // Check if clicking near first point to close polygon
-  if (boundaryPoints.length >= 3) {
-    const firstPoint = map.latLngToContainerPoint(L.latLng(boundaryPoints[0]));
-    const clickPoint = map.latLngToContainerPoint(e.latlng);
-    const dist = firstPoint.distanceTo(clickPoint);
-    if (dist <= 20) {
-      closePolygon();
+  map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
+  map.addLayer({
+    id: POLY_FILL_LAYER,
+    type: 'fill',
+    source: POLY_SRC,
+    paint: { 'fill-color': '#52b788', 'fill-opacity': 0.3 },
+    layout: { visibility: 'none' },
+  });
+  map.addLayer({
+    id: POLY_LINE_LAYER,
+    type: 'line',
+    source: POLY_SRC,
+    paint: { 'line-color': '#2d6a4f', 'line-width': 2 },
+    layout: { visibility: 'none' },
+  });
+
+  setInstructions(1);
+
+  // ---- Map click handler ----
+  map.on('click', (e) => {
+    if (!clickEnabled || isClosed) return;
+
+    const latlng = [e.lngLat.lat, e.lngLat.lng];
+
+    // Check if clicking near first point to close polygon
+    if (boundaryPoints.length >= 3) {
+      const firstPx = map.project(toLngLat(boundaryPoints[0]));
+      const clickPx = map.project([e.lngLat.lng, e.lngLat.lat]);
+      const dist = Math.sqrt((firstPx.x - clickPx.x) ** 2 + (firstPx.y - clickPx.y) ** 2);
+      if (dist <= 20) {
+        closePolygon();
+        return;
+      }
+    }
+
+    addPoint(latlng);
+  });
+
+  // Cursor style
+  map.on('mousemove', (e) => {
+    if (isClosed) {
+      map.getCanvas().style.cursor = '';
       return;
     }
-  }
-
-  addPoint(latlng);
+    if (boundaryPoints.length >= 3) {
+      const firstPx = map.project(toLngLat(boundaryPoints[0]));
+      const mousePx = map.project([e.lngLat.lng, e.lngLat.lat]);
+      const dist = Math.sqrt((firstPx.x - mousePx.x) ** 2 + (firstPx.y - mousePx.y) ** 2);
+      map.getCanvas().style.cursor = dist <= 20 ? 'pointer' : 'crosshair';
+    } else {
+      map.getCanvas().style.cursor = 'crosshair';
+    }
+  });
 });
 
 // ---- Point management ----
 function addPoint(latlng) {
   boundaryPoints.push(latlng);
-
-  const idx = boundaryPoints.length - 1;
-  const marker = L.circleMarker(L.latLng(latlng[0], latlng[1]), {
-    radius: 6,
-    color: '#2d6a4f',
-    fillColor: '#52b788',
-    fillOpacity: 1,
-    weight: 2,
-    draggable: false, // circleMarkers aren't natively draggable; we handle it manually
-  }).addTo(map);
-
-  // Make marker draggable before closing
-  enableMarkerDrag(marker, idx);
-
-  // If this is the first point, give it a distinct style for "close target"
-  if (idx === 0) {
-    marker.setStyle({ color: '#1b4332', fillColor: '#40916c', radius: 8 });
-  }
-
-  circleMarkers.push(marker);
 
   // Show toolbar on first point
   if (boundaryPoints.length === 1) {
@@ -102,51 +150,39 @@ function addPoint(latlng) {
     setInstructions(2);
   }
 
-  updatePolyline();
+  updateDrawing();
   updateStats();
 }
 
-function enableMarkerDrag(marker, idx) {
-  let dragging = false;
-
-  marker.on('mousedown', function (e) {
-    if (isClosed) return;
-    dragging = true;
-    map.dragging.disable();
-    L.DomEvent.stopPropagation(e);
-
-    function onMove(evt) {
-      if (!dragging) return;
-      const latlng = evt.latlng;
-      marker.setLatLng(latlng);
-      boundaryPoints[idx] = [latlng.lat, latlng.lng];
-      updatePolyline();
-      updateStats();
-    }
-
-    function onUp() {
-      dragging = false;
-      map.dragging.enable();
-      map.off('mousemove', onMove);
-      map.off('mouseup', onUp);
-    }
-
-    map.on('mousemove', onMove);
-    map.on('mouseup', onUp);
+function updateDrawing() {
+  // Update connecting line
+  const lineCoords = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+  setGeoJSONSource(map, LINE_SRC, {
+    type: 'Feature',
+    geometry: { type: 'LineString', coordinates: lineCoords },
+    properties: {},
   });
-}
 
-function updatePolyline() {
-  if (connectingPolyline) {
-    map.removeLayer(connectingPolyline);
-    connectingPolyline = null;
-  }
+  // Update point markers (all except first)
+  const pointFeatures = boundaryPoints.slice(1).map(([lat, lng], idx) => ({
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: [lng, lat] },
+    properties: { idx: idx + 1 },
+  }));
+  setGeoJSONSource(map, POINTS_SRC, {
+    type: 'FeatureCollection',
+    features: pointFeatures,
+  });
 
-  if (boundaryPoints.length >= 2) {
-    connectingPolyline = L.polyline(
-      boundaryPoints.map(p => L.latLng(p[0], p[1])),
-      { color: '#2d6a4f', weight: 2, dashArray: '6, 4' }
-    ).addTo(map);
+  // Update first point (distinct style)
+  if (boundaryPoints.length > 0) {
+    const [lat, lng] = boundaryPoints[0];
+    setGeoJSONSource(map, FIRST_POINT_SRC, {
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }],
+    });
+  } else {
+    setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [] });
   }
 }
 
@@ -155,26 +191,24 @@ function closePolygon() {
   isClosed = true;
   clickEnabled = false;
 
-  // Remove individual markers and polyline
-  circleMarkers.forEach(m => map.removeLayer(m));
-  circleMarkers = [];
-  if (connectingPolyline) {
-    map.removeLayer(connectingPolyline);
-    connectingPolyline = null;
-  }
+  // Hide drawing layers
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'none');
 
-  // Create final polygon
-  closedPolygon = L.polygon(
-    boundaryPoints.map(p => L.latLng(p[0], p[1])),
-    {
-      color: '#2d6a4f',
-      fillColor: '#52b788',
-      fillOpacity: 0.3,
-      weight: 2,
-    }
-  ).addTo(map);
+  // Build closed polygon ring
+  const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+  ring.push([...ring[0]]); // close ring
 
-  map.fitBounds(closedPolygon.getBounds(), { padding: [40, 40] });
+  setGeoJSONSource(map, POLY_SRC, {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [ring] },
+    properties: {},
+  });
+  map.setLayoutProperty(POLY_FILL_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(POLY_LINE_LAYER, 'visibility', 'visible');
+
+  fitToCoords(map, boundaryPoints);
 
   setInstructions(3);
   updateStats();
@@ -186,10 +220,7 @@ function undoLastPoint() {
   if (isClosed || boundaryPoints.length === 0) return;
 
   boundaryPoints.pop();
-  const marker = circleMarkers.pop();
-  if (marker) map.removeLayer(marker);
-
-  updatePolyline();
+  updateDrawing();
   updateStats();
 
   if (boundaryPoints.length === 0) {
@@ -199,26 +230,20 @@ function undoLastPoint() {
 }
 
 function clearAll() {
-  // Remove polygon if closed
-  if (closedPolygon) {
-    map.removeLayer(closedPolygon);
-    closedPolygon = null;
-  }
+  // Hide polygon
+  map.setLayoutProperty(POLY_FILL_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(POLY_LINE_LAYER, 'visibility', 'none');
+  // Show drawing layers
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'visible');
 
-  // Remove markers
-  circleMarkers.forEach(m => map.removeLayer(m));
-  circleMarkers = [];
-
-  // Remove polyline
-  if (connectingPolyline) {
-    map.removeLayer(connectingPolyline);
-    connectingPolyline = null;
-  }
-
+  // Clear data
   boundaryPoints = [];
   isClosed = false;
   clickEnabled = true;
 
+  updateDrawing();
   toolbar.style.display = 'none';
   setInstructions(1);
   updateStats();
@@ -304,10 +329,10 @@ function performSearch() {
       if (results && results.length > 0) {
         const lat = parseFloat(results[0].lat);
         const lon = parseFloat(results[0].lon);
-        map.setView([lat, lon], 15);
+        map.flyTo({ center: [lon, lat], zoom: 15 });
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 }
 
 if (btnSearch) btnSearch.addEventListener('click', performSearch);
@@ -323,22 +348,32 @@ if (searchInput) {
 // ---- Generate Landbook ----
 if (btnCreate) {
   btnCreate.disabled = true;
-  btnCreate.addEventListener('click', () => {
+  btnCreate.addEventListener('click', async () => {
     if (!isClosed || boundaryPoints.length < 3) return;
+
+    btnCreate.disabled = true;
+    btnCreate.textContent = 'Generating\u2026';
 
     const area = polygonArea(boundaryPoints);
     const perimeter = polygonPerimeter(boundaryPoints);
     const centroid = polygonCentroid(boundaryPoints);
     const address = statAddress ? statAddress.textContent : '';
 
-    const landbook = saveLandbook({
-      boundary: boundaryPoints,
-      center: centroid,
-      area: area,
-      perimeter: perimeter,
-      address: address !== '\u2014' ? address : '',
-    });
+    try {
+      const landbook = await saveLandbook({
+        boundary: boundaryPoints,
+        center: centroid,
+        area: area,
+        perimeter: perimeter,
+        address: address !== '\u2014' ? address : '',
+      });
 
-    window.location.href = `landbook.html?id=${landbook.id}`;
+      window.location.href = `landbook.html?id=${landbook.id}`;
+    } catch (err) {
+      console.error('Failed to save landbook:', err);
+      btnCreate.disabled = false;
+      btnCreate.textContent = 'Generate Landbook';
+      alert('Failed to save. Please try again.');
+    }
   });
 }
