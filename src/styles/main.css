@@ -542,62 +542,19 @@ a {
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ---- TWO PRODUCTS SECTION ---- */
-.products {
-  padding: 100px 40px;
-  max-width: 1180px;
-  margin: 0 auto;
-}
-
-.products-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-}
-
-.product-card {
-  border: 1.5px solid var(--card-border);
-  border-radius: var(--radius-lg);
-  padding: 48px 40px;
-  display: flex;
-  flex-direction: column;
-  transition: border-color 0.2s;
-}
-
-.product-card:hover {
-  border-color: var(--black);
-}
-
-.product-card .product-type {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  color: var(--muted);
-}
-
-.product-card h3 {
-  font-size: 32px;
-  margin-bottom: 12px;
-  line-height: 1.1;
-}
-
-.product-card .product-tagline {
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--muted);
-  flex: 1;
-  margin-bottom: 28px;
-}
-
-/* ---- LANDBOOK SECTION ---- */
-.landbook-section {
+/* ---- DATA ROOM SECTION ---- */
+.dataroom-section {
   padding: 100px 0;
   border-top: 1px solid var(--border);
 }
 
-.landbook-section .section-desc {
+.dataroom-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 3.5vw, 42px);
+  margin-bottom: 16px;
+}
+
+.dataroom-section .section-desc {
   font-size: 17px;
   line-height: 1.65;
   color: var(--muted);
@@ -605,83 +562,187 @@ a {
   margin-bottom: 60px;
 }
 
-.landbook-section h2 {
+.dataroom-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.dataroom-card {
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 36px 32px;
+  transition: border-color 0.2s;
+}
+
+.dataroom-card:hover {
+  border-color: var(--black);
+}
+
+.dataroom-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--black);
+  color: var(--cream);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.dataroom-card h4 {
+  font-family: 'Inter', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.dataroom-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---- REPORT INCLUDES SECTION ---- */
+.report-section {
+  padding: 100px 0;
+  border-top: 1px solid var(--border);
+}
+
+.report-title {
+  font-family: 'DM Serif Display', serif;
   font-size: clamp(28px, 3.5vw, 42px);
   margin-bottom: 16px;
 }
 
-/* Process steps */
-.process-steps {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
+.report-section .section-desc {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 640px;
   margin-bottom: 60px;
-  padding-bottom: 60px;
-  border-bottom: 1px solid var(--border);
 }
 
-.process-step .step-num {
-  font-family: 'DM Serif Display', serif;
-  font-size: 48px;
-  color: var(--card-border);
-  margin-bottom: 12px;
+.report-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
 }
 
-.process-step h3 {
-  font-size: 20px;
-  margin-bottom: 6px;
+/* Sample report preview card */
+.report-preview-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #e8e3d4;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
 }
 
-.process-step p {
-  font-size: 14px;
-  line-height: 1.6;
+.report-topo-header {
+  padding: 20px 28px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
   color: var(--muted);
 }
 
-/* Includes grid */
-.includes-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-  margin-bottom: 60px;
+.report-topo-body {
+  padding: 12px 28px 16px;
+  position: relative;
 }
 
-.include-card {
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
-  padding: 28px 24px;
+.topo-lines {
+  width: 100%;
+  aspect-ratio: 4/3;
 }
 
-.include-card h4 {
-  font-size: 18px;
+.topo-lines svg {
+  width: 100%;
+  height: 100%;
+}
+
+.topo-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.7;
+  margin-top: 8px;
+}
+
+.report-preview-footer {
+  background: var(--black);
+  color: var(--cream);
+  padding: 24px 28px;
+}
+
+.report-sample-label {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #8B6914;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
-.include-card p {
-  font-size: 13px;
-  line-height: 1.55;
-  color: var(--muted);
+.report-parcel-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  margin-bottom: 4px;
 }
 
-/* Benefits */
-.benefits-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-  padding-top: 40px;
+.report-parcel-location {
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+/* Chapter list */
+.report-chapters {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.report-chapter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.report-chapter:first-child {
   border-top: 1px solid var(--border);
 }
 
-.benefit h4 {
-  font-size: 20px;
-  margin-bottom: 6px;
+.report-chapter:hover {
+  background: rgba(0, 0, 0, 0.02);
 }
 
-.benefit p {
+.chapter-num {
+  font-family: 'DM Serif Display', serif;
   font-size: 14px;
-  line-height: 1.6;
   color: var(--muted);
+  min-width: 24px;
 }
+
+.report-chapter svg {
+  color: var(--black);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.chapter-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+
 
 /* ---- PRICING ---- */
 .pricing-section {
@@ -2387,27 +2448,15 @@ a {
     grid-template-columns: 1fr;
   }
 
-  .products {
-    padding: 60px 20px;
-  }
-
-  .products-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* LandBook section */
-  .process-steps {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-
-  .includes-grid {
+  /* Data room */
+  .dataroom-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .benefits-row {
+  /* Report includes */
+  .report-layout {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 32px;
   }
 
   /* Pricing */
@@ -2473,21 +2522,14 @@ a {
     height: 36px;
   }
 
-  .products {
-    padding: 48px 16px;
-  }
-
-  .product-card {
-    padding: 32px 24px;
-  }
-
-  /* LandBook + Pricing sections */
-  .landbook-section,
+  /* Data room + Report + Pricing sections */
+  .dataroom-section,
+  .report-section,
   .pricing-section {
     padding: 60px 0;
   }
 
-  .includes-grid {
+  .dataroom-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2639,4 +2681,149 @@ a {
   color: var(--muted);
   margin-bottom: 24px;
   line-height: 1.5;
+}
+
+/* ---- DATA FRESHNESS INDICATOR ---- */
+.data-freshness {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 12px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* ========================================
+   PRINT / PDF EXPORT STYLES
+   ======================================== */
+@media print {
+
+  /* Hide UI chrome */
+  .header,
+  .landbook-sidebar,
+  .landbook-nav,
+  .landbook-sidebar-actions,
+  .section-pagination,
+  .btn-page,
+  .page-indicator,
+  .map-layer-toggles,
+  .skeleton,
+  .coming-soon-overlay,
+  #save-user-data,
+  #save-feedback,
+  .chip-group label,
+  .data-freshness {
+    display: none !important;
+  }
+
+  /* Reset layout */
+  body {
+    background: white;
+    color: #1a1a1a;
+    font-size: 11pt;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+  }
+
+  .landbook-layout {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .landbook-container {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  /* Sections */
+  .landbook-section {
+    padding: 24pt 0;
+    border: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .landbook-section+.landbook-section {
+    border-top: 1px solid #ddd;
+  }
+
+  /* Typography */
+  .landbook-header h1 {
+    font-size: 22pt;
+    color: #1a1a1a;
+  }
+
+  .landbook-section h2 {
+    font-size: 16pt;
+    color: #1a1a1a;
+    margin-bottom: 12pt;
+  }
+
+  .landbook-section h3 {
+    font-size: 12pt;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+  }
+
+  /* Map — show as fixed height */
+  .landbook-map {
+    height: 300pt !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Data grids */
+  .data-grid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .data-item {
+    border-color: #ddd;
+    break-inside: avoid;
+  }
+
+  /* Species photos */
+  .species-photo {
+    max-height: 60pt;
+  }
+
+  /* Risk card */
+  .risk-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* User form — show values only */
+  #user-reported-form input,
+  #user-reported-form select,
+  #user-reported-form textarea {
+    border: none;
+    background: transparent;
+    padding: 2pt 0;
+    font-size: 10pt;
+  }
+
+  /* Table */
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Links */
+  a {
+    color: #1a1a1a;
+    text-decoration: none;
+  }
+
+  /* Footer */
+  @page {
+    margin: 1.5cm;
+
+    @bottom-center {
+      content: "Generated by LandLibrary";
+      font-size: 8pt;
+      color: #999;
+    }
+  }
 }

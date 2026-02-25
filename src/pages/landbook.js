@@ -233,6 +233,7 @@ function renderReport(lb) {
         </div>
         <div id="data-admin" class="data-sub-section"></div>
         <div id="data-infrastructure" class="data-sub-section"></div>
+        <div id="data-freshness" class="data-freshness">${lb.autoData && lb.autoData.lastFetched ? `Data from ${formatDate(lb.autoData.lastFetched)} \u2022 Refreshing...` : 'Loading data...'}</div>
       </div>
       ${pagination(0)}
     </div>
@@ -315,7 +316,15 @@ function renderReport(lb) {
 
 
   // Fetch live data in parallel (protected areas are now dynamic too)
-  if (center) fetchAllData(lb, center[0], center[1], boundary);
+  if (center) {
+    const cached = lb.autoData && lb.autoData.lastFetched;
+    if (cached) {
+      // Render cached data instantly
+      renderCachedData(lb.autoData, center[0], center[1]);
+    }
+    // Always re-fetch fresh data
+    fetchAllData(lb, center[0], center[1], boundary);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -420,7 +429,6 @@ function fetchAllData(lb, lat, lng, boundary) {
     { key: 'species', fn: () => getSpeciesCounts(lat, lng, 5) },
     { key: 'threatened', fn: () => getThreatenedSpecies(lat, lng, 10) },
     { key: 'water', fn: () => bounds ? getWaterFeatures(bounds) : Promise.resolve(null) },
-    // Phase 5A: New data sources
     { key: 'gbif', fn: () => getSpeciesOccurrences(lat, lng, 10) },
     { key: 'activeFires', fn: () => getActiveFiresNearby(lat, lng, 50) },
     { key: 'ipmaForecast', fn: () => getIpmaForecast().catch(() => null) },
@@ -433,12 +441,58 @@ function fetchAllData(lb, lat, lng, boundary) {
   ];
 
   const results = {};
+  let completed = 0;
+
   tasks.forEach(t =>
     t.fn()
       .then(data => { results[t.key] = { ok: true, data }; })
-      .catch(err => { results[t.key] = { ok: false, error: err }; })
-      .finally(() => renderDataSection(t.key, results, lat, lng))
+      .catch(err => { results[t.key] = { ok: false, error: String(err) }; })
+      .finally(() => {
+        renderDataSection(t.key, results, lat, lng);
+        completed++;
+        if (completed === tasks.length) {
+          persistResults(lb, results);
+        }
+      })
   );
+}
+
+/**
+ * Save fetched results to MongoDB so revisits load instantly.
+ */
+async function persistResults(lb, results) {
+  if (!lb || !lb.id) return;
+  try {
+    // Serialize: strip error objects, keep only JSON-safe data
+    const autoData = { lastFetched: new Date().toISOString() };
+    for (const [key, val] of Object.entries(results)) {
+      if (val.ok) {
+        autoData[key] = val.data;
+      }
+    }
+    await updateLandbook(lb.id, { autoData });
+    // Show save indicator
+    const indicator = document.getElementById('data-freshness');
+    if (indicator) indicator.textContent = `Data saved \u2022 ${new Date().toLocaleTimeString()}`;
+  } catch (err) {
+    console.warn('Auto-save failed:', err);
+  }
+}
+
+/**
+ * Render cached autoData from MongoDB (instant on revisit).
+ */
+function renderCachedData(autoData, lat, lng) {
+  if (!autoData) return;
+  const results = {};
+  for (const [key, data] of Object.entries(autoData)) {
+    if (key === 'lastFetched') continue;
+    results[key] = { ok: true, data };
+  }
+  // Render all cached sections
+  for (const key of Object.keys(results)) {
+    renderDataSection(key, results, lat, lng);
+  }
 }
 
 function renderDataSection(key, results, lat, lng) {

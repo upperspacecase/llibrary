@@ -207,6 +207,10 @@ function renderSidebar(activeId) {
         </a>
       `).join('')}
     </nav>
+    <a href="#contribute" class="wiki-sidebar-cta ${activeId === 'contribute' ? 'active' : ''}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Add Info
+    </a>
   `;
 }
 
@@ -285,23 +289,81 @@ function renderSection(sectionId) {
 
     <!-- Community Contributions -->
     <section class="wiki-contributions" id="wiki-contributions">
-      <h2>Community Contributions</h2>
-      <p class="wiki-contributions-desc">Knowledge shared by the community. Have something to add? Use the form below.</p>
+      <div class="wiki-contributions-header">
+        <h2>Community Contributions</h2>
+        <a href="#contribute" class="btn-outline btn-sm">Add Info</a>
+      </div>
       <div class="wiki-contributions-list" id="contributions-list">
         <div class="loading-block"><span class="loading-spinner"></span> Loading contributions...</div>
       </div>
     </section>
 
-    <!-- Contribute Form -->
-    <section class="wiki-contribute-form" id="wiki-contribute-form">
-      <h2>Share Your Knowledge</h2>
-      <p class="wiki-contribute-desc">Help build the wiki. Share a story, tip, event, place, or resource about this topic.</p>
-      <form id="contribution-form" data-section="${sectionId}">
+    <!-- Live Data (lazy) -->
+    <section class="wiki-data-section" id="wiki-data-section">
+      <button class="wiki-data-toggle" id="wiki-data-toggle">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Show live data
+      </button>
+      <div id="wiki-data-content"></div>
+    </section>
+  `;
+
+  // Initialise map and contributions after DOM insertion
+  setTimeout(() => {
+    currentMap = createBaseMap('wiki-section-map');
+    currentMap.on('load', () => {
+      initSectionMap(sectionId, currentMap);
+    });
+    loadContributions(sectionId);
+
+    // Wire up lazy live-data toggle
+    const toggleBtn = document.getElementById('wiki-data-toggle');
+    const dataContent = document.getElementById('wiki-data-content');
+    if (toggleBtn && dataContent) {
+      toggleBtn.addEventListener('click', () => {
+        toggleBtn.disabled = true;
+        toggleBtn.innerHTML = `<span class="loading-spinner"></span> Loading live data\u2026`;
+        loadSectionData(sectionId).then(() => {
+          toggleBtn.style.display = 'none';
+        }).catch(() => {
+          toggleBtn.disabled = false;
+          toggleBtn.textContent = 'Retry loading live data';
+        });
+      });
+    }
+  }, 0);
+}
+
+// ---------------------------------------------------------------------------
+// Contribute view (centralized form)
+// ---------------------------------------------------------------------------
+
+function renderContribute(preselectedSection) {
+  destroyMap();
+  const sections = getAllSections();
+
+  content.innerHTML = `
+    <section class="wiki-hero">
+      <h1>Share Your Knowledge</h1>
+      <p class="wiki-intro">Help build the wiki. Share a story, tip, event, place, or resource about the Odemira bioregion. All fields are optional except your message.</p>
+    </section>
+
+    <section class="wiki-contribute-form">
+      <form id="contribution-form">
         <div class="field-row">
           <div class="field">
+            <label for="contrib-section">Section</label>
+            <select id="contrib-section" name="section">
+              <option value="">General (no specific section)</option>
+              ${sections.map(s => `
+                <option value="${s.id}" ${s.id === preselectedSection ? 'selected' : ''}>${s.title}</option>
+              `).join('')}
+            </select>
+          </div>
+          <div class="field">
             <label for="contrib-type">Type</label>
-            <select id="contrib-type" name="type" required>
-              <option value="">Select type...</option>
+            <select id="contrib-type" name="type">
+              <option value="">Any</option>
               <option value="story">Story / Experience</option>
               <option value="tip">Practical Tip</option>
               <option value="event">Event / Gathering</option>
@@ -309,40 +371,28 @@ function renderSection(sectionId) {
               <option value="resource">Resource / Link</option>
             </select>
           </div>
+        </div>
+        <div class="field-row">
           <div class="field">
-            <label for="contrib-author">Your Name (optional)</label>
+            <label for="contrib-author">Your Name</label>
             <input type="text" id="contrib-author" name="author" placeholder="Anonymous">
+          </div>
+          <div class="field">
+            <label for="contrib-title">Title</label>
+            <input type="text" id="contrib-title" name="title" placeholder="A short title (optional)">
           </div>
         </div>
         <div class="field">
-          <label for="contrib-title">Title</label>
-          <input type="text" id="contrib-title" name="title" placeholder="A short title for your contribution" required>
+          <label for="contrib-content">Your message *</label>
+          <textarea id="contrib-content" name="content" rows="6" placeholder="Share what you know about this place..." required></textarea>
         </div>
-        <div class="field">
-          <label for="contrib-content">Content</label>
-          <textarea id="contrib-content" name="content" rows="5" placeholder="Share what you know..." required></textarea>
-        </div>
-        <button type="submit" class="btn-primary" id="submit-contribution">Submit Contribution</button>
+        <button type="submit" class="btn-primary" id="submit-contribution">Submit</button>
         <div id="contrib-feedback" style="margin-top:12px;font-size:14px;"></div>
       </form>
     </section>
-
-    <section class="wiki-data-section" id="wiki-data-section">
-      <h2>Live Data</h2>
-      ${loadingSkeleton(6)}
-    </section>
   `;
 
-  // Initialise map, live data, and contributions after DOM insertion
-  setTimeout(() => {
-    currentMap = createBaseMap('wiki-section-map');
-    currentMap.on('load', () => {
-      initSectionMap(sectionId, currentMap);
-    });
-    loadSectionData(sectionId);
-    loadContributions(sectionId);
-    setupContributionForm(sectionId);
-  }, 0);
+  setupContributionForm();
 }
 
 // ---------------------------------------------------------------------------
@@ -506,8 +556,10 @@ function initGovernanceMap(map) {
 // ---------------------------------------------------------------------------
 
 async function loadSectionData(sectionId) {
-  const container = document.getElementById('wiki-data-section');
+  const container = document.getElementById('wiki-data-content');
   if (!container) return;
+
+  container.innerHTML = loadingSkeleton(4);
 
   try {
     switch (sectionId) {
@@ -520,12 +572,11 @@ async function loadSectionData(sectionId) {
       case 'threats': await loadWaterData(container); break;
       case 'community': await loadCommunityData(container); break;
       default:
-        container.innerHTML = '<h2>Live Data</h2><p>No live data available for this section.</p>';
+        container.innerHTML = '<p>No live data available for this section.</p>';
     }
   } catch (err) {
     console.error(`Data load error [${sectionId}]:`, err);
     container.innerHTML = `
-      <h2>Live Data</h2>
       <p class="wiki-data-error">Unable to load live data. Please try again later.</p>
     `;
   }
@@ -959,7 +1010,7 @@ async function loadContributions(sectionId) {
   }
 }
 
-function setupContributionForm(sectionId) {
+function setupContributionForm() {
   const form = document.getElementById('contribution-form');
   if (!form) return;
 
@@ -968,13 +1019,15 @@ function setupContributionForm(sectionId) {
 
     const btn = document.getElementById('submit-contribution');
     const feedback = document.getElementById('contrib-feedback');
+    const sectionEl = form.querySelector('[name="section"]');
+    const sectionId = sectionEl ? sectionEl.value : '';
     const type = form.querySelector('[name="type"]').value;
     const author = form.querySelector('[name="author"]').value.trim();
     const title = form.querySelector('[name="title"]').value.trim();
-    const content = form.querySelector('[name="content"]').value.trim();
+    const contentVal = form.querySelector('[name="content"]').value.trim();
 
-    if (!type || !content) {
-      if (feedback) feedback.innerHTML = '<span style="color:var(--coral);">Please select a type and write some content.</span>';
+    if (!contentVal) {
+      if (feedback) feedback.innerHTML = '<span style="color:var(--coral);">Please write a message.</span>';
       return;
     }
 
@@ -986,10 +1039,10 @@ function setupContributionForm(sectionId) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          section: sectionId,
-          type,
-          title,
-          content,
+          section: sectionId || 'general',
+          type: type || 'story',
+          title: title || '',
+          content: contentVal,
           author: author || 'Anonymous',
         }),
       });
@@ -1005,13 +1058,6 @@ function setupContributionForm(sectionId) {
         feedback.innerHTML = '<span style="color:var(--green);font-weight:600;">Thank you! Your contribution has been added.</span>';
         setTimeout(() => { feedback.innerHTML = ''; }, 4000);
       }
-
-      // Refresh contributions list
-      await loadContributions(sectionId);
-
-      // Scroll to contributions section
-      const contribSection = document.getElementById('wiki-contributions');
-      if (contribSection) contribSection.scrollIntoView({ behavior: 'smooth' });
     } catch (err) {
       console.error('Submit failed:', err);
       if (feedback) {
@@ -1019,7 +1065,7 @@ function setupContributionForm(sectionId) {
       }
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Submit Contribution';
+      btn.textContent = 'Submit';
     }
   });
 }
@@ -1028,13 +1074,19 @@ function setupContributionForm(sectionId) {
 // Router
 // ---------------------------------------------------------------------------
 
+// Track last section for pre-selecting in contribute form
+let lastSectionId = null;
+
 function route() {
   const id = currentRoute();
   renderSidebar(id);
 
-  if (id === 'hub' || !getSectionById(id)) {
+  if (id === 'contribute') {
+    renderContribute(lastSectionId);
+  } else if (id === 'hub' || !getSectionById(id)) {
     renderHub();
   } else {
+    lastSectionId = id;
     renderSection(id);
   }
 }
