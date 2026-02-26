@@ -1,177 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Add Property — LandLibrary</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <title>Add Property — LandLibrary</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
 
-<header class="header">
-  <a href="index.html" class="logo">
-    <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none"/>
-      <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none"/>
-      <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5"/>
-      <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5"/>
-    </svg>
-    <div class="logo-text">Land<br>Library</div>
-  </a>
-  <div class="header-nav">
-    <a href="index.html" data-i18n="nav.home">Home</a>
-    <a href="directory.html" data-i18n="nav.directory">Directory</a>
-    <a href="onboard.html" class="active" data-i18n="nav.add">Add Property</a>
-    <div class="lang-toggle">
-      <button data-lang="en">EN</button>
-      <button data-lang="pt">PT</button>
+  <header class="header">
+    <a href="index.html" class="logo">
+      <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+        <circle cx="24" cy="24" r="22" stroke="#000" stroke-width="2.5" fill="none" />
+        <circle cx="24" cy="24" r="8" stroke="#000" stroke-width="2.5" fill="none" />
+        <line x1="0" y1="24" x2="16" y2="24" stroke="#000" stroke-width="2.5" />
+        <line x1="32" y1="24" x2="48" y2="24" stroke="#000" stroke-width="2.5" />
+      </svg>
+      <div class="logo-text">Land<br>Library</div>
+    </a>
+    <div class="header-nav">
+      <a href="index.html" data-i18n="nav.home">Home</a>
+      <a href="directory.html" data-i18n="nav.directory">Directory</a>
+      <a href="onboard.html" class="active" data-i18n="nav.add">Add Property</a>
+      <div class="lang-toggle">
+        <button data-lang="en">EN</button>
+        <button data-lang="pt">PT</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="onboard-container">
+
+      <div class="progress-bar" id="progress">
+        <div class="pip active"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+        <div class="pip"></div>
+      </div>
+
+      <form id="onboard-form" autocomplete="off">
+
+        <div class="form-step active" data-step="0">
+          <h2 data-i18n="onboard.s1.title">Property basics</h2>
+          <p class="step-desc" data-i18n="onboard.s1.desc">Let's start with the name of your property and your contact
+            details.</p>
+          <div class="field">
+            <label data-i18n="onboard.s1.name">Property name</label>
+            <input type="text" name="propertyName" required data-i18n="onboard.s1.name.hint">
+          </div>
+          <div class="field">
+            <label data-i18n="onboard.s1.owner">Your name</label>
+            <input type="text" name="ownerName" required>
+          </div>
+          <div class="field">
+            <label data-i18n="onboard.s1.email">Email</label>
+            <input type="email" name="email" data-i18n="onboard.s1.email.hint">
+            <div class="field-hint" data-i18n="onboard.s1.email.hint">Optional — only used if you want updates</div>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="1">
+          <h2 data-i18n="onboard.s2.title">Location</h2>
+          <p class="step-desc" data-i18n="onboard.s2.desc">Enter an address or place the pin on the map to mark your
+            property location.</p>
+          <div class="field">
+            <label data-i18n="onboard.s2.address">Address or place name</label>
+            <input type="text" name="address" id="address-input" data-i18n="onboard.s2.address.hint">
+          </div>
+          <div class="map-container">
+            <div id="onboard-map"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label data-i18n="onboard.s2.lat">Latitude</label><input type="text" name="lat"
+                id="lat-input" readonly></div>
+            <div class="field"><label data-i18n="onboard.s2.lng">Longitude</label><input type="text" name="lng"
+                id="lng-input" readonly></div>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="2">
+          <h2 data-i18n="onboard.s3.title">Land details</h2>
+          <p class="step-desc" data-i18n="onboard.s3.desc">Tell us about the size and current use of your land.</p>
+          <div class="field-row">
+            <div class="field"><label data-i18n="onboard.s3.area">Approximate area</label><input type="number"
+                name="area" min="0" step="any"></div>
+            <div class="field"><label data-i18n="onboard.s3.unit">Unit</label><select name="areaUnit">
+                <option value="hectares">Hectares</option>
+                <option value="acres">Acres</option>
+                <option value="sqm">m&sup2;</option>
+              </select></div>
+          </div>
+          <div class="field">
+            <label data-i18n="onboard.s3.landuse">Current land use</label>
+            <div class="chip-group">
+              <label><input type="checkbox" name="landUse" value="forest"><span
+                  data-i18n="onboard.s3.lu.forest">Forest</span></label>
+              <label><input type="checkbox" name="landUse" value="pasture"><span
+                  data-i18n="onboard.s3.lu.pasture">Pasture</span></label>
+              <label><input type="checkbox" name="landUse" value="crops"><span
+                  data-i18n="onboard.s3.lu.crops">Crops</span></label>
+              <label><input type="checkbox" name="landUse" value="mixed"><span
+                  data-i18n="onboard.s3.lu.mixed">Mixed</span></label>
+              <label><input type="checkbox" name="landUse" value="orchard"><span
+                  data-i18n="onboard.s3.lu.orchard">Orchard</span></label>
+              <label><input type="checkbox" name="landUse" value="vineyard"><span
+                  data-i18n="onboard.s3.lu.vineyard">Vineyard</span></label>
+              <label><input type="checkbox" name="landUse" value="fallow"><span
+                  data-i18n="onboard.s3.lu.fallow">Fallow</span></label>
+              <label><input type="checkbox" name="landUse" value="residential"><span
+                  data-i18n="onboard.s3.lu.residential">Residential</span></label>
+              <label><input type="checkbox" name="landUse" value="other"><span
+                  data-i18n="onboard.s3.lu.other">Other</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="3">
+          <h2 data-i18n="onboard.s4.title">Soil &amp; water</h2>
+          <p class="step-desc" data-i18n="onboard.s4.desc">What do you know about the soil and water on your property?
+          </p>
+          <div class="field"><label data-i18n="onboard.s4.soil">Soil type or description</label><textarea name="soil"
+              data-i18n="onboard.s4.soil.hint"></textarea></div>
+          <div class="field"><label data-i18n="onboard.s4.water">Water sources</label><textarea name="water"
+              data-i18n="onboard.s4.water.hint"></textarea></div>
+        </div>
+
+        <div class="form-step" data-step="4">
+          <h2 data-i18n="onboard.s5.title">Ecology &amp; fire</h2>
+          <p class="step-desc" data-i18n="onboard.s5.desc">What lives on your land, and what's your fire situation?</p>
+          <div class="field"><label data-i18n="onboard.s5.flora">Known flora</label><textarea name="flora"
+              data-i18n="onboard.s5.flora.hint"></textarea></div>
+          <div class="field"><label data-i18n="onboard.s5.fauna">Known fauna</label><textarea name="fauna"
+              data-i18n="onboard.s5.fauna.hint"></textarea></div>
+          <div class="field"><label data-i18n="onboard.s5.fire">Fire history &amp; preparedness</label><textarea
+              name="fire" data-i18n="onboard.s5.fire.hint"></textarea></div>
+        </div>
+
+        <div class="form-step" data-step="5">
+          <h2 data-i18n="onboard.s6.title">Challenges &amp; goals</h2>
+          <p class="step-desc" data-i18n="onboard.s6.desc">What are you facing, and what do you hope for your land?</p>
+          <div class="field">
+            <label data-i18n="onboard.s6.challenges">Current challenges</label>
+            <div class="chip-group">
+              <label><input type="checkbox" name="challenges" value="erosion"><span
+                  data-i18n="onboard.s6.ch.erosion">Erosion</span></label>
+              <label><input type="checkbox" name="challenges" value="drought"><span
+                  data-i18n="onboard.s6.ch.drought">Drought</span></label>
+              <label><input type="checkbox" name="challenges" value="pests"><span
+                  data-i18n="onboard.s6.ch.pests">Pests</span></label>
+              <label><input type="checkbox" name="challenges" value="fire"><span data-i18n="onboard.s6.ch.fire">Fire
+                  risk</span></label>
+              <label><input type="checkbox" name="challenges" value="flooding"><span
+                  data-i18n="onboard.s6.ch.flooding">Flooding</span></label>
+              <label><input type="checkbox" name="challenges" value="soil"><span data-i18n="onboard.s6.ch.soil">Soil
+                  degradation</span></label>
+              <label><input type="checkbox" name="challenges" value="invasive"><span
+                  data-i18n="onboard.s6.ch.invasive">Invasive species</span></label>
+              <label><input type="checkbox" name="challenges" value="access"><span
+                  data-i18n="onboard.s6.ch.access">Access / infrastructure</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label data-i18n="onboard.s6.goals">Goals for the land</label>
+            <div class="chip-group">
+              <label><input type="checkbox" name="goals" value="conservation"><span
+                  data-i18n="onboard.s6.go.conservation">Conservation</span></label>
+              <label><input type="checkbox" name="goals" value="agriculture"><span
+                  data-i18n="onboard.s6.go.agriculture">Agriculture</span></label>
+              <label><input type="checkbox" name="goals" value="regen"><span
+                  data-i18n="onboard.s6.go.regen">Regeneration</span></label>
+              <label><input type="checkbox" name="goals" value="sale"><span
+                  data-i18n="onboard.s6.go.sale">Sale</span></label>
+              <label><input type="checkbox" name="goals" value="education"><span
+                  data-i18n="onboard.s6.go.education">Education</span></label>
+              <label><input type="checkbox" name="goals" value="tourism"><span
+                  data-i18n="onboard.s6.go.tourism">Eco-tourism</span></label>
+              <label><input type="checkbox" name="goals" value="residence"><span
+                  data-i18n="onboard.s6.go.residence">Residence</span></label>
+              <label><input type="checkbox" name="goals" value="other"><span
+                  data-i18n="onboard.s6.go.other">Other</span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-step" data-step="6">
+          <h2 data-i18n="onboard.s7.title">Review &amp; submit</h2>
+          <p class="step-desc" data-i18n="onboard.s7.desc">Check your details below. You can go back to edit any
+            section.</p>
+          <div id="review-content"></div>
+        </div>
+
+        <div class="form-nav">
+          <button type="button" class="btn-back" id="btn-back" data-i18n="onboard.nav.back"
+            style="visibility:hidden;">Back</button>
+          <button type="button" class="btn-primary" id="btn-next" data-i18n="onboard.nav.next">Continue</button>
+        </div>
+
+      </form>
     </div>
   </div>
-</header>
 
-<div class="page-body">
-<div class="onboard-container">
-
-  <div class="progress-bar" id="progress">
-    <div class="pip active"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div><div class="pip"></div>
-  </div>
-
-  <form id="onboard-form" autocomplete="off">
-
-    <div class="form-step active" data-step="0">
-      <h2 data-i18n="onboard.s1.title">Property basics</h2>
-      <p class="step-desc" data-i18n="onboard.s1.desc">Let's start with the name of your property and your contact details.</p>
-      <div class="field">
-        <label data-i18n="onboard.s1.name">Property name</label>
-        <input type="text" name="propertyName" required data-i18n="onboard.s1.name.hint">
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s1.owner">Your name</label>
-        <input type="text" name="ownerName" required>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s1.email">Email</label>
-        <input type="email" name="email" data-i18n="onboard.s1.email.hint">
-        <div class="field-hint" data-i18n="onboard.s1.email.hint">Optional — only used if you want updates</div>
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="logo">
+          <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none" />
+            <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none" />
+            <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5" />
+            <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5" />
+          </svg>
+          <div class="logo-text" style="color:var(--cream);">Land<br>Library</div>
+        </a>
+        <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
       </div>
     </div>
-
-    <div class="form-step" data-step="1">
-      <h2 data-i18n="onboard.s2.title">Location</h2>
-      <p class="step-desc" data-i18n="onboard.s2.desc">Enter an address or place the pin on the map to mark your property location.</p>
-      <div class="field">
-        <label data-i18n="onboard.s2.address">Address or place name</label>
-        <input type="text" name="address" id="address-input" data-i18n="onboard.s2.address.hint">
-      </div>
-      <div class="map-container"><div id="onboard-map"></div></div>
-      <div class="field-row">
-        <div class="field"><label data-i18n="onboard.s2.lat">Latitude</label><input type="text" name="lat" id="lat-input" readonly></div>
-        <div class="field"><label data-i18n="onboard.s2.lng">Longitude</label><input type="text" name="lng" id="lng-input" readonly></div>
-      </div>
+    <div class="footer-bottom">
+      <div>LandLibrary</div>
+      <div>EN / PT</div>
     </div>
+  </footer>
 
-    <div class="form-step" data-step="2">
-      <h2 data-i18n="onboard.s3.title">Land details</h2>
-      <p class="step-desc" data-i18n="onboard.s3.desc">Tell us about the size and current use of your land.</p>
-      <div class="field-row">
-        <div class="field"><label data-i18n="onboard.s3.area">Approximate area</label><input type="number" name="area" min="0" step="any"></div>
-        <div class="field"><label data-i18n="onboard.s3.unit">Unit</label><select name="areaUnit"><option value="hectares">Hectares</option><option value="acres">Acres</option><option value="sqm">m&sup2;</option></select></div>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s3.landuse">Current land use</label>
-        <div class="chip-group">
-          <label><input type="checkbox" name="landUse" value="forest"><span data-i18n="onboard.s3.lu.forest">Forest</span></label>
-          <label><input type="checkbox" name="landUse" value="pasture"><span data-i18n="onboard.s3.lu.pasture">Pasture</span></label>
-          <label><input type="checkbox" name="landUse" value="crops"><span data-i18n="onboard.s3.lu.crops">Crops</span></label>
-          <label><input type="checkbox" name="landUse" value="mixed"><span data-i18n="onboard.s3.lu.mixed">Mixed</span></label>
-          <label><input type="checkbox" name="landUse" value="orchard"><span data-i18n="onboard.s3.lu.orchard">Orchard</span></label>
-          <label><input type="checkbox" name="landUse" value="vineyard"><span data-i18n="onboard.s3.lu.vineyard">Vineyard</span></label>
-          <label><input type="checkbox" name="landUse" value="fallow"><span data-i18n="onboard.s3.lu.fallow">Fallow</span></label>
-          <label><input type="checkbox" name="landUse" value="residential"><span data-i18n="onboard.s3.lu.residential">Residential</span></label>
-          <label><input type="checkbox" name="landUse" value="other"><span data-i18n="onboard.s3.lu.other">Other</span></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-step" data-step="3">
-      <h2 data-i18n="onboard.s4.title">Soil &amp; water</h2>
-      <p class="step-desc" data-i18n="onboard.s4.desc">What do you know about the soil and water on your property?</p>
-      <div class="field"><label data-i18n="onboard.s4.soil">Soil type or description</label><textarea name="soil" data-i18n="onboard.s4.soil.hint"></textarea></div>
-      <div class="field"><label data-i18n="onboard.s4.water">Water sources</label><textarea name="water" data-i18n="onboard.s4.water.hint"></textarea></div>
-    </div>
-
-    <div class="form-step" data-step="4">
-      <h2 data-i18n="onboard.s5.title">Ecology &amp; fire</h2>
-      <p class="step-desc" data-i18n="onboard.s5.desc">What lives on your land, and what's your fire situation?</p>
-      <div class="field"><label data-i18n="onboard.s5.flora">Known flora</label><textarea name="flora" data-i18n="onboard.s5.flora.hint"></textarea></div>
-      <div class="field"><label data-i18n="onboard.s5.fauna">Known fauna</label><textarea name="fauna" data-i18n="onboard.s5.fauna.hint"></textarea></div>
-      <div class="field"><label data-i18n="onboard.s5.fire">Fire history &amp; preparedness</label><textarea name="fire" data-i18n="onboard.s5.fire.hint"></textarea></div>
-    </div>
-
-    <div class="form-step" data-step="5">
-      <h2 data-i18n="onboard.s6.title">Challenges &amp; goals</h2>
-      <p class="step-desc" data-i18n="onboard.s6.desc">What are you facing, and what do you hope for your land?</p>
-      <div class="field">
-        <label data-i18n="onboard.s6.challenges">Current challenges</label>
-        <div class="chip-group">
-          <label><input type="checkbox" name="challenges" value="erosion"><span data-i18n="onboard.s6.ch.erosion">Erosion</span></label>
-          <label><input type="checkbox" name="challenges" value="drought"><span data-i18n="onboard.s6.ch.drought">Drought</span></label>
-          <label><input type="checkbox" name="challenges" value="pests"><span data-i18n="onboard.s6.ch.pests">Pests</span></label>
-          <label><input type="checkbox" name="challenges" value="fire"><span data-i18n="onboard.s6.ch.fire">Fire risk</span></label>
-          <label><input type="checkbox" name="challenges" value="flooding"><span data-i18n="onboard.s6.ch.flooding">Flooding</span></label>
-          <label><input type="checkbox" name="challenges" value="soil"><span data-i18n="onboard.s6.ch.soil">Soil degradation</span></label>
-          <label><input type="checkbox" name="challenges" value="invasive"><span data-i18n="onboard.s6.ch.invasive">Invasive species</span></label>
-          <label><input type="checkbox" name="challenges" value="access"><span data-i18n="onboard.s6.ch.access">Access / infrastructure</span></label>
-        </div>
-      </div>
-      <div class="field">
-        <label data-i18n="onboard.s6.goals">Goals for the land</label>
-        <div class="chip-group">
-          <label><input type="checkbox" name="goals" value="conservation"><span data-i18n="onboard.s6.go.conservation">Conservation</span></label>
-          <label><input type="checkbox" name="goals" value="agriculture"><span data-i18n="onboard.s6.go.agriculture">Agriculture</span></label>
-          <label><input type="checkbox" name="goals" value="regen"><span data-i18n="onboard.s6.go.regen">Regeneration</span></label>
-          <label><input type="checkbox" name="goals" value="sale"><span data-i18n="onboard.s6.go.sale">Sale</span></label>
-          <label><input type="checkbox" name="goals" value="education"><span data-i18n="onboard.s6.go.education">Education</span></label>
-          <label><input type="checkbox" name="goals" value="tourism"><span data-i18n="onboard.s6.go.tourism">Eco-tourism</span></label>
-          <label><input type="checkbox" name="goals" value="residence"><span data-i18n="onboard.s6.go.residence">Residence</span></label>
-          <label><input type="checkbox" name="goals" value="other"><span data-i18n="onboard.s6.go.other">Other</span></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-step" data-step="6">
-      <h2 data-i18n="onboard.s7.title">Review &amp; submit</h2>
-      <p class="step-desc" data-i18n="onboard.s7.desc">Check your details below. You can go back to edit any section.</p>
-      <div id="review-content"></div>
-    </div>
-
-    <div class="form-nav">
-      <button type="button" class="btn-back" id="btn-back" data-i18n="onboard.nav.back" style="visibility:hidden;">Back</button>
-      <button type="button" class="btn-primary" id="btn-next" data-i18n="onboard.nav.next">Continue</button>
-    </div>
-
-  </form>
-</div>
-</div>
-
-<footer class="footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <a href="index.html" class="logo">
-        <svg class="logo-icon" width="40" height="40" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="22" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
-          <circle cx="24" cy="24" r="8" stroke="#FFFCED" stroke-width="2.5" fill="none"/>
-          <line x1="0" y1="24" x2="16" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
-          <line x1="32" y1="24" x2="48" y2="24" stroke="#FFFCED" stroke-width="2.5"/>
-        </svg>
-        <div class="logo-text" style="color:var(--cream);">Land<br>Library</div>
-      </a>
-      <div class="footer-tagline" data-i18n="footer.tagline">Your land, understood.</div>
-    </div>
-  </div>
-  <div class="footer-bottom"><div>LandLibrary</div><div>EN / PT</div></div>
-</footer>
-
-<script type="module" src="/src/pages/onboard.js"></script>
+  <script type="module" src="/src/pages/onboard.js"></script>
 </body>
+
 </html>
