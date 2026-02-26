@@ -10,6 +10,7 @@ export default defineConfig({
         chat: resolve(__dirname, 'chat.html'),
         create: resolve(__dirname, 'create.html'),
         landbook: resolve(__dirname, 'landbook.html'),
+        preview: resolve(__dirname, 'preview.html'),
         // Legacy pages
         onboard: resolve(__dirname, 'onboard.html'),
         passport: resolve(__dirname, 'passport.html'),

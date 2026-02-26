@@ -368,7 +368,9 @@ if (btnCreate) {
         address: address !== '\u2014' ? address : '',
       });
 
-      window.location.href = `landbook.html?id=${landbook.id}`;
+      const tier = new URLSearchParams(window.location.search).get('tier');
+      const targetPage = tier === 'preview' ? 'preview.html' : 'landbook.html';
+      window.location.href = `${targetPage}?id=${landbook.id}`;
     } catch (err) {
       console.error('Failed to save landbook:', err);
       btnCreate.disabled = false;

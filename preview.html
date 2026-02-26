@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <title>Preview Report — LandLibrary</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <meta property="og:title" content="Preview Report — LandLibrary">
+    <meta property="og:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+</head>
+
+<body>
+
+    <header class="header page-header">
+        <a href="/" class="logo">
+            <img src="/logo.svg" alt="LandLibrary" class="logo-img">
+        </a>
+        <div class="header-nav">
+            <a href="/">Home</a>
+            <a href="/wiki">The Commons</a>
+            <a href="/create.html">Create LandBook</a>
+            <div class="lang-toggle">
+                <button data-lang="en">EN</button>
+                <button data-lang="pt">PT</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="landbook-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="landbook-sidebar" id="landbook-sidebar">
+            <nav class="landbook-nav" id="landbook-nav">
+                <!-- JS populates -->
+            </nav>
+            <div class="landbook-sidebar-actions" id="landbook-sidebar-actions">
+                <!-- Populated by JS -->
+            </div>
+        </aside>
+
+        <!-- Main Report Content -->
+        <main class="landbook-main" id="landbook-content">
+            <div class="loading-block">
+                <div class="loading-spinner"></div>
+                <span>Loading preview report...</span>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/src/pages/preview.js"></script>
+</body>
+
+</html>
