@@ -3091,6 +3091,220 @@ a {
   padding: 0 16px 16px;
 }
 
+/* ---- LIVE DATA: Cards & Grid ---- */
+.wiki-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.wiki-data-card {
+  background: var(--white);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.wiki-data-card h3 {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.wiki-data-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.wiki-data-card p:last-child {
+  margin-bottom: 0;
+}
+
+.wiki-data-card ul,
+.wiki-data-card ol {
+  padding-left: 18px;
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #444;
+}
+
+.wiki-data-card li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.wiki-data-card-wide {
+  grid-column: 1 / -1;
+}
+
+.wiki-data-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 32px;
+  line-height: 1.1;
+  color: var(--black);
+  margin-bottom: 8px !important;
+}
+
+.wiki-data-error {
+  color: var(--coral);
+  font-style: italic;
+  padding: 16px 0;
+}
+
+/* Shared table styles for all live-data tables */
+.wiki-forecast-table,
+.wiki-species-table,
+.wiki-corine-table,
+.wiki-events-table,
+.wiki-history-table,
+.wiki-governance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  margin-top: 8px;
+}
+
+.wiki-forecast-table thead,
+.wiki-species-table thead,
+.wiki-corine-table thead,
+.wiki-events-table thead,
+.wiki-history-table thead,
+.wiki-governance-table thead {
+  border-bottom: 2px solid var(--border);
+}
+
+.wiki-forecast-table th,
+.wiki-species-table th,
+.wiki-corine-table th,
+.wiki-events-table th,
+.wiki-history-table th,
+.wiki-governance-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.wiki-forecast-table td,
+.wiki-species-table td,
+.wiki-corine-table td,
+.wiki-events-table td,
+.wiki-history-table td,
+.wiki-governance-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: #333;
+}
+
+.wiki-forecast-table tbody tr:last-child td,
+.wiki-species-table tbody tr:last-child td,
+.wiki-corine-table tbody tr:last-child td,
+.wiki-events-table tbody tr:last-child td,
+.wiki-history-table tbody tr:last-child td,
+.wiki-governance-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.wiki-forecast-table tbody tr:hover,
+.wiki-species-table tbody tr:hover,
+.wiki-corine-table tbody tr:hover,
+.wiki-events-table tbody tr:hover,
+.wiki-history-table tbody tr:hover,
+.wiki-governance-table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Live data heading */
+#wiki-data-content h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid var(--border);
+}
+
+#wiki-data-content>p {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+/* Color swatch in CORINE table */
+.wiki-color-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+/* ---- Wiki article definition list (key: value text) ---- */
+.wiki-article dl.wiki-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  margin: 12px 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.wiki-article dl.wiki-dl dt {
+  font-weight: 600;
+  color: var(--black);
+  white-space: nowrap;
+}
+
+.wiki-article dl.wiki-dl dd {
+  color: #444;
+  margin: 0;
+}
+
+/* ---- Responsive: live data ---- */
+@media (max-width: 640px) {
+  .wiki-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-data-card-wide {
+    grid-column: auto;
+  }
+
+  .wiki-data-value {
+    font-size: 26px;
+  }
+
+  .wiki-forecast-table,
+  .wiki-species-table,
+  .wiki-corine-table,
+  .wiki-events-table,
+  .wiki-history-table,
+  .wiki-governance-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .wiki-article dl.wiki-dl {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+
+  .wiki-article dl.wiki-dl dd {
+    margin-bottom: 10px;
+  }
+}
+
 /* Category badge */
 .wiki-section-badge {
   display: inline-flex;

@@ -74,6 +74,29 @@ function loadingSkeleton(lines = 4) {
     }</div>`;
 }
 
+/**
+ * Format wiki article content: detect "Label: value. Label2: value2." patterns
+ * and convert them to a definition list for cleaner presentation.
+ */
+function formatArticleContent(text) {
+  if (!text) return '';
+  // Split on sentence boundaries followed by a Key: pattern
+  // e.g. "Area: 1,720 km². Population: ~30,000."
+  const parts = text.split(/(?<=\.)\s+(?=[A-Z][\w\s&\/()~<>-]*?:)/);
+  // If fewer than 2 key-value items, render as normal paragraph
+  if (parts.length < 2 || !parts.every(p => /^[A-Z][\w\s&\/()~<>-]*?:/.test(p))) {
+    return `<p>${text}</p>`;
+  }
+  const items = parts.map(chunk => {
+    const colonIdx = chunk.indexOf(':');
+    if (colonIdx === -1) return `<p>${chunk}</p>`;
+    const label = chunk.slice(0, colonIdx).trim();
+    const value = chunk.slice(colonIdx + 1).trim().replace(/\.$/, '');
+    return `<dt>${label}</dt><dd>${value}</dd>`;
+  }).join('');
+  return `<dl class="wiki-dl">${items}</dl>`;
+}
+
 // Cached stats from API
 let _statsCache = null;
 let _statsCacheTime = 0;
@@ -547,7 +570,7 @@ async function renderSection(sectionId) {
           ${section.articles.map(a => `
             <article class="wiki-article" data-article-title="${a.title}">
               <h2>${a.title}</h2>
-              <p>${a.content}</p>
+              ${formatArticleContent(a.content)}
             </article>
           `).join('')}
         </section>
