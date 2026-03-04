@@ -246,7 +246,6 @@ export const SECTIONS = {
           { label: 'At-risk Users', value: '100–150 precários' },
         ],
       },
-      watershedDiagram: true,
     },
   },
 

@@ -3067,19 +3067,17 @@ a {
   align-self: flex-start;
 }
 
-/* Live data in sidebar */
-.wiki-sidebar-data {
-  margin-top: 20px;
-}
-
-.wiki-sidebar-data .wiki-data-section {
+/* Live data section (in main content) */
+.wiki-section-main>.wiki-data-section {
+  margin-top: 48px;
   background: var(--white);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
+  padding: 0;
   overflow: hidden;
 }
 
-.wiki-sidebar-data .wiki-data-toggle {
+.wiki-section-main>.wiki-data-section .wiki-data-toggle {
   width: 100%;
   justify-content: center;
   border-radius: 0;
@@ -3087,8 +3085,8 @@ a {
   padding: 14px 20px;
 }
 
-.wiki-sidebar-data #wiki-data-content {
-  padding: 0 16px 16px;
+.wiki-section-main>.wiki-data-section #wiki-data-content {
+  padding: 0 24px 24px;
 }
 
 /* ---- LIVE DATA: Cards & Grid ---- */

@@ -498,11 +498,7 @@ function renderDashboard(section) {
     panel.appendChild(cardsDiv);
   }
 
-  // 8) Watershed SVG diagram
-  if (v.watershedDiagram) {
-    const body = createContentCard(panel, 'Watershed Map');
-    renderWatershedSvg(body);
-  }
+  // (Watershed diagram removed)
 }
 
 // ---------------------------------------------------------------------------
@@ -586,6 +582,15 @@ async function renderSection(sectionId) {
             <div class="loading-block"><span class="loading-spinner"></span> ${t('wiki.section.loadingContributions')}</div>
           </div>
         </section>
+
+        <!-- Live Data -->
+        <section class="wiki-data-section" id="wiki-data-section">
+          <button class="wiki-data-toggle" id="wiki-data-toggle" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+             ${t('wiki.section.refreshLiveData')}
+          </button>
+          <div id="wiki-data-content"></div>
+        </section>
       </div>
 
       <!-- Right column: Community Notes sidebar -->
@@ -635,16 +640,7 @@ async function renderSection(sectionId) {
           </div>
         </div>
 
-        <!-- Live Data (in sidebar) -->
-        <div class="wiki-sidebar-data">
-          <section class="wiki-data-section" id="wiki-data-section">
-            <button class="wiki-data-toggle" id="wiki-data-toggle" style="display:none;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-               ${t('wiki.section.refreshLiveData')}
-            </button>
-            <div id="wiki-data-content"></div>
-          </section>
-        </div>
+
 
         <!-- Resources (in sidebar) -->
         <div class="wiki-resources-panel">
