@@ -29,8 +29,8 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'section, type, and content are required' });
         }
 
-        const validSections = ['land', 'water', 'weather', 'biodiversity', 'agriculture', 'community', 'history', 'governance'];
-        const validTypes = ['story', 'tip', 'event', 'place', 'resource'];
+        const validSections = ['bioregion', 'ecology', 'land', 'soil', 'water', 'climate', 'landuse', 'risks', 'culture', 'community', 'general'];
+        const validTypes = ['story', 'tip', 'event', 'place', 'resource', 'edit', 'comment', 'flag'];
 
         if (!validSections.includes(body.section)) {
             return res.status(400).json({ error: `Invalid section. Must be one of: ${validSections.join(', ')}` });
@@ -51,6 +51,13 @@ export default async function handler(req, res) {
             created: new Date().toISOString(),
             updated: new Date().toISOString(),
         };
+
+        // Additional fields for edit-type contributions
+        if (body.type === 'edit') {
+            doc.selectedText = body.selectedText || '';
+            doc.suggestedText = body.suggestedText || '';
+            doc.articleTitle = body.articleTitle || '';
+        }
 
         await contributions.insertOne(doc);
         return res.status(201).json(doc);

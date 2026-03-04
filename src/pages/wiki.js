@@ -207,10 +207,6 @@ function renderSidebar(activeId) {
         </a>
       `).join('')}
     </nav>
-    <a href="#contribute" class="wiki-sidebar-cta ${activeId === 'contribute' ? 'active' : ''}">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Info
-    </a>
   `;
 }
 
@@ -218,45 +214,115 @@ function renderSidebar(activeId) {
 // Hub view
 // ---------------------------------------------------------------------------
 
+function getIconSvg(icon) {
+  const icons = {
+    globe: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    leaf: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.9C15.5 4.9 17 3.5 19 2c1 2 2 4.5 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+    mountain: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>',
+    layers: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22.54 12.43-1.42-.65-8.28 3.78a2 2 0 0 1-1.66 0l-8.29-3.78-1.42.65a1 1 0 0 0 0 1.84l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.85Z"/><path d="m22.54 16.43-1.42-.65-8.28 3.78a2 2 0 0 1-1.66 0l-8.29-3.78-1.42.65a1 1 0 0 0 0 1.84l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.85Z"/></svg>',
+    waves: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>',
+    sun: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    map: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5a.5.5 0 1 1-1 0 .5.5 0 0 1 1 0Z"/><path d="M2 4v16l6-3 8 3 6-3V1l-6 3-8-3-6 3Z"/><path d="M8 4v13"/><path d="M16 7v13"/></svg>',
+    alert: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+    people: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    heart: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+  };
+  return icons[icon] || icons.globe;
+}
+
 function renderHub() {
   destroyMap();
   const sections = getAllSections();
+  const totalSuggestions = sections.reduce((sum, s) => sum + (s.stats?.suggestions || 0), 0);
+  const totalComments = sections.reduce((sum, s) => sum + (s.stats?.comments || 0), 0);
 
   content.innerHTML = `
-    <section class="wiki-hero">
-      <h1>Odemira Bioregional Wiki</h1>
-      <p class="wiki-hero-subtitle">
-        Exploring <strong>${ODEMIRA.name}</strong> &mdash;
-        ${ODEMIRA.area} km&sup2; of ${ODEMIRA.region}, ${ODEMIRA.country}.
-        Population ~${ODEMIRA.population.toLocaleString()} across ${ODEMIRA.parishes} parishes,
-        stretching from ${ODEMIRA.coastline} of Atlantic coastline to the interior Alentejo hills
-        (${ODEMIRA.elevation.min}m &ndash; ${ODEMIRA.elevation.max}m elevation).
-      </p>
+    <div class="wiki-hub-breadcrumb">
+      <a href="/">Commons</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      <span>Odemira</span>
+    </div>
+
+    <section class="wiki-hub-hero">
+      <div class="wiki-hub-hero-left">
+        <div class="wiki-hub-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Bioregion Overview
+        </div>
+        <h1>Odemira Bioregion</h1>
+        <p class="wiki-hub-description">
+          ${ODEMIRA.subtitle} — A municipality in the Beja District of Portugal's Alentejo region,
+          encompassing approximately ${ODEMIRA.area.toLocaleString()} km² of coastal and inland ecosystems.
+        </p>
+        <div class="wiki-hub-meta">
+          <span class="wiki-hub-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            ${ODEMIRA.population.toLocaleString()} residents
+          </span>
+          <span class="wiki-hub-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Updated 3 days ago by Maria S.
+          </span>
+        </div>
+      </div>
+      <div class="wiki-hub-stats">
+        <div class="wiki-hub-stats-grid">
+          <div class="wiki-hub-stat">
+            <span class="wiki-hub-stat-value">${ODEMIRA.area}</span>
+            <span class="wiki-hub-stat-label">km² area</span>
+          </div>
+          <div class="wiki-hub-stat">
+            <span class="wiki-hub-stat-value">44%</span>
+            <span class="wiki-hub-stat-label">protected</span>
+          </div>
+          <div class="wiki-hub-stat">
+            <span class="wiki-hub-stat-value">110 km</span>
+            <span class="wiki-hub-stat-label">coastline</span>
+          </div>
+          <div class="wiki-hub-stat">
+            <span class="wiki-hub-stat-value">${sections.length}</span>
+            <span class="wiki-hub-stat-label">wiki sections</span>
+          </div>
+        </div>
+        <div class="wiki-hub-stats-footer">
+          <span class="wiki-hub-dot wiki-hub-dot-orange"></span>
+          <span>${totalSuggestions} suggestions</span>
+          <span class="wiki-hub-dot wiki-hub-dot-green"></span>
+          <span>${totalComments} comments</span>
+        </div>
+      </div>
     </section>
 
     <div class="wiki-hub-grid">
       ${sections.map(s => `
-        <a href="#${s.id}" class="wiki-hub-card" style="border-top: 4px solid ${s.color}">
-          <h3>${s.title}</h3>
-          <p>${s.subtitle}</p>
+        <a href="#${s.id}" class="wiki-hub-card">
+          <div class="wiki-hub-card-image" style="border-top: 3px solid ${s.accentColor || s.color}">
+            <img src="/wiki/${s.id}.png" alt="${s.title}" loading="lazy" />
+          </div>
+          <div class="wiki-hub-card-body">
+            <div class="wiki-hub-card-icon" style="color: ${s.accentColor || s.color}">
+              ${getIconSvg(s.icon)}
+            </div>
+            <h3>${s.title}</h3>
+            <p>${s.description}</p>
+          </div>
+          <div class="wiki-hub-card-footer">
+            <span class="wiki-hub-card-stat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+              ${s.stats?.suggestions || 0}
+            </span>
+            <span class="wiki-hub-card-stat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+              ${s.stats?.comments || 0}
+            </span>
+            <span class="wiki-hub-card-time">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${s.stats?.updatedAgo || 'recently'}
+            </span>
+          </div>
         </a>
       `).join('')}
     </div>
-
-    <section class="wiki-hub-extras">
-      <h2>Upcoming Events</h2>
-      <ul class="wiki-events-list">
-        ${EVENTS_CALENDAR.map(e =>
-    `<li><strong>${e.month}</strong> &mdash; ${e.name} <em>(${e.location})</em></li>`
-  ).join('')}
-      </ul>
-      <h2>Key Landmarks</h2>
-      <ul class="wiki-landmarks-list">
-        ${LANDMARKS.map(lm =>
-    `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
-  ).join('')}
-      </ul>
-    </section>
   `;
 }
 
@@ -269,52 +335,213 @@ function renderSection(sectionId) {
   const section = getSectionById(sectionId);
   if (!section) { renderHub(); return; }
 
+  const stats = section.stats || {};
+  const totalSuggestions = stats.suggestions || 0;
+  const totalComments = stats.comments || 0;
+  const dataAlerts = Math.min(Math.floor(totalSuggestions / 5), 5) || 0;
+
   content.innerHTML = `
-    <section class="wiki-hero">
-      <h1>${section.title}</h1>
-      <p class="wiki-hero-subtitle">${section.subtitle}</p>
-      <p class="wiki-intro">${section.intro}</p>
-    </section>
-
-    <div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>
-
-    <section class="wiki-articles">
-      ${section.articles.map(a => `
-        <article class="wiki-article">
-          <h2>${a.title}</h2>
-          <p>${a.content}</p>
-        </article>
-      `).join('')}
-    </section>
-
-    <!-- Community Contributions -->
-    <section class="wiki-contributions" id="wiki-contributions">
-      <div class="wiki-contributions-header">
-        <h2>Community Contributions</h2>
-        <a href="#contribute" class="btn-outline btn-sm">Add Info</a>
+    <!-- Breadcrumb + Help -->
+    <div class="wiki-section-topbar">
+      <div class="wiki-section-breadcrumb">
+        <a href="/">Commons</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        <a href="#hub">Odemira</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        <span>${section.title}</span>
       </div>
-      <div class="wiki-contributions-list" id="contributions-list">
-        <div class="loading-block"><span class="loading-spinner"></span> Loading contributions...</div>
+      <div class="wiki-help-trigger" id="wiki-help-trigger">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div class="wiki-help-popover" id="wiki-help-popover">
+          ${renderGuidelinesHTML()}
+        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Live Data (lazy) -->
-    <section class="wiki-data-section" id="wiki-data-section">
-      <button class="wiki-data-toggle" id="wiki-data-toggle">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        Show live data
+    <div class="wiki-section-layout">
+      <!-- Left column: main content -->
+      <div class="wiki-section-main">
+        <h1 class="wiki-section-title">${section.title}</h1>
+        <p class="wiki-section-subtitle">${section.intro}</p>
+
+        <div class="wiki-section-meta">
+          <span class="wiki-section-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Updated ${stats.updatedAgo || 'recently'}
+          </span>
+          <span class="wiki-section-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+            ${totalSuggestions} suggestions
+          </span>
+          <span class="wiki-section-meta-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            ${totalComments} comments
+          </span>
+        </div>
+
+        <hr class="wiki-section-divider" />
+
+        <!-- Articles (text selectable for edit toolbar) -->
+        <section class="wiki-articles" id="wiki-articles">
+          ${section.articles.map(a => `
+            <article class="wiki-article" data-article-title="${a.title}">
+              <h2>${a.title}</h2>
+              <p>${a.content}</p>
+            </article>
+          `).join('')}
+        </section>
+        <!-- Map (bioregion only) -->
+        ${sectionId === 'bioregion' ? '<div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>' : ''}
+
+        <!-- Community Contributions -->
+        <section class="wiki-contributions" id="wiki-contributions">
+          <div class="wiki-contributions-header">
+            <h2>Community Contributions</h2>
+          </div>
+          <div class="wiki-contributions-list" id="contributions-list">
+            <div class="loading-block"><span class="loading-spinner"></span> Loading contributions...</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Right column: Community Notes sidebar -->
+      <aside class="wiki-section-aside">
+        <div class="wiki-community-notes">
+          <h3 class="wiki-community-notes-title">Community Notes</h3>
+
+          <div class="wiki-community-notes-item wiki-community-notes-item--clickable" id="wiki-notes-suggestions" data-type="edit" style="cursor:pointer;">
+            <div class="wiki-community-notes-icon wiki-community-notes-icon--suggest">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>
+            </div>
+            <div class="wiki-community-notes-text">
+              <strong>${totalSuggestions} suggestions</strong>
+              <span>Pending review</span>
+            </div>
+            <svg class="wiki-community-notes-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+
+          <div class="wiki-community-notes-item wiki-community-notes-item--clickable" id="wiki-notes-comments" data-type="comment" style="cursor:pointer;">
+            <div class="wiki-community-notes-icon wiki-community-notes-icon--comment">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+            </div>
+            <div class="wiki-community-notes-text">
+              <strong>${totalComments} comments</strong>
+              <span>Community insights</span>
+            </div>
+            <svg class="wiki-community-notes-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+
+          ${dataAlerts > 0 ? `
+          <div class="wiki-community-notes-item wiki-community-notes-item--alert">
+            <div class="wiki-community-notes-icon wiki-community-notes-icon--alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            </div>
+            <div class="wiki-community-notes-text">
+              <strong>${dataAlerts} data alerts</strong>
+              <span>Needs verification</span>
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="wiki-recent-activity" id="wiki-recent-activity">
+            <h4>Recent Activity</h4>
+            <div class="wiki-recent-activity-list" id="recent-activity-list">
+              <span class="wiki-recent-activity-placeholder">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Data (in sidebar) -->
+        <div class="wiki-sidebar-data">
+          <section class="wiki-data-section" id="wiki-data-section">
+            <button class="wiki-data-toggle" id="wiki-data-toggle">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              Show live data
+            </button>
+            <div id="wiki-data-content"></div>
+          </section>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Text Selection Toolbar (hidden, positioned absolutely) -->
+    <div class="wiki-selection-toolbar" id="wiki-selection-toolbar" style="display:none;">
+      <button data-action="edit" title="Suggest Edit">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+        Suggest Edit
       </button>
-      <div id="wiki-data-content"></div>
-    </section>
+      <button data-action="comment" title="Add Comment">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+        Comment
+      </button>
+      <button data-action="flag" title="Flag Issue">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Flag
+      </button>
+    </div>
+
+    <!-- Contributions viewer modal (hidden) -->
+    <div class="wiki-contrib-viewer-overlay" id="wiki-contrib-viewer-overlay" style="display:none;">
+      <div class="wiki-inline-contrib-modal wiki-contrib-viewer-modal">
+        <div class="wiki-inline-contrib-header">
+          <h3 id="wiki-contrib-viewer-title">Suggestions</h3>
+          <button class="wiki-inline-contrib-close" id="wiki-contrib-viewer-close">&times;</button>
+        </div>
+        <div class="wiki-contrib-viewer-body" id="wiki-contrib-viewer-body">
+          <div class="loading-block"><span class="loading-spinner"></span> Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inline contribution modal (hidden) -->
+    <div class="wiki-inline-contrib-overlay" id="wiki-inline-contrib-overlay" style="display:none;">
+      <div class="wiki-inline-contrib-modal">
+        <div class="wiki-inline-contrib-header">
+          <h3 id="wiki-inline-contrib-title">Suggest Edit</h3>
+          <button class="wiki-inline-contrib-close" id="wiki-inline-contrib-close">&times;</button>
+        </div>
+        <div class="wiki-inline-contrib-body">
+          <div class="wiki-inline-contrib-selected" id="wiki-inline-contrib-selected"></div>
+          <textarea id="wiki-inline-contrib-text" rows="4" placeholder="Your suggestion or comment..."></textarea>
+          <input type="text" id="wiki-inline-contrib-author" placeholder="Your name (optional)" />
+        </div>
+        <div class="wiki-inline-contrib-footer">
+          <button class="wiki-inline-contrib-cancel" id="wiki-inline-contrib-cancel">Cancel</button>
+          <button class="wiki-inline-contrib-submit" id="wiki-inline-contrib-submit">Submit</button>
+        </div>
+      </div>
+    </div>
   `;
 
-  // Initialise map and contributions after DOM insertion
+  // Initialise map, contributions, sidebar, and toolbar after DOM insertion
   setTimeout(() => {
-    currentMap = createBaseMap('wiki-section-map');
-    currentMap.on('load', () => {
-      initSectionMap(sectionId, currentMap);
-    });
+    // Only init map for bioregion (only section with a map)
+    const mapContainer = document.getElementById('wiki-section-map');
+    if (mapContainer) {
+      currentMap = createBaseMap('wiki-section-map');
+      currentMap.on('load', () => {
+        initSectionMap(sectionId, currentMap);
+      });
+    }
     loadContributions(sectionId);
+    loadRecentActivity(sectionId);
+    initTextSelectionToolbar(sectionId);
+    initContribViewerClicks(sectionId);
+
+    // Wire up ? help tooltip (click-to-toggle)
+    const helpTrigger = document.getElementById('wiki-help-trigger');
+    const helpPopover = document.getElementById('wiki-help-popover');
+    if (helpTrigger && helpPopover) {
+      helpTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        helpPopover.classList.toggle('wiki-help-popover--open');
+      });
+      document.addEventListener('click', (e) => {
+        if (!helpTrigger.contains(e.target)) {
+          helpPopover.classList.remove('wiki-help-popover--open');
+        }
+      });
+    }
 
     // Wire up lazy live-data toggle
     const toggleBtn = document.getElementById('wiki-data-toggle');
@@ -404,11 +631,13 @@ async function initSectionMap(sectionId, map) {
     switch (sectionId) {
       case 'bioregion': await initLandMap(map); break;
       case 'ecology': initBiodiversityMap(map); break;
+      case 'land': await initLandMap(map); break;
+      case 'soil': await initLandMap(map); break;
+      case 'water': await initWaterMap(map); break;
+      case 'climate': initWeatherMap(map); break;
       case 'landuse': initAgricultureMap(map); break;
-      case 'cultural': await initHistoryMap(map); break;
-      case 'intelligence': initGovernanceMap(map); break;
-      case 'planning': initGovernanceMap(map); break;
-      case 'threats': await initWaterMap(map); break;
+      case 'risks': await initWaterMap(map); break;
+      case 'culture': await initHistoryMap(map); break;
       case 'community': await initCommunityMap(map); break;
     }
   } catch (err) {
@@ -565,11 +794,13 @@ async function loadSectionData(sectionId) {
     switch (sectionId) {
       case 'bioregion': await loadLandData(container); await loadWeatherData(container); break;
       case 'ecology': await loadBiodiversityData(container); break;
+      case 'land': await loadLandData(container); break;
+      case 'soil': await loadLandData(container); break;
+      case 'water': await loadWaterData(container); break;
+      case 'climate': await loadWeatherData(container); break;
       case 'landuse': loadAgricultureData(container); break;
-      case 'cultural': await loadHistoryData(container); break;
-      case 'intelligence': loadGovernanceData(container); break;
-      case 'planning': loadGovernanceData(container); break;
-      case 'threats': await loadWaterData(container); break;
+      case 'risks': await loadWaterData(container); break;
+      case 'culture': await loadHistoryData(container); break;
       case 'community': await loadCommunityData(container); break;
       default:
         container.innerHTML = '<p>No live data available for this section.</p>';
@@ -1071,6 +1302,396 @@ function setupContributionForm() {
 }
 
 // ---------------------------------------------------------------------------
+// Contributions Viewer Modal (from sidebar clicks)
+// ---------------------------------------------------------------------------
+
+function initContribViewerClicks(sectionId) {
+  const suggestionsBtn = document.getElementById('wiki-notes-suggestions');
+  const commentsBtn = document.getElementById('wiki-notes-comments');
+  const overlay = document.getElementById('wiki-contrib-viewer-overlay');
+  const titleEl = document.getElementById('wiki-contrib-viewer-title');
+  const bodyEl = document.getElementById('wiki-contrib-viewer-body');
+  const closeBtn = document.getElementById('wiki-contrib-viewer-close');
+
+  if (!overlay || !bodyEl) return;
+
+  function closeViewer() {
+    overlay.style.display = 'none';
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeViewer);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeViewer();
+  });
+
+  async function openViewer(typeFilter, label) {
+    if (titleEl) titleEl.textContent = label;
+    bodyEl.innerHTML = '<div class="loading-block"><span class="loading-spinner"></span> Loading...</div>';
+    overlay.style.display = 'flex';
+
+    try {
+      const res = await fetch('/api/wiki/contributions?section=' + sectionId + '&type=' + typeFilter + '&limit=30');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const items = await res.json();
+
+      if (items.length === 0) {
+        bodyEl.innerHTML = '<div class="wiki-contrib-viewer-empty"><p>No ' + label.toLowerCase() + ' yet for this section.</p></div>';
+        return;
+      }
+
+      bodyEl.innerHTML = items.map(function (c) {
+        var typeInfo = CONTRIBUTION_TYPE_LABELS[c.type] || { label: c.type, color: '#999' };
+        var date = new Date(c.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        var html = '<div class="wiki-contribution-card">';
+        html += '<div class="wiki-contribution-header">';
+        html += '<span class="wiki-contribution-badge" style="background:' + typeInfo.color + ';">' + typeInfo.label + '</span>';
+        html += '<span class="wiki-contribution-meta">' + (c.author || 'Anonymous') + ' &middot; ' + date + '</span>';
+        html += '</div>';
+        if (c.title) html += '<h3 class="wiki-contribution-title">' + c.title + '</h3>';
+        if (c.selectedText) {
+          html += '<blockquote class="wiki-contrib-viewer-quote">' + c.selectedText + '</blockquote>';
+        }
+        html += '<p class="wiki-contribution-content">' + c.content + '</p>';
+        html += '</div>';
+        return html;
+      }).join('');
+    } catch (err) {
+      bodyEl.innerHTML = '<div class="wiki-contrib-viewer-empty"><p>Unable to load ' + label.toLowerCase() + '. Please try again later.</p></div>';
+    }
+  }
+
+  if (suggestionsBtn) {
+    suggestionsBtn.addEventListener('click', function () {
+      openViewer('edit', 'Suggestions');
+    });
+  }
+
+  if (commentsBtn) {
+    commentsBtn.addEventListener('click', function () {
+      openViewer('comment', 'Comments');
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Contribution Guidelines (for ? tooltip)
+// ---------------------------------------------------------------------------
+
+function renderGuidelinesHTML() {
+  return `
+    <div class="wiki-guidelines-content">
+      <h3>Bioregional Knowledge Commons — Contribution Guidelines</h3>
+
+      <h4>Our Purpose</h4>
+      <p>The Bioregional Knowledge Commons exists to democratize landscape knowledge. We believe that effective stewardship requires accessible, accurate, and collectively-maintained information about the places we inhabit.</p>
+
+      <h4>Types of Contributions</h4>
+      <div class="wiki-guidelines-section">
+        <h5>1. Suggest Edits</h5>
+        <ul>
+          <li>Correct outdated information</li>
+          <li>Improve clarity or accuracy</li>
+          <li>Update data with new sources</li>
+          <li>Fix typos or formatting</li>
+        </ul>
+        <h5>2. Add Context (Comments)</h5>
+        <ul>
+          <li>Share local perspective</li>
+          <li>Ask clarifying questions</li>
+          <li>Provide additional nuance</li>
+          <li>Connect related information</li>
+        </ul>
+        <h5>3. Flag Issues</h5>
+        <ul>
+          <li>Report potential errors</li>
+          <li>Highlight missing citations</li>
+          <li>Identify biased language</li>
+          <li>Note accessibility problems</li>
+        </ul>
+      </div>
+
+      <h4>How to Contribute</h4>
+      <p><strong>Highlight any text</strong> in the wiki articles to see contribution options. You can suggest edits, add comments, or flag issues directly on the content you're reading.</p>
+
+      <h4>Quality Standards</h4>
+      <div class="wiki-guidelines-section">
+        <p><strong>For Data &amp; Facts:</strong> Cite sources, prefer primary sources, indicate uncertainty, and note when data was collected.</p>
+        <p><strong>For Local Knowledge:</strong> Help readers understand your perspective. Specific examples are invaluable.</p>
+        <p><strong>For Corrections:</strong> Use constructive tone, explain reasoning, and suggest alternatives.</p>
+      </div>
+
+      <h4>Review Process</h4>
+      <ol>
+        <li><strong>Acknowledgment</strong> — Automated confirmation</li>
+        <li><strong>Triage</strong> — Editors assess type and urgency (1-3 days)</li>
+        <li><strong>Review</strong> — Subject-matter review (3-7 days)</li>
+        <li><strong>Decision</strong> — Approved, declined, or returned for revision</li>
+        <li><strong>Integration</strong> — Merged into wiki</li>
+      </ol>
+
+      <h4>Community Norms</h4>
+      <p><em>We encourage:</em> Respectful disagreement, questions from all levels, connections between concepts, recognition of uncertainty.</p>
+      <p><em>We discourage:</em> Promotional content, unsourced claims as fact, dismissive language, speculation without uncertainty framing.</p>
+
+      <h4>Contact</h4>
+      <p><strong>Technical:</strong> support@landlibrary.co<br/>
+      <strong>Editorial:</strong> editors@landlibrary.co</p>
+    </div>
+  `;
+}
+
+// ---------------------------------------------------------------------------
+// Recent Activity (for sidebar)
+// ---------------------------------------------------------------------------
+
+async function loadRecentActivity(sectionId) {
+  const listEl = document.getElementById('recent-activity-list');
+  if (!listEl) return;
+
+  try {
+    const res = await fetch(`/api/wiki/contributions?section=${sectionId}&limit=4`);
+    if (!res.ok) throw new Error('Failed to fetch');
+    const items = await res.json();
+
+    if (items.length === 0) {
+      listEl.innerHTML = '<span class="wiki-recent-activity-placeholder">No recent activity</span>';
+      return;
+    }
+
+    const typeIcons = {
+      edit: '⟳',
+      comment: '💬',
+      flag: '⚠',
+      story: '📖',
+      tip: '💡',
+      event: '📅',
+      place: '📍',
+      resource: '🔗',
+    };
+
+    listEl.innerHTML = items.map(item => {
+      const icon = typeIcons[item.type] || '📝';
+      const date = new Date(item.created);
+      const dateStr = date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+      const title = item.title || `${item.type} contribution`;
+      return `
+        <div class="wiki-recent-activity-item">
+          <span class="wiki-recent-activity-icon">${icon}</span>
+          <div class="wiki-recent-activity-detail">
+            <span class="wiki-recent-activity-title">${title}</span>
+            <span class="wiki-recent-activity-date">${dateStr}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    listEl.innerHTML = '<span class="wiki-recent-activity-placeholder">Activity unavailable</span>';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Text Selection Toolbar (Medium-style)
+// ---------------------------------------------------------------------------
+
+function initTextSelectionToolbar(sectionId) {
+  const articlesContainer = document.getElementById('wiki-articles');
+  const toolbar = document.getElementById('wiki-selection-toolbar');
+  const overlay = document.getElementById('wiki-inline-contrib-overlay');
+  if (!articlesContainer || !toolbar || !overlay) return;
+
+  let currentSelectedText = '';
+  let currentArticleTitle = '';
+  let currentAction = '';
+
+  // Show/hide toolbar on text selection
+  function handleSelectionChange() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || sel.rangeCount === 0) {
+      toolbar.style.display = 'none';
+      return;
+    }
+
+    const selectedText = sel.toString().trim();
+    if (!selectedText || selectedText.length < 3) {
+      toolbar.style.display = 'none';
+      return;
+    }
+
+    // Check if selection is within our articles
+    const range = sel.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const articleEl = container.nodeType === 1
+      ? container.closest('.wiki-article')
+      : container.parentElement?.closest('.wiki-article');
+
+    if (!articleEl || !articlesContainer.contains(articleEl)) {
+      toolbar.style.display = 'none';
+      return;
+    }
+
+    currentSelectedText = selectedText;
+    currentArticleTitle = articleEl.dataset.articleTitle || '';
+
+    // Position toolbar above selection
+    const rect = range.getBoundingClientRect();
+    toolbar.style.display = 'flex';
+    toolbar.style.position = 'fixed';
+    toolbar.style.left = `${rect.left + rect.width / 2}px`;
+    toolbar.style.top = `${rect.top - 8}px`;
+    toolbar.style.transform = 'translate(-50%, -100%)';
+  }
+
+  // Debounce selection changes
+  let selTimer = null;
+  document.addEventListener('selectionchange', () => {
+    clearTimeout(selTimer);
+    selTimer = setTimeout(handleSelectionChange, 150);
+  });
+
+  // Hide toolbar on click outside
+  document.addEventListener('mousedown', (e) => {
+    if (!toolbar.contains(e.target) && !overlay.contains(e.target)) {
+      setTimeout(() => {
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) {
+          toolbar.style.display = 'none';
+        }
+      }, 200);
+    }
+  });
+
+  // Toolbar button clicks
+  toolbar.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    currentAction = btn.dataset.action;
+    toolbar.style.display = 'none';
+
+    // Open inline contribution modal
+    const titleEl = document.getElementById('wiki-inline-contrib-title');
+    const selectedEl = document.getElementById('wiki-inline-contrib-selected');
+    const textEl = document.getElementById('wiki-inline-contrib-text');
+
+    const labels = {
+      edit: 'Suggest Edit',
+      comment: 'Add Comment',
+      flag: 'Flag Issue',
+    };
+    const placeholders = {
+      edit: 'What should this text say instead?',
+      comment: 'Share your thoughts on this passage...',
+      flag: 'Describe the issue with this content...',
+    };
+
+    if (titleEl) titleEl.textContent = labels[currentAction] || 'Contribute';
+    if (selectedEl) {
+      const displayText = currentSelectedText.length > 200
+        ? currentSelectedText.slice(0, 200) + '\u2026'
+        : currentSelectedText;
+      selectedEl.innerHTML = '<span class="wiki-inline-contrib-label">Selected text:</span>' +
+        '<blockquote>' + displayText + '</blockquote>';
+    }
+    if (textEl) {
+      textEl.placeholder = placeholders[currentAction] || 'Your message...';
+      textEl.value = '';
+    }
+
+    overlay.style.display = 'flex';
+    if (textEl) textEl.focus();
+
+    // Clear selection
+    window.getSelection().removeAllRanges();
+  });
+
+  // Close modal
+  const closeBtn = document.getElementById('wiki-inline-contrib-close');
+  const cancelBtn = document.getElementById('wiki-inline-contrib-cancel');
+  function closeModal() {
+    overlay.style.display = 'none';
+    currentSelectedText = '';
+    currentArticleTitle = '';
+    currentAction = '';
+  }
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  // Submit contribution
+  const submitBtn = document.getElementById('wiki-inline-contrib-submit');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      const textEl = document.getElementById('wiki-inline-contrib-text');
+      const authorEl = document.getElementById('wiki-inline-contrib-author');
+      const contentVal = textEl ? textEl.value.trim() : '';
+
+      if (!contentVal) {
+        textEl.style.borderColor = 'var(--coral, #e74c3c)';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting\u2026';
+
+      try {
+        const actionLabel = currentAction === 'edit' ? 'Edit suggestion'
+          : currentAction === 'comment' ? 'Comment' : 'Flag';
+        const payload = {
+          section: sectionId,
+          type: currentAction,
+          title: actionLabel + ': ' + currentArticleTitle,
+          content: contentVal,
+          author: authorEl ? authorEl.value.trim() || 'Anonymous' : 'Anonymous',
+          selectedText: currentSelectedText,
+          articleTitle: currentArticleTitle,
+        };
+
+        if (currentAction === 'edit') {
+          payload.suggestedText = contentVal;
+        }
+
+        const res = await fetch('/api/wiki/contributions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to submit');
+        }
+
+        // Success — show confirmation then close
+        const modalBody = overlay.querySelector('.wiki-inline-contrib-body');
+        if (modalBody) {
+          modalBody.innerHTML = '<div style="text-align:center;padding:1.5rem 0;">' +
+            '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+            '<p style="margin-top:12px;font-weight:600;color:#2E8B57;">Thank you for your contribution!</p>' +
+            '<p style="font-size:13px;color:#666;">Your ' + currentAction + ' has been submitted for review.</p>' +
+            '</div>';
+        }
+        setTimeout(closeModal, 2500);
+        // Reload contributions
+        loadContributions(sectionId);
+        loadRecentActivity(sectionId);
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit';
+        const modalFooter = overlay.querySelector('.wiki-inline-contrib-footer');
+        if (modalFooter) {
+          const errMsg = document.createElement('p');
+          errMsg.style.cssText = 'color:var(--coral,#e74c3c);font-size:13px;margin:8px 0 0;';
+          errMsg.textContent = 'Error: ' + err.message;
+          modalFooter.appendChild(errMsg);
+        }
+      }
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -1081,9 +1702,7 @@ function route() {
   const id = currentRoute();
   renderSidebar(id);
 
-  if (id === 'contribute') {
-    renderContribute(lastSectionId);
-  } else if (id === 'hub' || !getSectionById(id)) {
+  if (id === 'hub' || !getSectionById(id)) {
     renderHub();
   } else {
     lastSectionId = id;

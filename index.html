@@ -56,14 +56,57 @@
         environmental data from over 45
         verified sources — giving you an accurate view of your land's value.</p>
       <div class="hero-actions">
-        <a href="#landbook" class="btn-pill-primary" data-i18n="landing.hero.cta.primary">Discover My Land's Value</a>
-        <a href="/wiki" class="btn-pill-outline" data-i18n="landing.hero.cta.secondary">Explore the Commons</a>
+        <a href="/create.html" class="btn-pill-primary" data-i18n="landing.hero.cta.primary">Discover My Land's
+          Value</a>
+        <a href="#featured-commons" class="btn-pill-outline" data-i18n="landing.hero.cta.secondary">Explore the
+          Commons</a>
       </div>
       <div class="hero-scroll-hint">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M10 4v12M4 10l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
             stroke-linejoin="round" />
         </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURED COMMONS ===== -->
+  <section class="featured-commons-section" id="featured-commons">
+    <div class="container">
+      <p class="featured-commons-label">Featured Bioregion</p>
+      <div class="featured-commons-card">
+        <div class="featured-commons-img-wrap">
+          <img src="/wiki/bioregion.png" alt="" class="featured-commons-img" />
+          <div class="featured-commons-badge" id="fc-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            Active
+          </div>
+          <div class="featured-commons-overlay">
+            <h3 class="featured-commons-name" id="fc-name">Odemira</h3>
+            <p class="featured-commons-location" id="fc-location">Southwest Alentejo, Portugal</p>
+          </div>
+        </div>
+        <div class="featured-commons-stats">
+          <div class="featured-commons-stat">
+            <span class="featured-commons-stat-value" id="fc-area">1720.6</span>
+            <span class="featured-commons-stat-unit">km²</span>
+          </div>
+          <div class="featured-commons-stat">
+            <span class="featured-commons-stat-value" id="fc-pop">31,488</span>
+            <span class="featured-commons-stat-unit">population</span>
+          </div>
+          <a href="/wiki" class="featured-commons-arrow" aria-label="Explore bioregion">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
       </div>
     </div>
   </section>
@@ -308,8 +351,8 @@
           <div class="pricing-tier" data-i18n="landing.pricing.preview.tier">Preview</div>
           <div class="pricing-price">&euro;0</div>
           <p class="pricing-desc" data-i18n="landing.pricing.preview.desc">Value estimate. 3 pages. Instant.</p>
-          <a href="#" class="btn-pill-outline dark btn-small-pill" data-i18n="landing.pricing.preview.cta"
-            onclick="event.preventDefault();showComingSoon()">Get
+          <a href="/create.html?tier=preview" class="btn-pill-outline dark btn-small-pill"
+            data-i18n="landing.pricing.preview.cta">Get
             Preview</a>
         </div>
         <div class="pricing-card featured">
@@ -317,8 +360,7 @@
           <div class="pricing-price">&euro;250</div>
           <p class="pricing-desc" data-i18n="landing.pricing.landbook.desc">Full assessment. 25 pages. Permanent record.
           </p>
-          <a href="#" class="btn-pill-primary btn-small-pill" data-i18n="landing.pricing.landbook.cta"
-            onclick="event.preventDefault();showComingSoon()">Order
+          <a href="/create.html" class="btn-pill-primary btn-small-pill" data-i18n="landing.pricing.landbook.cta">Order
             LandBook</a>
         </div>
         <div class="pricing-card">
