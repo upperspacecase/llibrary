@@ -558,17 +558,26 @@ a {
 }
 
 .featured-commons-card {
+  display: block;
   max-width: 640px;
   margin: 0 auto;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--white);
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-decoration: none;
+  color: var(--black);
+  cursor: pointer;
 }
 
 .featured-commons-card:hover {
+  transform: translateY(-3px);
   box-shadow: 0 8px 48px rgba(0, 0, 0, 0.12);
+}
+
+.featured-commons-card:hover .featured-commons-img {
+  transform: scale(1.03);
 }
 
 .featured-commons-img-wrap {
@@ -583,6 +592,7 @@ a {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.3s;
 }
 
 .featured-commons-badge {
@@ -660,10 +670,9 @@ a {
   border: 1.5px solid var(--card-border);
   color: var(--muted);
   transition: all 0.2s;
-  text-decoration: none;
 }
 
-.featured-commons-arrow:hover {
+.featured-commons-card:hover .featured-commons-arrow {
   border-color: var(--black);
   color: var(--black);
 }
@@ -3053,6 +3062,9 @@ a {
 .wiki-section-aside {
   width: 300px;
   flex-shrink: 0;
+  position: sticky;
+  top: 100px;
+  align-self: flex-start;
 }
 
 /* Live data in sidebar */
@@ -3142,8 +3154,6 @@ a {
 
 /* ---- Community Notes Sidebar ---- */
 .wiki-community-notes {
-  position: sticky;
-  top: 100px;
   background: var(--white);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
