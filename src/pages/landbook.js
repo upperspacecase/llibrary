@@ -7,7 +7,7 @@
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addPolygon, addWmsLayer, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 
-import { initI18n } from '../lib/i18n.js';
+import { initI18n, t } from '../lib/i18n.js';
 import { getLandbook, updateLandbook, createAutoData, createUserReported } from '../lib/store.js';
 import { formatArea, formatDistance, polygonBounds, expandBounds, sqmToHectares } from '../lib/geo.js';
 
@@ -32,16 +32,16 @@ initI18n();
 // Section definitions (ordered)
 // ---------------------------------------------------------------------------
 const SECTION_DEFS = [
-  { id: 'overview', icon: '\u{1F4CB}', label: 'Overview' },
-  { id: 'map', icon: '\u{1F5FA}', label: 'Map' },
-  { id: 'elevation', icon: '\u26F0', label: 'Elevation & Terrain' },
-  { id: 'soil', icon: '\u{1F33E}', label: 'Soil' },
-  { id: 'water', icon: '\u{1F4A7}', label: 'Water Features' },
-  { id: 'weather', icon: '\u2601', label: 'Weather & Climate' },
-  { id: 'biodiversity', icon: '\u{1F33F}', label: 'Biodiversity' },
-  { id: 'fire', icon: '\u{1F525}', label: 'Fire Risk' },
-  { id: 'protected', icon: '\u2696', label: 'Protected Areas' },
-  { id: 'knowledge', icon: '\u270D', label: 'Your Knowledge' },
+  { id: 'overview', icon: '\u{1F4CB}', labelKey: 'lb.section.overview' },
+  { id: 'map', icon: '\u{1F5FA}', labelKey: 'lb.section.map' },
+  { id: 'elevation', icon: '\u26F0', labelKey: 'lb.section.elevation' },
+  { id: 'soil', icon: '\u{1F33E}', labelKey: 'lb.section.soil' },
+  { id: 'water', icon: '\u{1F4A7}', labelKey: 'lb.section.water' },
+  { id: 'weather', icon: '\u2601', labelKey: 'lb.section.weather' },
+  { id: 'biodiversity', icon: '\u{1F33F}', labelKey: 'lb.section.biodiversity' },
+  { id: 'fire', icon: '\u{1F525}', labelKey: 'lb.section.fire' },
+  { id: 'protected', icon: '\u2696', labelKey: 'lb.section.protected' },
+  { id: 'knowledge', icon: '\u270D', labelKey: 'lb.section.knowledge' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -56,7 +56,7 @@ function esc(str) {
 }
 
 function skeleton(id) {
-  return `<div id="${id}" class="loading-block"><span class="loading-spinner"></span> Loading...</div>`;
+  return `<div id="${id}" class="loading-block"><span class="loading-spinner"></span> ${t('lb.loading.text')}</div>`;
 }
 
 function errorBlock(message) {
@@ -83,11 +83,11 @@ function pagination(currentIdx) {
   const next = currentIdx < SECTION_DEFS.length - 1 ? SECTION_DEFS[currentIdx + 1] : null;
   return `<div class="section-pagination">
     <button class="btn-page ${prev ? '' : 'hidden'}" ${prev ? `onclick="document.getElementById('section-${prev.id}').scrollIntoView({behavior:'smooth'})"` : ''}>
-      \u2190 ${prev ? prev.label : ''}
+      \u2190 ${prev ? t(prev.labelKey) : ''}
     </button>
     <span class="page-indicator">${currentIdx + 1} / ${SECTION_DEFS.length}</span>
     <button class="btn-page ${next ? '' : 'hidden'}" ${next ? `onclick="document.getElementById('section-${next.id}').scrollIntoView({behavior:'smooth'})"` : ''}>
-      ${next ? next.label : ''} \u2192
+      ${next ? t(next.labelKey) : ''} \u2192
     </button>
   </div>`;
 }
@@ -109,9 +109,9 @@ let landbook = null;
   if (!landbook) {
     container.innerHTML = `
       <div class="empty-state" style="padding-top:120px;">
-        <h3>Landbook not found</h3>
-        <p>This landbook does not exist or may have been removed.</p>
-        <a href="create.html" class="btn-primary">Create a New Landbook</a>
+        <h3>${t('lb.notfound')}</h3>
+        <p>${t('lb.notfound.desc')}</p>
+        <a href="create.html" class="btn-primary">${t('lb.notfound.cta')}</a>
       </div>`;
     if (sidebar) sidebar.innerHTML = '';
     return;
@@ -133,7 +133,7 @@ function renderSidebar() {
   sidebar.innerHTML = SECTION_DEFS.map((s) => `
     <a class="landbook-nav-link" data-section="${s.id}" href="#section-${s.id}">
       <span class="nav-icon">${s.icon}</span>
-      <span class="nav-label">${s.label}</span>
+      <span class="nav-label">${t(s.labelKey)}</span>
     </a>
   `).join('');
 
@@ -150,10 +150,10 @@ function renderSidebar() {
   if (sidebarActions) {
     sidebarActions.innerHTML = `
       <button class="btn-sidebar" id="btn-share">
-        <span class="btn-icon">\u{1F517}</span> Share link
+        <span class="btn-icon">\u{1F517}</span> ${t('lb.shareLink')}
       </button>
       <button class="btn-sidebar" id="btn-export">
-        <span class="btn-icon">\u{1F4C4}</span> Export PDF
+        <span class="btn-icon">\u{1F4C4}</span> ${t('lb.exportPdf')}
       </button>
     `;
 
@@ -189,7 +189,7 @@ function shareLandbook() {
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('btn-share');
     const orig = btn.innerHTML;
-    btn.innerHTML = '<span class="btn-icon">\u2705</span> Copied!';
+    btn.innerHTML = '<span class="btn-icon">\u2705</span> ' + t('lb.copied') + '!';
     setTimeout(() => { btn.innerHTML = orig; }, 2000);
   }).catch(() => {
     prompt('Copy this link:', window.location.href);
@@ -199,7 +199,7 @@ function shareLandbook() {
 function exportPdf() {
   const btn = document.getElementById('btn-export');
   const orig = btn.innerHTML;
-  btn.innerHTML = '<span class="btn-icon">\u23F3</span> Preparing...';
+  btn.innerHTML = '<span class="btn-icon">\u23F3</span> ' + t('lb.preparing');
 
   // Use browser print with media query for PDF
   setTimeout(() => {
@@ -223,34 +223,34 @@ function renderReport(lb) {
     <!-- 1. Overview -->
     <div class="landbook-section" id="section-overview">
       <div class="landbook-header">
-        <div class="section-label">Landbook</div>
-        <h1>${esc(lb.address || 'Untitled Parcel')}</h1>
+        <div class="section-label">${t('lb.label')}</div>
+        <h1>${esc(lb.address || t('lb.untitled'))}</h1>
         <div class="landbook-meta">
-          ${lb.created ? `<span><strong>Created</strong>: ${formatDate(lb.created)}</span>` : ''}
-          ${area ? `<span><strong>Area</strong>: ${formatArea(area)}${ha ? ` (${ha.toFixed(2)} ha)` : ''}</span>` : ''}
-          ${perimeter ? `<span><strong>Perimeter</strong>: ${formatDistance(perimeter)}</span>` : ''}
-          ${center ? `<span><strong>Center</strong>: ${center[0].toFixed(5)}, ${center[1].toFixed(5)}</span>` : ''}
+          ${lb.created ? `<span><strong>${t('lb.created')}</strong>: ${formatDate(lb.created)}</span>` : ''}
+          ${area ? `<span><strong>${t('lb.area')}</strong>: ${formatArea(area)}${ha ? ` (${ha.toFixed(2)} ha)` : ''}</span>` : ''}
+          ${perimeter ? `<span><strong>${t('lb.perimeter')}</strong>: ${formatDistance(perimeter)}</span>` : ''}
+          ${center ? `<span><strong>${t('lb.center')}</strong>: ${center[0].toFixed(5)}, ${center[1].toFixed(5)}</span>` : ''}
         </div>
         <div id="data-admin" class="data-sub-section"></div>
         <div id="data-infrastructure" class="data-sub-section"></div>
-        <div id="data-freshness" class="data-freshness">${lb.autoData && lb.autoData.lastFetched ? `Data from ${formatDate(lb.autoData.lastFetched)} \u2022 Refreshing...` : 'Loading data...'}</div>
+        <div id="data-freshness" class="data-freshness">${lb.autoData && lb.autoData.lastFetched ? `Data from ${formatDate(lb.autoData.lastFetched)} \u2022 ${t('lb.refreshing')}` : t('lb.loading')}</div>
       </div>
       ${pagination(0)}
     </div>
 
     <!-- 2. Map -->
     <div class="landbook-section" id="section-map">
-      <h2>Map</h2>
+      <h2>${t('lb.section.map')}</h2>
       ${boundary.length ? `
         <div class="landbook-map"><div id="landbook-map" style="width:100%;height:100%;"></div></div>
         <div class="map-layer-toggles" id="map-layer-toggles"></div>
-      ` : '<p style="color:var(--muted);">No boundary data available.</p>'}
+      ` : `<p style="color:var(--muted);">${t('lb.noboundary')}</p>`}
       ${pagination(1)}
     </div>
 
     <!-- 3. Elevation -->
     <div class="landbook-section" id="section-elevation">
-      <h2>Elevation &amp; Terrain</h2>
+      <h2>${t('lb.section.elevation')}</h2>
       ${skeleton('data-elevation')}
       <div id="data-geology" class="data-sub-section"></div>
       ${pagination(2)}
@@ -258,14 +258,14 @@ function renderReport(lb) {
 
     <!-- 4. Soil -->
     <div class="landbook-section" id="section-soil">
-      <h2>Soil</h2>
+      <h2>${t('lb.section.soil')}</h2>
       ${skeleton('data-soil')}
       ${pagination(3)}
     </div>
 
     <!-- 5. Water -->
     <div class="landbook-section" id="section-water">
-      <h2>Water Features</h2>
+      <h2>${t('lb.section.water')}</h2>
       ${skeleton('data-water')}
       <div id="data-flood" class="data-sub-section"></div>
       ${pagination(4)}
@@ -273,7 +273,7 @@ function renderReport(lb) {
 
     <!-- 6. Weather -->
     <div class="landbook-section" id="section-weather">
-      <h2>Weather &amp; Climate</h2>
+      <h2>${t('lb.section.weather')}</h2>
       ${skeleton('data-weather')}
       <div id="data-ipma" class="data-sub-section"></div>
       <div id="data-drought" class="data-sub-section"></div>
@@ -282,14 +282,14 @@ function renderReport(lb) {
 
     <!-- 7. Biodiversity -->
     <div class="landbook-section" id="section-biodiversity">
-      <h2>Biodiversity</h2>
+      <h2>${t('lb.section.biodiversity')}</h2>
       ${skeleton('data-biodiversity')}
       ${pagination(6)}
     </div>
 
     <!-- 8. Fire -->
     <div class="landbook-section" id="section-fire">
-      <h2>Fire Risk</h2>
+      <h2>${t('lb.section.fire')}</h2>
       ${skeleton('data-fire')}
       <div id="data-active-fires" class="data-sub-section"></div>
       ${pagination(7)}
@@ -297,15 +297,15 @@ function renderReport(lb) {
 
     <!-- 9. Protected Areas -->
     <div class="landbook-section" id="section-protected">
-      <h2>Protected Areas &amp; Zoning</h2>
+      <h2>${t('lb.section.protected')}</h2>
       ${skeleton('data-protected')}
       ${pagination(8)}
     </div>
 
     <!-- 10. Your Knowledge (inline form) -->
     <div class="landbook-section user-form" id="section-knowledge">
-      <h2>Your Knowledge</h2>
-      <p class="form-desc">Add what you know about this land. Your observations complement the data above.</p>
+      <h2>${t('lb.section.knowledge')}</h2>
+      <p class="form-desc">${t('lb.form.desc')}</p>
       <div id="user-form-container">${renderUserForm(lb)}</div>
       ${pagination(9)}
     </div>

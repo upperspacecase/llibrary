@@ -27,7 +27,6 @@ export const SECTIONS = {
     icon: 'globe',
     description: 'Municipality profile, geography, and key statistics',
     accentColor: '#8B6914',
-    stats: { suggestions: 12, comments: 8, updatedAgo: '3 days ago' },
     intro: `Odemira is a municipality in the Beja District of Portugal's Alentejo region, encompassing approximately 1,720.6 km² (172,929 hectares), making it the largest municipality in Portugal by area. The resident population was 29,538 in the 2021 census, rising to about 31,488 by the end of 2022. The bioregion stretches from the Atlantic coast at Zambujeira do Mar inland to the rolling hills of the Alentejo. Ecologically, it is structured around the Mira River basin, from the Santa Clara dam to the estuary at Vila Nova de Milfontes and the irrigated coastal plain known as the Perímetro de Rega do Mira (Mira Irrigation Perimeter). 44% of the territory falls within the Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), extending 110 km along the southwest coast.`,
     articles: [
       {
@@ -36,6 +35,14 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['elevation', 'boundaries'],
+    visuals: {
+      stats: [
+        { label: 'Area', value: '1,720.6', sublabel: 'km²' },
+        { label: 'Population', value: '31,488', sublabel: '~end of 2022' },
+        { label: 'Protected', value: '44%', sublabel: 'PNSACV', color: '#2E8B57' },
+        { label: 'Coastline', value: '110 km', sublabel: 'Southwest coast' },
+      ],
+    },
   },
 
   ecology: {
@@ -46,7 +53,6 @@ export const SECTIONS = {
     icon: 'leaf',
     description: 'Ecosystems, biodiversity, and ecological dynamics',
     accentColor: '#2E8B57',
-    stats: { suggestions: 18, comments: 24, updatedAgo: '1 week ago' },
     intro: `Odemira spans a rich gradient of ecosystems from Atlantic cliffs to Mediterranean woodlands.`,
     articles: [
       {
@@ -67,6 +73,25 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['biodiversity', 'protected'],
+    visuals: {
+      stats: [
+        { label: 'Plant Species', value: '~750', color: '#2E8B57' },
+        { label: 'Bird Species', value: '~200' },
+        { label: 'Marine Species', value: '1,889', sublabel: 'PNSACV waters' },
+        { label: 'Endemic Plants', value: '12', sublabel: 'Coastal cliffs', color: '#8B6914' },
+      ],
+      charts: [{
+        type: 'pie',
+        title: 'Ecosystem Distribution',
+        data: [
+          { name: 'Montado', value: 35, color: '#2d5a3d' },
+          { name: 'Shrubland', value: 25, color: '#8b9a46' },
+          { name: 'Coastal Cliffs', value: 15, color: '#4a90a4' },
+          { name: 'Agriculture', value: 15, color: '#d4a574' },
+          { name: 'Riverine', value: 10, color: '#2B7BB9' },
+        ],
+      }],
+    },
   },
 
   land: {
@@ -77,7 +102,6 @@ export const SECTIONS = {
     icon: 'mountain',
     description: 'Geography, topography, and geology',
     accentColor: '#6B8E23',
-    stats: { suggestions: 7, comments: 5, updatedAgo: '2 weeks ago' },
     intro: `The territory grades from rugged Atlantic coastline to rolling interior plateaus.`,
     articles: [
       {
@@ -94,6 +118,23 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['elevation', 'boundaries'],
+    visuals: {
+      stats: [
+        { label: 'Elevation', value: '0–590m', sublabel: 'Coast to interior' },
+        { label: 'Area', value: '1,720.6', sublabel: 'km²' },
+        { label: 'Parishes', value: '13' },
+        { label: 'Highest Point', value: '324m', sublabel: 'Serra do Cercal' },
+      ],
+      infoGrid: {
+        title: 'Topographic Zones',
+        rows: [
+          { label: 'Coastal Zone', value: 'Cliffs up to 156m' },
+          { label: 'Interior Plateaus', value: 'Rolling hills, up to 324m' },
+          { label: 'Valley Corridors', value: 'Alluvial flats' },
+          { label: 'Bedrock', value: 'Schist & greywacke' },
+        ],
+      },
+    },
   },
 
   soil: {
@@ -104,7 +145,6 @@ export const SECTIONS = {
     icon: 'layers',
     description: 'Soil types, management, and agricultural suitability',
     accentColor: '#8B4513',
-    stats: { suggestions: 4, comments: 3, updatedAgo: '1 month ago' },
     intro: `Odemira's soils range from sandy coastal substrates to shallow inland schist soils, each with distinct management needs.`,
     articles: [
       {
@@ -125,6 +165,40 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['landcover'],
+    visuals: {
+      stats: [
+        { label: 'Soil Types', value: '3', sublabel: 'Major groups' },
+        { label: 'pH Range', value: '5.5–6.5', sublabel: 'Slightly acidic' },
+        { label: 'Organic Carbon', value: 'Moderate', sublabel: 'Montado areas' },
+        { label: 'Erosion Risk', value: 'Moderate', sublabel: 'Schist slopes', color: '#CC6633' },
+      ],
+      charts: [{
+        type: 'pie',
+        title: 'Soil Type Distribution',
+        data: [
+          { name: 'Sandy-Clay (coastal)', value: 35, color: '#d4a574' },
+          { name: 'Shallow Schist (inland)', value: 40, color: '#8b7355' },
+          { name: 'Alluvial (river)', value: 15, color: '#c4b5a0' },
+          { name: 'Sandy (dunes)', value: 10, color: '#E8D8B8' },
+        ],
+      }],
+      textureBar: {
+        title: 'Soil Texture',
+        segments: [
+          { label: 'Sand', percent: 42, color: '#E8D098' },
+          { label: 'Silt', percent: 28, color: '#D4B87A' },
+          { label: 'Clay', percent: 30, color: '#B89A60' },
+        ],
+      },
+      bulletList: {
+        title: 'Limitations',
+        items: [
+          'Wind erosion risk on coastal sandy soils',
+          'Shallow depth on inland schist (limits root zone)',
+          'Saltwater intrusion risk near coast',
+        ],
+      },
+    },
   },
 
   water: {
@@ -135,7 +209,6 @@ export const SECTIONS = {
     icon: 'waves',
     description: 'Mira River system, irrigation, and water governance',
     accentColor: '#2B7BB9',
-    stats: { suggestions: 32, comments: 41, updatedAgo: '2 days ago' },
     intro: `The Mira River is the hydrological backbone of the bioregion.`,
     articles: [
       {
@@ -156,6 +229,25 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['water'],
+    visuals: {
+      stats: [
+        { label: 'Reservoir Level', value: '36–37%', sublabel: 'vs. avg 76–80%', color: '#dc2626' },
+        { label: 'Main Canal', value: '38 km', sublabel: '+ 600 km secondary' },
+        { label: 'Irrigated Area', value: '12,000 ha', sublabel: 'Mira Perimeter' },
+        { label: 'Equipped Area', value: '15,200 ha' },
+      ],
+      infoGrid: {
+        title: 'Mira River System',
+        rows: [
+          { label: 'Main Basin', value: 'Mira River' },
+          { label: 'Dam', value: 'Barragem de Santa Clara (1963–73)' },
+          { label: 'Coverage', value: '~41 km coastal strip' },
+          { label: 'Governance', value: 'APA (since 2023)' },
+          { label: 'At-risk Users', value: '100–150 precários' },
+        ],
+      },
+      watershedDiagram: true,
+    },
   },
 
   climate: {
@@ -166,7 +258,6 @@ export const SECTIONS = {
     icon: 'sun',
     description: 'Current climate patterns and future projections',
     accentColor: '#E8A317',
-    stats: { suggestions: 9, comments: 12, updatedAgo: '1 week ago' },
     intro: `Köppen classification: Csa (hot-summer Mediterranean) with strong Atlantic coastal influence.`,
     articles: [
       {
@@ -183,6 +274,30 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['fire'],
+    visuals: {
+      stats: [
+        { label: 'Climate Zone', value: 'Csa', sublabel: 'Hot-summer Mediterranean' },
+        { label: 'Mean Temperature', value: '18.9°C' },
+        { label: 'Annual Rainfall', value: '575 mm' },
+        { label: 'Dry Season', value: 'Jun–Sep' },
+      ],
+      charts: [{
+        type: 'area',
+        title: 'Seasonal Patterns',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [
+            { label: 'Temperature (°C)', values: [10, 11, 13, 14, 17, 20, 23, 23, 21, 17, 13, 11], color: '#ea580c', fillOpacity: 0.25 },
+            { label: 'Precipitation (mm)', values: [80, 70, 50, 45, 30, 10, 3, 3, 20, 60, 80, 100], color: '#0284c7', fillOpacity: 0.25 },
+          ],
+        },
+      }],
+      infoCards: [
+        { label: 'Wet Season', value: 'Oct – Mar', sublabel: '~78% of annual precipitation' },
+        { label: 'Dry Season', value: 'Jun – Sep', sublabel: 'Irrigation likely needed' },
+        { label: 'Drought Return', value: '1-in-5 years', sublabel: 'Severe drought interval' },
+      ],
+    },
   },
 
   landuse: {
@@ -193,7 +308,6 @@ export const SECTIONS = {
     icon: 'map',
     description: 'Historical trajectory and current land use patterns',
     accentColor: '#6B8E23',
-    stats: { suggestions: 15, comments: 19, updatedAgo: '5 days ago' },
     intro: `Historically characterized by extensive dryland cereals, olive groves, pastoralism, and large estates with montado systems. The 1960s-70s Mira irrigation scheme marked a turning point, converting marginal "Charneca de Odemira" into productive agricultural land.`,
     articles: [
       {
@@ -210,6 +324,26 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['landcover', 'agriculture'],
+    visuals: {
+      stats: [
+        { label: 'Greenhouses 2013', value: '438 ha' },
+        { label: 'Greenhouses 2021', value: '1,253 ha', color: '#CC6633' },
+        { label: 'Potential Limit', value: '4,800 ha', sublabel: 'RCM 179/2019' },
+        { label: 'Tourism Nodes', value: '5', sublabel: 'Coastal towns' },
+      ],
+      charts: [{
+        type: 'bar',
+        title: 'Land Use Composition',
+        data: [
+          { name: 'Montado', value: 35, color: '#2d5a3d' },
+          { name: 'Shrubland/Pasture', value: 20, color: '#8b9a46' },
+          { name: 'Irrigated Agriculture', value: 18, color: '#d4a574' },
+          { name: 'Greenhouse/Plastic', value: 12, color: '#CC6633' },
+          { name: 'Urban/Tourism', value: 8, color: '#8b7355' },
+          { name: 'Eucalyptus/Pine', value: 7, color: '#6B8E23' },
+        ],
+      }],
+    },
   },
 
   risks: {
@@ -220,7 +354,6 @@ export const SECTIONS = {
     icon: 'alert',
     description: 'Climate impacts, water scarcity, and social pressures',
     accentColor: '#CC6633',
-    stats: { suggestions: 28, comments: 33, updatedAgo: '3 days ago' },
     intro: `Water scarcity is the most acute threat: Santa Clara reservoir has fallen to 36-37% of capacity. Climate projections indicate rising temperatures, more frequent droughts and higher wildfire risk.`,
     articles: [
       {
@@ -245,6 +378,30 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['fire', 'water'],
+    visuals: {
+      stats: [
+        { label: 'Water Scarcity', value: 'Severe', color: '#dc2626' },
+        { label: 'Fire Risk', value: 'High', color: '#ea580c' },
+        { label: 'Reservoir', value: '36–37%', sublabel: 'of capacity' },
+        { label: 'Overall', value: 'Critical', color: '#dc2626' },
+      ],
+      charts: [{
+        type: 'radar',
+        title: 'Risk Profile',
+        data: [
+          { axis: 'Fire', value: 72, max: 100 },
+          { axis: 'Drought', value: 78, max: 100 },
+          { axis: 'Flood', value: 28, max: 100 },
+          { axis: 'Erosion', value: 52, max: 100 },
+        ],
+      }],
+      alertRows: [
+        { icon: '🔥', label: 'Fire Risk', value: 'High', score: '72/100', bgColor: '#fef2f2', textColor: '#dc2626', iconColor: '#dc2626' },
+        { icon: '🌡️', label: 'Drought Risk', value: 'Severe', score: '78/100', bgColor: '#fff7ed', textColor: '#ea580c', iconColor: '#ea580c' },
+        { icon: '💧', label: 'Flood Risk', value: 'Low', score: '28/100', bgColor: '#eff6ff', textColor: '#2563eb', iconColor: '#2563eb' },
+        { icon: '⛰️', label: 'Erosion Risk', value: 'Moderate', score: '52/100', bgColor: '#f5f3ff', textColor: '#7c3aed', iconColor: '#7c3aed' },
+      ],
+    },
   },
 
   culture: {
@@ -255,7 +412,6 @@ export const SECTIONS = {
     icon: 'people',
     description: 'Demographics, cultural landscapes, and traditional knowledge',
     accentColor: '#B8860B',
-    stats: { suggestions: 11, comments: 14, updatedAgo: '2 weeks ago' },
     intro: `Human history mirrors southwest Iberian trajectories: prehistoric occupation, Roman and medieval settlement, consolidated agrarian estates in early modern period. The montado landscape is centuries of human management transforming Mediterranean woodland into agro-silvo-pastoral systems.`,
     articles: [
       {
@@ -272,6 +428,23 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['places', 'historic'],
+    visuals: {
+      stats: [
+        { label: 'Population (2021)', value: '29,538' },
+        { label: 'Population (2022)', value: '31,488', color: '#2E8B57' },
+        { label: 'Asian-born', value: '5,623', sublabel: 'Residents' },
+        { label: 'Working Age', value: '22,699', sublabel: '15–64 years' },
+      ],
+      infoGrid: {
+        title: 'Demographics',
+        rows: [
+          { label: 'Population Growth', value: '26,066 → 29,538 → 31,488' },
+          { label: 'Asian Citizenship', value: '5,787 residents' },
+          { label: 'Age 65+', value: '7,538' },
+          { label: 'Berry Workers (national)', value: '>10,000' },
+        ],
+      },
+    },
   },
 
   community: {
@@ -282,7 +455,6 @@ export const SECTIONS = {
     icon: 'heart',
     description: 'Regenerative initiatives, citizen science, and stakeholders',
     accentColor: '#8B4789',
-    stats: { suggestions: 22, comments: 27, updatedAgo: '4 days ago' },
     intro: `Several community-driven and regenerative initiatives illustrate alternative trajectories for Odemira.`,
     articles: [
       {
@@ -303,6 +475,24 @@ export const SECTIONS = {
       },
     ],
     mapLayers: ['places', 'infrastructure'],
+    visuals: {
+      stats: [
+        { label: 'Regenerativa', value: '180', sublabel: 'Collaborators', color: '#8B4789' },
+        { label: 'Initiatives', value: '~30', sublabel: 'Entrepreneurial' },
+        { label: 'Citizen Groups', value: '2', sublabel: 'JPS + SOS Rio Mira' },
+        { label: 'Founded', value: '2022', sublabel: 'Cooperativa Integral' },
+      ],
+      infoGrid: {
+        title: 'Stakeholder Landscape',
+        rows: [
+          { label: 'Small/Medium Farmers', value: 'Irrigated & rain-fed' },
+          { label: 'Agro-industrial', value: 'Large greenhouse ops' },
+          { label: 'Migrant Workers', value: 'Primarily South Asian' },
+          { label: 'Environmental NGOs', value: 'JPS, SOS Rio Mira' },
+          { label: 'Government', value: 'Municipality, ICNF, APA' },
+        ],
+      },
+    },
   },
 };
 

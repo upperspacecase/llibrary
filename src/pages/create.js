@@ -1,6 +1,6 @@
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, setGeoJSONSource, fitToCoords, toLatLng, toLngLat } from '../lib/mapbox.js';
-import { initI18n } from '../lib/i18n.js';
+import { initI18n, t } from '../lib/i18n.js';
 import { saveLandbook } from '../lib/store.js';
 import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, formatDistance } from '../lib/geo.js';
 import { geocode, reverseGeocode } from '../api/nominatim.js';
@@ -256,13 +256,13 @@ function setInstructions(state) {
   if (!instructions) return;
   switch (state) {
     case 1:
-      instructions.textContent = 'Click on the map to start drawing your land boundary';
+      instructions.textContent = t('create.inst.start');
       break;
     case 2:
-      instructions.textContent = 'Click to add points. Click first point to close.';
+      instructions.textContent = t('create.inst.adding');
       break;
     case 3:
-      instructions.textContent = 'Boundary complete. Generate your landbook.';
+      instructions.textContent = t('create.inst.done');
       break;
   }
 }
@@ -352,7 +352,7 @@ if (btnCreate) {
     if (!isClosed || boundaryPoints.length < 3) return;
 
     btnCreate.disabled = true;
-    btnCreate.textContent = 'Generating\u2026';
+    btnCreate.textContent = t('create.generating');
 
     const area = polygonArea(boundaryPoints);
     const perimeter = polygonPerimeter(boundaryPoints);
@@ -374,8 +374,8 @@ if (btnCreate) {
     } catch (err) {
       console.error('Failed to save landbook:', err);
       btnCreate.disabled = false;
-      btnCreate.textContent = 'Generate Landbook';
-      alert('Failed to save. Please try again.');
+      btnCreate.textContent = t('create.submit');
+      alert(t('create.fail'));
     }
   });
 }

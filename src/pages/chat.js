@@ -1,5 +1,5 @@
 import '../styles/main.css';
-import { initI18n } from '../lib/i18n.js';
+import { initI18n, t } from '../lib/i18n.js';
 import { ODEMIRA, SECTIONS, getAllSections, LANDMARKS, EVENTS_CALENDAR } from '../lib/wiki-data.js';
 import { escapeHtml } from '../lib/utils.js';
 
@@ -46,19 +46,19 @@ Keep answers concise (2-4 paragraphs max). If you don't know something specific,
 
 // ---- Suggestions ----
 const SUGGESTIONS = [
-  'What\'s the water situation in Odemira?',
-  'Tell me about fire risk in the region',
-  'What species are unique to this area?',
-  'How has greenhouse agriculture changed things?',
-  'What\'s the best time of year for planting?',
-  'Tell me about the Vicentine Coast Natural Park',
-  'What zoning restrictions should I know about?',
-  'What community projects exist here?',
+  'chat.sug.water',
+  'chat.sug.fire',
+  'chat.sug.species',
+  'chat.sug.greenhouse',
+  'chat.sug.planting',
+  'chat.sug.park',
+  'chat.sug.zoning',
+  'chat.sug.community',
 ];
 
 function renderSuggestions() {
-  suggestionsEl.innerHTML = SUGGESTIONS.map(s =>
-    `<button class="chat-suggestion">${escapeHtml(s)}</button>`
+  suggestionsEl.innerHTML = SUGGESTIONS.map(key =>
+    `<button class="chat-suggestion">${escapeHtml(t(key))}</button>`
   ).join('');
 
   suggestionsEl.querySelectorAll('.chat-suggestion').forEach(btn => {
@@ -118,7 +118,7 @@ async function handleSend() {
       await sendLocal(text);
     }
   } catch (err) {
-    addMessage('assistant', 'Sorry, I had trouble processing that. Please try again.');
+    addMessage('assistant', t('chat.error'));
   }
 
   sendBtn.disabled = false;
@@ -226,4 +226,4 @@ inputEl.addEventListener('input', () => {
 renderSuggestions();
 
 // Welcome message
-addMessage('assistant', 'Welcome to the Odemira wiki chat. I can answer questions about the region — the land, water, weather, biodiversity, agriculture, community, history, and governance. What would you like to know?\n\nTip: You can also browse the wiki directly for detailed articles and live data.');
+addMessage('assistant', t('chat.welcome'));
