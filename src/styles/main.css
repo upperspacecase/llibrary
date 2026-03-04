@@ -4227,12 +4227,15 @@ a {
 @media (max-width: 900px) {
   .wiki-section-layout {
     flex-direction: column;
+    gap: 24px;
   }
 
   .wiki-section-aside {
     width: 100%;
-    order: -1;
-    margin-bottom: 24px;
+    position: static;
+    top: auto;
+    align-self: auto;
+    margin-bottom: 0;
   }
 
   .wiki-community-notes {
