@@ -1705,7 +1705,7 @@ function initContribViewerClicks(sectionId) {
 
   if (suggestionsBtn) {
     suggestionsBtn.addEventListener('click', function () {
-      openViewer('edit', 'Suggestions');
+      openViewer('edit,flag,story,tip,event,place,resource', 'Suggestions');
     });
   }
 
