@@ -20,9 +20,9 @@ export const pt = {
 
   // Landing \u2014 Hero
   "landing.hero.tagline": "A sua terra vale mais<br>do que imagina.",
-  "landing.hero.sub": "A LandLibrary analisa tend\u00EAncias de mercado, din\u00E2micas regionais e dados ambientais de mais de 45 fontes verificadas \u2014 dando-lhe uma vis\u00E3o precisa do valor da sua terra.",
-  "landing.hero.cta.primary": "Descobrir o Valor da Minha Terra",
-  "landing.hero.cta.secondary": "Explorar os Comuns",
+  "landing.hero.sub": "Os mercados tradicionais subvalorizam as amenidades ambientais em 5–15%, dependendo da regi\u00E3o. Obtenha uma avalia\u00E7\u00E3o com IA que revela o valor ambiental oculto da sua propriedade e Explore conhecimento aberto sobre a sua regi\u00E3o. <span class=\"hero-source\">(Fonte: <a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\">pnas.org</a>)</span>",
+  "landing.hero.cta.primary": "Descobrir o Valor da Terra",
+  "landing.hero.cta.secondary": "Explorar a Minha Regi\u00E3o",
 
   // Landing \u2014 Produtos
   "landing.products.type.individual": "Avalia\u00E7\u00E3o Individual",
@@ -36,8 +36,9 @@ export const pt = {
 
   // Landing \u2014 Sec\u00E7\u00E3o LandBook
   "landing.lb.label": "LandBook",
-  "landing.lb.title": "Intelig\u00EAncia territorial completa. Um relat\u00F3rio.",
-  "landing.lb.desc": "Processamos terabytes de dados sobre solos, \u00E1gua, clima, culturas, impostos, taxas de juro e pre\u00E7os de mercado para calcular o valor estimado. Do sat\u00E9lite ao solo \u00E0 IA. Vinte e cinco categorias. Entregue em 48 horas.",
+  "landing.lb.title": "Obtenha o seu LandBook",
+  "landing.lb.desc": "Cada LandBook cobre 10 sec\u00E7\u00F5es \u2014 da vis\u00E3o geral \u00E0s suas pr\u00F3prias notas. Utilizamos mais de 15 APIs e fontes de sat\u00E9lite para construir um retrato completo da sua terra \u2014 do substrato \u00E0 biodiversidade.",
+  "landing.lb.cta": "Entrar na Lista de Espera",
   "landing.lb.step1.title": "Carregar",
   "landing.lb.step1.desc": "Escritura ou coordenadas",
   "landing.lb.step2.title": "Analisar",
@@ -77,7 +78,7 @@ export const pt = {
 
   // P\u00E1gina inicial \u2014 Hero
   "hero.tagline": "Conhece a tua terra.<br>Conhece os teus vizinhos.",
-  "hero.sub": "Uma plataforma bioregional para Odemira, Portugal \u2014 wiki p\u00FAblica gratuita, relat\u00F3rios privados de terrenos.",
+  "hero.sub": "Uma plataforma regional para Odemira, Portugal \u2014 wiki p\u00FAblica gratuita, relat\u00F3rios privados de terrenos.",
   "hero.text": "Tudo o que precisas para te tornares um bom vizinho rapidamente. A terra, a \u00E1gua, o clima, as esp\u00E9cies, as pessoas, a hist\u00F3ria, as regras \u2014 tudo num s\u00F3 lugar. Mais um cofre de dados privado para a tua parcela.",
   "hero.cta.wiki": "Explorar a Wiki",
   "hero.cta.create": "Criar o Teu Landbook",
@@ -85,9 +86,9 @@ export const pt = {
   // P\u00E1gina inicial \u2014 Produtos
   "products.label": "Dois produtos, uma plataforma",
   "products.title": "Conhecimento p\u00FAblico. Relat\u00F3rios privados.",
-  "products.desc": "A Libraries combina uma wiki bioregional gratuita com um passaporte privado de terrenos. A wiki \u00E9 para todos \u2014 o landbook \u00E9 s\u00F3 teu.",
+  "products.desc": "A Libraries combina uma wiki regional gratuita com um passaporte privado de terrenos. A wiki \u00E9 para todos \u2014 o landbook \u00E9 s\u00F3 teu.",
   "products.wiki.type": "Gratuito e P\u00FAblico",
-  "products.wiki.title": "Wiki Bioregional",
+  "products.wiki.title": "Wiki Regional",
   "products.wiki.desc": "Se te mudasses para Odemira, que informa\u00E7\u00E3o precisarias para te tornares um bom vizinho rapidamente? Essa \u00E9 a wiki. Artigos curtos e objetivos sobre tudo, desde tipos de solo a festivais locais \u2014 com interface de chat para fazeres perguntas.",
   "products.wiki.li1": "A Terra \u2014 geologia, limites, eleva\u00E7\u00E3o",
   "products.wiki.li2": "A \u00C1gua \u2014 rios, nascentes, qualidade da \u00E1gua",
@@ -270,7 +271,7 @@ export const pt = {
   "passport.temp": "Temperatura",
   "passport.rain": "Precipita\u00E7\u00E3o",
   "passport.elevation": "Eleva\u00E7\u00E3o",
-  "passport.bioregion": "Bioregi\u00E3o",
+  "passport.bioregion": "Regi\u00E3o",
   "passport.seasonal": "Orienta\u00E7\u00E3o sazonal",
   "passport.share": "Partilhar este Landbook",
   "passport.notfound": "Propriedade n\u00E3o encontrada",
@@ -348,10 +349,10 @@ export const pt = {
   "preview.sidebar.unlock": "Desbloquear Relat\u00F3rio Completo",
 
   // Wiki hub \u2014 r\u00F3tulos din\u00E2micos
-  "wiki.hub.title": "Hub da Wiki",
+  "wiki.hub.title": "Conhecimento Regional",
   "wiki.hub.breadcrumb.commons": "Comuns",
   "wiki.hub.breadcrumb.odemira": "Odemira",
-  "wiki.hub.hero.title": "Biorregi\u00E3o de Odemira",
+  "wiki.hub.hero.title": "Regi\u00E3o de Odemira",
   "wiki.hub.residents": "residentes",
   "wiki.hub.updated": "Atualizado",
   "wiki.hub.kmArea": "km\u00B2 de \u00E1rea",
@@ -389,4 +390,22 @@ export const pt = {
   "wiki.section.title": "T\u00EDtulo",
   "wiki.section.description": "Descri\u00E7\u00E3o",
   "wiki.section.yourName": "O Teu Nome",
+
+  // Ações da barra lateral wiki
+  "wiki.sidebar.addContribution": "Adicionar Contribui\u00E7\u00E3o",
+  "wiki.sidebar.suggestEdit": "Sugerir uma Edi\u00E7\u00E3o",
+  "wiki.sidebar.addComment": "Adicionar Coment\u00E1rio",
+  "wiki.sidebar.noRecentActivity": "Sem atividade recente",
+
+  // Títulos das secções wiki
+  "wiki.sections.bioregion": "Vis\u00E3o Geral da Regi\u00E3o",
+  "wiki.sections.ecology": "Ecologia",
+  "wiki.sections.land": "Terra",
+  "wiki.sections.soil": "Solo",
+  "wiki.sections.water": "\u00C1gua",
+  "wiki.sections.climate": "Clima",
+  "wiki.sections.landuse": "Uso do Solo",
+  "wiki.sections.risks": "Riscos",
+  "wiki.sections.culture": "Cultura",
+  "wiki.sections.community": "Comunidade",
 };

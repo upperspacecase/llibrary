@@ -35,8 +35,6 @@
     <div class="header-nav">
       <a href="#landbook" data-i18n="nav.landbook">LandBook</a>
       <a href="/wiki" data-i18n="nav.commons">The Commons</a>
-      <a href="#" onclick="event.preventDefault();showComingSoon()" data-i18n="nav.chat">Chat with Land</a>
-      <a href="#pricing" data-i18n="nav.pricing">Pricing</a>
       <div class="lang-toggle">
         <button data-lang="en" class="active">EN</button>
         <button data-lang="pt">PT</button>
@@ -52,13 +50,15 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <h1 class="hero-tagline" data-i18n-html="landing.hero.tagline">Your land is worth more<br>than you know.</h1>
-      <p class="hero-sub" data-i18n="landing.hero.sub">LandLibrary analyzes market trends, regional dynamics, and
-        environmental data from over 45
-        verified sources — giving you an accurate view of your land's value.</p>
+      <p class="hero-sub" data-i18n-html="landing.hero.sub">Traditional markets undervalue environmental amenities by
+        5–15% depending on region. Get an AI-powered valuation that uncovers your property's hidden environmental value
+        and Explore open knowledge about your region. <span class="hero-source">(Source: <a
+            href="https://www.pnas.org/doi/10.1073/pnas.2012865117" target="_blank" rel="noopener">pnas.org</a>)</span>
+      </p>
       <div class="hero-actions">
-        <a href="/create.html" class="btn-pill-primary" data-i18n="landing.hero.cta.primary">Discover My Land's
-          Value</a>
-        <a href="/wiki" class="btn-pill-outline" data-i18n="landing.hero.cta.secondary">Explore the Commons</a>
+        <a href="#landbook" class="btn-pill-primary" data-i18n="landing.hero.cta.primary">Discover Land Value</a>
+        <a href="#featured-commons" class="btn-pill-outline" data-i18n="landing.hero.cta.secondary">Explore my
+          Region</a>
       </div>
       <div class="hero-scroll-hint">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -69,11 +69,21 @@
     </div>
   </section>
 
-  <!-- ===== FEATURED COMMONS ===== -->
-  <section class="featured-commons-section" id="featured-commons">
+  <!-- ===== THE COMMONS INTRO ===== -->
+  <section class="commons-intro-section" id="featured-commons">
     <div class="container">
-      <p class="featured-commons-label">Featured Bioregion</p>
-      <a href="/wiki" class="featured-commons-card" aria-label="Explore Odemira bioregion">
+      <div class="section-label">The Commons</div>
+      <h2 class="commons-intro-title">Collective intelligence for your region</h2>
+      <p class="commons-intro-desc">Explore local knowledge. Contribute what you know. Help build the most complete
+        picture of your region—so better decisions get made by the people who live here.</p>
+    </div>
+  </section>
+
+  <!-- ===== FEATURED COMMONS ===== -->
+  <section class="featured-commons-section">
+    <div class="container">
+      <p class="featured-commons-label">Featured Region</p>
+      <a href="/wiki" class="featured-commons-card" aria-label="Explore Odemira region">
         <div class="featured-commons-img-wrap">
           <img src="/wiki/bioregion.png" alt="" class="featured-commons-img" />
           <div class="featured-commons-badge" id="fc-badge">
@@ -110,93 +120,13 @@
     </div>
   </section>
 
-
-  <!-- ===== WHAT WE ANALYZE ===== -->
-  <section class="dataroom-section" id="dataroom">
-    <div class="container">
-      <h2 class="dataroom-title">What we analyze</h2>
-      <p class="section-desc">We pull from 15+ APIs and satellite sources to build a complete picture of your land —
-        from bedrock to biodiversity.</p>
-
-      <div class="dataroom-grid">
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 17l4-4 4 4 4-8 6 6" />
-              <path d="M3 21h18" />
-            </svg>
-          </div>
-          <h4>Elevation &amp; Geology</h4>
-          <p>SRTM elevation data, slope analysis, and bedrock geology from Macrostrat and LNEG geological survey.</p>
-        </div>
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <circle cx="12" cy="12" r="7" />
-              <circle cx="12" cy="12" r="10" />
-            </svg>
-          </div>
-          <h4>Soil Profile</h4>
-          <p>Texture, pH, organic carbon, nitrogen, and WRB classification from SoilGrids at 250m resolution.</p>
-        </div>
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-            </svg>
-          </div>
-          <h4>Water &amp; Flood Risk</h4>
-          <p>Rivers, streams, wells, and springs from OpenStreetMap. Flood hazard zones from JRC and GloFAS forecasts.
-          </p>
-        </div>
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
-            </svg>
-          </div>
-          <h4>Weather &amp; Climate</h4>
-          <p>7-day forecast, 30-year climate averages, frost dates, and drought index from Open-Meteo and IPMA.</p>
-        </div>
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M6.5 6.5a7 7 0 0 1 11 0" />
-              <path d="M3 11a11 11 0 0 1 18 0" />
-              <path d="M12 18c-2.5-3-4-5.5-4-8a4 4 0 1 1 8 0c0 2.5-1.5 5-4 8z" />
-              <circle cx="12" cy="10" r="1" />
-            </svg>
-          </div>
-          <h4>Biodiversity</h4>
-          <p>Species counts and photos from iNaturalist, threatened species alerts, and GBIF occurrence records.</p>
-        </div>
-        <div class="dataroom-card">
-          <div class="dataroom-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          </div>
-          <h4>Fire &amp; Protected Areas</h4>
-          <p>EFFIS fire danger rating, NASA FIRMS active fire detections, and Natura 2000 conservation zones.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== REPORT INCLUDES ===== -->
   <section class="report-section" id="landbook">
     <div class="container">
-      <h2 class="report-title">See what your report includes</h2>
-      <p class="section-desc">Every LandBook covers 10 sections — from overview to your own notes.</p>
+      <h2 class="report-title" data-i18n="landing.lb.title">Get your LandBook</h2>
+      <p class="section-desc" data-i18n="landing.lb.desc">Every LandBook covers 10 sections — from overview to your own
+        notes. We pull from 15+ APIs and satellite sources to build a complete picture of your land — from bedrock to
+        biodiversity.</p>
 
       <div class="report-layout">
         <div class="report-preview">
@@ -333,46 +263,13 @@
           </div>
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ===== PRICING ===== -->
-  <section class="pricing-section" id="pricing">
-    <div class="container">
-      <div class="section-label" data-i18n="landing.pricing.label">Pricing</div>
-      <h2 data-i18n="landing.pricing.title">Choose your depth</h2>
-      <p class="section-desc" data-i18n="landing.pricing.desc">LandBook pays for itself if it finds &euro;1,000 in
-        hidden value. It typically finds
-        &euro;15,000.</p>
-
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <div class="pricing-tier" data-i18n="landing.pricing.preview.tier">Preview</div>
-          <div class="pricing-price">&euro;0</div>
-          <p class="pricing-desc" data-i18n="landing.pricing.preview.desc">Value estimate. 3 pages. Instant.</p>
-          <a href="/create.html?tier=preview" class="btn-pill-outline dark btn-small-pill"
-            data-i18n="landing.pricing.preview.cta">Get
-            Preview</a>
-        </div>
-        <div class="pricing-card featured">
-          <div class="pricing-tier" data-i18n="landing.pricing.landbook.tier">LandBook</div>
-          <div class="pricing-price">&euro;250</div>
-          <p class="pricing-desc" data-i18n="landing.pricing.landbook.desc">Full assessment. 25 pages. Permanent record.
-          </p>
-          <a href="/create.html" class="btn-pill-primary btn-small-pill" data-i18n="landing.pricing.landbook.cta">Order
-            LandBook</a>
-        </div>
-        <div class="pricing-card">
-          <div class="pricing-tier" data-i18n="landing.pricing.steward.tier">Steward</div>
-          <div class="pricing-price">&euro;29<span class="pricing-period">/month</span></div>
-          <p class="pricing-desc" data-i18n="landing.pricing.steward.desc">Ongoing monitoring. Market alerts. Digital
-            vault.</p>
-          <a href="#" class="btn-pill-outline dark btn-small-pill" data-i18n="landing.pricing.steward.cta"
-            onclick="event.preventDefault();showComingSoon()">Start Steward</a>
-        </div>
+      <div class="report-cta-wrap">
+        <a href="/create" class="btn-pill-primary report-cta-btn" data-i18n="landing.lb.cta">Join the Waitlist</a>
       </div>
     </div>
   </section>
+
 
   <!-- ===== FOOTER ===== -->
   <footer class="footer">
@@ -387,7 +284,6 @@
         <a href="/" data-i18n="footer.home">Home</a>
         <a href="/wiki" data-i18n="footer.commons">The Commons</a>
         <a href="#landbook" data-i18n="footer.landbook">LandBook</a>
-        <a href="#pricing" data-i18n="footer.pricing">Pricing</a>
       </div>
     </div>
     <div class="footer-bottom">

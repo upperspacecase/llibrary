@@ -271,7 +271,7 @@ function renderSidebar(activeId) {
       <hr>
       ${sections.map(s => `
         <a href="#${s.id}" class="wiki-nav-link ${activeId === s.id ? 'active' : ''}">
-          <span class="wiki-nav-title">${s.title}</span>
+          <span class="wiki-nav-title">${t('wiki.sections.' + s.id) || s.title}</span>
         </a>
       `).join('')}
     </nav>
@@ -363,13 +363,13 @@ async function renderHub() {
       ${sections.map(s => `
         <a href="#${s.id}" class="wiki-hub-card">
           <div class="wiki-hub-card-image" style="border-top: 3px solid ${s.accentColor || s.color}">
-            <img src="/wiki/${s.id}.png" alt="${s.title}" loading="lazy" />
+            <img src="/wiki/${s.id}.png" alt="${t('wiki.sections.' + s.id) || s.title}" loading="lazy" />
           </div>
           <div class="wiki-hub-card-body">
             <div class="wiki-hub-card-icon" style="color: ${s.accentColor || s.color}">
               ${getIconSvg(s.icon)}
             </div>
-            <h3>${s.title}</h3>
+            <h3>${t('wiki.sections.' + s.id) || s.title}</h3>
             <p>${s.description}</p>
           </div>
           <div class="wiki-hub-card-footer">
@@ -525,7 +525,7 @@ async function renderSection(sectionId) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
         <a href="#hub">${t('wiki.hub.breadcrumb.odemira')}</a>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-        <span>${section.title}</span>
+        <span>${t('wiki.sections.' + section.id) || section.title}</span>
       </div>
       <div class="wiki-help-trigger" id="wiki-help-trigger">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -538,7 +538,7 @@ async function renderSection(sectionId) {
     <div class="wiki-section-layout">
       <!-- Left column: main content -->
       <div class="wiki-section-main">
-        <h1 class="wiki-section-title">${section.title}</h1>
+        <h1 class="wiki-section-title">${t('wiki.sections.' + section.id) || section.title}</h1>
         <p class="wiki-section-subtitle">${section.intro}</p>
 
         <div class="wiki-section-meta">
@@ -636,6 +636,20 @@ async function renderSection(sectionId) {
             <h4>${t('wiki.section.recentActivity')}</h4>
             <div class="wiki-recent-activity-list" id="recent-activity-list">
               <span class="wiki-recent-activity-placeholder">Loading...</span>
+            </div>
+            <div class="wiki-sidebar-actions">
+              <button class="wiki-sidebar-action-btn" id="sidebar-add-contribution">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                ${t('wiki.sidebar.addContribution')}
+              </button>
+              <button class="wiki-sidebar-action-btn" id="sidebar-suggest-edit">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                ${t('wiki.sidebar.suggestEdit')}
+              </button>
+              <button class="wiki-sidebar-action-btn" id="sidebar-add-comment">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                ${t('wiki.sidebar.addComment')}
+              </button>
             </div>
           </div>
         </div>
@@ -764,6 +778,7 @@ async function renderSection(sectionId) {
     initResourceUpload(sectionId);
     initTextSelectionToolbar(sectionId);
     initContribViewerClicks(sectionId);
+    initSidebarActions(sectionId);
 
     // Render dashboard visuals (if section has them)
     renderDashboard(section);
@@ -822,7 +837,7 @@ function renderContribute(preselectedSection) {
   content.innerHTML = `
     <section class="wiki-hero">
       <h1>Share Your Knowledge</h1>
-      <p class="wiki-intro">Help build the wiki. Share a story, tip, event, place, or resource about the Odemira bioregion. All fields are optional except your message.</p>
+      <p class="wiki-intro">Help build the wiki. Share a story, tip, event, place, or resource about the Odemira region. All fields are optional except your message.</p>
     </section>
 
     <section class="wiki-contribute-form">
@@ -833,7 +848,7 @@ function renderContribute(preselectedSection) {
             <select id="contrib-section" name="section">
               <option value="">General (no specific section)</option>
               ${sections.map(s => `
-                <option value="${s.id}" ${s.id === preselectedSection ? 'selected' : ''}>${s.title}</option>
+                <option value="${s.id}" ${s.id === preselectedSection ? 'selected' : ''}>${t('wiki.sections.' + s.id) || s.title}</option>
               `).join('')}
             </select>
           </div>
@@ -1631,10 +1646,10 @@ function initContribViewerClicks(sectionId) {
 function renderGuidelinesHTML() {
   return `
     <div class="wiki-guidelines-content">
-      <h3>Bioregional Knowledge Commons — Contribution Guidelines</h3>
+      <h3>Regional Knowledge Commons — Contribution Guidelines</h3>
 
       <h4>Our Purpose</h4>
-      <p>The Bioregional Knowledge Commons exists to democratize landscape knowledge. We believe that effective stewardship requires accessible, accurate, and collectively-maintained information about the places we inhabit.</p>
+      <p>The Regional Knowledge Commons exists to democratize landscape knowledge. We believe that effective stewardship requires accessible, accurate, and collectively-maintained information about the places we inhabit.</p>
 
       <h4>Types of Contributions</h4>
       <div class="wiki-guidelines-section">
@@ -1705,7 +1720,7 @@ async function loadRecentActivity(sectionId) {
     const items = await res.json();
 
     if (items.length === 0) {
-      listEl.innerHTML = '<span class="wiki-recent-activity-placeholder">No recent activity</span>';
+      listEl.innerHTML = '<span class="wiki-recent-activity-placeholder">' + t('wiki.sidebar.noRecentActivity') + '</span>';
       return;
     }
 
@@ -1970,6 +1985,66 @@ function initTextSelectionToolbar(sectionId) {
       }
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar Action Buttons
+// ---------------------------------------------------------------------------
+
+function initSidebarActions(sectionId) {
+  const addContribBtn = document.getElementById('sidebar-add-contribution');
+  const suggestEditBtn = document.getElementById('sidebar-suggest-edit');
+  const addCommentBtn = document.getElementById('sidebar-add-comment');
+  const overlay = document.getElementById('wiki-inline-contrib-overlay');
+
+  // "Add a Contribution" scrolls to the community contributions form
+  if (addContribBtn) {
+    addContribBtn.addEventListener('click', () => {
+      window.location.hash = '#contribute/' + sectionId;
+    });
+  }
+
+  // "Suggest an Edit" opens the inline modal in 'edit' mode
+  if (suggestEditBtn && overlay) {
+    suggestEditBtn.addEventListener('click', () => {
+      openSidebarContrib('edit', sectionId);
+    });
+  }
+
+  // "Add a Comment" opens the inline modal in 'comment' mode
+  if (addCommentBtn && overlay) {
+    addCommentBtn.addEventListener('click', () => {
+      openSidebarContrib('comment', sectionId);
+    });
+  }
+}
+
+function openSidebarContrib(action, sectionId) {
+  const overlay = document.getElementById('wiki-inline-contrib-overlay');
+  const titleEl = document.getElementById('wiki-inline-contrib-title');
+  const selectedEl = document.getElementById('wiki-inline-contrib-selected');
+  const textEl = document.getElementById('wiki-inline-contrib-text');
+
+  const labels = { edit: t('wiki.sidebar.suggestEdit'), comment: t('wiki.sidebar.addComment') };
+  const placeholders = {
+    edit: 'What would you like to change or improve?',
+    comment: 'Share your thoughts about this section...',
+  };
+
+  if (titleEl) titleEl.textContent = labels[action] || 'Contribute';
+  if (selectedEl) selectedEl.innerHTML = '';
+  if (textEl) {
+    textEl.placeholder = placeholders[action] || 'Your message...';
+    textEl.value = '';
+  }
+
+  // Store action for submit handler
+  if (overlay) {
+    overlay.dataset.currentAction = action;
+    overlay.dataset.currentSection = sectionId;
+    overlay.style.display = 'flex';
+  }
+  if (textEl) textEl.focus();
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 /**
- * Odemira bioregional wiki content — structured data from WIKI_CONTENT.md.
- * 10 sections matching the researched bioregion profile.
+ * Odemira regional wiki content — structured data from WIKI_CONTENT.md.
+ * 10 sections matching the researched region profile.
  */
 
 // Odemira municipality reference coordinates
@@ -21,13 +21,13 @@ export const ODEMIRA = {
 export const SECTIONS = {
   bioregion: {
     id: 'bioregion',
-    title: 'Bioregion Overview',
+    title: 'Region Overview',
     subtitle: 'Municipality profile, geography, and key statistics',
     color: '#8B6914',
     icon: 'globe',
     description: 'Municipality profile, geography, and key statistics',
     accentColor: '#8B6914',
-    intro: `Odemira is a municipality in the Beja District of Portugal's Alentejo region, encompassing approximately 1,720.6 km² (172,929 hectares), making it the largest municipality in Portugal by area. The resident population was 29,538 in the 2021 census, rising to about 31,488 by the end of 2022. The bioregion stretches from the Atlantic coast at Zambujeira do Mar inland to the rolling hills of the Alentejo. Ecologically, it is structured around the Mira River basin, from the Santa Clara dam to the estuary at Vila Nova de Milfontes and the irrigated coastal plain known as the Perímetro de Rega do Mira (Mira Irrigation Perimeter). 44% of the territory falls within the Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), extending 110 km along the southwest coast.`,
+    intro: `Odemira is a municipality in the Beja District of Portugal's Alentejo region, encompassing approximately 1,720.6 km² (172,929 hectares), making it the largest municipality in Portugal by area. The resident population was 29,538 in the 2021 census, rising to about 31,488 by the end of 2022. The region stretches from the Atlantic coast at Zambujeira do Mar inland to the rolling hills of the Alentejo. Ecologically, it is structured around the Mira River basin, from the Santa Clara dam to the estuary at Vila Nova de Milfontes and the irrigated coastal plain known as the Perímetro de Rega do Mira (Mira Irrigation Perimeter). 44% of the territory falls within the Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), extending 110 km along the southwest coast.`,
     articles: [
       {
         title: 'Key Facts',
@@ -209,7 +209,7 @@ export const SECTIONS = {
     icon: 'waves',
     description: 'Mira River system, irrigation, and water governance',
     accentColor: '#2B7BB9',
-    intro: `The Mira River is the hydrological backbone of the bioregion.`,
+    intro: `The Mira River is the hydrological backbone of the region.`,
     articles: [
       {
         title: 'The Mira River System',
@@ -234,7 +234,6 @@ export const SECTIONS = {
         { label: 'Reservoir Level', value: '36–37%', sublabel: 'vs. avg 76–80%', color: '#dc2626' },
         { label: 'Main Canal', value: '38 km', sublabel: '+ 600 km secondary' },
         { label: 'Irrigated Area', value: '12,000 ha', sublabel: 'Mira Perimeter' },
-        { label: 'Equipped Area', value: '15,200 ha' },
       ],
       infoGrid: {
         title: 'Mira River System',
@@ -476,10 +475,8 @@ export const SECTIONS = {
     mapLayers: ['places', 'infrastructure'],
     visuals: {
       stats: [
-        { label: 'Regenerativa', value: '180', sublabel: 'Collaborators', color: '#8B4789' },
         { label: 'Initiatives', value: '~30', sublabel: 'Entrepreneurial' },
         { label: 'Citizen Groups', value: '2', sublabel: 'JPS + SOS Rio Mira' },
-        { label: 'Founded', value: '2022', sublabel: 'Cooperativa Integral' },
       ],
       infoGrid: {
         title: 'Stakeholder Landscape',

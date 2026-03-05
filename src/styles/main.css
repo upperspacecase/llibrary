@@ -9,6 +9,10 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --cream: #FFFCED;
   --coral: #EB5F54;
@@ -341,10 +345,21 @@ a {
 
 .hero-tagline {
   font-family: 'DM Serif Display', serif;
-  font-size: clamp(64px, 8.8vw, 109px);
-  line-height: 1.02;
+  font-size: clamp(51px, 7vw, 87px);
+  line-height: 0.98;
   margin-bottom: 24px;
   color: var(--white);
+}
+
+.hero-source {
+  font-size: 0.85em;
+  opacity: 0.7;
+}
+
+.hero-source a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .hero-sub {
@@ -540,6 +555,27 @@ a {
 
 .mobile-menu-btn.open span:nth-child(3) {
   transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---- COMMONS INTRO SECTION ---- */
+.commons-intro-section {
+  padding: 100px 0 40px;
+  text-align: center;
+}
+
+.commons-intro-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 3.5vw, 42px);
+  margin-bottom: 20px;
+}
+
+.commons-intro-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 640px;
+  margin: 0 auto;
 }
 
 /* ---- FEATURED COMMONS SECTION ---- */
@@ -876,6 +912,16 @@ a {
   font-family: 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 500;
+}
+
+.report-cta-wrap {
+  text-align: center;
+  margin-top: 48px;
+}
+
+.report-cta-btn {
+  font-size: 16px;
+  padding: 16px 40px;
 }
 
 
@@ -2925,7 +2971,7 @@ a {
   }
 
   .hero-tagline {
-    font-size: clamp(28px, 7vw, 40px);
+    font-size: clamp(34px, 8.4vw, 48px);
   }
 
   .hero-sub {
@@ -3521,6 +3567,49 @@ a {
   font-size: 12px;
   color: var(--muted);
   font-style: italic;
+}
+
+/* ---- Sidebar Action Buttons ---- */
+.wiki-sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.wiki-sidebar-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--black);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wiki-sidebar-action-btn:hover {
+  border-color: var(--black);
+  background: var(--black);
+  color: var(--cream);
+}
+
+.wiki-sidebar-action-btn svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.wiki-sidebar-action-btn:hover svg {
+  opacity: 1;
+  stroke: var(--cream);
 }
 
 /* ---- Help Tooltip (?) ---- */

@@ -20,9 +20,9 @@ export const en = {
 
   // Landing — Hero
   "landing.hero.tagline": "Your land is worth more<br>than you know.",
-  "landing.hero.sub": "LandLibrary analyzes market trends, regional dynamics, and environmental data from over 45 verified sources — giving you an accurate view of your land's value.",
-  "landing.hero.cta.primary": "Discover My Land's Value",
-  "landing.hero.cta.secondary": "Explore the Commons",
+  "landing.hero.sub": "Traditional markets undervalue environmental amenities by 5–15% depending on region. Get an AI-powered valuation that uncovers your property's hidden environmental value and Explore open knowledge about your region. <span class=\"hero-source\">(Source: <a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\">pnas.org</a>)</span>",
+  "landing.hero.cta.primary": "Discover Land Value",
+  "landing.hero.cta.secondary": "Explore my Region",
 
   // Landing — Products
   "landing.products.type.individual": "Individual Assessment",
@@ -36,8 +36,9 @@ export const en = {
 
   // Landing — LandBook Section
   "landing.lb.label": "LandBook",
-  "landing.lb.title": "Complete land intelligence. One report.",
-  "landing.lb.desc": "We process terabytes of data about soils, water, climate, crops, taxes, interest rates, and market prices to calculate the estimated value. Satellite to soil to AI. Twenty-five categories. Delivered in 48 hours.",
+  "landing.lb.title": "Get your LandBook",
+  "landing.lb.desc": "Every LandBook covers 10 sections \u2014 from overview to your own notes. We pull from 15+ APIs and satellite sources to build a complete picture of your land \u2014 from bedrock to biodiversity.",
+  "landing.lb.cta": "Join the Waitlist",
   "landing.lb.step1.title": "Upload",
   "landing.lb.step1.desc": "Land deed or coordinates",
   "landing.lb.step2.title": "Analyze",
@@ -77,7 +78,7 @@ export const en = {
 
   // Homepage — Hero
   "hero.tagline": "Know your land.<br>Know your neighbors.",
-  "hero.sub": "A bioregional platform for Odemira, Portugal \u2014 free public wiki, private land reports.",
+  "hero.sub": "A regional platform for Odemira, Portugal \u2014 free public wiki, private land reports.",
   "hero.text": "Everything you need to become a good neighbor quickly. The land, the water, the weather, the species, the people, the history, the rules \u2014 all in one place. Plus a private data vault for your own parcel.",
   "hero.cta.wiki": "Explore the Wiki",
   "hero.cta.create": "Create Your Landbook",
@@ -85,9 +86,9 @@ export const en = {
   // Homepage — Products
   "products.label": "Two products, one platform",
   "products.title": "Public knowledge. Private land reports.",
-  "products.desc": "Libraries combines a free bioregional wiki with a paid private land passport. The wiki is for everyone \u2014 the landbook is yours alone.",
+  "products.desc": "Libraries combines a free regional wiki with a paid private land passport. The wiki is for everyone \u2014 the landbook is yours alone.",
   "products.wiki.type": "Free & Public",
-  "products.wiki.title": "Bioregional Wiki",
+  "products.wiki.title": "Regional Wiki",
   "products.wiki.desc": "If you were to move to Odemira, what\u2019s all the information you\u2019d need to become a good neighbor quickly? That\u2019s the wiki. Short, scannable articles about everything from soil types to local festivals \u2014 with a chat interface so you can just ask questions.",
   "products.wiki.li1": "The Land \u2014 geology, boundaries, elevation",
   "products.wiki.li2": "The Water \u2014 rivers, springs, water quality",
@@ -272,7 +273,7 @@ export const en = {
   "passport.temp": "Temperature",
   "passport.rain": "Rainfall",
   "passport.elevation": "Elevation",
-  "passport.bioregion": "Bioregion",
+  "passport.bioregion": "Region",
   "passport.seasonal": "Seasonal guidance",
   "passport.share": "Share this Landbook",
   "passport.notfound": "Property not found",
@@ -351,10 +352,10 @@ export const en = {
   "preview.sidebar.unlock": "Unlock Full Report",
 
   // Wiki hub — dynamic labels
-  "wiki.hub.title": "Wiki Hub",
+  "wiki.hub.title": "Regional Knowledge",
   "wiki.hub.breadcrumb.commons": "Commons",
   "wiki.hub.breadcrumb.odemira": "Odemira",
-  "wiki.hub.hero.title": "Odemira Bioregion",
+  "wiki.hub.hero.title": "Odemira Region",
   "wiki.hub.residents": "residents",
   "wiki.hub.updated": "Updated",
   "wiki.hub.kmArea": "km² area",
@@ -392,4 +393,22 @@ export const en = {
   "wiki.section.title": "Title",
   "wiki.section.description": "Description",
   "wiki.section.yourName": "Your Name",
+
+  // Wiki sidebar actions
+  "wiki.sidebar.addContribution": "Add a Contribution",
+  "wiki.sidebar.suggestEdit": "Suggest an Edit",
+  "wiki.sidebar.addComment": "Add a Comment",
+  "wiki.sidebar.noRecentActivity": "No recent activity",
+
+  // Wiki section titles
+  "wiki.sections.bioregion": "Region Overview",
+  "wiki.sections.ecology": "Ecology",
+  "wiki.sections.land": "Land",
+  "wiki.sections.soil": "Soil",
+  "wiki.sections.water": "Water",
+  "wiki.sections.climate": "Climate",
+  "wiki.sections.landuse": "Land Use",
+  "wiki.sections.risks": "Risks",
+  "wiki.sections.culture": "Culture",
+  "wiki.sections.community": "Community",
 };
