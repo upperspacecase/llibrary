@@ -584,6 +584,7 @@ async function renderSection(sectionId) {
           </div>
         </section>
 
+        ${['water', 'climate', 'landuse', 'community'].includes(sectionId) ? `
         <!-- Live Data -->
         <section class="wiki-data-section" id="wiki-data-section">
           <button class="wiki-data-toggle" id="wiki-data-toggle" style="display:none;">
@@ -592,6 +593,7 @@ async function renderSection(sectionId) {
           </button>
           <div id="wiki-data-content"></div>
         </section>
+        ` : ''}
 
         ${section.references && section.references.length ? `
         <!-- References -->
