@@ -372,6 +372,12 @@ a {
   opacity: 0.85;
 }
 
+.hero-sub a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .hero-actions {
   display: flex;
   gap: 16px;
