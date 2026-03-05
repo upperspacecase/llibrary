@@ -1101,15 +1101,9 @@ async function loadSectionData(sectionId) {
 
   try {
     switch (sectionId) {
-      case 'bioregion': await loadLandData(container); await loadWeatherData(container); break;
-      case 'ecology': await loadBiodiversityData(container); break;
-      case 'land': await loadLandData(container); break;
-      case 'soil': await loadLandData(container); break;
       case 'water': await loadWaterData(container); break;
       case 'climate': await loadWeatherData(container); break;
       case 'landuse': loadAgricultureData(container); break;
-      case 'risks': await loadWaterData(container); break;
-      case 'culture': await loadHistoryData(container); break;
       case 'community': await loadCommunityData(container); break;
       default:
         container.innerHTML = '<p>No live data available for this section.</p>';
