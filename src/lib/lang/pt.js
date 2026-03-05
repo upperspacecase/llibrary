@@ -20,7 +20,7 @@ export const pt = {
 
   // Landing \u2014 Hero
   "landing.hero.tagline": "A sua terra vale mais<br>do que imagina.",
-  "landing.hero.sub": "Os mercados tradicionais subvalorizam as amenidades ambientais em 5–15%, dependendo da regi\u00E3o. Obtenha uma avalia\u00E7\u00E3o com IA que revela o valor ambiental oculto da sua propriedade e Explore conhecimento aberto sobre a sua regi\u00E3o. <span class=\"hero-source\">(Fonte: <a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\">pnas.org</a>)</span>",
+  "landing.hero.sub": "<a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\" style=\"text-decoration:underline;\">Os mercados tradicionais subvalorizam as amenidades ambientais em 5–15%</a>, dependendo da regi\u00E3o. Obtenha uma avalia\u00E7\u00E3o com IA que revela o valor ambiental oculto da sua propriedade e Explore conhecimento aberto sobre a sua regi\u00E3o.",
   "landing.hero.cta.primary": "Descobrir o Valor da Terra",
   "landing.hero.cta.secondary": "Explorar a Minha Regi\u00E3o",
 

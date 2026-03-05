@@ -1567,7 +1567,6 @@ async function loadContributions(sectionId) {
       return `
         <div class="wiki-contribution-card">
           <div class="wiki-contribution-header">
-            <span class="wiki-contribution-badge" style="background:${typeInfo.color};">${typeInfo.label}</span>
             <span class="wiki-contribution-meta">${c.author || 'Anonymous'} &middot; ${date}</span>
           </div>
           ${c.title ? `<h3 class="wiki-contribution-title">${c.title}</h3>` : ''}
@@ -1687,7 +1686,6 @@ function initContribViewerClicks(sectionId) {
         var date = new Date(c.created).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
         var html = '<div class="wiki-contribution-card">';
         html += '<div class="wiki-contribution-header">';
-        html += '<span class="wiki-contribution-badge" style="background:' + typeInfo.color + ';">' + typeInfo.label + '</span>';
         html += '<span class="wiki-contribution-meta">' + (c.author || 'Anonymous') + ' &middot; ' + date + '</span>';
         html += '</div>';
         if (c.title) html += '<h3 class="wiki-contribution-title">' + c.title + '</h3>';
