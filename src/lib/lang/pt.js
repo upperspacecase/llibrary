@@ -370,7 +370,7 @@ export const pt = {
   "wiki.section.communityContributions": "Contribui\u00E7\u00F5es da Comunidade",
   "wiki.section.loadingContributions": "A carregar contribui\u00E7\u00F5es...",
   "wiki.section.communityNotes": "Notas da Comunidade",
-  "wiki.section.pendingReview": "Revis\u00E3o pendente",
+  "wiki.section.pendingReview": "Contribuições da comunidade",
   "wiki.section.communityInsights": "Perspetivas da comunidade",
   "wiki.section.dataAlerts": "alertas de dados",
   "wiki.section.needsVerification": "Necessita verifica\u00E7\u00E3o",

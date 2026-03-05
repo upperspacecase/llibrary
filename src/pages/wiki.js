@@ -45,6 +45,9 @@ import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams, CORINE_CLASSES } from 
 // API — EFFIS
 import { EFFIS_WMS, getFireDangerWmsParams } from '../api/effis.js';
 
+// API — Risk scores (live)
+import { fetchRiskScores, scoreToColors } from '../api/risk-scores.js';
+
 // API — Natura 2000
 import {
   NATURA2000_WMS, getNatura2000WmsParams,
@@ -515,7 +518,7 @@ async function renderSection(sectionId) {
   const totalSuggestions = sectionStats.suggestions;
   const totalComments = sectionStats.comments;
   const updatedAgoText = timeAgo(sectionStats.lastUpdated);
-  const dataAlerts = Math.min(Math.floor(totalSuggestions / 5), 5) || 0;
+
 
   content.innerHTML = `
     <!-- Breadcrumb + Help -->
@@ -640,17 +643,7 @@ async function renderSection(sectionId) {
             <svg class="wiki-community-notes-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
           </div>
 
-          ${dataAlerts > 0 ? `
-          <div class="wiki-community-notes-item wiki-community-notes-item--alert">
-            <div class="wiki-community-notes-icon wiki-community-notes-icon--alert">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-            </div>
-            <div class="wiki-community-notes-text">
-              <strong>${dataAlerts} ${t('wiki.section.dataAlerts')}</strong>
-              <span>${t('wiki.section.needsVerification')}</span>
-            </div>
-          </div>
-          ` : ''}
+
 
           <div class="wiki-recent-activity" id="wiki-recent-activity">
             <h4>${t('wiki.section.recentActivity')}</h4>
@@ -809,7 +802,7 @@ async function renderSection(sectionId) {
   `;
 
   // Initialise map, contributions, sidebar, and toolbar after DOM insertion
-  setTimeout(() => {
+  setTimeout(async () => {
     // Only init map for bioregion (only section with a map)
     const mapContainer = document.getElementById('wiki-section-map');
     if (mapContainer) {
@@ -826,10 +819,53 @@ async function renderSection(sectionId) {
     initContribViewerClicks(sectionId);
     initSidebarActions(sectionId);
 
+    // For the risks section, fetch live scores and patch visuals before rendering
+    if (sectionId === 'risks') {
+      try {
+        const scores = await fetchRiskScores(ODEMIRA.center[0], ODEMIRA.center[1]);
+        const v = section.visuals;
+        // Patch radar chart data (keep erosion static)
+        if (v.charts?.[0]?.data) {
+          v.charts[0].data.forEach(d => {
+            if (d.axis === 'Fire') d.value = scores.fire;
+            else if (d.axis === 'Drought') d.value = scores.drought;
+            else if (d.axis === 'Flood') d.value = scores.flood;
+          });
+        }
+        // Patch alert rows (keep erosion static)
+        if (v.alertRows) {
+          v.alertRows.forEach(r => {
+            if (r.label === 'Fire Risk') {
+              const c = scoreToColors(scores.fire);
+              Object.assign(r, { value: scores.fireLabel, score: `${scores.fire}/100`, ...c });
+            } else if (r.label === 'Drought Risk') {
+              const c = scoreToColors(scores.drought);
+              Object.assign(r, { value: scores.droughtLabel, score: `${scores.drought}/100`, ...c });
+            } else if (r.label === 'Flood Risk') {
+              const c = scoreToColors(scores.flood);
+              Object.assign(r, { value: scores.floodLabel, score: `${scores.flood}/100`, ...c });
+            }
+          });
+        }
+        // Patch stat cards
+        if (v.stats) {
+          v.stats.forEach(s => {
+            if (s.label === 'Fire Risk') {
+              s.value = scores.fireLabel;
+              s.color = scoreToColors(scores.fire).textColor;
+            } else if (s.label === 'Water Scarcity') {
+              s.value = scores.droughtLabel;
+              s.color = scoreToColors(scores.drought).textColor;
+            }
+          });
+        }
+      } catch (e) {
+        console.warn('Live risk scores unavailable, using static values:', e);
+      }
+    }
+
     // Render dashboard visuals (if section has them)
     renderDashboard(section);
-
-    // Wire up ? help tooltip (click-to-toggle)
     const helpTrigger = document.getElementById('wiki-help-trigger');
     const helpPopover = document.getElementById('wiki-help-popover');
     if (helpTrigger && helpPopover) {
@@ -1151,6 +1187,7 @@ async function loadLandData(container) {
     </div>
   `;
 }
+
 
 // ----- Water -----
 
@@ -1726,14 +1763,8 @@ function renderGuidelinesHTML() {
         <p><strong>For Corrections:</strong> Use constructive tone, explain reasoning, and suggest alternatives.</p>
       </div>
 
-      <h4>Review Process</h4>
-      <ol>
-        <li><strong>Acknowledgment</strong> — Automated confirmation</li>
-        <li><strong>Triage</strong> — Editors assess type and urgency (1-3 days)</li>
-        <li><strong>Review</strong> — Subject-matter review (3-7 days)</li>
-        <li><strong>Decision</strong> — Approved, declined, or returned for revision</li>
-        <li><strong>Integration</strong> — Merged into wiki</li>
-      </ol>
+      <h4>How Contributions Work</h4>
+      <p>Contributions are published immediately and visible to all visitors. The editorial team may edit or remove submissions that do not meet community standards.</p>
 
       <h4>Community Norms</h4>
       <p><em>We encourage:</em> Respectful disagreement, questions from all levels, connections between concepts, recognition of uncertainty.</p>
@@ -2002,7 +2033,7 @@ function initTextSelectionToolbar(sectionId) {
           modalBody.innerHTML = '<div style="text-align:center;padding:1.5rem 0;">' +
             '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
             '<p style="margin-top:12px;font-weight:600;color:#2E8B57;">Thank you for your contribution!</p>' +
-            '<p style="font-size:13px;color:#666;">Your ' + currentAction + ' has been submitted for review.</p>' +
+            '<p style="font-size:13px;color:#666;">Your ' + currentAction + ' has been added.</p>' +
             '</div>';
         }
         setTimeout(closeModal, 2500);
@@ -2154,7 +2185,7 @@ function openContribModal(sectionId) {
           body.innerHTML = '<div style="text-align:center;padding:1.5rem 0;">' +
             '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
             '<p style="margin-top:12px;font-weight:600;color:#2E8B57;">Thank you for your contribution!</p>' +
-            '<p style="font-size:13px;color:#666;">Your contribution has been submitted for review.</p>' +
+            '<p style="font-size:13px;color:#666;">Your contribution has been added.</p>' +
             '</div>';
         }
         setTimeout(closeModal, 2500);

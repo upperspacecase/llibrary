@@ -373,7 +373,7 @@ export const en = {
   "wiki.section.communityContributions": "Community Contributions",
   "wiki.section.loadingContributions": "Loading contributions...",
   "wiki.section.communityNotes": "Community Notes",
-  "wiki.section.pendingReview": "Pending review",
+  "wiki.section.pendingReview": "Community submissions",
   "wiki.section.communityInsights": "Community insights",
   "wiki.section.dataAlerts": "data alerts",
   "wiki.section.needsVerification": "Needs verification",
