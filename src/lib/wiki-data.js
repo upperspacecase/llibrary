@@ -43,6 +43,20 @@ export const SECTIONS = {
         { label: 'Coastline', value: '110 km', sublabel: 'Southwest coast' },
       ],
     },
+    references: [
+      { id: 1, title: 'Odemira — Wikipedia', url: 'https://en.wikipedia.org/wiki/Odemira' },
+      { id: 2, title: 'Odemira (Municipality) — CityPopulation', url: 'http://citypopulation.de/en/portugal/beja/admin/1810211__odemira/' },
+      { id: 3, title: 'Municipality of Odemira — Urbistat', url: 'https://ugeo.urbistat.com/AdminStat/en/pt/demografia/popolacao/odemira/20317454/4' },
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 7, title: 'Costa Sudoeste — EUNIS', url: 'https://eunis.eea.europa.eu/sites/PTCON0012' },
+      { id: 8, title: 'Annexes — APA', url: 'https://siaia.apambiente.pt/AIADOC/AIA3281/vol3_at_ax3-ax6201978151851.pdf' },
+      { id: 9, title: 'PNSACV — e-cultura', url: 'https://www.e-cultura.pt/patrimonio_item/11536' },
+      { id: 11, title: 'PDM Odemira — CM Odemira', url: 'https://www.cm-odemira.pt/viver/gestao-do-territorio/planos-municipais-de-ordenamento-do-territorio/plano-diretor-municipal' },
+      { id: 12, title: 'Odemira Climate — WeatherAndClimate', url: 'https://weatherandclimate.com/portugal/beja/odemira' },
+      { id: 13, title: 'Odemira Weather — NearWeather', url: 'https://www.nearweather.com/location/2265472' },
+    ],
   },
 
   ecology: {
@@ -92,6 +106,21 @@ export const SECTIONS = {
         ],
       }],
     },
+    references: [
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 7, title: 'Costa Sudoeste — EUNIS', url: 'https://eunis.eea.europa.eu/sites/PTCON0012' },
+      { id: 8, title: 'Annexes — APA', url: 'https://siaia.apambiente.pt/AIADOC/AIA3281/vol3_at_ax3-ax6201978151851.pdf' },
+      { id: 9, title: 'PNSACV — e-cultura', url: 'https://www.e-cultura.pt/patrimonio_item/11536' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 16, title: 'Montado — CorkLands', url: 'https://www.corklands.pt/en/montado' },
+      { id: 17, title: 'Montado: a man-made sanctuary — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/montado/' },
+      { id: 20, title: 'PNSACV — Museu Biodiversidade', url: 'https://museubiodiversidade.uevora.pt/areas-classificadas/parque-natural-do-sudoeste-alentejano-e-costa-vicentina-2/' },
+      { id: 21, title: 'MARSW Relatório de Síntese', url: 'https://marsw.pt/downloads/repo/materiais_divulgacao/Relatorio_de_Sintese_da_Biodiversidade_Marinha_da_area_marinha_do_Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina_Relatorio_tecnico_do_Projeto_MARSW-1_compressed.pdf' },
+      { id: 22, title: 'Cork oak — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/cork-oak/' },
+      { id: 23, title: 'Cork oak forest — Casa do Montado', url: 'https://casadomontado.com/en/cork-oak-forest/' },
+    ],
   },
 
   land: {
@@ -135,6 +164,13 @@ export const SECTIONS = {
         ],
       },
     },
+    references: [
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 9, title: 'PNSACV — e-cultura', url: 'https://www.e-cultura.pt/patrimonio_item/11536' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 11, title: 'PDM Odemira — CM Odemira', url: 'https://www.cm-odemira.pt/viver/gestao-do-territorio/planos-municipais-de-ordenamento-do-territorio/plano-diretor-municipal' },
+    ],
   },
 
   soil: {
@@ -199,6 +235,13 @@ export const SECTIONS = {
         ],
       },
     },
+    references: [
+      { id: 9, title: 'PNSACV — e-cultura', url: 'https://www.e-cultura.pt/patrimonio_item/11536' },
+      { id: 16, title: 'Montado — CorkLands', url: 'https://www.corklands.pt/en/montado' },
+      { id: 17, title: 'Montado: a man-made sanctuary — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/montado/' },
+      { id: 18, title: 'Superfície CORINE — ForestSTATS', url: 'https://foreststats.pt/variavel/33' },
+      { id: 19, title: 'O que é o CORINE — EEA', url: 'https://www.eea.europa.eu/pt/help/perguntas-frequentes/o-que-e-o-corine' },
+    ],
   },
 
   water: {
@@ -246,6 +289,14 @@ export const SECTIONS = {
         ],
       },
     },
+    references: [
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 14, title: 'Pequenos proprietários — Agroportal', url: 'https://www.agroportal.pt/mais-de-100-pequenos-proprietarios-podem-perder-acesso-a-agua-em-odemira-devido-a-escassez/' },
+      { id: 15, title: 'Ministro retira gestão — Agroportal', url: 'https://www.agroportal.pt/ministro-da-agricultura-retira-gestao-da-agua-da-associacao-de-beneficiarios-do-mira-a-apa/' },
+      { id: 39, title: 'Crise da Água — Expresso / EIT Food', url: 'https://journalismawards.eitfood.eu/wp-content/uploads/jet-engine-forms/683/2024/09/2023-09-22-EXPRESSO-PAPER-EDITION-WATER-CRISIS-STORY-1-1.pdf' },
+    ],
   },
 
   climate: {
@@ -296,6 +347,13 @@ export const SECTIONS = {
         { label: 'Drought Return', value: '1-in-5 years', sublabel: 'Severe drought interval' },
       ],
     },
+    references: [
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 12, title: 'Odemira Climate — WeatherAndClimate', url: 'https://weatherandclimate.com/portugal/beja/odemira' },
+      { id: 13, title: 'Odemira Weather — NearWeather', url: 'https://www.nearweather.com/location/2265472' },
+      { id: 41, title: 'Climate History Odemira — Meteoblue', url: 'https://www.meteoblue.com/en/weather/historyclimate/climatemodelled/odemira_portugal_2265472' },
+    ],
   },
 
   landuse: {
@@ -342,6 +400,25 @@ export const SECTIONS = {
         ],
       }],
     },
+    references: [
+      { id: 2, title: 'Odemira (Municipality) — CityPopulation', url: 'http://citypopulation.de/en/portugal/beja/admin/1810211__odemira/' },
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 7, title: 'Costa Sudoeste — EUNIS', url: 'https://eunis.eea.europa.eu/sites/PTCON0012' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 11, title: 'PDM Odemira — CM Odemira', url: 'https://www.cm-odemira.pt/viver/gestao-do-territorio/planos-municipais-de-ordenamento-do-territorio/plano-diretor-municipal' },
+      { id: 14, title: 'Pequenos proprietários — Agroportal', url: 'https://www.agroportal.pt/mais-de-100-pequenos-proprietarios-podem-perder-acesso-a-agua-em-odemira-devido-a-escassez/' },
+      { id: 16, title: 'Montado — CorkLands', url: 'https://www.corklands.pt/en/montado' },
+      { id: 17, title: 'Montado: a man-made sanctuary — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/montado/' },
+      { id: 24, title: 'Historical land use changes in Portugal — ScienceDirect', url: 'https://www.sciencedirect.com/science/article/abs/pii/S0143622811000385' },
+      { id: 25, title: 'População teme pelo seu futuro — DN', url: 'https://www.dn.pt/arquivo/diario-de-noticias/agricultura-intensiva-populacao-do-concelho-de-odemira-teme-pelo-seu-futuro-11882695.html' },
+      { id: 27, title: 'Ministro: redução objetiva — 24Notícias', url: 'https://24noticias.sapo.pt/atualidade/artigos/ministro-diz-que-houve-reducao-objetiva-de-areas-onde-se-podem-instalar-estufas-em-odemira' },
+      { id: 29, title: 'Odemira PDM Redação Final — Scribd', url: 'https://pt.scribd.com/document/918342595/Odemira-PDM-Redacao-Final' },
+      { id: 30, title: 'Aviso n.º 15779/2023 — DR', url: 'https://diariodarepublica.pt/dr/detalhe/aviso/15779-2023-220218637' },
+      { id: 31, title: 'Juntos pelo Sudoeste — Agroportal', url: 'https://www.agroportal.pt/juntos-pelo-sudoeste-a-favor-do-parque-natural-contra-as-estufas/' },
+      { id: 32, title: 'Agricultura intensiva: Out of Control? — Observador', url: 'https://observador.pt/opiniao/agricultura-intensiva-das-estufas-de-frutos-vermelhos-no-parque-natural-do-sudoeste-alentejano-out-of-control/' },
+    ],
   },
 
   risks: {
@@ -400,6 +477,23 @@ export const SECTIONS = {
         { icon: '⛰️', label: 'Erosion Risk', value: 'Moderate', score: '52/100', bgColor: '#f5f3ff', textColor: '#7c3aed', iconColor: '#7c3aed' },
       ],
     },
+    references: [
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 14, title: 'Pequenos proprietários — Agroportal', url: 'https://www.agroportal.pt/mais-de-100-pequenos-proprietarios-podem-perder-acesso-a-agua-em-odemira-devido-a-escassez/' },
+      { id: 16, title: 'Montado — CorkLands', url: 'https://www.corklands.pt/en/montado' },
+      { id: 17, title: 'Montado: a man-made sanctuary — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/montado/' },
+      { id: 21, title: 'MARSW Relatório de Síntese', url: 'https://marsw.pt/downloads/repo/materiais_divulgacao/Relatorio_de_Sintese_da_Biodiversidade_Marinha_da_area_marinha_do_Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina_Relatorio_tecnico_do_Projeto_MARSW-1_compressed.pdf' },
+      { id: 25, title: 'População teme pelo seu futuro — DN', url: 'https://www.dn.pt/arquivo/diario-de-noticias/agricultura-intensiva-populacao-do-concelho-de-odemira-teme-pelo-seu-futuro-11882695.html' },
+      { id: 27, title: 'Ministro: redução objetiva — 24Notícias', url: 'https://24noticias.sapo.pt/atualidade/artigos/ministro-diz-que-houve-reducao-objetiva-de-areas-onde-se-podem-instalar-estufas-em-odemira' },
+      { id: 28, title: 'Petição Pública — Parlamento', url: 'https://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c6379395953565a4d5a5763765247563464473946615735686246426c64476c6a6232567a4c7a4d32597a55774f574a6b4c5759354e446b744e445532597931684d6a67774c57466c4f444933597a4a6b4d32466a4f4335775a47593d&fich=32c509bd-f949-456c-a280-ae827c2d3ac8.pdf&Inline=true' },
+      { id: 31, title: 'Juntos pelo Sudoeste — Agroportal', url: 'https://www.agroportal.pt/juntos-pelo-sudoeste-a-favor-do-parque-natural-contra-as-estufas/' },
+      { id: 33, title: 'South Asian migrant workers — BHRRC', url: 'https://www.business-humanrights.org/en/latest-news/portugal-south-asian-migrant-workers-working-on-berry-farms-face-exploitation-labour-bondage-while-waiting-for-passports/' },
+      { id: 39, title: 'Crise da Água — Expresso / EIT Food', url: 'https://journalismawards.eitfood.eu/wp-content/uploads/jet-engine-forms/683/2024/09/2023-09-22-EXPRESSO-PAPER-EDITION-WATER-CRISIS-STORY-1-1.pdf' },
+      { id: 47, title: 'Odemira — Phoenix Horizon', url: 'https://phoenix-horizon.eu/odemira/' },
+      { id: 48, title: 'Bloco de Esquerda — Sul Informação', url: 'https://alentejo.sulinformacao.pt/2021/07/bloco-de-esquerda-nao-quer-nem-mais-um-metro-de-estufa-em-odemira/' },
+    ],
   },
 
   culture: {
@@ -443,6 +537,16 @@ export const SECTIONS = {
         ],
       },
     },
+    references: [
+      { id: 2, title: 'Odemira (Municipality) — CityPopulation', url: 'http://citypopulation.de/en/portugal/beja/admin/1810211__odemira/' },
+      { id: 4, title: 'Aproveitamento Hidroagrícola do Mira', url: 'http://www.abm.pt/pt/mira' },
+      { id: 6, title: 'PNSACV — Wikipédia', url: 'https://pt.wikipedia.org/wiki/Parque_Natural_do_Sudoeste_Alentejano_e_Costa_Vicentina' },
+      { id: 16, title: 'Montado — CorkLands', url: 'https://www.corklands.pt/en/montado' },
+      { id: 17, title: 'Montado: a man-made sanctuary — Biodiversity.com.pt', url: 'https://biodiversity.com.pt/biogallery/montado/' },
+      { id: 23, title: 'Cork oak forest — Casa do Montado', url: 'https://casadomontado.com/en/cork-oak-forest/' },
+      { id: 33, title: 'South Asian migrant workers — BHRRC', url: 'https://www.business-humanrights.org/en/latest-news/portugal-south-asian-migrant-workers-working-on-berry-farms-face-exploitation-labour-bondage-while-waiting-for-passports/' },
+      { id: 34, title: 'The Land — Montado de Sobro e Cortiça', url: 'https://montadodesobroecortica.pt/the-montado/the-land/?lang=en' },
+    ],
   },
 
   community: {
@@ -489,6 +593,21 @@ export const SECTIONS = {
         ],
       },
     },
+    references: [
+      { id: 5, title: 'Água "já não corre no rio Mira" — Diário do Alentejo', url: 'https://diariodoalentejo.pt/pt/noticias/15991/agua-%E2%80%9Cja-nao-corre-no-rio-mira%E2%80%9D.aspx' },
+      { id: 10, title: 'Ambientalistas preocupados — Tribuna Alentejo', url: 'https://www.tribunaalentejo.pt/artigos/ambientalistas-preocupados-com-agricultura-intensiva-em-odemira' },
+      { id: 25, title: 'População teme pelo seu futuro — DN', url: 'https://www.dn.pt/arquivo/diario-de-noticias/agricultura-intensiva-populacao-do-concelho-de-odemira-teme-pelo-seu-futuro-11882695.html' },
+      { id: 28, title: 'Petição Pública — Parlamento', url: 'https://app.parlamento.pt/webutils/docs/doc.pdf?path=6148523063484d364c793968636d356c6443397a6158526c6379395953565a4d5a5763765247563464473946615735686246426c64476c6a6232567a4c7a4d32597a55774f574a6b4c5759354e446b744e445532597931684d6a67774c57466c4f444933597a4a6b4d32466a4f4335775a47593d&fich=32c509bd-f949-456c-a280-ae827c2d3ac8.pdf&Inline=true' },
+      { id: 31, title: 'Juntos pelo Sudoeste — Agroportal', url: 'https://www.agroportal.pt/juntos-pelo-sudoeste-a-favor-do-parque-natural-contra-as-estufas/' },
+      { id: 33, title: 'South Asian migrant workers — BHRRC', url: 'https://www.business-humanrights.org/en/latest-news/portugal-south-asian-migrant-workers-working-on-berry-farms-face-exploitation-labour-bondage-while-waiting-for-passports/' },
+      { id: 42, title: 'Valorização do Rio Mira — CM Odemira', url: 'https://www.cm-odemira.pt/investir/plano-estrategico-e-operacional-de-valorizacao-do-rio-mira' },
+      { id: 43, title: 'Cidadãos exigem menos agricultura — Agronegócios', url: 'https://www.agronegocios.eu/noticias/cidadaos-exigem-menos-agricultura-em-odemira-e-aljezur/' },
+      { id: 44, title: 'A Quinta da Lage', url: 'https://www.aquinta.org/about' },
+      { id: 45, title: 'Regenerativa Cooperativa Integral — Rota Vicentina', url: 'https://rotavicentina.com/en/comercio/regenerativa-cooperativa-integral/' },
+      { id: 46, title: 'Cooperativa Regenerativa', url: 'https://www.regenerativa.pt' },
+      { id: 47, title: 'Odemira — Phoenix Horizon', url: 'https://phoenix-horizon.eu/odemira/' },
+      { id: 49, title: 'Regenerar Odemira — Co-RE', url: 'https://www.co-re.info/en/regenerationruralcamp' },
+    ],
   },
 };
 

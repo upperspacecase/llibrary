@@ -570,6 +570,23 @@ async function renderSection(sectionId) {
             </article>
           `).join('')}
         </section>
+
+        ${section.references && section.references.length ? `
+        <!-- References -->
+        <section class="wiki-references">
+          <h2 class="wiki-references-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            References
+          </h2>
+          <ol class="wiki-references-list">
+            ${section.references.map(r => `
+              <li class="wiki-reference-item" value="${r.id}">
+                <a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a>
+              </li>
+            `).join('')}
+          </ol>
+        </section>
+        ` : ''}
         <!-- Map (bioregion only) -->
         ${sectionId === 'bioregion' ? '<div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>' : ''}
 
@@ -642,6 +659,23 @@ async function renderSection(sectionId) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 ${t('wiki.sidebar.addContribution')}
               </button>
+              <div class="wiki-sidebar-contrib-form" id="sidebar-contrib-form" style="display:none;">
+                <select id="sidebar-contrib-type" class="wiki-sidebar-contrib-select">
+                  <option value="story">Story / Experience</option>
+                  <option value="tip">Practical Tip</option>
+                  <option value="event">Event / Gathering</option>
+                  <option value="place">Place / Location</option>
+                  <option value="resource">Resource / Link</option>
+                </select>
+                <input type="text" id="sidebar-contrib-title" class="wiki-sidebar-contrib-input" placeholder="${t('wiki.section.title')}" />
+                <textarea id="sidebar-contrib-text" class="wiki-sidebar-contrib-textarea" rows="3" placeholder="Share what you know\u2026"></textarea>
+                <input type="text" id="sidebar-contrib-author" class="wiki-sidebar-contrib-input" placeholder="${t('wiki.section.yourName')} (optional)" />
+                <div class="wiki-sidebar-contrib-actions">
+                  <button class="wiki-sidebar-contrib-cancel" id="sidebar-contrib-cancel">${t('wiki.section.cancel')}</button>
+                  <button class="wiki-sidebar-contrib-submit" id="sidebar-contrib-submit">${t('wiki.section.submit')}</button>
+                </div>
+                <div class="wiki-sidebar-contrib-feedback" id="sidebar-contrib-feedback"></div>
+              </div>
               <button class="wiki-sidebar-action-btn" id="sidebar-suggest-edit">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 ${t('wiki.sidebar.suggestEdit')}
@@ -1996,11 +2030,85 @@ function initSidebarActions(sectionId) {
   const suggestEditBtn = document.getElementById('sidebar-suggest-edit');
   const addCommentBtn = document.getElementById('sidebar-add-comment');
   const overlay = document.getElementById('wiki-inline-contrib-overlay');
+  const contribForm = document.getElementById('sidebar-contrib-form');
+  const cancelBtn = document.getElementById('sidebar-contrib-cancel');
+  const submitBtn = document.getElementById('sidebar-contrib-submit');
 
-  // "Add a Contribution" scrolls to the community contributions form
-  if (addContribBtn) {
+  // "Add a Contribution" toggles the inline form
+  if (addContribBtn && contribForm) {
     addContribBtn.addEventListener('click', () => {
-      window.location.hash = '#contribute/' + sectionId;
+      const isOpen = contribForm.style.display !== 'none';
+      contribForm.style.display = isOpen ? 'none' : 'block';
+    });
+  }
+
+  // Cancel collapses the form
+  if (cancelBtn && contribForm) {
+    cancelBtn.addEventListener('click', () => {
+      contribForm.style.display = 'none';
+    });
+  }
+
+  // Submit contribution
+  if (submitBtn) {
+    submitBtn.addEventListener('click', async () => {
+      const typeEl = document.getElementById('sidebar-contrib-type');
+      const titleEl = document.getElementById('sidebar-contrib-title');
+      const textEl = document.getElementById('sidebar-contrib-text');
+      const authorEl = document.getElementById('sidebar-contrib-author');
+      const feedback = document.getElementById('sidebar-contrib-feedback');
+
+      const contentVal = textEl ? textEl.value.trim() : '';
+      if (!contentVal) {
+        if (textEl) textEl.style.borderColor = 'var(--coral, #e74c3c)';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting\u2026';
+
+      try {
+        const res = await fetch('/api/wiki/contributions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section: sectionId,
+            type: typeEl ? typeEl.value : 'story',
+            title: titleEl ? titleEl.value.trim() : '',
+            content: contentVal,
+            author: authorEl ? authorEl.value.trim() || 'Anonymous' : 'Anonymous',
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to submit');
+        }
+
+        // Success — reset and show feedback
+        if (typeEl) typeEl.selectedIndex = 0;
+        if (titleEl) titleEl.value = '';
+        if (textEl) { textEl.value = ''; textEl.style.borderColor = ''; }
+        if (authorEl) authorEl.value = '';
+
+        if (feedback) {
+          feedback.innerHTML = '<span style="color:var(--green, #2E8B57);font-weight:600;">Thank you! Your contribution has been added.</span>';
+          setTimeout(() => { feedback.innerHTML = ''; }, 4000);
+        }
+
+        // Refresh data
+        _statsCache = null;
+        loadContributions(sectionId);
+        loadRecentActivity(sectionId);
+        refreshSidebarStats(sectionId);
+      } catch (err) {
+        if (feedback) {
+          feedback.innerHTML = '<span style="color:var(--coral, #e74c3c);">Error: ' + err.message + '</span>';
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = t('wiki.section.submit');
+      }
     });
   }
 

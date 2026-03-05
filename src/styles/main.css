@@ -713,6 +713,229 @@ a {
   color: var(--black);
 }
 
+/* ---- ADD YOUR REGION SECTION ---- */
+.add-region-section {
+  padding: 80px 0 60px;
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+.add-region-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 3.5vw, 42px);
+  margin-bottom: 16px;
+}
+
+.add-region-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 540px;
+  margin: 0 auto 32px;
+}
+
+.add-region-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.add-region-pill {
+  padding: 10px 22px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--pill);
+  background: none;
+  color: var(--black);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-region-pill:hover {
+  border-color: var(--black);
+  background: var(--black);
+  color: var(--cream);
+}
+
+.add-region-cta-wrap {
+  margin-top: 8px;
+}
+
+.add-region-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: none;
+  color: var(--muted);
+  border: 1.5px dashed var(--card-border);
+  border-radius: var(--pill);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-region-cta:hover {
+  border-color: var(--black);
+  border-style: solid;
+  color: var(--black);
+}
+
+/* ---- ADD REGION MODAL ---- */
+.add-region-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+  padding: 24px;
+}
+
+.add-region-modal {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.25s ease;
+  position: relative;
+}
+
+.add-region-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.add-region-close:hover {
+  color: var(--black);
+}
+
+.add-region-modal h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.add-region-modal-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.add-region-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.add-region-field label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.add-region-field input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.add-region-field input:focus {
+  border-color: var(--black);
+}
+
+.add-region-submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--black);
+  color: var(--cream);
+  border: 1.5px solid var(--black);
+  border-radius: var(--pill);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-region-submit:hover {
+  background: transparent;
+  color: var(--black);
+}
+
+.add-region-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-region-feedback {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--coral);
+  text-align: center;
+}
+
+.add-region-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.add-region-success-icon {
+  color: #2d6a4f;
+  margin-bottom: 16px;
+}
+
+.add-region-success h3 {
+  margin-bottom: 8px;
+}
+
+.add-region-success p {
+  color: var(--muted);
+  font-size: 15px;
+}
+
 /* ---- DATA ROOM SECTION ---- */
 .dataroom-section {
   padding: 100px 0;
@@ -920,8 +1143,25 @@ a {
 }
 
 .report-cta-btn {
-  font-size: 16px;
+  display: inline-block;
   padding: 16px 40px;
+  background: var(--black);
+  color: var(--cream);
+  border: 1.5px solid var(--black);
+  border-radius: var(--pill);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.report-cta-btn:hover {
+  background: transparent;
+  color: var(--black);
 }
 
 
@@ -1519,6 +1759,77 @@ a {
   margin-bottom: 48px;
 }
 
+/* Wiki references */
+.wiki-references {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1.5px solid var(--border);
+}
+
+.wiki-references-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.3px;
+}
+
+.wiki-references-title svg {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.wiki-references-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  counter-reset: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wiki-reference-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.wiki-reference-item:hover {
+  background: rgba(0, 0, 0, 0.025);
+}
+
+.wiki-reference-item::before {
+  content: "[" attr(value) "]";
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.6;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+.wiki-reference-item a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.wiki-reference-item a:hover {
+  color: var(--black);
+  border-bottom-color: var(--black);
+}
+
 .wiki-data-section h3 {
   font-size: 18px;
   margin-bottom: 20px;
@@ -1744,6 +2055,187 @@ a {
 .coming-soon-card button:hover {
   background: var(--black);
   color: var(--cream);
+}
+
+/* ---- Waitlist Modal ---- */
+.waitlist-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+  padding: 24px;
+}
+
+.waitlist-modal {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.25s ease;
+  position: relative;
+}
+
+.waitlist-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.15s;
+}
+
+.waitlist-close:hover {
+  color: var(--black);
+}
+
+.waitlist-modal h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.waitlist-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.waitlist-map-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.waitlist-map {
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.waitlist-map-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  padding: 6px 14px;
+  border-radius: 20px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.waitlist-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.waitlist-field label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.waitlist-field input {
+  width: 100%;
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.waitlist-field input:focus {
+  border-color: var(--black);
+}
+
+.waitlist-submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--black);
+  color: var(--cream);
+  border: 1.5px solid var(--black);
+  border-radius: var(--pill);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.waitlist-submit:hover {
+  background: transparent;
+  color: var(--black);
+}
+
+.waitlist-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.waitlist-feedback {
+  font-size: 13px;
+  color: var(--coral, #e74c3c);
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* Success state */
+.waitlist-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.waitlist-success-icon {
+  color: var(--green, #2E8B57);
+  margin-bottom: 16px;
+}
+
+.waitlist-success h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.waitlist-success p {
+  font-size: 15px;
+  color: var(--muted);
 }
 
 /* ========================================
@@ -3610,6 +4102,92 @@ a {
 .wiki-sidebar-action-btn:hover svg {
   opacity: 1;
   stroke: var(--cream);
+}
+
+/* ---- Sidebar Contribution Form ---- */
+.wiki-sidebar-contrib-form {
+  background: var(--cream);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wiki-sidebar-contrib-select,
+.wiki-sidebar-contrib-input,
+.wiki-sidebar-contrib-textarea {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--black);
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.wiki-sidebar-contrib-select:focus,
+.wiki-sidebar-contrib-input:focus,
+.wiki-sidebar-contrib-textarea:focus {
+  border-color: var(--black);
+}
+
+.wiki-sidebar-contrib-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.wiki-sidebar-contrib-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.wiki-sidebar-contrib-cancel {
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid var(--card-border);
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.wiki-sidebar-contrib-cancel:hover {
+  border-color: var(--muted);
+}
+
+.wiki-sidebar-contrib-submit {
+  padding: 6px 14px;
+  background: var(--black);
+  color: var(--cream);
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.wiki-sidebar-contrib-submit:hover {
+  opacity: 0.85;
+}
+
+.wiki-sidebar-contrib-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wiki-sidebar-contrib-feedback {
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 /* ---- Help Tooltip (?) ---- */

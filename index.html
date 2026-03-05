@@ -120,6 +120,76 @@
     </div>
   </section>
 
+  <!-- ===== ADD YOUR REGION ===== -->
+  <section class="add-region-section">
+    <div class="container">
+      <div class="section-label">Expand the Network</div>
+      <h2 class="add-region-title">Want LandLibrary in your region?</h2>
+      <p class="add-region-desc">Tell us where you are. We'll let you know when we launch near you.</p>
+
+      <div class="add-region-pills">
+        <button class="add-region-pill" data-region="Algarve, Portugal">Algarve</button>
+        <button class="add-region-pill" data-region="Sintra, Portugal">Sintra</button>
+        <button class="add-region-pill" data-region="Douro Valley, Portugal">Douro Valley</button>
+        <button class="add-region-pill" data-region="Azores, Portugal">Azores</button>
+        <button class="add-region-pill" data-region="Lisbon Coast, Portugal">Lisbon Coast</button>
+        <button class="add-region-pill" data-region="Alentejo Interior, Portugal">Alentejo Interior</button>
+      </div>
+
+      <div class="add-region-cta-wrap">
+        <button class="add-region-cta" id="open-add-region">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+          Add Your Region
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ADD REGION MODAL ===== -->
+  <div class="add-region-overlay" id="add-region-overlay" style="display:none;">
+    <div class="add-region-modal">
+      <button class="add-region-close" id="add-region-close">&times;</button>
+
+      <!-- Success state -->
+      <div class="add-region-success" id="add-region-success" style="display:none;">
+        <div class="add-region-success-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <h3>Thank you!</h3>
+        <p>We'll notify you when LandLibrary launches in your region.</p>
+      </div>
+
+      <!-- Form state -->
+      <div class="add-region-form-state" id="add-region-form-state">
+        <h3>Add Your Region</h3>
+        <p class="add-region-modal-sub">Enter your location and email. We'll let you know when we expand to your area.
+        </p>
+
+        <div class="add-region-fields">
+          <div class="add-region-field">
+            <label for="add-region-location">Location</label>
+            <input type="text" id="add-region-location" placeholder="e.g. Algarve, Portugal" />
+          </div>
+          <div class="add-region-field">
+            <label for="add-region-email">Email</label>
+            <input type="email" id="add-region-email" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <button class="add-region-submit" id="add-region-submit">Submit</button>
+        <div class="add-region-feedback" id="add-region-feedback"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ===== REPORT INCLUDES ===== -->
   <section class="report-section" id="landbook">
     <div class="container">
@@ -265,13 +335,57 @@
       </div>
 
       <div class="report-cta-wrap">
-        <a href="/create" class="btn-pill-primary report-cta-btn" data-i18n="landing.lb.cta">Join the Waitlist</a>
+        <button class="report-cta-btn" id="open-waitlist" data-i18n="landing.lb.cta">Join the Waitlist</button>
       </div>
     </div>
   </section>
 
 
-  <!-- ===== FOOTER ===== -->
+  <!-- ===== WAITLIST MODAL ===== -->
+  <div class="waitlist-overlay" id="waitlist-overlay" style="display:none;">
+    <div class="waitlist-modal">
+      <button class="waitlist-close" id="waitlist-close">&times;</button>
+
+      <!-- Success state (hidden initially) -->
+      <div class="waitlist-success" id="waitlist-success" style="display:none;">
+        <div class="waitlist-success-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+        </div>
+        <h3>Thank you!</h3>
+        <p>We'll get in touch soon.</p>
+      </div>
+
+      <!-- Form state -->
+      <div class="waitlist-form-state" id="waitlist-form-state">
+        <h3>Join the Waitlist</h3>
+        <p class="waitlist-sub">Pin your land on the map, tell us your address, and leave your email. We'll notify you
+          when LandBook launches.</p>
+
+        <div class="waitlist-map-wrap">
+          <div id="waitlist-map" class="waitlist-map"></div>
+          <div class="waitlist-map-hint" id="waitlist-map-hint">Click the map to drop a pin on your land</div>
+        </div>
+
+        <div class="waitlist-fields">
+          <div class="waitlist-field">
+            <label for="waitlist-address">Address</label>
+            <input type="text" id="waitlist-address" placeholder="e.g. Odemira, Portugal" />
+          </div>
+          <div class="waitlist-field">
+            <label for="waitlist-email">Email</label>
+            <input type="email" id="waitlist-email" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <button class="waitlist-submit" id="waitlist-submit">Submit</button>
+        <div class="waitlist-feedback" id="waitlist-feedback"></div>
+      </div>
+    </div>
+  </div>
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
