@@ -12,11 +12,8 @@ export function t(key) {
 export function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lll-lang', lang);
-  applyTranslations();
-  document.querySelectorAll('.lang-toggle button').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.lang === lang);
-  });
-  document.documentElement.lang = lang;
+  // Reload so all dynamically rendered t() content updates immediately
+  window.location.reload();
 }
 
 export function applyTranslations() {
@@ -36,6 +33,7 @@ export function applyTranslations() {
 }
 
 export function initI18n() {
+  document.documentElement.lang = currentLang;
   document.querySelectorAll('.lang-toggle button').forEach(btn => {
     btn.addEventListener('click', () => setLang(btn.dataset.lang));
     btn.classList.toggle('active', btn.dataset.lang === currentLang);
