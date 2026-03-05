@@ -17,6 +17,7 @@ export function setLang(lang) {
     btn.classList.toggle('active', btn.dataset.lang === lang);
   });
   document.documentElement.lang = lang;
+  document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
 }
 
 export function applyTranslations() {

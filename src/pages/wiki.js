@@ -317,8 +317,7 @@ async function renderHub() {
       <div class="wiki-hub-hero-left">
         <h1>${t('wiki.hub.hero.title')}</h1>
         <p class="wiki-hub-description">
-          ${ODEMIRA.subtitle} — A municipality in the Beja District of Portugal's Alentejo region,
-          encompassing approximately ${ODEMIRA.area.toLocaleString()} km² of coastal and inland ecosystems.
+          ${ODEMIRA.subtitle} — ${t('wiki.hub.description')}
         </p>
         <div class="wiki-hub-meta">
           <span class="wiki-hub-meta-item">
@@ -370,7 +369,7 @@ async function renderHub() {
               ${getIconSvg(s.icon)}
             </div>
             <h3>${t('wiki.sections.' + s.id) || s.title}</h3>
-            <p>${s.description}</p>
+            <p>${t('wiki.sections.' + s.id + '.description') || s.description}</p>
           </div>
           <div class="wiki-hub-card-footer">
             <span class="wiki-hub-card-stat">
@@ -539,7 +538,7 @@ async function renderSection(sectionId) {
       <!-- Left column: main content -->
       <div class="wiki-section-main">
         <h1 class="wiki-section-title">${t('wiki.sections.' + section.id) || section.title}</h1>
-        <p class="wiki-section-subtitle">${section.intro}</p>
+        <p class="wiki-section-subtitle">${t('wiki.content.' + section.id + '.intro') || section.intro}</p>
 
         <div class="wiki-section-meta">
           <span class="wiki-section-meta-item">
@@ -563,12 +562,17 @@ async function renderSection(sectionId) {
 
         <!-- Articles (text selectable for edit toolbar) -->
         <section class="wiki-articles" id="wiki-articles">
-          ${section.articles.map(a => `
+          ${section.articles.map((a, i) => {
+            const titleKey = 'wiki.content.' + section.id + '.article.' + i + '.title';
+            const contentKey = 'wiki.content.' + section.id + '.article.' + i + '.content';
+            const translatedTitle = t(titleKey) !== titleKey ? t(titleKey) : a.title;
+            const translatedContent = t(contentKey) !== contentKey ? t(contentKey) : a.content;
+            return `
             <article class="wiki-article" data-article-title="${a.title}">
-              <h2>${a.title}</h2>
-              ${formatArticleContent(a.content)}
+              <h2>${translatedTitle}</h2>
+              ${formatArticleContent(translatedContent)}
             </article>
-          `).join('')}
+          `; }).join('')}
         </section>
 
         <!-- Map (bioregion only) -->
@@ -2483,6 +2487,7 @@ async function route() {
 }
 
 window.addEventListener('hashchange', route);
+document.addEventListener('langchange', () => route());
 
 // Initial render
 route();

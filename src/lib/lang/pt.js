@@ -408,4 +408,117 @@ export const pt = {
   "wiki.sections.risks": "Riscos",
   "wiki.sections.culture": "Cultura",
   "wiki.sections.community": "Comunidade",
+
+  // Descrição do hub wiki
+  "wiki.hub.description": "Um município no Distrito de Beja, na região do Alentejo em Portugal, abrangendo aproximadamente 1.720,6 km² de ecossistemas costeiros e interiores.",
+
+  // Descrições das secções wiki (cartões do hub)
+  "wiki.sections.bioregion.description": "Perfil do município, geografia e estatísticas-chave",
+  "wiki.sections.ecology.description": "Ecossistemas, biodiversidade e dinâmicas ecológicas",
+  "wiki.sections.land.description": "Geografia, topografia e geologia",
+  "wiki.sections.soil.description": "Tipos de solo, gestão e aptidão agrícola",
+  "wiki.sections.water.description": "Sistema do Rio Mira, irrigação e governança da água",
+  "wiki.sections.climate.description": "Padrões climáticos atuais e projeções futuras",
+  "wiki.sections.landuse.description": "Trajetória histórica e padrões atuais de uso do solo",
+  "wiki.sections.risks.description": "Impactos climáticos, escassez de água e pressões sociais",
+  "wiki.sections.culture.description": "Demografia, paisagens culturais e conhecimento tradicional",
+  "wiki.sections.community.description": "Iniciativas regenerativas, ciência cidadã e partes interessadas",
+
+  // Conteúdo wiki — Visão Geral da Região (bioregion)
+  "wiki.content.bioregion.intro": "Odemira é um município no Distrito de Beja, na região do Alentejo em Portugal, abrangendo aproximadamente 1.720,6 km² (172.929 hectares), sendo o maior município de Portugal em área. A população residente era de 29.538 no censo de 2021, subindo para cerca de 31.488 no final de 2022. A região estende-se desde a costa atlântica em Zambujeira do Mar até às colinas ondulantes do Alentejo interior. Ecologicamente, está estruturada em torno da bacia do Rio Mira, desde a barragem de Santa Clara até ao estuário em Vila Nova de Milfontes e a planície costeira irrigada conhecida como Perímetro de Rega do Mira. 44% do território está dentro do Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), estendendo-se por 110 km ao longo da costa sudoeste.",
+  "wiki.content.bioregion.article.0.title": "Dados-Chave",
+  "wiki.content.bioregion.article.0.content": "Área: 1.720,6 km². População: ~30.000 (em crescimento devido à migração). Altitude: 0m (costa) a 590m (colinas interiores). Protegido: 44% sob PNSACV. Costa: 110 km dentro do parque protegido. À escala europeia, o sítio Natura 2000 \"Costa Sudoeste\" (PTCON0012) protege 118.266,58 ha nas regiões biogeográficas Mediterrânica e Atlântica Marinha, salvaguardando 110 espécies da diretiva e 47 tipos de habitat.",
+
+  // Conteúdo wiki — Ecologia
+  "wiki.content.ecology.intro": "Odemira abrange um rico gradiente de ecossistemas, desde falésias atlânticas a bosques mediterrânicos.",
+  "wiki.content.ecology.article.0.title": "Ecossistemas",
+  "wiki.content.ecology.article.0.content": "Falésias costeiras e dunas: Rara paisagem costeira mediterrânica natural com matos de topo de falésia, pradarias dunares, estepes salinas. Sistemas ribeirinhos e estuarinos: Zonas húmidas do estuário do Mira, planícies de maré, sapais, florestas ripícolas. Montado: Agrossilvicultura semi-natural de sobreiro e azinheira, emblemática do Alentejo. Matos e charnecas: Flora mediterrânica em solos mais pobres. Mosaicos agrícolas: Cereais de sequeiro, olivais, horticultura irrigada.",
+  "wiki.content.ecology.article.1.title": "Destaques da Biodiversidade",
+  "wiki.content.ecology.article.1.content": "Flora: ~750 espécies de plantas, incluindo 12 endémicas mundiais nas falésias costeiras. Avifauna: ~200 espécies de aves, 26 nidificantes nas falésias. Marinho: 1.889 espécies registadas nas águas do PNSACV (38 com estatuto de conservação). Mamíferos: Lontra (Lutra lutra), gatos-bravos, genetas, sacarrabos em todo o território.",
+  "wiki.content.ecology.article.2.title": "Espécies Protegidas",
+  "wiki.content.ecology.article.2.content": "O sítio Natura 2000 protege 110 espécies ao abrigo das diretivas da UE, incluindo plantas prioritárias, aves de rapina que nidificam nas falésias, e o sobreiro legalmente protegido (Quercus suber), um habitat prioritário (6310) reconhecido desde o século XVI.",
+  "wiki.content.ecology.article.3.title": "Dinâmicas Ecológicas",
+  "wiki.content.ecology.article.3.content": "Regimes de fogo: Os sistemas de montado historicamente reduzem o risco de grandes incêndios. Conectividade hidrológica: Os corredores fluviais proporcionam corredores-chave para a vida selvagem. Ciclos agroecológicos: O pastoreio tradicional mantém a estrutura aberta do bosque.",
+
+  // Conteúdo wiki — Terra
+  "wiki.content.land.intro": "O território transita da linha costeira atlântica acidentada para os planaltos ondulantes do interior.",
+  "wiki.content.land.article.0.title": "Geografia e Topografia",
+  "wiki.content.land.article.0.content": "Zona Costeira: Falésias altas (até 156m), ravinas estreitas, praias arenosas, campos de dunas. Estuário do Rio Mira com características de maré. Interior: Planaltos ondulantes e colinas dissecadas (até 324m na Serra do Cercal). Encostas de xisto suportando sistemas de montado. Terraços costeiros mais planos acolhendo o perímetro de rega.",
+  "wiki.content.land.article.1.title": "Geologia",
+  "wiki.content.land.article.1.content": "Costa: Formações carboníferas, triássicas e jurássicas cobertas por depósitos quaternários de praia. Interior: Substrato de xisto e grauvaque com encostas propensas à erosão.",
+  "wiki.content.land.article.2.title": "Influência Topográfica no Uso do Solo",
+  "wiki.content.land.article.2.content": "Encostas mais íngremes: Montado, matos, pastoreio extensivo. Terraços mais planos: Agricultura irrigada intensiva. Corredores de vale: Agricultura aluvial e assentamento urbano.",
+
+  // Conteúdo wiki — Solo
+  "wiki.content.soil.intro": "Os solos de Odemira variam de substratos arenosos costeiros a solos rasos de xisto no interior, cada um com necessidades de gestão distintas.",
+  "wiki.content.soil.article.0.title": "Solos Costeiros",
+  "wiki.content.soil.article.0.content": "Tipo: Substratos arenosos a areno-argilosos. Origem: Depósitos quaternários de praia, terraços fluviais, sistemas dunares. Riscos: Erosão eólica, intrusão salina se mal geridos.",
+  "wiki.content.soil.article.1.title": "Solos do Interior",
+  "wiki.content.soil.article.1.content": "Tipo: Solos rasos, de baixa fertilidade sobre xisto/grauvaque. Gestão: Estabilizados pela cobertura arbórea do montado e pastoreio de baixa intensidade. Função: A cobertura arbórea e a vegetação do solo regulam o escoamento e previnem a erosão.",
+  "wiki.content.soil.article.2.title": "Solos Agrícolas",
+  "wiki.content.soil.article.2.content": "Perímetro de rega: Solos arenosos mais leves suportando cultivo intensivo. Sistemas de montado: Agrossilvicultura mista com acumulação de matéria orgânica da folhada das árvores.",
+  "wiki.content.soil.article.3.title": "Lacunas de Dados",
+  "wiki.content.soil.article.3.content": "Mapas de solo de alta resolução (textura, profundidade, matéria orgânica, salinidade) e mapas de risco de erosão especificamente para Odemira não estão facilmente disponíveis em fontes abertas.",
+
+  // Conteúdo wiki — Água
+  "wiki.content.water.intro": "O Rio Mira é a espinha dorsal hidrológica da região.",
+  "wiki.content.water.article.0.title": "O Sistema do Rio Mira",
+  "wiki.content.water.article.0.content": "Aproveitamento Hidroagrícola do Mira (construído 1963-1973): Área equipada: 15.200 ha. Área beneficiada: ~12.000 ha efetivamente irrigados. Infraestrutura: 38 km de canal principal + ~600 km de rede secundária/terciária. Cobertura: ~41 km de faixa costeira entre Vila Nova de Milfontes e Rogil.",
+  "wiki.content.water.article.1.title": "Crise Atual",
+  "wiki.content.water.article.1.content": "Armazenamento da barragem: 36-37% da capacidade (vs. média histórica 76-80%). Caudal do rio: Secções entre a barragem de Santa Clara e o estuário reportadas com praticamente nenhum caudal superficial. Estado ecológico: Descrito por ativistas como \"agonia\" para o ecossistema fluvial.",
+  "wiki.content.water.article.2.title": "Mudanças de Governança",
+  "wiki.content.water.article.2.content": "Atualização 2023: O Ministério da Agricultura retirou a Associação de Beneficiários do Mira (ABM) da gestão da irrigação. A Agência Portuguesa do Ambiente (APA) gere agora os recursos hídricos diretamente devido a conflitos sobre a alocação entre agricultores e abastecimento público.",
+  "wiki.content.water.article.3.title": "Conflito pela Água",
+  "wiki.content.water.article.3.content": "Racionamento: A ABM começou a racionar água para irrigação. Utilizadores em risco: 100-150 pequenos proprietários classificados como \"precários\" podem perder acesso. Extração não regulada: Numerosos furos não controlados suspeitos de contribuir para o esgotamento dos aquíferos. Poços tradicionais: Reportados como estando a secar.",
+
+  // Conteúdo wiki — Clima
+  "wiki.content.climate.intro": "Classificação de Köppen: Csa (Mediterrânico de verão quente) com forte influência costeira atlântica.",
+  "wiki.content.climate.article.0.title": "Clima Atual",
+  "wiki.content.climate.article.0.content": "Temperatura média anual: ~18,9°C. Máximas de verão: Acima de 30°C. Mínimas de inverno: 6-8°C. Precipitação anual: 550-600 mm. Sazonalidade: Altamente sazonal, com novembro-fevereiro como meses mais húmidos; verões muito secos.",
+  "wiki.content.climate.article.1.title": "Projeções Climáticas",
+  "wiki.content.climate.article.1.content": "Para a região do Alentejo: Temperaturas crescentes e ondas de calor mais frequentes. Precipitação decrescente e mais variável. Secas mais longas e intensas. Evapotranspiração aumentada e risco elevado de incêndio florestal.",
+  "wiki.content.climate.article.2.title": "Stress Atual",
+  "wiki.content.climate.article.2.content": "A aridez causada pelo clima agrava a escassez de água existente no verão, colocando pressão adicional sobre o sistema do Mira e as paisagens de montado de sequeiro.",
+
+  // Conteúdo wiki — Uso do Solo
+  "wiki.content.landuse.intro": "Historicamente caracterizado por cereais de sequeiro extensivos, olivais, pastorícia e grandes herdades com sistemas de montado. O esquema de irrigação do Mira dos anos 1960-70 marcou um ponto de viragem, convertendo a marginal \"Charneca de Odemira\" em terras agrícolas produtivas.",
+  "wiki.content.landuse.article.0.title": "Padrões Atuais",
+  "wiki.content.landuse.article.0.content": "Interior e Planalto: Montado (agrossilvicultura de sobreiro/azinheira), matos e pastagens, algumas plantações de eucalipto ou pinheiro, pecuária extensiva, produção de cortiça, caça. Zona de Irrigação Costeira (Perímetro de Rega do Mira): ~12.000 ha de terra beneficiada, horticultura intensiva, plantações de frutos vermelhos (framboesas, mirtilos, morangos), grande parte sob estufas ou túneis de plástico. Pólos Urbanos/Turísticos: Vila Nova de Milfontes, Zambujeira do Mar, Almograve, vila de Odemira, São Teotónio.",
+  "wiki.content.landuse.article.1.title": "Intensificação Agrícola",
+  "wiki.content.landuse.article.1.content": "Expansão de estufas: 2013: 438 ha de culturas cobertas. 2021: 1.253 ha (dados de satélite). Potencial: Até 4.800 ha (40% do perímetro de rega) permitidos ao abrigo da RCM 179/2019.",
+  "wiki.content.landuse.article.2.title": "Pressões",
+  "wiki.content.landuse.article.2.content": "Conflito de uso do solo impulsionado pela água. Turismo e desenvolvimento costeiro. Abandono da terra e avanço de matos (interior). \"Mar de plástico\" ao longo de ~40 km de costa.",
+
+  // Conteúdo wiki — Riscos
+  "wiki.content.risks.intro": "A escassez de água é a ameaça mais aguda: a barragem de Santa Clara caiu para 36-37% da capacidade. As projeções climáticas indicam temperaturas crescentes, secas mais frequentes e maior risco de incêndio florestal.",
+  "wiki.content.risks.article.0.title": "Impactos das Alterações Climáticas",
+  "wiki.content.risks.article.0.content": "Temperaturas crescentes e ondas de calor. Variabilidade decrescente da precipitação. Secas mais longas. Risco elevado de incêndio florestal em áreas com avanço de matos.",
+  "wiki.content.risks.article.1.title": "Escassez de Água",
+  "wiki.content.risks.article.1.content": "A ameaça mais aguda: Esgotamento da barragem (36-37% da capacidade). Degradação ecológica do Rio Mira. Competição entre necessidades agrícolas, abastecimento público e ecológicas.",
+  "wiki.content.risks.article.2.title": "Agricultura Intensiva",
+  "wiki.content.risks.article.2.content": "Uso intensivo de plástico/agroquímicos. Degradação e poluição do solo. Fragmentação de habitat por grandes blocos de estufas. Homogeneização da paisagem.",
+  "wiki.content.risks.article.3.title": "Erosão Social e Cultural",
+  "wiki.content.risks.article.3.content": "Mudança demográfica rápida (afluxo de mão-de-obra migrante). Condições de trabalho precárias. Sobrecarga dos serviços locais (escolas, saúde, segurança social). Perda de conhecimento ecológico tradicional.",
+  "wiki.content.risks.article.4.title": "Estratégias de Adaptação",
+  "wiki.content.risks.article.4.content": "\"Pacto da água\": Negociação entre município, APA, autoridades agrícolas. Debates políticos: Moratória sobre novas estufas (\"nem mais um metro de estufa\"). Co-gestão: Novas estruturas de governança do PNSACV envolvendo municípios e sociedade civil. Agricultura regenerativa: Quintas de demonstração implementando design keyline, pastoreio holístico, agrossilvicultura. Planeamento climático: Projeto europeu Phoenix Horizon para agenda participativa de ação climática.",
+
+  // Conteúdo wiki — Cultura
+  "wiki.content.culture.intro": "A história humana espelha as trajetórias do sudoeste ibérico: ocupação pré-histórica, povoamento romano e medieval, herdades agrárias consolidadas no período moderno. A paisagem de montado representa séculos de gestão humana transformando bosque mediterrânico em sistemas agro-silvo-pastoris.",
+  "wiki.content.culture.article.0.title": "Demografia e Comunidades",
+  "wiki.content.culture.article.0.content": "Crescimento Populacional: 26.066 (2011) → 29.538 (2021). Estrutura Demográfica Única: 5.623 residentes nascidos na Ásia e Oceânia (vs. 20.946 em Portugal). 5.787 residentes com cidadania asiática e da Oceânia. Grande força de trabalho migrante do Sul e Sudeste Asiático na agricultura (>10.000 trabalhadores da indústria de frutos vermelhos a nível nacional, Odemira como polo-chave). Estrutura Etária: Relativamente jovem para o Portugal rural. 15-64 anos: 22.699. 65+ anos: 7.538.",
+  "wiki.content.culture.article.1.title": "Paisagens Culturais",
+  "wiki.content.culture.article.1.content": "Património do montado: Colheita de cortiça, recolha de bolota, pastorícia tradicional. Arquitetura: Aldeias caiadas (montes), socalcos de pedra. Pesca costeira: Comunidades tradicionais e ciclos de trabalho sazonais. Identidade alentejana: Música regional, gastronomia, festas ligadas às colheitas e à tiragem da cortiça.",
+  "wiki.content.culture.article.2.title": "Conhecimento Tradicional (CET)",
+  "wiki.content.culture.article.2.content": "Persistente entre agricultores e pastores mais velhos: Recolha de água (cisternas, poços) e conservação pluvial. Regimes de pastoreio evitando o uso excessivo de solos frágeis. Práticas de uso/evitamento do fogo limitando incêndios catastróficos.",
+
+  // Conteúdo wiki — Comunidade
+  "wiki.content.community.intro": "Várias iniciativas comunitárias e regenerativas ilustram trajetórias alternativas para Odemira.",
+  "wiki.content.community.article.0.title": "Regenerativa — Cooperativa Integral (São Luís)",
+  "wiki.content.community.article.0.content": "Fundada em 2022, emergindo de movimentos locais desde 2020. 180 colaboradores, ~30 iniciativas empreendedoras. Projetos: Sistema Alimentar Local de Odemira, rede Web de Empreendedores, Espaço Nativa (espaço comunitário multiusos). Foco: Regeneração agroflorestal, educação não-formal, projetos culturais.",
+  "wiki.content.community.article.1.title": "A Quinta da Lage (Parque Natural Costeiro)",
+  "wiki.content.community.article.1.content": "Local de demonstração de eco-quinta regenerativa. Práticas: Recolha de água por keyline, pastoreio holístico, agrossilvicultura, horta sem lavoura. Polo educativo com cursos sobre restauração de terras e segurança alimentar local.",
+  "wiki.content.community.article.2.title": "Ciência Cidadã e Advocacia",
+  "wiki.content.community.article.2.content": "Juntos pelo Sudoeste (JPS): Movimento cidadão em defesa do sudoeste. Recolha de dados sobre expansão da área de estufas e tendências pluviométricas. Petições ao parlamento e queixas à UE. SOS Rio Mira: Advocacia pela saúde do rio. Alertas públicos sobre degradação ecológica. Monitorização da governança da água.",
+  "wiki.content.community.article.3.title": "Panorama de Partes Interessadas",
+  "wiki.content.community.article.3.content": "Pequenos e médios agricultores locais (irrigados e de sequeiro). Grandes empresas agroindustriais (operações de estufas). Trabalhadores agrícolas migrantes (principalmente do Sul da Ásia). ONG ambientais e movimentos cidadãos. Governo municipal, ICNF, APA. Operadores turísticos. Cooperativas regenerativas e iniciativas agroecológicas.",
 };

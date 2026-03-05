@@ -411,4 +411,117 @@ export const en = {
   "wiki.sections.risks": "Risks",
   "wiki.sections.culture": "Culture",
   "wiki.sections.community": "Community",
+
+  // Wiki hub description
+  "wiki.hub.description": "A municipality in the Beja District of Portugal's Alentejo region, encompassing approximately 1,720.6 km² of coastal and inland ecosystems.",
+
+  // Wiki section descriptions (hub cards)
+  "wiki.sections.bioregion.description": "Municipality profile, geography, and key statistics",
+  "wiki.sections.ecology.description": "Ecosystems, biodiversity, and ecological dynamics",
+  "wiki.sections.land.description": "Geography, topography, and geology",
+  "wiki.sections.soil.description": "Soil types, management, and agricultural suitability",
+  "wiki.sections.water.description": "Mira River system, irrigation, and water governance",
+  "wiki.sections.climate.description": "Current climate patterns and future projections",
+  "wiki.sections.landuse.description": "Historical trajectory and current land use patterns",
+  "wiki.sections.risks.description": "Climate impacts, water scarcity, and social pressures",
+  "wiki.sections.culture.description": "Demographics, cultural landscapes, and traditional knowledge",
+  "wiki.sections.community.description": "Regenerative initiatives, citizen science, and stakeholders",
+
+  // Wiki content — Region Overview (bioregion)
+  "wiki.content.bioregion.intro": "Odemira is a municipality in the Beja District of Portugal's Alentejo region, encompassing approximately 1,720.6 km² (172,929 hectares), making it the largest municipality in Portugal by area. The resident population was 29,538 in the 2021 census, rising to about 31,488 by the end of 2022. The region stretches from the Atlantic coast at Zambujeira do Mar inland to the rolling hills of the Alentejo. Ecologically, it is structured around the Mira River basin, from the Santa Clara dam to the estuary at Vila Nova de Milfontes and the irrigated coastal plain known as the Perímetro de Rega do Mira (Mira Irrigation Perimeter). 44% of the territory falls within the Parque Natural do Sudoeste Alentejano e Costa Vicentina (PNSACV), extending 110 km along the southwest coast.",
+  "wiki.content.bioregion.article.0.title": "Key Facts",
+  "wiki.content.bioregion.article.0.content": "Area: 1,720.6 km². Population: ~30,000 (growing due to migration). Elevation: 0m (coast) to 590m (interior hills). Protected: 44% under PNSACV. Coastline: 110 km within protected park. At the European scale, the Natura 2000 site \"Costa Sudoeste\" (PTCON0012) protects 118,266.58 ha across Mediterranean and Marine Atlantic biogeographical regions, safeguarding 110 directive species and 47 habitat types.",
+
+  // Wiki content — Ecology
+  "wiki.content.ecology.intro": "Odemira spans a rich gradient of ecosystems from Atlantic cliffs to Mediterranean woodlands.",
+  "wiki.content.ecology.article.0.title": "Ecosystems",
+  "wiki.content.ecology.article.0.content": "Coastal cliffs and dunes: Rare natural Mediterranean coastal landscape with cliff-top scrub, dune grasslands, saline steppes. Riverine and estuarine systems: Mira estuary wetlands, tidal flats, saltmarshes, riparian forests. Montado: Semi-natural cork and holm oak agroforestry, emblematic of Alentejo. Shrublands and heathlands: Mediterranean flora on poorer soils. Agricultural mosaics: Dryland cereals, olive groves, irrigated horticulture.",
+  "wiki.content.ecology.article.1.title": "Biodiversity Highlights",
+  "wiki.content.ecology.article.1.content": "Flora: ~750 plant species, including 12 worldwide endemics on coastal cliffs. Avifauna: ~200 bird species, 26 breeding on cliffs. Marine: 1,889 species recorded in PNSACV waters (38 with conservation status). Mammals: Otter (Lutra lutra), wildcats, genets, mongooses throughout territory.",
+  "wiki.content.ecology.article.2.title": "Protected Species",
+  "wiki.content.ecology.article.2.content": "The Natura 2000 site protects 110 species under EU directives, including priority plants, cliff-breeding raptors, and the legally protected cork oak (Quercus suber), a priority habitat (6310) recognized since the 16th century.",
+  "wiki.content.ecology.article.3.title": "Ecological Dynamics",
+  "wiki.content.ecology.article.3.content": "Fire regimes: Montado systems historically reduce large fire risk. Hydrological connectivity: River corridors provide key wildlife corridors. Agro-ecological cycles: Traditional grazing maintains open woodland structure.",
+
+  // Wiki content — Land
+  "wiki.content.land.intro": "The territory grades from rugged Atlantic coastline to rolling interior plateaus.",
+  "wiki.content.land.article.0.title": "Geography & Topography",
+  "wiki.content.land.article.0.content": "Coastal Zone: High cliffs (up to 156m), narrow ravines, sandy beaches, dune fields. Mira River estuary with tidal characteristics. Interior: Rolling plateaus and dissected hills (up to 324m at Serra do Cercal). Schist hill slopes supporting montado systems. Flatter coastal terraces hosting irrigation perimeter.",
+  "wiki.content.land.article.1.title": "Geology",
+  "wiki.content.land.article.1.content": "Coastal: Carboniferous, Triassic, and Jurassic formations overlain by Quaternary beach deposits. Inland: Schist and grauvacke bedrock with erosion-prone slopes.",
+  "wiki.content.land.article.2.title": "Topographic Influence on Land Use",
+  "wiki.content.land.article.2.content": "Steeper slopes: Montado, shrubland, extensive grazing. Flatter terraces: Intensive irrigated agriculture. Valley corridors: Alluvial agriculture and urban settlement.",
+
+  // Wiki content — Soil
+  "wiki.content.soil.intro": "Odemira's soils range from sandy coastal substrates to shallow inland schist soils, each with distinct management needs.",
+  "wiki.content.soil.article.0.title": "Coastal Soils",
+  "wiki.content.soil.article.0.content": "Type: Sandy to sandy-clayey substrates. Origin: Quaternary beach deposits, fluvial terraces, dune systems. Risks: Wind erosion, saltwater intrusion if poorly managed.",
+  "wiki.content.soil.article.1.title": "Inland Soils",
+  "wiki.content.soil.article.1.content": "Type: Shallow, low-fertility soils on schist/grauvacke. Management: Stabilized by montado tree cover and low-intensity grazing. Function: Tree cover and ground vegetation regulate runoff and prevent erosion.",
+  "wiki.content.soil.article.2.title": "Agricultural Soils",
+  "wiki.content.soil.article.2.content": "Irrigation perimeter: Lighter sandy soils supporting intensive cultivation. Montado systems: Mixed agro-forestry with organic matter accumulation from tree litter.",
+  "wiki.content.soil.article.3.title": "Data Gaps",
+  "wiki.content.soil.article.3.content": "High-resolution soil maps (texture, depth, organic matter, salinity) and erosion-risk maps for Odemira specifically are not readily available in open sources.",
+
+  // Wiki content — Water
+  "wiki.content.water.intro": "The Mira River is the hydrological backbone of the region.",
+  "wiki.content.water.article.0.title": "The Mira River System",
+  "wiki.content.water.article.0.content": "Aproveitamento Hidroagrícola do Mira (built 1963-1973): Equipped area: 15,200 ha. Benefited area: ~12,000 ha effectively irrigated. Infrastructure: 38 km main canal + ~600 km secondary/tertiary network. Coverage: ~41 km coastal strip between Vila Nova de Milfontes and Rogil.",
+  "wiki.content.water.article.1.title": "Current Crisis",
+  "wiki.content.water.article.1.content": "Reservoir storage: 36-37% of capacity (vs. historical average 76-80%). River flow: Sections between Santa Clara dam and estuary reported with virtually no surface flow. Ecological state: Described by activists as \"agony\" for the river ecosystem.",
+  "wiki.content.water.article.2.title": "Governance Changes",
+  "wiki.content.water.article.2.content": "2023 Update: The Ministry of Agriculture removed the Associação de Beneficiários do Mira (ABM) from irrigation management. The Portuguese Environment Agency (APA) now manages water resources directly due to conflicts over allocation between farmers and public supply.",
+  "wiki.content.water.article.3.title": "Water Conflict",
+  "wiki.content.water.article.3.content": "Rationing: ABM began rationing water for irrigation. At-risk users: 100-150 small property owners classified as \"precários\" may lose access. Unregulated extraction: Numerous uncontrolled boreholes suspected of contributing to aquifer depletion. Traditional wells: Reported to be drying up.",
+
+  // Wiki content — Climate
+  "wiki.content.climate.intro": "Köppen classification: Csa (hot-summer Mediterranean) with strong Atlantic coastal influence.",
+  "wiki.content.climate.article.0.title": "Current Climate",
+  "wiki.content.climate.article.0.content": "Annual mean temperature: ~18.9°C. Summer highs: Above 30°C. Winter lows: 6-8°C. Annual rainfall: 550-600 mm. Seasonality: Highly seasonal, with November-February as wettest months; very dry summers.",
+  "wiki.content.climate.article.1.title": "Climate Projections",
+  "wiki.content.climate.article.1.content": "For Alentejo region: Rising temperatures and more frequent heatwaves. Decreasing and more variable rainfall. Longer and more intense droughts. Increased evapotranspiration and elevated wildfire risk.",
+  "wiki.content.climate.article.2.title": "Current Stress",
+  "wiki.content.climate.article.2.content": "Climate-driven aridity exacerbates existing summer water scarcity, placing added pressure on the Mira system and rain-fed montado landscapes.",
+
+  // Wiki content — Land Use
+  "wiki.content.landuse.intro": "Historically characterized by extensive dryland cereals, olive groves, pastoralism, and large estates with montado systems. The 1960s-70s Mira irrigation scheme marked a turning point, converting marginal \"Charneca de Odemira\" into productive agricultural land.",
+  "wiki.content.landuse.article.0.title": "Current Patterns",
+  "wiki.content.landuse.article.0.content": "Inland and Upland: Montado (cork/holm oak agroforestry), shrublands and pastures, some eucalyptus or pine plantations, extensive livestock, cork production, hunting. Coastal Irrigation Zone (Perímetro de Rega do Mira): ~12,000 ha benefited land, intensive horticulture, berry plantations (raspberries, blueberries, strawberries), much under greenhouses or plastic tunnels. Urban/Tourism Nodes: Vila Nova de Milfontes, Zambujeira do Mar, Almograve, Odemira town, São Teotónio.",
+  "wiki.content.landuse.article.1.title": "Agricultural Intensification",
+  "wiki.content.landuse.article.1.content": "Greenhouse expansion: 2013: 438 ha covered crops. 2021: 1,253 ha (satellite data). Potential: Up to 4,800 ha (40% of irrigation perimeter) permitted under RCM 179/2019.",
+  "wiki.content.landuse.article.2.title": "Pressures",
+  "wiki.content.landuse.article.2.content": "Water-driven land-use conflict. Tourism and coastal development. Land abandonment and shrub encroachment (inland). \"Mar de plástico\" (sea of plastic) along ~40 km of coast.",
+
+  // Wiki content — Risks
+  "wiki.content.risks.intro": "Water scarcity is the most acute threat: Santa Clara reservoir has fallen to 36-37% of capacity. Climate projections indicate rising temperatures, more frequent droughts and higher wildfire risk.",
+  "wiki.content.risks.article.0.title": "Climate Change Impacts",
+  "wiki.content.risks.article.0.content": "Rising temperatures and heatwaves. Decreasing rainfall variability. Longer droughts. Elevated wildfire risk on shrub-encroached areas.",
+  "wiki.content.risks.article.1.title": "Water Scarcity",
+  "wiki.content.risks.article.1.content": "The most acute threat: Reservoir depletion (36-37% capacity). Ecological degradation of Mira River. Competition between agricultural, public supply, and ecological needs.",
+  "wiki.content.risks.article.2.title": "Intensive Agriculture",
+  "wiki.content.risks.article.2.content": "Heavy plastic/agrochemical use. Soil degradation and pollution. Habitat fragmentation from large greenhouse blocks. Landscape homogenization.",
+  "wiki.content.risks.article.3.title": "Social & Cultural Erosion",
+  "wiki.content.risks.article.3.content": "Rapid demographic change (migrant workforce influx). Precarious labor conditions. Overload of local services (schools, health, social security). Loss of traditional ecological knowledge.",
+  "wiki.content.risks.article.4.title": "Adaptation Strategies",
+  "wiki.content.risks.article.4.content": "\"Pacto da água\": Negotiation between municipality, APA, agricultural authorities. Policy debates: Moratorium on new greenhouses (\"nem mais um metro de estufa\"). Co-management: New PNSACV governance structures involving municipalities and civil society. Regenerative agriculture: Demonstration farms implementing keyline design, holistic grazing, agroforestry. Climate planning: Phoenix Horizon EU project for participatory climate-action agenda.",
+
+  // Wiki content — Culture
+  "wiki.content.culture.intro": "Human history mirrors southwest Iberian trajectories: prehistoric occupation, Roman and medieval settlement, consolidated agrarian estates in early modern period. The montado landscape is centuries of human management transforming Mediterranean woodland into agro-silvo-pastoral systems.",
+  "wiki.content.culture.article.0.title": "Demographics & Communities",
+  "wiki.content.culture.article.0.content": "Population Growth: 26,066 (2011) → 29,538 (2021). Unique Demographic Structure: 5,623 residents born in Asia & Oceania (vs. 20,946 in Portugal). 5,787 residents hold Asian & Oceania citizenship. Large South and Southeast Asian migrant workforce in agriculture (>10,000 berry industry workers nationally, Odemira as key hub). Age Structure: Relatively young for rural Portugal. 15-64 years: 22,699. 65+ years: 7,538.",
+  "wiki.content.culture.article.1.title": "Cultural Landscapes",
+  "wiki.content.culture.article.1.content": "Montado heritage: Cork harvesting, acorn gathering, traditional pastoralism. Architecture: Whitewashed villages (montes), stone terraces. Coastal fishing: Traditional communities and seasonal work cycles. Alentejo identity: Regional music, cuisine, festivals tied to harvests and cork stripping.",
+  "wiki.content.culture.article.2.title": "Traditional Knowledge (TEK)",
+  "wiki.content.culture.article.2.content": "Persisting among older farmers and shepherds: Water harvesting (cisterns, wells) and rainfall conservation. Grazing regimes avoiding fragile soil overuse. Fire use/avoidance practices limiting catastrophic burns.",
+
+  // Wiki content — Community
+  "wiki.content.community.intro": "Several community-driven and regenerative initiatives illustrate alternative trajectories for Odemira.",
+  "wiki.content.community.article.0.title": "Regenerativa — Cooperativa Integral (São Luís)",
+  "wiki.content.community.article.0.content": "Founded 2022, emerging from local movements since 2020. 180 collaborators, ~30 entrepreneurial initiatives. Projects: Odemira Local Food System, Web of Entrepreneurs network, Espaço Nativa (multi-use community space). Focus: Agroforestry regeneration, non-formal education, cultural projects.",
+  "wiki.content.community.article.1.title": "A Quinta da Lage (Coastal Natural Park)",
+  "wiki.content.community.article.1.content": "Regenerative eco-farm demonstration site. Practices: Keyline water harvesting, holistic grazing, agroforestry, no-till gardening. Educational hub with courses on land restoration and local food security.",
+  "wiki.content.community.article.2.title": "Citizen Science & Advocacy",
+  "wiki.content.community.article.2.content": "Juntos pelo Sudoeste (JPS): Citizen movement defending the southwest. Data collection on greenhouse area expansion and rainfall trends. Petitions to parliament and EU complaints. SOS Rio Mira: River health advocacy. Public alerts on ecological degradation. Water governance monitoring.",
+  "wiki.content.community.article.3.title": "Stakeholder Landscape",
+  "wiki.content.community.article.3.content": "Small and medium local farmers (irrigated and rain-fed). Large agro-industrial enterprises (greenhouse operations). Migrant agricultural workers (primarily South Asian). Environmental NGOs and citizen movements. Municipal government, ICNF, APA. Tourism operators. Regenerative cooperatives and agroecological initiatives.",
 };
