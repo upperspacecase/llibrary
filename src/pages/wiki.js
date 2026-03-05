@@ -571,22 +571,6 @@ async function renderSection(sectionId) {
           `).join('')}
         </section>
 
-        ${section.references && section.references.length ? `
-        <!-- References -->
-        <section class="wiki-references">
-          <h2 class="wiki-references-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-            References
-          </h2>
-          <ol class="wiki-references-list">
-            ${section.references.map(r => `
-              <li class="wiki-reference-item" value="${r.id}">
-                <a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a>
-              </li>
-            `).join('')}
-          </ol>
-        </section>
-        ` : ''}
         <!-- Map (bioregion only) -->
         ${sectionId === 'bioregion' ? '<div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>' : ''}
 
@@ -608,6 +592,23 @@ async function renderSection(sectionId) {
           </button>
           <div id="wiki-data-content"></div>
         </section>
+
+        ${section.references && section.references.length ? `
+        <!-- References -->
+        <section class="wiki-references">
+          <h2 class="wiki-references-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            References
+          </h2>
+          <ol class="wiki-references-list">
+            ${section.references.map(r => `
+              <li class="wiki-reference-item" value="${r.id}">
+                <a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a>
+              </li>
+            `).join('')}
+          </ol>
+        </section>
+        ` : ''}
       </div>
 
       <!-- Right column: Community Notes sidebar -->
@@ -659,23 +660,6 @@ async function renderSection(sectionId) {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 ${t('wiki.sidebar.addContribution')}
               </button>
-              <div class="wiki-sidebar-contrib-form" id="sidebar-contrib-form" style="display:none;">
-                <select id="sidebar-contrib-type" class="wiki-sidebar-contrib-select">
-                  <option value="story">Story / Experience</option>
-                  <option value="tip">Practical Tip</option>
-                  <option value="event">Event / Gathering</option>
-                  <option value="place">Place / Location</option>
-                  <option value="resource">Resource / Link</option>
-                </select>
-                <input type="text" id="sidebar-contrib-title" class="wiki-sidebar-contrib-input" placeholder="${t('wiki.section.title')}" />
-                <textarea id="sidebar-contrib-text" class="wiki-sidebar-contrib-textarea" rows="3" placeholder="Share what you know\u2026"></textarea>
-                <input type="text" id="sidebar-contrib-author" class="wiki-sidebar-contrib-input" placeholder="${t('wiki.section.yourName')} (optional)" />
-                <div class="wiki-sidebar-contrib-actions">
-                  <button class="wiki-sidebar-contrib-cancel" id="sidebar-contrib-cancel">${t('wiki.section.cancel')}</button>
-                  <button class="wiki-sidebar-contrib-submit" id="sidebar-contrib-submit">${t('wiki.section.submit')}</button>
-                </div>
-                <div class="wiki-sidebar-contrib-feedback" id="sidebar-contrib-feedback"></div>
-              </div>
               <button class="wiki-sidebar-action-btn" id="sidebar-suggest-edit">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 ${t('wiki.sidebar.suggestEdit')}
@@ -754,6 +738,32 @@ async function renderSection(sectionId) {
         <div class="wiki-inline-contrib-footer">
           <button class="wiki-inline-contrib-cancel" id="wiki-inline-contrib-cancel">${t('wiki.section.cancel')}</button>
           <button class="wiki-inline-contrib-submit" id="wiki-inline-contrib-submit">${t('wiki.section.submit')}</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contribution modal (hidden) -->
+    <div class="wiki-inline-contrib-overlay" id="wiki-contrib-modal-overlay" style="display:none;">
+      <div class="wiki-inline-contrib-modal">
+        <div class="wiki-inline-contrib-header">
+          <h3>${t('wiki.sidebar.addContribution')}</h3>
+          <button class="wiki-inline-contrib-close" id="wiki-contrib-modal-close">&times;</button>
+        </div>
+        <div class="wiki-inline-contrib-body">
+          <select id="wiki-contrib-modal-type" class="wiki-sidebar-contrib-select" style="margin-bottom:12px;">
+            <option value="story">Story / Experience</option>
+            <option value="tip">Practical Tip</option>
+            <option value="event">Event / Gathering</option>
+            <option value="place">Place / Location</option>
+            <option value="resource">Resource / Link</option>
+          </select>
+          <input type="text" id="wiki-contrib-modal-title" placeholder="${t('wiki.section.title')}" />
+          <textarea id="wiki-contrib-modal-text" rows="4" placeholder="Share what you know\u2026"></textarea>
+          <input type="text" id="wiki-contrib-modal-author" placeholder="${t('wiki.section.yourName')} (optional)" />
+        </div>
+        <div class="wiki-inline-contrib-footer">
+          <button class="wiki-inline-contrib-cancel" id="wiki-contrib-modal-cancel">${t('wiki.section.cancel')}</button>
+          <button class="wiki-inline-contrib-submit" id="wiki-contrib-modal-submit">${t('wiki.section.submit')}</button>
         </div>
       </div>
     </div>
@@ -2030,85 +2040,11 @@ function initSidebarActions(sectionId) {
   const suggestEditBtn = document.getElementById('sidebar-suggest-edit');
   const addCommentBtn = document.getElementById('sidebar-add-comment');
   const overlay = document.getElementById('wiki-inline-contrib-overlay');
-  const contribForm = document.getElementById('sidebar-contrib-form');
-  const cancelBtn = document.getElementById('sidebar-contrib-cancel');
-  const submitBtn = document.getElementById('sidebar-contrib-submit');
 
-  // "Add a Contribution" toggles the inline form
-  if (addContribBtn && contribForm) {
+  // "Add a Contribution" opens the contribution modal
+  if (addContribBtn) {
     addContribBtn.addEventListener('click', () => {
-      const isOpen = contribForm.style.display !== 'none';
-      contribForm.style.display = isOpen ? 'none' : 'block';
-    });
-  }
-
-  // Cancel collapses the form
-  if (cancelBtn && contribForm) {
-    cancelBtn.addEventListener('click', () => {
-      contribForm.style.display = 'none';
-    });
-  }
-
-  // Submit contribution
-  if (submitBtn) {
-    submitBtn.addEventListener('click', async () => {
-      const typeEl = document.getElementById('sidebar-contrib-type');
-      const titleEl = document.getElementById('sidebar-contrib-title');
-      const textEl = document.getElementById('sidebar-contrib-text');
-      const authorEl = document.getElementById('sidebar-contrib-author');
-      const feedback = document.getElementById('sidebar-contrib-feedback');
-
-      const contentVal = textEl ? textEl.value.trim() : '';
-      if (!contentVal) {
-        if (textEl) textEl.style.borderColor = 'var(--coral, #e74c3c)';
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting\u2026';
-
-      try {
-        const res = await fetch('/api/wiki/contributions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            section: sectionId,
-            type: typeEl ? typeEl.value : 'story',
-            title: titleEl ? titleEl.value.trim() : '',
-            content: contentVal,
-            author: authorEl ? authorEl.value.trim() || 'Anonymous' : 'Anonymous',
-          }),
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Failed to submit');
-        }
-
-        // Success — reset and show feedback
-        if (typeEl) typeEl.selectedIndex = 0;
-        if (titleEl) titleEl.value = '';
-        if (textEl) { textEl.value = ''; textEl.style.borderColor = ''; }
-        if (authorEl) authorEl.value = '';
-
-        if (feedback) {
-          feedback.innerHTML = '<span style="color:var(--green, #2E8B57);font-weight:600;">Thank you! Your contribution has been added.</span>';
-          setTimeout(() => { feedback.innerHTML = ''; }, 4000);
-        }
-
-        // Refresh data
-        _statsCache = null;
-        loadContributions(sectionId);
-        loadRecentActivity(sectionId);
-        refreshSidebarStats(sectionId);
-      } catch (err) {
-        if (feedback) {
-          feedback.innerHTML = '<span style="color:var(--coral, #e74c3c);">Error: ' + err.message + '</span>';
-        }
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = t('wiki.section.submit');
-      }
+      openContribModal(sectionId);
     });
   }
 
@@ -2123,6 +2059,128 @@ function initSidebarActions(sectionId) {
   if (addCommentBtn && overlay) {
     addCommentBtn.addEventListener('click', () => {
       openSidebarContrib('comment', sectionId);
+    });
+  }
+}
+
+function openContribModal(sectionId) {
+  const overlay = document.getElementById('wiki-contrib-modal-overlay');
+  const closeBtn = document.getElementById('wiki-contrib-modal-close');
+  const cancelBtn = document.getElementById('wiki-contrib-modal-cancel');
+  const submitBtn = document.getElementById('wiki-contrib-modal-submit');
+  const typeEl = document.getElementById('wiki-contrib-modal-type');
+  const titleEl = document.getElementById('wiki-contrib-modal-title');
+  const textEl = document.getElementById('wiki-contrib-modal-text');
+  const authorEl = document.getElementById('wiki-contrib-modal-author');
+
+  if (!overlay) return;
+
+  // Reset form
+  if (typeEl) typeEl.selectedIndex = 0;
+  if (titleEl) titleEl.value = '';
+  if (textEl) { textEl.value = ''; textEl.style.borderColor = ''; }
+  if (authorEl) authorEl.value = '';
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = t('wiki.section.submit'); }
+
+  // Restore body content if it was replaced by success message
+  const modalBody = overlay.querySelector('.wiki-inline-contrib-body');
+  if (modalBody && !modalBody.querySelector('#wiki-contrib-modal-type')) {
+    modalBody.innerHTML = `
+      <select id="wiki-contrib-modal-type" class="wiki-sidebar-contrib-select" style="margin-bottom:12px;">
+        <option value="story">Story / Experience</option>
+        <option value="tip">Practical Tip</option>
+        <option value="event">Event / Gathering</option>
+        <option value="place">Place / Location</option>
+        <option value="resource">Resource / Link</option>
+      </select>
+      <input type="text" id="wiki-contrib-modal-title" placeholder="${t('wiki.section.title')}" />
+      <textarea id="wiki-contrib-modal-text" rows="4" placeholder="Share what you know\u2026"></textarea>
+      <input type="text" id="wiki-contrib-modal-author" placeholder="${t('wiki.section.yourName')} (optional)" />
+    `;
+  }
+
+  overlay.style.display = 'flex';
+  if (textEl) textEl.focus();
+
+  function closeModal() {
+    overlay.style.display = 'none';
+  }
+
+  // Close handlers (use { once: true } pattern via cloning to avoid stacking)
+  const newCloseBtn = closeBtn?.cloneNode(true);
+  if (closeBtn && newCloseBtn) { closeBtn.replaceWith(newCloseBtn); newCloseBtn.addEventListener('click', closeModal); }
+  const newCancelBtn = cancelBtn?.cloneNode(true);
+  if (cancelBtn && newCancelBtn) { cancelBtn.replaceWith(newCancelBtn); newCancelBtn.addEventListener('click', closeModal); }
+
+  // Click overlay backdrop to close
+  overlay.onclick = (e) => { if (e.target === overlay) closeModal(); };
+
+  // Submit handler
+  const newSubmitBtn = submitBtn?.cloneNode(true);
+  if (submitBtn && newSubmitBtn) {
+    submitBtn.replaceWith(newSubmitBtn);
+    newSubmitBtn.addEventListener('click', async () => {
+      const tEl = document.getElementById('wiki-contrib-modal-type');
+      const tiEl = document.getElementById('wiki-contrib-modal-title');
+      const txEl = document.getElementById('wiki-contrib-modal-text');
+      const auEl = document.getElementById('wiki-contrib-modal-author');
+
+      const contentVal = txEl ? txEl.value.trim() : '';
+      if (!contentVal) {
+        if (txEl) txEl.style.borderColor = 'var(--coral, #e74c3c)';
+        return;
+      }
+
+      newSubmitBtn.disabled = true;
+      newSubmitBtn.textContent = 'Submitting\u2026';
+
+      try {
+        const res = await fetch('/api/wiki/contributions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            section: sectionId,
+            type: tEl ? tEl.value : 'story',
+            title: tiEl ? tiEl.value.trim() : '',
+            content: contentVal,
+            author: auEl ? auEl.value.trim() || 'Anonymous' : 'Anonymous',
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Failed to submit');
+        }
+
+        // Success — show confirmation then close
+        const body = overlay.querySelector('.wiki-inline-contrib-body');
+        if (body) {
+          body.innerHTML = '<div style="text-align:center;padding:1.5rem 0;">' +
+            '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+            '<p style="margin-top:12px;font-weight:600;color:#2E8B57;">Thank you for your contribution!</p>' +
+            '<p style="font-size:13px;color:#666;">Your contribution has been submitted for review.</p>' +
+            '</div>';
+        }
+        setTimeout(closeModal, 2500);
+
+        // Refresh data
+        _statsCache = null;
+        loadContributions(sectionId);
+        loadRecentActivity(sectionId);
+        refreshSidebarStats(sectionId);
+      } catch (err) {
+        newSubmitBtn.disabled = false;
+        newSubmitBtn.textContent = t('wiki.section.submit');
+        const footer = overlay.querySelector('.wiki-inline-contrib-footer');
+        if (footer) {
+          footer.querySelector('.wiki-contrib-modal-error')?.remove();
+          const errMsg = document.createElement('p');
+          errMsg.className = 'wiki-contrib-modal-error';
+          errMsg.style.cssText = 'color:var(--coral,#e74c3c);font-size:13px;margin:8px 0 0;';
+          errMsg.textContent = 'Error: ' + err.message;
+          footer.appendChild(errMsg);
+        }
+      }
     });
   }
 }

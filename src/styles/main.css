@@ -4462,6 +4462,32 @@ a {
   border-color: var(--green, #2E8B57);
 }
 
+.wiki-inline-contrib-body select {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1.5px solid var(--card-border, #e5e5e5);
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  background: #fff;
+  color: var(--black, #1a1a1a);
+  cursor: pointer;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  padding-right: 32px;
+}
+
+.wiki-inline-contrib-body select:focus {
+  outline: none;
+  border-color: var(--green, #2E8B57);
+}
+
 .wiki-inline-contrib-body input[type="text"] {
   width: 100%;
   padding: 10px 16px;
