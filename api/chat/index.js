@@ -36,12 +36,14 @@ export default async function handler(req, res) {
     const index = pc.index(INDEX_NAME);
 
     // Embed the query using Pinecone's built-in model
-    const queryEmbedding = await pc.inference.embed('multilingual-e5-large', [message], {
-      inputType: 'query',
+    const queryEmbedding = await pc.inference.embed({
+      model: 'multilingual-e5-large',
+      inputs: [message],
+      parameters: { inputType: 'query', truncate: 'END' },
     });
 
     const queryResult = await index.query({
-      vector: queryEmbedding[0].values,
+      vector: queryEmbedding.data[0].values,
       topK: 8,
       includeMetadata: true,
     });

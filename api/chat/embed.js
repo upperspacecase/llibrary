@@ -191,13 +191,15 @@ export default async function handler(req, res) {
       const texts = batch.map(c => c.text);
 
       // Use Pinecone's built-in embedding model
-      const embeddings = await pc.inference.embed('multilingual-e5-large', texts, {
-        inputType: 'passage',
+      const embeddings = await pc.inference.embed({
+        model: 'multilingual-e5-large',
+        inputs: texts,
+        parameters: { inputType: 'passage', truncate: 'END' },
       });
 
       const vectors = batch.map((chunk, idx) => ({
         id: chunk.id,
-        values: embeddings[idx].values,
+        values: embeddings.data[idx].values,
         metadata: {
           section: chunk.section,
           title: chunk.title,
@@ -206,7 +208,7 @@ export default async function handler(req, res) {
         },
       }));
 
-      await index.upsert(vectors);
+      await index.upsert({ records: vectors });
       upserted += vectors.length;
     }
 
