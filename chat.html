@@ -34,20 +34,23 @@
   </header>
 
   <div class="page-body">
-    <div class="chat-layout" style="align-items:center;justify-content:center;">
-      <div style="text-align:center;padding:40px;">
-        <div style="font-size:64px;margin-bottom:20px;"></div>
-        <h1 style="margin-bottom:8px;">Coming Soon</h1>
-        <p style="color:var(--muted);font-size:16px;max-width:400px;margin:0 auto 24px;">Chat with your land is under
-          development. Check back soon!</p>
-        <a href="/" class="btn-outline">Go Home</a>
+    <div class="chat-layout">
+      <div class="chat-header">
+        <h1>Chat with Land</h1>
+        <p>Ask anything about the Odemira bioregion</p>
+      </div>
+      <div id="chat-suggestions" class="chat-suggestions"></div>
+      <div id="chat-messages" class="chat-messages"></div>
+      <div class="chat-input-area">
+        <div class="chat-input-row">
+          <textarea id="chat-input" class="chat-input" placeholder="Ask about water, soil, fire risk, biodiversity..." rows="1"></textarea>
+          <button id="chat-send" class="chat-send">&#8593;</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
-  </script>
+  <script type="module" src="/src/pages/chat.js"></script>
 </body>
 
 </html>
