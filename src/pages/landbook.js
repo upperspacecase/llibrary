@@ -237,14 +237,6 @@ function renderReport(lb) {
           <div class="metric-value">${ha ? ha.toFixed(2) : '\u2014'}</div>
           <div class="metric-label">${t('lb.cover.hectares')}</div>
         </div>
-        <div class="lb-hero-metric">
-          <div class="metric-value">\u2014</div>
-          <div class="metric-label">${t('lb.cover.value')}</div>
-        </div>
-        <div class="lb-hero-metric">
-          <div class="metric-value">\u2014</div>
-          <div class="metric-label">${t('lb.cover.bioscore')}</div>
-        </div>
       </div>
       <div class="lb-cover-footer">
         <span><strong>Report Date:</strong> ${formatDate(new Date().toISOString())}</span>
@@ -263,20 +255,6 @@ function renderReport(lb) {
     <!-- 1. Executive Summary -->
     <div class="landbook-section" id="section-executive">
       ${sectionHeader(1, 'lb.section.executive')}
-      <div class="lb-value-summary">
-        <table>
-          <tr><td>Market Value:</td><td>\u2014</td><td>Natural Capital Premium:</td><td>\u2014</td></tr>
-          <tr><td>Total Est. Value:</td><td>\u2014</td><td>Annual Ecosystem Services:</td><td>\u2014</td></tr>
-        </table>
-      </div>
-      <h3>${t('lb.exec.keyMetrics')}</h3>
-      <div class="lb-metric-row">
-        <div class="lb-metric-badge"><div class="badge-value">${ha ? ha.toFixed(2) + ' ha' : '\u2014'}</div><div class="badge-label">${t('lb.exec.totalArea')}</div></div>
-        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.perHectare')}</div></div>
-        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.carbonStock')}</div></div>
-        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.bioScore')}</div></div>
-        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.waterSecurity')}</div></div>
-      </div>
       <h3>${t('lb.exec.propertyDetails')}</h3>
       <table class="lb-kv-table">
         <tr><td>Property Name</td><td>${esc(lb.address || t('lb.untitled'))}</td></tr>
@@ -1417,8 +1395,10 @@ function renderSeasonalRiskCalendar(results) {
         </tr></thead>
         <tbody>
           <tr><td><strong>Fire</strong></td>
-            ${months.map((m, i) => {
-              const level = (i >= 5 && i <= 8) ? 'High' : (i >= 3 && i <= 10) ? 'Mod' : 'Low';
+            ${months.map(m => {
+              const temp = m.avgHigh || 0;
+              const precip = m.totalPrecip || 0;
+              const level = (temp > 28 && precip < 15) ? 'High' : (temp > 22 && precip < 40) ? 'Mod' : 'Low';
               const bg = level === 'High' ? '#EB5F5425' : level === 'Mod' ? '#E6A81718' : 'transparent';
               return `<td style="background:${bg};text-align:center;">${level}</td>`;
             }).join('')}

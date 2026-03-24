@@ -37,7 +37,7 @@ export const en = {
   // Landing — LandBook Section
   "landing.lb.label": "LandBook",
   "landing.lb.title": "Get your LandBook",
-  "landing.lb.desc": "Every LandBook covers 10 sections \u2014 from overview to your own notes. We pull from 15+ APIs and satellite sources to build a complete picture of your land \u2014 from bedrock to biodiversity.",
+  "landing.lb.desc": "Every LandBook covers 10 sections \u2014 from executive summary to source citations. We pull from 15+ APIs and satellite sources to build a complete picture of your land \u2014 from bedrock to biodiversity.",
   "landing.lb.cta": "Join the Waitlist",
   "landing.lb.step1.title": "Upload",
   "landing.lb.step1.desc": "Land deed or coordinates",
