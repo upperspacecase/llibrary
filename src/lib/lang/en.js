@@ -487,7 +487,7 @@ export const en = {
 
   // Commons Hub Page
   "commons.label": "The Commons",
-  "commons.title": "Bioregional knowledge,<br>built by the people who live there.",
+  "commons.title": "Regional knowledge,<br>built by the people who live there.",
   "commons.desc": "Each region is a living wiki \u2014 land, water, climate, ecology, culture \u2014 contributed by locals and enriched with open data. Choose a region to explore.",
   "commons.active": "Active Regions",
   "commons.badge.live": "Live",
@@ -495,6 +495,6 @@ export const en = {
   "commons.odemira.community": "Community-built",
   "commons.request.label": "Expand the Network",
   "commons.request.title": "Want LandLibrary in your region?",
-  "commons.request.desc": "We\u2019re growing across Europe and beyond. Tell us where you are \u2014 we\u2019ll let you know when we launch near you.",
+  "commons.request.desc": "Tell us where you are \u2014 we\u2019ll let you know when we launch near you.",
   "commons.request.cta": "Request Your Region",
 };

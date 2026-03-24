@@ -1,25 +1,24 @@
 /**
- * Create Landbook — Simplified Flow
- * 1. Type address → autocomplete suggestions (Mapbox geocoding)
- * 2. Select → fly to location, auto-draw boundary
- * 3. Drag boundary points to adjust
+ * Create Landbook
+ * 1. Type address → autocomplete → map flies to location
+ * 2. Click on map to draw boundary points
+ * 3. Close boundary (click near first point or "Close Boundary" button)
  * 4. Click Generate → save → open landbook
  */
 
 import '../styles/main.css';
-import { createMap, mapboxgl, addPolygon, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
+import { createMap, mapboxgl, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n, t } from '../lib/i18n.js';
 import { saveLandbook } from '../lib/store.js';
 import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, formatDistance, sqmToHectares } from '../lib/geo.js';
-import { geocode } from '../api/nominatim.js';
 
 initI18n();
 
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
-let boundaryPoints = [];    // Array of [lat, lng]
-let dragMarkers = [];       // Array of mapboxgl.Marker
+let boundaryPoints = [];
+let isClosed = false;
 let selectedAddress = '';
 
 // ---------------------------------------------------------------------------
@@ -27,7 +26,7 @@ let selectedAddress = '';
 // ---------------------------------------------------------------------------
 const searchInput = document.getElementById('search-input');
 const btnSearch = document.getElementById('btn-search');
-const suggestions = document.getElementById('search-suggestions');
+const suggestionsEl = document.getElementById('search-suggestions');
 const resultPanel = document.getElementById('boundary-result');
 const statAddress = document.getElementById('stat-address');
 const statArea = document.getElementById('stat-area');
@@ -35,13 +34,22 @@ const statPerimeter = document.getElementById('stat-perimeter');
 const btnCreate = document.getElementById('btn-create');
 const instructions = document.getElementById('map-instructions');
 const toolbar = document.getElementById('map-toolbar');
+const btnUndo = document.getElementById('btn-undo');
+const btnClear = document.getElementById('btn-clear');
+const btnClose = document.getElementById('btn-close');
 
 // ---------------------------------------------------------------------------
-// Map
+// Map sources
 // ---------------------------------------------------------------------------
-const POLY_SRC = 'boundary-polygon';
-const POLY_FILL = 'boundary-fill';
-const POLY_LINE = 'boundary-line';
+const POINTS_SRC = 'draw-points';
+const POINTS_LAYER = 'draw-points-layer';
+const FIRST_POINT_SRC = 'first-point';
+const FIRST_POINT_LAYER = 'first-point-layer';
+const LINE_SRC = 'draw-line';
+const LINE_LAYER = 'draw-line-layer';
+const POLY_SRC = 'draw-polygon';
+const POLY_FILL = 'draw-polygon-fill';
+const POLY_LINE = 'draw-polygon-line';
 
 const map = createMap('create-map', {
   center: [-8.6400, 37.5967],
@@ -50,37 +58,181 @@ const map = createMap('create-map', {
 });
 
 map.on('load', () => {
-  map.addSource(POLY_SRC, {
-    type: 'geojson',
-    data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} },
-  });
+  // Drawing points
+  map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
-    id: POLY_FILL, type: 'fill', source: POLY_SRC,
-    paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 },
+    id: POINTS_LAYER, type: 'circle', source: POINTS_SRC,
+    paint: { 'circle-radius': 6, 'circle-color': '#52b788', 'circle-stroke-color': '#2d6a4f', 'circle-stroke-width': 2 },
   });
+
+  // First point (larger, distinct)
+  map.addSource(FIRST_POINT_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
-    id: POLY_LINE, type: 'line', source: POLY_SRC,
-    paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 },
+    id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC,
+    paint: { 'circle-radius': 8, 'circle-color': '#40916c', 'circle-stroke-color': '#1b4332', 'circle-stroke-width': 2 },
   });
+
+  // Connecting line
+  map.addSource(LINE_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
+  map.addLayer({
+    id: LINE_LAYER, type: 'line', source: LINE_SRC,
+    paint: { 'line-color': '#2d6a4f', 'line-width': 2, 'line-dasharray': [6, 4] },
+  });
+
+  // Closed polygon
+  map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
+  map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
+  map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 }, layout: { visibility: 'none' } });
 
   if (instructions) instructions.textContent = 'Search for your land to get started';
   if (toolbar) toolbar.style.display = 'none';
+
+  // Click to add points
+  map.on('click', (e) => {
+    if (isClosed) return;
+
+    const latlng = [e.lngLat.lat, e.lngLat.lng];
+
+    // Click near first point to close
+    if (boundaryPoints.length >= 3) {
+      const firstPx = map.project([boundaryPoints[0][1], boundaryPoints[0][0]]);
+      const clickPx = map.project([e.lngLat.lng, e.lngLat.lat]);
+      const dist = Math.sqrt((firstPx.x - clickPx.x) ** 2 + (firstPx.y - clickPx.y) ** 2);
+      if (dist <= 20) { closePolygon(); return; }
+    }
+
+    addPoint(latlng);
+  });
+
+  // Cursor
+  map.on('mousemove', (e) => {
+    if (isClosed) { map.getCanvas().style.cursor = ''; return; }
+    if (boundaryPoints.length >= 3) {
+      const firstPx = map.project([boundaryPoints[0][1], boundaryPoints[0][0]]);
+      const mousePx = map.project([e.lngLat.lng, e.lngLat.lat]);
+      const dist = Math.sqrt((firstPx.x - mousePx.x) ** 2 + (firstPx.y - mousePx.y) ** 2);
+      map.getCanvas().style.cursor = dist <= 20 ? 'pointer' : 'crosshair';
+    } else {
+      map.getCanvas().style.cursor = boundaryPoints.length > 0 ? 'crosshair' : '';
+    }
+  });
 });
+
+// ---------------------------------------------------------------------------
+// Drawing
+// ---------------------------------------------------------------------------
+
+function addPoint(latlng) {
+  boundaryPoints.push(latlng);
+
+  if (boundaryPoints.length === 1 && toolbar) {
+    toolbar.style.display = 'flex';
+  }
+
+  if (instructions) {
+    instructions.textContent = boundaryPoints.length < 3
+      ? 'Keep clicking to add more points'
+      : 'Click near the first point to close, or press "Close Boundary"';
+  }
+
+  updateDrawing();
+}
+
+function updateDrawing() {
+  const lineCoords = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+  setGeoJSONSource(map, LINE_SRC, {
+    type: 'Feature', geometry: { type: 'LineString', coordinates: lineCoords }, properties: {},
+  });
+
+  const pointFeatures = boundaryPoints.slice(1).map(([lat, lng], idx) => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { idx: idx + 1 },
+  }));
+  setGeoJSONSource(map, POINTS_SRC, { type: 'FeatureCollection', features: pointFeatures });
+
+  if (boundaryPoints.length > 0) {
+    const [lat, lng] = boundaryPoints[0];
+    setGeoJSONSource(map, FIRST_POINT_SRC, {
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }],
+    });
+  } else {
+    setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [] });
+  }
+}
+
+function closePolygon() {
+  if (boundaryPoints.length < 3) return;
+  isClosed = true;
+
+  // Hide drawing layers, show polygon
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'none');
+
+  const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+  ring.push([...ring[0]]);
+  setGeoJSONSource(map, POLY_SRC, { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} });
+  map.setLayoutProperty(POLY_FILL, 'visibility', 'visible');
+  map.setLayoutProperty(POLY_LINE, 'visibility', 'visible');
+
+  fitToCoords(map, boundaryPoints, { padding: 80 });
+
+  if (instructions) instructions.textContent = 'Boundary set. Click Generate to create your landbook.';
+  updateStats();
+  if (resultPanel) resultPanel.style.display = 'block';
+  if (btnCreate) btnCreate.disabled = false;
+}
+
+function undoLastPoint() {
+  if (isClosed || boundaryPoints.length === 0) return;
+  boundaryPoints.pop();
+  updateDrawing();
+  if (boundaryPoints.length === 0 && toolbar) {
+    toolbar.style.display = 'none';
+    if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
+  }
+}
+
+function clearAll() {
+  map.setLayoutProperty(POLY_FILL, 'visibility', 'none');
+  map.setLayoutProperty(POLY_LINE, 'visibility', 'none');
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'visible');
+
+  boundaryPoints = [];
+  isClosed = false;
+  updateDrawing();
+  if (toolbar) toolbar.style.display = 'none';
+  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
+  if (resultPanel) resultPanel.style.display = 'none';
+  if (btnCreate) btnCreate.disabled = true;
+}
+
+function updateStats() {
+  if (boundaryPoints.length < 3) return;
+  const area = polygonArea(boundaryPoints);
+  const perimeter = polygonPerimeter(boundaryPoints);
+  const ha = sqmToHectares(area);
+  if (statAddress) statAddress.textContent = selectedAddress || 'Custom boundary';
+  if (statArea) statArea.textContent = ha >= 1 ? `${ha.toFixed(2)} ha` : formatArea(area);
+  if (statPerimeter) statPerimeter.textContent = formatDistance(perimeter);
+}
+
+// Toolbar buttons
+if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
+if (btnClear) btnClear.addEventListener('click', clearAll);
+if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.length >= 3 && !isClosed) closePolygon(); });
 
 // ---------------------------------------------------------------------------
 // Mapbox Geocoding Autocomplete
 // ---------------------------------------------------------------------------
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-
 let debounceTimer = null;
 
 function onSearchInput() {
   const query = searchInput.value.trim();
-  if (query.length < 3) {
-    hideSuggestions();
-    return;
-  }
-
+  if (query.length < 3) { hideSuggestions(); return; }
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => fetchSuggestions(query), 300);
 }
@@ -91,7 +243,6 @@ async function fetchSuggestions(query) {
     const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
-
     if (data.features && data.features.length > 0) {
       showSuggestions(data.features);
     } else {
@@ -103,7 +254,7 @@ async function fetchSuggestions(query) {
 }
 
 function showSuggestions(features) {
-  suggestions.innerHTML = features.map((f, i) => {
+  suggestionsEl.innerHTML = features.map((f, i) => {
     const name = f.text || f.place_name;
     const context = f.place_name || '';
     return `<li data-index="${i}">
@@ -111,24 +262,18 @@ function showSuggestions(features) {
       <div class="suggestion-context">${esc(context)}</div>
     </li>`;
   }).join('');
-
-  suggestions.classList.add('active');
-
-  // Store features for selection
-  suggestions._features = features;
-
-  // Click handlers
-  suggestions.querySelectorAll('li').forEach(li => {
+  suggestionsEl.classList.add('active');
+  suggestionsEl._features = features;
+  suggestionsEl.querySelectorAll('li').forEach(li => {
     li.addEventListener('click', () => {
-      const idx = parseInt(li.dataset.index);
-      selectSuggestion(suggestions._features[idx]);
+      selectSuggestion(suggestionsEl._features[parseInt(li.dataset.index)]);
     });
   });
 }
 
 function hideSuggestions() {
-  suggestions.classList.remove('active');
-  suggestions.innerHTML = '';
+  suggestionsEl.classList.remove('active');
+  suggestionsEl.innerHTML = '';
 }
 
 function esc(str) {
@@ -138,159 +283,25 @@ function esc(str) {
   return d.innerHTML;
 }
 
-// ---------------------------------------------------------------------------
-// Selection → Place boundary
-// ---------------------------------------------------------------------------
-
-async function selectSuggestion(feature) {
+function selectSuggestion(feature) {
   hideSuggestions();
   searchInput.value = feature.place_name || feature.text;
   selectedAddress = feature.place_name || feature.text;
 
   const [lng, lat] = feature.center;
+  map.flyTo({ center: [lng, lat], zoom: 16 });
 
-  if (instructions) instructions.textContent = 'Finding your land...';
-
-  // Try to get a polygon from Nominatim
-  let polygon = null;
-  try {
-    const results = await geocode(selectedAddress, { limit: 1 });
-    if (results && results.length > 0) {
-      const osmResult = results[0];
-      // Fetch with polygon_geojson
-      const lookupUrl = `https://nominatim.openstreetmap.org/details?osmtype=${osmResult.osm_type?.[0]?.toUpperCase()}&osmid=${osmResult.osm_id}&format=json&polygon_geojson=1`;
-      const lookupRes = await fetch(lookupUrl, { headers: { 'User-Agent': 'Libraries/1.0' } });
-      if (lookupRes.ok) {
-        const detail = await lookupRes.json();
-        if (detail.geometry && (detail.geometry.type === 'Polygon' || detail.geometry.type === 'MultiPolygon')) {
-          polygon = detail.geometry;
-        }
-      }
-    }
-  } catch (err) {
-    console.log('No OSM polygon available, generating default boundary');
-  }
-
-  if (polygon && polygon.type === 'Polygon') {
-    // Use OSM polygon — convert coordinates from [lng, lat] to [lat, lng]
-    const ring = polygon.coordinates[0];
-    boundaryPoints = ring.slice(0, -1).map(([ln, la]) => [la, ln]); // remove closing point
-  } else if (polygon && polygon.type === 'MultiPolygon') {
-    // Use the largest ring from the MultiPolygon
-    let largestRing = polygon.coordinates[0][0];
-    for (const poly of polygon.coordinates) {
-      if (poly[0].length > largestRing.length) largestRing = poly[0];
-    }
-    boundaryPoints = largestRing.slice(0, -1).map(([ln, la]) => [la, ln]);
-  } else {
-    // Generate a default ~1 hectare rectangle around the point
-    const offset = 0.00045; // ~50m at this latitude
-    boundaryPoints = [
-      [lat + offset, lng - offset * 1.5],
-      [lat + offset, lng + offset * 1.5],
-      [lat - offset, lng + offset * 1.5],
-      [lat - offset, lng - offset * 1.5],
-    ];
-  }
-
-  // Simplify polygon if too many points (keep it draggable)
-  if (boundaryPoints.length > 20) {
-    boundaryPoints = simplifyPolygon(boundaryPoints, 20);
-  }
-
-  placeBoundary();
+  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
 }
-
-function simplifyPolygon(points, maxPoints) {
-  if (points.length <= maxPoints) return points;
-  const step = Math.ceil(points.length / maxPoints);
-  const result = [];
-  for (let i = 0; i < points.length; i += step) {
-    result.push(points[i]);
-  }
-  return result;
-}
-
-// ---------------------------------------------------------------------------
-// Boundary rendering + draggable markers
-// ---------------------------------------------------------------------------
-
-function placeBoundary() {
-  updatePolygon();
-  updateStats();
-  createDragMarkers();
-  fitToCoords(map, boundaryPoints);
-
-  // Show result panel
-  if (resultPanel) resultPanel.style.display = 'block';
-  if (instructions) instructions.textContent = 'Drag points to adjust your boundary';
-  if (btnCreate) btnCreate.disabled = false;
-}
-
-function updatePolygon() {
-  const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
-  ring.push([...ring[0]]); // close ring
-
-  setGeoJSONSource(map, POLY_SRC, {
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [ring] },
-    properties: {},
-  });
-}
-
-function updateStats() {
-  if (boundaryPoints.length < 3) return;
-
-  const area = polygonArea(boundaryPoints);
-  const perimeter = polygonPerimeter(boundaryPoints);
-  const ha = sqmToHectares(area);
-
-  if (statAddress) statAddress.textContent = selectedAddress;
-  if (statArea) statArea.textContent = ha >= 1 ? `${ha.toFixed(2)} ha` : formatArea(area);
-  if (statPerimeter) statPerimeter.textContent = formatDistance(perimeter);
-}
-
-function createDragMarkers() {
-  // Remove existing markers
-  dragMarkers.forEach(m => m.remove());
-  dragMarkers = [];
-
-  boundaryPoints.forEach((point, idx) => {
-    const el = document.createElement('div');
-    el.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#52b788;border:2.5px solid #2d6a4f;cursor:grab;';
-
-    const marker = new mapboxgl.Marker({ element: el, draggable: true })
-      .setLngLat([point[1], point[0]])
-      .addTo(map);
-
-    marker.on('drag', () => {
-      const lngLat = marker.getLngLat();
-      boundaryPoints[idx] = [lngLat.lat, lngLat.lng];
-      updatePolygon();
-    });
-
-    marker.on('dragend', () => {
-      updateStats();
-    });
-
-    dragMarkers.push(marker);
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Search event handlers
-// ---------------------------------------------------------------------------
 
 if (searchInput) {
   searchInput.addEventListener('input', onSearchInput);
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      // Select first suggestion if available
-      if (suggestions._features && suggestions._features.length > 0) {
-        selectSuggestion(suggestions._features[0]);
+      if (suggestionsEl._features && suggestionsEl._features.length > 0) {
+        selectSuggestion(suggestionsEl._features[0]);
       } else {
-        // Fallback: trigger search
         const query = searchInput.value.trim();
         if (query.length >= 3) fetchSuggestions(query);
       }
@@ -301,9 +312,8 @@ if (searchInput) {
 
 if (btnSearch) {
   btnSearch.addEventListener('click', () => {
-    // Select first suggestion or trigger search
-    if (suggestions._features && suggestions._features.length > 0) {
-      selectSuggestion(suggestions._features[0]);
+    if (suggestionsEl._features && suggestionsEl._features.length > 0) {
+      selectSuggestion(suggestionsEl._features[0]);
     } else {
       const query = searchInput ? searchInput.value.trim() : '';
       if (query.length >= 3) fetchSuggestions(query);
@@ -311,11 +321,8 @@ if (btnSearch) {
   });
 }
 
-// Close suggestions when clicking outside
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.create-search')) {
-    hideSuggestions();
-  }
+  if (!e.target.closest('.create-search')) hideSuggestions();
 });
 
 // ---------------------------------------------------------------------------
@@ -324,7 +331,7 @@ document.addEventListener('click', (e) => {
 
 if (btnCreate) {
   btnCreate.addEventListener('click', async () => {
-    if (boundaryPoints.length < 3) return;
+    if (!isClosed || boundaryPoints.length < 3) return;
 
     btnCreate.disabled = true;
     btnCreate.textContent = 'Generating...';
@@ -339,7 +346,7 @@ if (btnCreate) {
         center: centroid,
         area: area,
         perimeter: perimeter,
-        address: selectedAddress,
+        address: selectedAddress || '',
       });
 
       window.location.href = `/landbook?id=${landbook.id}`;

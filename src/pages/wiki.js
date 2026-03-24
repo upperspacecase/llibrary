@@ -1,5 +1,5 @@
 /**
- * wiki.js — Hash-routed Odemira bioregional wiki page.
+ * wiki.js — Hash-routed regional wiki page.
  *
  * Routes:  #hub (or empty) = hub overview
  *          #land | #water | #weather | #biodiversity | #agriculture
