@@ -62,119 +62,102 @@ if (menuBtn && headerNav) {
 // Waitlist Modal
 // ==========================================================================
 
-const openBtn = document.getElementById('open-waitlist');
-const overlay = document.getElementById('waitlist-overlay');
-const closeBtn = document.getElementById('waitlist-close');
-const formState = document.getElementById('waitlist-form-state');
-const successState = document.getElementById('waitlist-success');
-const submitBtn = document.getElementById('waitlist-submit');
-const emailInput = document.getElementById('waitlist-email');
-const addressInput = document.getElementById('waitlist-address');
-const feedback = document.getElementById('waitlist-feedback');
-const mapHint = document.getElementById('waitlist-map-hint');
+// Generic waitlist modal handler
+function setupWaitlistModal(config) {
+    const openBtn = document.getElementById(config.openId);
+    const overlay = document.getElementById(config.overlayId);
+    const closeBtn = document.getElementById(config.closeId);
+    const formState = document.getElementById(config.formStateId);
+    const successState = document.getElementById(config.successId);
+    const submitBtn = document.getElementById(config.submitId);
+    const emailInput = document.getElementById(config.emailId);
+    const addressInput = document.getElementById(config.addressId);
+    const feedback = document.getElementById(config.feedbackId);
 
-let waitlistMap = null;
-let waitlistMarker = null;
-let pinLocation = null;
+    if (!openBtn || !overlay) return;
 
-// Open modal
-if (openBtn && overlay) {
     openBtn.addEventListener('click', () => {
         overlay.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-
-        // Lazy-init map (must wait for container to be visible)
-        if (!waitlistMap) {
-            setTimeout(() => {
-                waitlistMap = createMap('waitlist-map', {
-                    center: [-8.6400, 37.5967],
-                    zoom: 6,
-                    satellite: false,
-                    scrollZoom: true,
-                });
-
-                waitlistMap.on('click', (e) => {
-                    pinLocation = { lat: e.lngLat.lat, lng: e.lngLat.lng };
-
-                    // Remove old marker
-                    if (waitlistMarker) waitlistMarker.remove();
-
-                    // Add new marker
-                    waitlistMarker = addMarker(waitlistMap, [e.lngLat.lng, e.lngLat.lat], {
-                        color: '#2d6a4f',
-                        draggable: true,
-                    });
-
-                    // Update on drag
-                    waitlistMarker.on('dragend', () => {
-                        const lngLat = waitlistMarker.getLngLat();
-                        pinLocation = { lat: lngLat.lat, lng: lngLat.lng };
-                    });
-
-                    // Hide hint
-                    if (mapHint) mapHint.style.display = 'none';
-                });
-            }, 100);
-        } else {
-            // Resize map when re-opening
-            setTimeout(() => waitlistMap.resize(), 100);
-        }
+        if (formState) formState.style.display = '';
+        if (successState) successState.style.display = 'none';
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit'; }
+        if (emailInput) { emailInput.value = ''; emailInput.style.borderColor = ''; }
+        if (addressInput) addressInput.value = '';
+        if (feedback) feedback.textContent = '';
     });
-}
 
-// Close modal
-function closeWaitlist() {
-    if (overlay) {
+    function close() {
         overlay.style.display = 'none';
         document.body.style.overflow = '';
     }
-}
 
-if (closeBtn) closeBtn.addEventListener('click', closeWaitlist);
-if (overlay) {
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) closeWaitlist();
-    });
-}
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
 
-// Submit
-if (submitBtn) {
-    submitBtn.addEventListener('click', async () => {
-        const email = emailInput ? emailInput.value.trim() : '';
-        const address = addressInput ? addressInput.value.trim() : '';
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            const email = emailInput ? emailInput.value.trim() : '';
+            const address = addressInput ? addressInput.value.trim() : '';
 
-        if (!email || !email.includes('@')) {
-            if (emailInput) emailInput.style.borderColor = 'var(--coral, #e74c3c)';
-            if (feedback) feedback.textContent = 'Please enter a valid email address.';
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting…';
-        if (feedback) feedback.textContent = '';
-
-        try {
-            const res = await fetch('/api/waitlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, address, location: pinLocation }),
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || 'Failed to submit');
+            if (!email || !email.includes('@')) {
+                if (emailInput) emailInput.style.borderColor = 'var(--coral, #e74c3c)';
+                if (feedback) feedback.textContent = 'Please enter a valid email address.';
+                return;
             }
 
-            // Show success state
-            if (formState) formState.style.display = 'none';
-            if (successState) successState.style.display = 'flex';
-        } catch (err) {
-            if (feedback) feedback.textContent = 'Error: ' + err.message;
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Submit';
-        }
-    });
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            if (feedback) feedback.textContent = '';
+
+            try {
+                const res = await fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, address, type: config.type || 'landbook' }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Failed to submit');
+                }
+                if (formState) formState.style.display = 'none';
+                if (successState) successState.style.display = 'flex';
+            } catch (err) {
+                if (feedback) feedback.textContent = 'Error: ' + err.message;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit';
+            }
+        });
+    }
 }
+
+// LandBook waitlist
+setupWaitlistModal({
+    openId: 'open-waitlist',
+    overlayId: 'waitlist-overlay',
+    closeId: 'waitlist-close',
+    formStateId: 'waitlist-form-state',
+    successId: 'waitlist-success',
+    submitId: 'waitlist-submit',
+    emailId: 'waitlist-email',
+    addressId: 'waitlist-address',
+    feedbackId: 'waitlist-feedback',
+    type: 'landbook',
+});
+
+// Library waitlist
+setupWaitlistModal({
+    openId: 'open-library-waitlist',
+    overlayId: 'library-waitlist-overlay',
+    closeId: 'library-waitlist-close',
+    formStateId: 'library-waitlist-form-state',
+    successId: 'library-waitlist-success',
+    submitId: 'library-waitlist-submit',
+    emailId: 'library-waitlist-email',
+    addressId: 'library-waitlist-address',
+    feedbackId: 'library-waitlist-feedback',
+    type: 'library',
+});
 
 // ==========================================================================
 // Add Region Modal

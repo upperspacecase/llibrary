@@ -3652,6 +3652,23 @@ a {
   width: 25%;
 }
 
+/* Neighbourhood section */
+.neighbourhood-section {
+  padding: 80px 0;
+}
+
+.neighbourhood-image-wrap {
+  margin: 32px 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.neighbourhood-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* ---- USER-REPORTED FORM ---- */
 .user-form {
   margin-top: 48px;

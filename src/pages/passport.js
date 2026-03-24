@@ -144,7 +144,7 @@ function renderPassport(p) {
   }
 }
 
-function getBioregionEstimate(lat, lng) {
+function getRegionEstimate(lat, lng) {
   if (lat >= 36 && lat <= 44 && lng >= -10 && lng <= 4) return 'Mediterranean (Iberian Peninsula)';
   if (lat >= 44 && lat <= 55 && lng >= -5 && lng <= 15) return 'Atlantic European';
   if (lat >= 35 && lat <= 45 && lng >= 10 && lng <= 30) return 'Mediterranean (Eastern)';
@@ -154,7 +154,7 @@ function getBioregionEstimate(lat, lng) {
   if (lat >= -35 && lat <= 0 && lng >= -60 && lng <= -30) return 'Tropical / Subtropical (South America)';
   if (lat >= -45 && lat <= -20 && lng >= 110 && lng <= 155) return 'Temperate (Australasia)';
   if (lat >= -10 && lat <= 10) return 'Tropical Equatorial';
-  return 'Unclassified \u2014 detailed bioregion data coming soon';
+  return 'Unclassified \u2014 detailed region data coming soon';
 }
 
 function getSeasonName(month, lat) {
@@ -207,7 +207,7 @@ function fetchOpenData(lat, lng) {
             ${dataCard(t('passport.weather'), `${avgMin.toFixed(1)}\u00B0C \u2014 ${avgMax.toFixed(1)}\u00B0C`)}
             ${dataCard(t('passport.rain'), `${totalRain.toFixed(1)} mm (7-day)`)}
             ${elevation !== null ? dataCard(t('passport.elevation'), `${Math.round(elevation)} m`) : ''}
-            ${dataCard(t('passport.bioregion'), getBioregionEstimate(lat, lng))}
+            ${dataCard(t('passport.bioregion'), getRegionEstimate(lat, lng))}
           `;
 
           const month = new Date().getMonth();
