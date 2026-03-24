@@ -2864,10 +2864,58 @@ a {
   border-color: var(--green);
 }
 
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+  background: var(--white);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.search-suggestions.active {
+  display: block;
+}
+
+.search-suggestions li {
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.search-suggestions li:last-child {
+  border-bottom: none;
+}
+
+.search-suggestions li:hover {
+  background: rgba(127, 205, 128, 0.1);
+}
+
+.search-suggestions li .suggestion-name {
+  font-weight: 500;
+}
+
+.search-suggestions li .suggestion-context {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 /* ---- LANDBOOK LAYOUT (SIDEBAR + CONTENT) ---- */
 .landbook-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px minmax(0, 1fr);
   min-height: calc(100vh - 72px);
 }
 
@@ -2914,8 +2962,17 @@ a {
 }
 
 .landbook-nav-link .nav-icon {
-  font-size: 16px;
+  font-size: 12px;
+  font-weight: 600;
   width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--muted);
+  flex-shrink: 0;
   text-align: center;
   flex-shrink: 0;
 }
@@ -2968,6 +3025,8 @@ a {
 /* Main content */
 .landbook-main {
   max-width: 900px;
+  width: 100%;
+  min-width: 0;
   padding: 0 40px 100px;
 }
 
@@ -3081,10 +3140,10 @@ a {
 
 .landbook-map {
   width: 100%;
-  height: 400px;
+  height: 500px;
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--card-border);
-  margin-bottom: 48px;
+  margin-bottom: 16px;
   background: #e8e5d8;
   overflow: hidden;
 }
@@ -3201,6 +3260,396 @@ a {
   text-align: center;
   font-size: 11px;
   color: var(--muted);
+}
+
+/* ---- LANDBOOK v2.0 REPORT STYLES ---- */
+
+/* Cover Page */
+.lb-cover {
+  padding: 64px 0 48px;
+  border-bottom: 2px solid var(--black);
+  margin-bottom: 48px;
+}
+
+.lb-cover-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: var(--black);
+  color: var(--cream);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  margin-bottom: 24px;
+  font-family: 'Inter', sans-serif;
+}
+
+.lb-cover h1 {
+  font-size: clamp(36px, 5vw, 56px);
+  margin-bottom: 8px;
+  line-height: 1.15;
+}
+
+.lb-cover-location {
+  font-size: 17px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+.lb-cover-divider {
+  width: 60px;
+  height: 3px;
+  background: var(--black);
+  margin-bottom: 32px;
+}
+
+.lb-hero-metrics {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.lb-hero-metric {
+  background: var(--green);
+  border-radius: var(--radius);
+  padding: 20px 28px;
+  min-width: 160px;
+  text-align: center;
+}
+
+.lb-hero-metric .metric-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.lb-hero-metric .metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
+}
+
+.lb-cover-tagline {
+  font-size: 15px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 16px;
+}
+
+.lb-cover-footer {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Table of Contents */
+.lb-toc {
+  margin-bottom: 48px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-toc-list {
+  list-style: none;
+  padding: 0;
+}
+
+.lb-toc-list li {
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-toc-list li:last-child {
+  border-bottom: none;
+}
+
+.lb-toc-list a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--black);
+  transition: color 0.2s;
+}
+
+.lb-toc-list a:hover {
+  color: var(--muted);
+}
+
+.lb-toc-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Numbered Section Headers */
+.lb-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--black);
+}
+
+.lb-section-header h2 {
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: 24px;
+}
+
+.lb-section-number {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+/* Report Tables */
+.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.lb-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  border-bottom: 2px solid var(--black);
+}
+
+.lb-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lb-table tbody tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.lb-table tbody tr:hover {
+  background: rgba(127, 205, 128, 0.06);
+}
+
+.lb-table-caption {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+/* Key-Value Property Tables */
+.lb-kv-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+.lb-kv-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.lb-kv-table td:first-child {
+  font-weight: 600;
+  width: 40%;
+  color: var(--muted);
+}
+
+.lb-kv-table tr:nth-child(even) {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* Callout / Assessment Boxes */
+.lb-callout {
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  border-left: 4px solid var(--green);
+  background: rgba(127, 205, 128, 0.08);
+  margin-bottom: 24px;
+}
+
+.lb-callout.warning {
+  border-left-color: #E6A817;
+  background: rgba(230, 168, 23, 0.06);
+}
+
+.lb-callout.danger {
+  border-left-color: var(--coral);
+  background: rgba(235, 95, 84, 0.06);
+}
+
+.lb-callout.info {
+  border-left-color: var(--blue);
+  background: rgba(142, 202, 255, 0.08);
+}
+
+.lb-callout-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.lb-callout-body {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #333;
+}
+
+/* Green Metric Badges */
+.lb-metric-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.lb-metric-badge {
+  flex: 1;
+  min-width: 140px;
+  background: var(--green);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  text-align: center;
+}
+
+.lb-metric-badge .badge-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+}
+
+.lb-metric-badge .badge-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+/* Figure Captions */
+.lb-figure-caption {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+  margin-top: 8px;
+  margin-bottom: 24px;
+}
+
+/* Horizontal Bar Chart */
+.lb-hbar-chart {
+  margin-bottom: 24px;
+}
+
+.lb-hbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.lb-hbar-label {
+  width: 120px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.lb-hbar-track {
+  flex: 1;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.lb-hbar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--black);
+  min-width: fit-content;
+}
+
+.lb-hbar-fill.birds { background: var(--coral); }
+.lb-hbar-fill.mammals { background: var(--blue); }
+.lb-hbar-fill.reptiles { background: var(--green); }
+.lb-hbar-fill.amphibia { background: #B39DDB; }
+.lb-hbar-fill.fungi { background: #E6A817; }
+.lb-hbar-fill.plantae { background: #66BB6A; }
+.lb-hbar-fill.insecta { background: #FF8A65; }
+.lb-hbar-fill.default { background: var(--green); }
+
+/* Mobile responsive for v2 components */
+@media (max-width: 900px) {
+  .lb-hero-metrics { flex-direction: column; }
+  .lb-metric-row { flex-direction: column; }
+  .lb-cover { padding: 40px 0 32px; }
+}
+
+@media (max-width: 640px) {
+  .lb-hbar-label { width: 80px; font-size: 12px; }
+  .lb-kv-table td:first-child { width: 35%; }
+}
+
+/* Value Summary Box */
+.lb-value-summary {
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 28px;
+}
+
+.lb-value-summary table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lb-value-summary td {
+  padding: 6px 0;
+  font-size: 14px;
+}
+
+.lb-value-summary td:nth-child(odd) {
+  font-weight: 600;
+  color: #aaa;
+  width: 25%;
+}
+
+.lb-value-summary td:nth-child(even) {
+  font-weight: 500;
+  color: #fff;
+  width: 25%;
 }
 
 /* ---- USER-REPORTED FORM ---- */
@@ -6051,6 +6500,7 @@ a {
 
 /* ========================================
    PRINT / PDF EXPORT STYLES
+   Matches the Landbook v2.0 web layout
    ======================================== */
 @media print {
 
@@ -6068,7 +6518,9 @@ a {
   #save-user-data,
   #save-feedback,
   .chip-group label,
-  .data-freshness {
+  .data-freshness,
+  .lb-toc,
+  .user-form {
     display: none !important;
   }
 
@@ -6087,33 +6539,66 @@ a {
     padding: 0;
   }
 
-  .landbook-container {
+  .landbook-main {
     padding: 0;
     max-width: 100%;
   }
 
+  /* Cover page */
+  .lb-cover {
+    padding: 60pt 0 40pt;
+    border-bottom: 2px solid #1a1a1a;
+    page-break-after: always;
+  }
+
+  .lb-cover-badge {
+    background: #1a1a1a;
+    color: white;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .lb-cover h1 {
+    font-size: 28pt;
+    color: #1a1a1a;
+  }
+
+  .lb-hero-metrics {
+    gap: 16pt;
+  }
+
+  .lb-hero-metric {
+    background: #7FCD80;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    padding: 14pt 20pt;
+  }
+
+  .lb-hero-metric .metric-value {
+    font-size: 20pt;
+  }
+
   /* Sections */
   .landbook-section {
-    padding: 24pt 0;
+    padding: 20pt 0;
     border: none;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  .landbook-section+.landbook-section {
-    border-top: 1px solid #ddd;
+  /* Section headers match web */
+  .lb-section-header {
+    border-bottom: 1.5px solid #1a1a1a;
+    margin-bottom: 16pt;
+    padding-bottom: 6pt;
   }
 
-  /* Typography */
-  .landbook-header h1 {
-    font-size: 22pt;
+  .lb-section-header h2 {
+    font-size: 18pt;
     color: #1a1a1a;
-  }
-
-  .landbook-section h2 {
-    font-size: 16pt;
-    color: #1a1a1a;
-    margin-bottom: 12pt;
+    margin: 0;
+    padding: 0;
+    border: none;
   }
 
   .landbook-section h3 {
@@ -6122,7 +6607,48 @@ a {
     margin-bottom: 6pt;
   }
 
-  /* Map — show as fixed height */
+  /* Tables — preserve alternating rows */
+  .lb-table,
+  .lb-kv-table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .lb-table tbody tr:nth-child(even),
+  .lb-kv-table tr:nth-child(even) {
+    background: #f5f5f5;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Callout boxes — preserve colors */
+  .lb-callout {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    break-inside: avoid;
+  }
+
+  /* Metric badges — preserve green background */
+  .lb-metric-badge,
+  .lb-metric-row .lb-metric-badge {
+    background: #7FCD80;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Horizontal bar chart */
+  .lb-hbar-fill {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .lb-hbar-track {
+    background: #f0f0f0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Map */
   .landbook-map {
     height: 300pt !important;
     break-inside: avoid;
@@ -6140,15 +6666,27 @@ a {
     break-inside: avoid;
   }
 
-  /* Species photos */
+  /* Species */
   .species-photo {
     max-height: 60pt;
+  }
+
+  .species-card {
+    break-inside: avoid;
   }
 
   /* Risk card */
   .risk-card {
     break-inside: avoid;
     page-break-inside: avoid;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Climate chart bars */
+  .chart-bar .bar {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
   /* User form — show values only */
@@ -6161,26 +6699,26 @@ a {
     font-size: 10pt;
   }
 
-  /* Table */
-  table {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
   /* Links */
   a {
     color: #1a1a1a;
     text-decoration: none;
   }
 
-  /* Footer */
+  /* Page setup */
   @page {
     margin: 1.5cm;
-
     @bottom-center {
-      content: "Generated by LandLibrary";
+      content: "Generated by LandLibrary \2022 Landbook v2.0";
       font-size: 8pt;
       color: #999;
     }
   }
+
+  /* Force page breaks between major sections */
+  #section-executive { page-break-before: always; }
+  #section-weather { page-break-before: always; }
+  #section-biodiversity { page-break-before: always; }
+  #section-risk { page-break-before: always; }
+  #section-sources { page-break-before: always; }
 }

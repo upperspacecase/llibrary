@@ -763,11 +763,11 @@ async function renderSection(sectionId) {
         </div>
         <div class="wiki-inline-contrib-body">
           <div class="wiki-contrib-type-pills" id="wiki-contrib-type-pills">
-            <button class="wiki-contrib-type-pill active" data-type="story">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-              Story
+            <button class="wiki-contrib-type-pill" data-type="file">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              File
             </button>
-            <button class="wiki-contrib-type-pill" data-type="tip">
+            <button class="wiki-contrib-type-pill active" data-type="tip">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m6.34 6.34 2.83 2.83"/><path d="M2 12h4"/><path d="m17.66 6.34-2.83 2.83"/><path d="M22 12h-4"/><circle cx="12" cy="17" r="5"/></svg>
               Tip
             </button>
@@ -784,6 +784,17 @@ async function renderSection(sectionId) {
               Link
             </button>
           </div>
+          <!-- File upload area (shown when "File" type is selected) -->
+          <div class="wiki-contrib-file-input" id="wiki-contrib-file-input" style="display:none;">
+            <div class="wiki-upload-dropzone" id="wiki-contrib-dropzone">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p>Drag and drop a file, or <span class="wiki-upload-browse">browse</span></p>
+              <p class="wiki-upload-hint">PDF, PNG, JPG, WEBP — max 5 MB</p>
+              <input type="file" id="wiki-contrib-file" accept=".pdf,.png,.jpg,.jpeg,.webp" style="display:none;" />
+            </div>
+            <div class="wiki-upload-file-preview" id="wiki-contrib-file-preview" style="display:none;"></div>
+          </div>
+          <!-- Link input (shown when "Link" type is selected) -->
           <div class="wiki-contrib-link-input" id="wiki-contrib-link-input" style="display:none;">
             <input type="url" id="wiki-contrib-modal-url" placeholder="Paste a URL\u2026" />
             <div class="wiki-contrib-link-preview" id="wiki-contrib-link-preview"></div>
@@ -1590,11 +1601,12 @@ function loadGovernanceData(container) {
 // ---------------------------------------------------------------------------
 
 const CONTRIBUTION_TYPE_LABELS = {
-  story: { label: 'Story', color: '#8B4789' },
+  file: { label: 'File', color: '#6B7280' },
   tip: { label: 'Tip', color: '#2E8B57' },
   event: { label: 'Event', color: '#E8A317' },
   place: { label: 'Place', color: '#2B7BB9' },
-  resource: { label: 'Resource', color: '#4A708B' },
+  resource: { label: 'Link', color: '#4A708B' },
+  story: { label: 'Story', color: '#8B4789' }, // legacy
 };
 
 async function loadContributions(sectionId) {
@@ -2144,18 +2156,28 @@ function initSidebarActions(sectionId) {
 function initContribTypePills(container) {
   const pills = container.querySelectorAll('.wiki-contrib-type-pill');
   const linkInput = container.querySelector('#wiki-contrib-link-input');
+  const fileInput = container.querySelector('#wiki-contrib-file-input');
+  const textArea = container.querySelector('#wiki-contrib-modal-text');
+  const titleInput = container.querySelector('#wiki-contrib-modal-title');
 
   pills.forEach(pill => {
     pill.addEventListener('click', () => {
       pills.forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
 
+      const type = pill.dataset.type;
       // Show/hide link input
-      if (linkInput) {
-        linkInput.style.display = pill.dataset.type === 'resource' ? '' : 'none';
-      }
+      if (linkInput) linkInput.style.display = type === 'resource' ? '' : 'none';
+      // Show/hide file dropzone
+      if (fileInput) fileInput.style.display = type === 'file' ? '' : 'none';
+      // Hide text area for file type, show for others
+      if (textArea) textArea.style.display = type === 'file' ? 'none' : '';
+      if (titleInput) titleInput.style.display = (type === 'file' || type === 'resource') ? 'none' : '';
     });
   });
+
+  // Wire up file dropzone inside contribution modal
+  initContribFileUpload(container);
 
   // URL preview on paste/input
   const urlInput = container.querySelector('#wiki-contrib-modal-url');
@@ -2168,6 +2190,55 @@ function initContribTypePills(container) {
       const url = urlInput.value.trim();
       if (!url) { previewEl.innerHTML = ''; return; }
       debounceTimer = setTimeout(() => fetchLinkPreview(url, previewEl), 500);
+    });
+  }
+}
+
+let _contribSelectedFile = null;
+
+function initContribFileUpload(container) {
+  const dropzone = container.querySelector('#wiki-contrib-dropzone');
+  const fileEl = container.querySelector('#wiki-contrib-file');
+  const previewEl = container.querySelector('#wiki-contrib-file-preview');
+  if (!dropzone || !fileEl) return;
+
+  const browse = dropzone.querySelector('.wiki-upload-browse');
+  if (browse) browse.addEventListener('click', () => fileEl.click());
+  dropzone.addEventListener('click', (e) => { if (e.target === dropzone || e.target.closest('p')) fileEl.click(); });
+
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleContribFile(e.dataTransfer.files[0], dropzone, previewEl);
+  });
+
+  fileEl.addEventListener('change', () => {
+    if (fileEl.files.length) handleContribFile(fileEl.files[0], dropzone, previewEl);
+  });
+}
+
+function handleContribFile(file, dropzone, previewEl) {
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) { alert('File too large. Max 5 MB.'); return; }
+  _contribSelectedFile = file;
+  if (dropzone) dropzone.style.display = 'none';
+  if (previewEl) {
+    previewEl.style.display = '';
+    previewEl.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--card-border);border-radius:var(--radius);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:500;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${file.name}</div>
+        <div style="font-size:12px;color:var(--muted);">${(file.size / 1024).toFixed(1)} KB</div>
+      </div>
+      <button type="button" class="wiki-contrib-file-remove" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);">&times;</button>
+    </div>`;
+    previewEl.querySelector('.wiki-contrib-file-remove').addEventListener('click', () => {
+      _contribSelectedFile = null;
+      previewEl.style.display = 'none';
+      previewEl.innerHTML = '';
+      if (dropzone) dropzone.style.display = '';
     });
   }
 }
@@ -2225,50 +2296,32 @@ function openContribModal(sectionId) {
   if (authorEl) authorEl.value = '';
   if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = t('wiki.section.submit'); }
 
-  // Reset type pills to 'story'
+  // Reset type pills to 'tip'
   const pills = overlay.querySelectorAll('.wiki-contrib-type-pill');
-  pills.forEach(p => p.classList.toggle('active', p.dataset.type === 'story'));
+  pills.forEach(p => p.classList.toggle('active', p.dataset.type === 'tip'));
   const linkInput = document.getElementById('wiki-contrib-link-input');
   if (linkInput) linkInput.style.display = 'none';
+  const fileInputArea = document.getElementById('wiki-contrib-file-input');
+  if (fileInputArea) fileInputArea.style.display = 'none';
+  const contribDropzone = document.getElementById('wiki-contrib-dropzone');
+  if (contribDropzone) contribDropzone.style.display = '';
+  const contribFilePreview = document.getElementById('wiki-contrib-file-preview');
+  if (contribFilePreview) { contribFilePreview.style.display = 'none'; contribFilePreview.innerHTML = ''; }
+  _contribSelectedFile = null;
   const urlEl = document.getElementById('wiki-contrib-modal-url');
   if (urlEl) urlEl.value = '';
   const previewEl = document.getElementById('wiki-contrib-link-preview');
   if (previewEl) previewEl.innerHTML = '';
+  // Show text fields (hidden for file type)
+  if (textEl) textEl.style.display = '';
+  if (titleEl) titleEl.style.display = '';
 
   // Restore body content if it was replaced by success message
   const modalBody = overlay.querySelector('.wiki-inline-contrib-body');
   if (modalBody && !modalBody.querySelector('.wiki-contrib-type-pills')) {
-    modalBody.innerHTML = `
-      <div class="wiki-contrib-type-pills" id="wiki-contrib-type-pills">
-        <button class="wiki-contrib-type-pill active" data-type="story">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-          Story
-        </button>
-        <button class="wiki-contrib-type-pill" data-type="tip">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m6.34 6.34 2.83 2.83"/><path d="M2 12h4"/><path d="m17.66 6.34-2.83 2.83"/><path d="M22 12h-4"/><circle cx="12" cy="17" r="5"/></svg>
-          Tip
-        </button>
-        <button class="wiki-contrib-type-pill" data-type="event">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          Event
-        </button>
-        <button class="wiki-contrib-type-pill" data-type="place">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          Place
-        </button>
-        <button class="wiki-contrib-type-pill" data-type="resource">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Link
-        </button>
-      </div>
-      <div class="wiki-contrib-link-input" id="wiki-contrib-link-input" style="display:none;">
-        <input type="url" id="wiki-contrib-modal-url" placeholder="Paste a URL\u2026" />
-        <div class="wiki-contrib-link-preview" id="wiki-contrib-link-preview"></div>
-      </div>
-      <input type="text" id="wiki-contrib-modal-title" placeholder="${t('wiki.section.title')}" />
-      <textarea id="wiki-contrib-modal-text" rows="4" placeholder="Share what you know\u2026"></textarea>
-      <input type="text" id="wiki-contrib-modal-author" placeholder="${t('wiki.section.yourName')} (optional)" />
-    `;
+    // Reload the page to reset the modal properly
+    location.reload();
+    return;
   }
 
   // Wire up pill type selection
@@ -2296,7 +2349,7 @@ function openContribModal(sectionId) {
     submitBtn.replaceWith(newSubmitBtn);
     newSubmitBtn.addEventListener('click', async () => {
       const activePill = overlay.querySelector('.wiki-contrib-type-pill.active');
-      const selectedType = activePill ? activePill.dataset.type : 'story';
+      const selectedType = activePill ? activePill.dataset.type : 'tip';
       const tiEl = document.getElementById('wiki-contrib-modal-title');
       const txEl = document.getElementById('wiki-contrib-modal-text');
       const auEl = document.getElementById('wiki-contrib-modal-author');
@@ -2304,6 +2357,40 @@ function openContribModal(sectionId) {
 
       const contentVal = txEl ? txEl.value.trim() : '';
       const urlVal = urlEl ? urlEl.value.trim() : '';
+
+      // File type: upload via FormData to /api/wiki/resources
+      if (selectedType === 'file') {
+        if (!_contribSelectedFile) { alert('Please select a file.'); return; }
+        newSubmitBtn.disabled = true;
+        newSubmitBtn.textContent = 'Uploading\u2026';
+        try {
+          const fd = new FormData();
+          fd.append('file', _contribSelectedFile);
+          fd.append('section', sectionId);
+          fd.append('title', tiEl ? tiEl.value.trim() : '');
+          fd.append('description', '');
+          fd.append('author', auEl ? auEl.value.trim() || 'Anonymous' : 'Anonymous');
+          const res = await fetch('/api/wiki/resources', { method: 'POST', body: fd });
+          if (!res.ok) throw new Error('Upload failed');
+          const body = overlay.querySelector('.wiki-inline-contrib-body');
+          if (body) {
+            body.innerHTML = '<div style="text-align:center;padding:1.5rem 0;">' +
+              '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>' +
+              '<p style="margin-top:12px;font-weight:600;color:#2E8B57;">File uploaded successfully!</p></div>';
+          }
+          _contribSelectedFile = null;
+          setTimeout(closeModal, 2500);
+          _statsCache = null;
+          loadContributions(sectionId);
+          loadRecentActivity(sectionId);
+          refreshSidebarStats(sectionId);
+        } catch (err) {
+          newSubmitBtn.disabled = false;
+          newSubmitBtn.textContent = t('wiki.section.submit');
+          alert('Upload failed. Please try again.');
+        }
+        return;
+      }
 
       // For resource type, require URL; for others require content
       if (selectedType === 'resource' && !urlVal) {

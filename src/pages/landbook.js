@@ -1,7 +1,6 @@
 /**
- * Landbook Report Page
- * Sidebar nav + long scroll with paginated sections.
- * Section order: Overview → Map → Elevation → Soil → Water → Weather → Biodiversity → Fire → Protected → Your Knowledge
+ * Landbook Report Page v2.0
+ * Professional report layout: Cover → TOC → Executive Summary → Map → Weather → Biodiversity → Risk → Elevation → Soil → Protected → Knowledge → Sources
  */
 
 import '../styles/main.css';
@@ -18,13 +17,13 @@ import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '
 import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
 import { CORINE_WMS, SENTINEL2_TILES, getCorineWmsParams, WORLDCOVER_WMS, getWorldCoverWmsParams } from '../api/copernicus.js';
 import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk } from '../api/effis.js';
-import { NATURA2000_WMS, getNatura2000WmsParams, getProtectedAreas, PT_ZONING } from '../api/natura2000.js';
+import { NATURA2000_WMS, getNatura2000WmsParams, getProtectedAreas } from '../api/natura2000.js';
 import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
-import { getForecast as getIpmaForecast, getDroughtIndex, interpretDrought, WEATHER_TYPES } from '../api/ipma.js';
+// IPMA (Portugal-only) — removed, using Open-Meteo globally instead
 import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
 import { calculateDistances, categorizeAmenities } from '../api/openrouteservice.js';
 import { getGeology, parseGeology, getGeologyDescription } from '../api/macrostrat.js';
-import { getAdminUnit, formatAdminUnit, COS_WMS, getCosWmsParams } from '../api/dgt.js';
+// DGT (Portugal-only) — removed, using Nominatim globally instead
 
 initI18n();
 
@@ -32,16 +31,18 @@ initI18n();
 // Section definitions (ordered)
 // ---------------------------------------------------------------------------
 const SECTION_DEFS = [
-  { id: 'overview', icon: '\u{1F4CB}', labelKey: 'lb.section.overview' },
-  { id: 'map', icon: '\u{1F5FA}', labelKey: 'lb.section.map' },
-  { id: 'elevation', icon: '\u26F0', labelKey: 'lb.section.elevation' },
-  { id: 'soil', icon: '\u{1F33E}', labelKey: 'lb.section.soil' },
-  { id: 'water', icon: '\u{1F4A7}', labelKey: 'lb.section.water' },
-  { id: 'weather', icon: '\u2601', labelKey: 'lb.section.weather' },
-  { id: 'biodiversity', icon: '\u{1F33F}', labelKey: 'lb.section.biodiversity' },
-  { id: 'fire', icon: '\u{1F525}', labelKey: 'lb.section.fire' },
-  { id: 'protected', icon: '\u2696', labelKey: 'lb.section.protected' },
-  { id: 'knowledge', icon: '\u270D', labelKey: 'lb.section.knowledge' },
+  { id: 'cover',        labelKey: 'lb.label',                hidden: true },
+  { id: 'toc',          labelKey: 'lb.section.toc',          hidden: true },
+  { id: 'executive',    labelKey: 'lb.section.executive',    num: 1 },
+  { id: 'map',          labelKey: 'lb.section.map',          num: 2 },
+  { id: 'weather',      labelKey: 'lb.section.weather',      num: 3 },
+  { id: 'biodiversity', labelKey: 'lb.section.biodiversity', num: 4 },
+  { id: 'risk',         labelKey: 'lb.section.risk',         num: 5 },
+  { id: 'elevation',    labelKey: 'lb.section.elevation',    num: 6 },
+  { id: 'soil',         labelKey: 'lb.section.soil',         num: 7 },
+  { id: 'protected',    labelKey: 'lb.section.protected',    num: 8 },
+  { id: 'knowledge',    labelKey: 'lb.section.knowledge',    num: 9 },
+  { id: 'sources',      labelKey: 'lb.section.sources',      num: 10 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -57,6 +58,13 @@ function esc(str) {
 
 function skeleton(id) {
   return `<div id="${id}" class="loading-block"><span class="loading-spinner"></span> ${t('lb.loading.text')}</div>`;
+}
+
+/** Get element by ID and remove loading-block class so content flows vertically */
+function getDataEl(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('loading-block');
+  return el;
 }
 
 function errorBlock(message) {
@@ -78,18 +86,18 @@ function formatDate(iso) {
   catch { return iso || '\u2014'; }
 }
 
-function pagination(currentIdx) {
-  const prev = currentIdx > 0 ? SECTION_DEFS[currentIdx - 1] : null;
-  const next = currentIdx < SECTION_DEFS.length - 1 ? SECTION_DEFS[currentIdx + 1] : null;
-  return `<div class="section-pagination">
-    <button class="btn-page ${prev ? '' : 'hidden'}" ${prev ? `onclick="document.getElementById('section-${prev.id}').scrollIntoView({behavior:'smooth'})"` : ''}>
-      \u2190 ${prev ? t(prev.labelKey) : ''}
-    </button>
-    <span class="page-indicator">${currentIdx + 1} / ${SECTION_DEFS.length}</span>
-    <button class="btn-page ${next ? '' : 'hidden'}" ${next ? `onclick="document.getElementById('section-${next.id}').scrollIntoView({behavior:'smooth'})"` : ''}>
-      ${next ? t(next.labelKey) : ''} \u2192
-    </button>
+function sectionHeader(num, titleKey) {
+  return `<div class="lb-section-header">
+    <span class="lb-section-number">${num}.</span>
+    <h2>${t(titleKey)}</h2>
   </div>`;
+}
+
+function renderToc() {
+  return SECTION_DEFS
+    .filter(s => s.num)
+    .map(s => `<li><a href="#section-${s.id}"><span class="lb-toc-number">${s.num}</span>${t(s.labelKey)}</a></li>`)
+    .join('');
 }
 
 // ---------------------------------------------------------------------------
@@ -130,9 +138,11 @@ let landbook = null;
 function renderSidebar() {
   if (!sidebar) return;
 
-  sidebar.innerHTML = SECTION_DEFS.map((s) => `
+  sidebar.innerHTML = SECTION_DEFS
+    .filter(s => !s.hidden)
+    .map((s) => `
     <a class="landbook-nav-link" data-section="${s.id}" href="#section-${s.id}">
-      <span class="nav-icon">${s.icon}</span>
+      <span class="nav-icon">${s.num || ''}</span>
       <span class="nav-label">${t(s.labelKey)}</span>
     </a>
   `).join('');
@@ -149,12 +159,8 @@ function renderSidebar() {
   // Sidebar actions
   if (sidebarActions) {
     sidebarActions.innerHTML = `
-      <button class="btn-sidebar" id="btn-share">
-        <span class="btn-icon">\u{1F517}</span> ${t('lb.shareLink')}
-      </button>
-      <button class="btn-sidebar" id="btn-export">
-        <span class="btn-icon">\u{1F4C4}</span> ${t('lb.exportPdf')}
-      </button>
+      <button class="btn-sidebar" id="btn-share">${t('lb.shareLink')}</button>
+      <button class="btn-sidebar" id="btn-export">${t('lb.exportPdf')}</button>
     `;
 
     document.getElementById('btn-share').addEventListener('click', shareLandbook);
@@ -189,7 +195,7 @@ function shareLandbook() {
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('btn-share');
     const orig = btn.innerHTML;
-    btn.innerHTML = '<span class="btn-icon">\u2705</span> ' + t('lb.copied') + '!';
+    btn.innerHTML = t('lb.copied') + '!';
     setTimeout(() => { btn.innerHTML = orig; }, 2000);
   }).catch(() => {
     prompt('Copy this link:', window.location.href);
@@ -220,109 +226,144 @@ function renderReport(lb) {
   const ha = area ? sqmToHectares(area) : null;
 
   container.innerHTML = `
-    <!-- 1. Overview -->
-    <div class="landbook-section" id="section-overview">
-      <div class="landbook-header">
-        <div class="section-label">${t('lb.label')}</div>
-        <h1>${esc(lb.address || t('lb.untitled'))}</h1>
-        <div class="landbook-meta">
-          ${lb.created ? `<span><strong>${t('lb.created')}</strong>: ${formatDate(lb.created)}</span>` : ''}
-          ${area ? `<span><strong>${t('lb.area')}</strong>: ${formatArea(area)}${ha ? ` (${ha.toFixed(2)} ha)` : ''}</span>` : ''}
-          ${perimeter ? `<span><strong>${t('lb.perimeter')}</strong>: ${formatDistance(perimeter)}</span>` : ''}
-          ${center ? `<span><strong>${t('lb.center')}</strong>: ${center[0].toFixed(5)}, ${center[1].toFixed(5)}</span>` : ''}
+    <!-- Cover -->
+    <div class="lb-cover" id="section-cover">
+      <div class="lb-cover-badge">${t('lb.cover.badge')}</div>
+      <h1>${esc(lb.address || t('lb.untitled'))}</h1>
+      <div class="lb-cover-location" id="data-admin"></div>
+      <div class="lb-cover-divider"></div>
+      <div class="lb-hero-metrics">
+        <div class="lb-hero-metric">
+          <div class="metric-value">${ha ? ha.toFixed(2) : '\u2014'}</div>
+          <div class="metric-label">${t('lb.cover.hectares')}</div>
         </div>
-        <div id="data-admin" class="data-sub-section"></div>
-        <div id="data-infrastructure" class="data-sub-section"></div>
-        <div id="data-freshness" class="data-freshness">${lb.autoData && lb.autoData.lastFetched ? `Data from ${formatDate(lb.autoData.lastFetched)} \u2022 ${t('lb.refreshing')}` : t('lb.loading')}</div>
+        <div class="lb-hero-metric">
+          <div class="metric-value">\u2014</div>
+          <div class="metric-label">${t('lb.cover.value')}</div>
+        </div>
+        <div class="lb-hero-metric">
+          <div class="metric-value">\u2014</div>
+          <div class="metric-label">${t('lb.cover.bioscore')}</div>
+        </div>
       </div>
-      ${pagination(0)}
+      <div class="lb-cover-footer">
+        <span><strong>Report Date:</strong> ${formatDate(new Date().toISOString())}</span>
+        <span>${t('lb.cover.version')}</span>
+        ${lb.created ? `<span><strong>${t('lb.created')}:</strong> ${formatDate(lb.created)}</span>` : ''}
+      </div>
+      <div id="data-freshness" class="data-freshness" style="margin-top:16px;">${lb.autoData && lb.autoData.lastFetched ? `Data from ${formatDate(lb.autoData.lastFetched)} \u2022 ${t('lb.refreshing')}` : t('lb.loading')}</div>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="lb-toc landbook-section" id="section-toc">
+      <h2 style="font-size:28px;margin-bottom:24px;">${t('lb.section.toc')}</h2>
+      <ol class="lb-toc-list">${renderToc()}</ol>
+    </div>
+
+    <!-- 1. Executive Summary -->
+    <div class="landbook-section" id="section-executive">
+      ${sectionHeader(1, 'lb.section.executive')}
+      <div class="lb-value-summary">
+        <table>
+          <tr><td>Market Value:</td><td>\u2014</td><td>Natural Capital Premium:</td><td>\u2014</td></tr>
+          <tr><td>Total Est. Value:</td><td>\u2014</td><td>Annual Ecosystem Services:</td><td>\u2014</td></tr>
+        </table>
+      </div>
+      <h3>${t('lb.exec.keyMetrics')}</h3>
+      <div class="lb-metric-row">
+        <div class="lb-metric-badge"><div class="badge-value">${ha ? ha.toFixed(2) + ' ha' : '\u2014'}</div><div class="badge-label">${t('lb.exec.totalArea')}</div></div>
+        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.perHectare')}</div></div>
+        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.carbonStock')}</div></div>
+        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.bioScore')}</div></div>
+        <div class="lb-metric-badge"><div class="badge-value">\u2014</div><div class="badge-label">${t('lb.exec.waterSecurity')}</div></div>
+      </div>
+      <h3>${t('lb.exec.propertyDetails')}</h3>
+      <table class="lb-kv-table">
+        <tr><td>Property Name</td><td>${esc(lb.address || t('lb.untitled'))}</td></tr>
+        <tr><td>Area</td><td>${area ? formatArea(area) + (ha ? ` (${ha.toFixed(2)} ha)` : '') : '\u2014'}</td></tr>
+        <tr><td>Perimeter</td><td>${perimeter ? formatDistance(perimeter) : '\u2014'}</td></tr>
+        <tr><td>Center</td><td>${center ? center[0].toFixed(5) + ', ' + center[1].toFixed(5) : '\u2014'}</td></tr>
+        ${lb.created ? `<tr><td>Created</td><td>${formatDate(lb.created)}</td></tr>` : ''}
+      </table>
+      <div id="data-infrastructure" class="data-sub-section"></div>
+      <div id="data-water"></div>
     </div>
 
     <!-- 2. Map -->
     <div class="landbook-section" id="section-map">
-      <h2>${t('lb.section.map')}</h2>
+      ${sectionHeader(2, 'lb.section.map')}
       ${boundary.length ? `
         <div class="landbook-map"><div id="landbook-map" style="width:100%;height:100%;"></div></div>
+        <div class="lb-figure-caption">Interactive map with satellite imagery and WMS data layers</div>
         <div class="map-layer-toggles" id="map-layer-toggles"></div>
       ` : `<p style="color:var(--muted);">${t('lb.noboundary')}</p>`}
-      ${pagination(1)}
     </div>
 
-    <!-- 3. Elevation -->
+    <!-- 3. Weather & Climate -->
+    <div class="landbook-section" id="section-weather">
+      ${sectionHeader(3, 'lb.section.weather')}
+      ${skeleton('data-weather')}
+    </div>
+
+    <!-- 4. Biodiversity -->
+    <div class="landbook-section" id="section-biodiversity">
+      ${sectionHeader(4, 'lb.section.biodiversity')}
+      ${skeleton('data-biodiversity')}
+    </div>
+
+    <!-- 5. Risk Assessment -->
+    <div class="landbook-section" id="section-risk">
+      ${sectionHeader(5, 'lb.section.risk')}
+      <div id="data-fire"></div>
+      <div id="data-active-fires" class="data-sub-section"></div>
+      <div id="data-flood" class="data-sub-section"></div>
+      <div id="data-drought" class="data-sub-section"></div>
+      <div id="data-risk-calendar"></div>
+    </div>
+
+    <!-- 6. Elevation & Terrain -->
     <div class="landbook-section" id="section-elevation">
-      <h2>${t('lb.section.elevation')}</h2>
+      ${sectionHeader(6, 'lb.section.elevation')}
       ${skeleton('data-elevation')}
       <div id="data-geology" class="data-sub-section"></div>
-      ${pagination(2)}
     </div>
 
-    <!-- 4. Soil -->
+    <!-- 7. Soil -->
     <div class="landbook-section" id="section-soil">
-      <h2>${t('lb.section.soil')}</h2>
+      ${sectionHeader(7, 'lb.section.soil')}
       ${skeleton('data-soil')}
-      ${pagination(3)}
     </div>
 
-    <!-- 5. Water -->
-    <div class="landbook-section" id="section-water">
-      <h2>${t('lb.section.water')}</h2>
-      ${skeleton('data-water')}
-      <div id="data-flood" class="data-sub-section"></div>
-      ${pagination(4)}
-    </div>
-
-    <!-- 6. Weather -->
-    <div class="landbook-section" id="section-weather">
-      <h2>${t('lb.section.weather')}</h2>
-      ${skeleton('data-weather')}
-      <div id="data-ipma" class="data-sub-section"></div>
-      <div id="data-drought" class="data-sub-section"></div>
-      ${pagination(5)}
-    </div>
-
-    <!-- 7. Biodiversity -->
-    <div class="landbook-section" id="section-biodiversity">
-      <h2>${t('lb.section.biodiversity')}</h2>
-      ${skeleton('data-biodiversity')}
-      ${pagination(6)}
-    </div>
-
-    <!-- 8. Fire -->
-    <div class="landbook-section" id="section-fire">
-      <h2>${t('lb.section.fire')}</h2>
-      ${skeleton('data-fire')}
-      <div id="data-active-fires" class="data-sub-section"></div>
-      ${pagination(7)}
-    </div>
-
-    <!-- 9. Protected Areas -->
+    <!-- 8. Protected Areas & Zoning -->
     <div class="landbook-section" id="section-protected">
-      <h2>${t('lb.section.protected')}</h2>
+      ${sectionHeader(8, 'lb.section.protected')}
       ${skeleton('data-protected')}
-      ${pagination(8)}
     </div>
 
-    <!-- 10. Your Knowledge (inline form) -->
+    <!-- 9. Your Knowledge -->
     <div class="landbook-section user-form" id="section-knowledge">
-      <h2>${t('lb.section.knowledge')}</h2>
+      ${sectionHeader(9, 'lb.section.knowledge')}
       <p class="form-desc">${t('lb.form.desc')}</p>
       <div id="user-form-container">${renderUserForm(lb)}</div>
-      ${pagination(9)}
+    </div>
+
+    <!-- 10. Source Citations -->
+    <div class="landbook-section" id="section-sources">
+      ${sectionHeader(10, 'lb.section.sources')}
+      <p style="color:var(--muted);margin-bottom:24px;">${t('lb.sources.desc')}</p>
+      ${renderSources()}
     </div>
   `;
 
   // Init map
   if (boundary.length) initMap(boundary, center);
 
-
-  // Fetch live data in parallel (protected areas are now dynamic too)
+  // Fetch live data in parallel
   if (center) {
     const cached = lb.autoData && lb.autoData.lastFetched;
     if (cached) {
-      // Render cached data instantly
       renderCachedData(lb.autoData, center[0], center[1]);
     }
-    // Always re-fetch fresh data
     fetchAllData(lb, center[0], center[1], boundary);
   }
 }
@@ -336,7 +377,7 @@ let wmsLayers = {};
 function initMap(boundary, center) {
   const map = createMap('landbook-map', {
     center: [center[1], center[0]],
-    zoom: 14,
+    zoom: 11,
     satellite: true,
     scrollZoom: true,
   });
@@ -350,7 +391,7 @@ function initMap(boundary, center) {
       lineWidth: 3,
     });
 
-    fitToCoords(map, boundary);
+    fitToCoords(map, boundary, { padding: 120 });
 
     wmsLayers.corine = addWmsLayer(map, CORINE_WMS, getCorineWmsParams(), {
       sourceId: 'wms-corine', opacity: 0.5, visible: false,
@@ -365,12 +406,8 @@ function initMap(boundary, center) {
     wmsLayers.worldcover = addWmsLayer(map, WORLDCOVER_WMS, getWorldCoverWmsParams(), {
       sourceId: 'wms-worldcover', opacity: 0.6, visible: false,
     });
-    wmsLayers.cos = addWmsLayer(map, COS_WMS, getCosWmsParams(), {
-      sourceId: 'wms-cos', opacity: 0.6, visible: false,
-    });
-    wmsLayers.geology = addWmsLayer(map, 'https://sig.lneg.pt/server/services/CGP500K/MapServer/WMSServer', {
-      layers: '0', format: 'image/png', transparent: true, version: '1.1.1',
-    }, { sourceId: 'wms-geology', opacity: 0.5, visible: false });
+    // COS (Portugal-only WMS) removed
+    // LNEG geology (Portugal-only WMS) removed
     wmsLayers.flood = addWmsLayer(map, 'https://globalfloods.eu/geoserver/wms', {
       layers: 'flood_hazard:T100', format: 'image/png', transparent: true, version: '1.1.1',
     }, { sourceId: 'wms-flood', opacity: 0.5, visible: false });
@@ -389,8 +426,6 @@ function renderLayerToggles(map) {
   const layers = [
     { key: 'corine', label: 'CORINE Land Cover', group: 'Land' },
     { key: 'worldcover', label: 'ESA WorldCover 10m', group: 'Land' },
-    { key: 'cos', label: 'DGT COS (Portugal)', group: 'Land' },
-    { key: 'geology', label: 'LNEG Geology', group: 'Terrain' },
     { key: 'fire', label: 'EFFIS Fire Danger', group: 'Risk' },
     { key: 'flood', label: 'JRC Flood Hazard (100yr)', group: 'Risk' },
     { key: 'drought', label: 'EDO Drought Index', group: 'Risk' },
@@ -431,12 +466,9 @@ function fetchAllData(lb, lat, lng, boundary) {
     { key: 'water', fn: () => bounds ? getWaterFeatures(bounds) : Promise.resolve(null) },
     { key: 'gbif', fn: () => getSpeciesOccurrences(lat, lng, 10) },
     { key: 'activeFires', fn: () => getActiveFiresNearby(lat, lng, 50) },
-    { key: 'ipmaForecast', fn: () => getIpmaForecast().catch(() => null) },
-    { key: 'drought', fn: () => getDroughtIndex().catch(() => null) },
     { key: 'flood', fn: () => getFloodForecastWithHistory(lat, lng) },
     { key: 'infrastructure', fn: () => bounds ? getInfrastructure(bounds) : Promise.resolve(null) },
     { key: 'geology', fn: () => getGeology(lat, lng) },
-    { key: 'admin', fn: () => getAdminUnit(lat, lng) },
     { key: 'protectedAreas', fn: () => getProtectedAreas(lat, lng, 25) },
   ];
 
@@ -499,7 +531,7 @@ function renderDataSection(key, results, lat, lng) {
   switch (key) {
     case 'elevation': renderElevation(results); break;
     case 'forecast': renderWeather(results); renderFireRisk(results, lat, lng); break;
-    case 'climate': renderClimate(results); break;
+    case 'climate': renderClimate(results); renderSeasonalRiskCalendar(results); break;
     case 'soilProps':
     case 'soilClass': renderSoil(results); break;
     case 'species':
@@ -508,11 +540,8 @@ function renderDataSection(key, results, lat, lng) {
     case 'water': renderWater(results); break;
     case 'flood': renderFloodData(results); break;
     case 'activeFires': renderActiveFires(results); break;
-    case 'ipmaForecast': renderIpmaForecast(results); break;
-    case 'drought': renderDrought(results); break;
     case 'infrastructure': renderInfrastructure(results, lat, lng); break;
     case 'geology': renderGeology(results); break;
-    case 'admin': renderAdminUnit(results); break;
     case 'protectedAreas': renderProtected(results); break;
   }
 }
@@ -522,7 +551,7 @@ function renderDataSection(key, results, lat, lng) {
 // ---------------------------------------------------------------------------
 
 function renderElevation(results) {
-  const el = document.getElementById('data-elevation');
+  const el = getDataEl('data-elevation');
   if (!el) return;
   const r = results.elevation;
   if (!r) return;
@@ -537,7 +566,7 @@ function renderElevation(results) {
 }
 
 function renderWeather(results) {
-  const el = document.getElementById('data-weather');
+  const el = getDataEl('data-weather');
   if (!el) return;
   const r = results.forecast;
   if (!r) return;
@@ -566,15 +595,15 @@ function renderWeather(results) {
     html += `
       <h3>7-Day Forecast</h3>
       <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <table class="lb-table">
           <thead>
-            <tr style="border-bottom:2px solid var(--black);text-align:left;">
-              <th style="padding:8px 12px;">Day</th>
-              <th style="padding:8px 12px;">Condition</th>
-              <th style="padding:8px 12px;">High</th>
-              <th style="padding:8px 12px;">Low</th>
-              <th style="padding:8px 12px;">Rain</th>
-              <th style="padding:8px 12px;">Wind</th>
+            <tr>
+              <th>Day</th>
+              <th>Condition</th>
+              <th>High</th>
+              <th>Low</th>
+              <th>Rain</th>
+              <th>Wind</th>
             </tr>
           </thead>
           <tbody>
@@ -585,13 +614,13 @@ function renderWeather(results) {
       const low = daily.temperature_2m_min ? daily.temperature_2m_min[i] : null;
       const rain = daily.precipitation_sum ? daily.precipitation_sum[i] : null;
       const wind = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
-      return `<tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:10px 12px;font-weight:500;">${dayName}</td>
-                <td style="padding:10px 12px;">${esc(wDesc)}</td>
-                <td style="padding:10px 12px;">${high != null ? `${high}\u00B0C` : '\u2014'}</td>
-                <td style="padding:10px 12px;">${low != null ? `${low}\u00B0C` : '\u2014'}</td>
-                <td style="padding:10px 12px;">${rain != null ? `${rain} mm` : '\u2014'}</td>
-                <td style="padding:10px 12px;">${wind != null ? `${wind} km/h` : '\u2014'}</td>
+      return `<tr>
+                <td><strong>${dayName}</strong></td>
+                <td>${esc(wDesc)}</td>
+                <td>${high != null ? `${high}\u00B0C` : '\u2014'}</td>
+                <td>${low != null ? `${low}\u00B0C` : '\u2014'}</td>
+                <td>${rain != null ? `${rain} mm` : '\u2014'}</td>
+                <td>${wind != null ? `${wind} km/h` : '\u2014'}</td>
               </tr>`;
     }).join('')}
           </tbody>
@@ -599,12 +628,27 @@ function renderWeather(results) {
       </div>`;
   }
 
+  // Wind summary from daily data
+  const winds = daily.wind_speed_10m_max ? daily.wind_speed_10m_max.filter(v => v != null) : [];
+  const uvMax = daily.uv_index_max ? daily.uv_index_max.filter(v => v != null) : [];
+  if (winds.length > 0 || uvMax.length > 0) {
+    const avgWind = winds.length ? (winds.reduce((s, v) => s + v, 0) / winds.length).toFixed(1) : null;
+    const peakWind = winds.length ? Math.max(...winds).toFixed(1) : null;
+    const maxUv = uvMax.length ? Math.max(...uvMax).toFixed(1) : null;
+    html += `<h3>Wind and Atmospheric Conditions</h3>
+      <table class="lb-kv-table">
+        ${avgWind ? `<tr><td>Average Wind Speed</td><td>${avgWind} km/h</td></tr>` : ''}
+        ${peakWind ? `<tr><td>Peak Gusts (7-day)</td><td>${peakWind} km/h</td></tr>` : ''}
+        ${maxUv ? `<tr><td>UV Index (max)</td><td>${maxUv}${parseFloat(maxUv) >= 8 ? ' \u2014 Very High' : parseFloat(maxUv) >= 6 ? ' \u2014 High' : parseFloat(maxUv) >= 3 ? ' \u2014 Moderate' : ' \u2014 Low'}</td></tr>` : ''}
+      </table>`;
+  }
+
   const climateHtml = buildClimateHtml(results);
   el.innerHTML = html + climateHtml;
 }
 
 function renderClimate(results) {
-  const el = document.getElementById('data-weather');
+  const el = getDataEl('data-weather');
   if (!el) return;
   if (results.forecast) renderWeather(results);
 }
@@ -617,37 +661,82 @@ function buildClimateHtml(results) {
   const maxPrecip = Math.max(...months.map(m => m.totalPrecip || 0), 1);
   const maxTemp = Math.max(...months.map(m => m.avgHigh || 0), 1);
   const frost = estimateFrostDates(months);
-  const frostHtml = frost ? `
-    <div class="data-grid" style="margin-top:16px;">
-      ${dataCard('Est. Last Frost', frost.lastFrost || 'None (frost-free)', '30-year average')}
-      ${dataCard('Est. First Frost', frost.firstFrost || 'None (frost-free)', '30-year average')}
-    </div>` : '';
 
-  return `
-    <h3>Climate Averages (30 years)</h3>
-    <div class="climate-chart">
-      <div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px;color:var(--muted);">
-        <span><span style="display:inline-block;width:12px;height:12px;background:var(--blue,#4A90D9);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Precipitation (mm)</span>
-        <span><span style="display:inline-block;width:12px;height:12px;background:var(--coral,#EB5F54);border-radius:2px;vertical-align:middle;margin-right:4px;"></span>Avg High</span>
-      </div>
-      <div class="chart-bars">
-        ${months.map(m => {
-    const precipH = Math.round(((m.totalPrecip || 0) / maxPrecip) * 100);
-    const tempH = Math.round(((m.avgHigh || 0) / maxTemp) * 100);
-    return `<div class="chart-bar" title="${m.month}: ${Math.round(m.totalPrecip || 0)}mm, ${Math.round(m.avgHigh || 0)}\u00B0C">
-            <div class="bar" style="height:${precipH}%;"></div>
-            <div class="bar temp" style="height:${tempH}%;"></div>
-          </div>`;
-  }).join('')}
-      </div>
-      <div class="chart-labels">${months.map(m => `<span>${m.month}</span>`).join('')}</div>
+  // SVG dual-axis climate chart
+  const chartHtml = `
+    <h3>Climate Profile — Monthly Temperature and Rainfall</h3>` + buildClimateSvg(months, maxPrecip, maxTemp) + `
+    <div class="lb-figure-caption">Figure 1 — Climate profile based on 30-year average (Open-Meteo)</div>`;
+
+  // Monthly data table
+  const tableHtml = `
+    <h3>${t('lb.weather.climateTable')}</h3>
+    <div style="overflow-x:auto;">
+      <table class="lb-table">
+        <thead><tr>
+          <th>Month</th><th>High \u00B0C</th><th>Low \u00B0C</th><th>Rain mm</th>
+        </tr></thead>
+        <tbody>
+          ${months.map(m => `<tr>
+            <td><strong>${m.month}</strong></td>
+            <td>${m.avgHigh != null ? Math.round(m.avgHigh) : '\u2014'}</td>
+            <td>${m.avgLow != null ? Math.round(m.avgLow) : '\u2014'}</td>
+            <td>${m.totalPrecip != null ? Math.round(m.totalPrecip) : '\u2014'}</td>
+          </tr>`).join('')}
+          <tr style="font-weight:600;border-top:2px solid var(--black);">
+            <td>ANNUAL</td>
+            <td>${Math.round(months.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12)}</td>
+            <td>${Math.round(months.reduce((s, m) => s + (m.avgLow || 0), 0) / 12)}</td>
+            <td>${Math.round(months.reduce((s, m) => s + (m.totalPrecip || 0), 0))}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    ${frostHtml}`;
+    <div class="lb-table-caption">Table 1 \u2014 Monthly climate averages based on 30-year records (Open-Meteo)</div>`;
+
+  // Seasonal callouts
+  const seasons = [
+    { name: 'Winter (Dec\u2013Feb)', months: [11, 0, 1] },
+    { name: 'Spring (Mar\u2013May)', months: [2, 3, 4] },
+    { name: 'Summer (Jun\u2013Aug)', months: [5, 6, 7] },
+    { name: 'Autumn (Sep\u2013Nov)', months: [8, 9, 10] },
+  ];
+  const seasonalHtml = `
+    <h3>${t('lb.weather.seasonalPatterns')}</h3>
+    <div class="data-grid">
+      ${seasons.map(s => {
+    const sMonths = s.months.map(i => months[i]);
+    const avgH = Math.round(sMonths.reduce((a, m) => a + (m.avgHigh || 0), 0) / 3);
+    const avgL = Math.round(sMonths.reduce((a, m) => a + (m.avgLow || 0), 0) / 3);
+    const rain = Math.round(sMonths.reduce((a, m) => a + (m.totalPrecip || 0), 0));
+    const variant = rain > 150 ? 'info' : avgH > 28 ? 'warning' : '';
+    return `<div class="lb-callout ${variant}">
+          <div class="lb-callout-title">${s.name}</div>
+          <div class="lb-callout-body">Avg: ${avgL}\u2013${avgH}\u00B0C \u00B7 Rain: ${rain} mm</div>
+        </div>`;
+  }).join('')}
+    </div>`;
+
+  // Frost analysis
+  const frostHtml = `
+    <h3>${t('lb.weather.frostAnalysis')}</h3>
+    <table class="lb-kv-table">
+      <tr><td>Estimated Last Frost</td><td>${frost ? (frost.lastFrost || 'None (frost-free)') : 'Calculating...'}</td></tr>
+      <tr><td>Estimated First Frost</td><td>${frost ? (frost.firstFrost || 'None (frost-free)') : 'Calculating...'}</td></tr>
+      <tr><td>Growing Season</td><td>${computeGrowingSeason(frost)}</td></tr>
+    </table>`;
+
+  return chartHtml + tableHtml + seasonalHtml + frostHtml;
+}
+
+function computeGrowingSeason(frost) {
+  if (!frost) return 'Calculating...';
+  if (!frost.lastFrost && !frost.firstFrost) return 'Year-round (frost-free)';
+  return `${frost.lastFrost || 'January'} to ${frost.firstFrost || 'December'}`;
 }
 
 let _soilRendered = false;
 function renderSoil(results) {
-  const el = document.getElementById('data-soil');
+  const el = getDataEl('data-soil');
   if (!el) return;
   const rp = results.soilProps;
   const rc = results.soilClass;
@@ -693,7 +782,7 @@ function renderSoil(results) {
 }
 
 function renderWater(results) {
-  const el = document.getElementById('data-water');
+  const el = getDataEl('data-water');
   if (!el) return;
   const r = results.water;
   if (!r) return;
@@ -717,7 +806,7 @@ function renderWater(results) {
     return;
   }
 
-  el.innerHTML = `<div class="data-grid cols-3">
+  el.innerHTML = `<h3>Water Features</h3><div class="data-grid cols-3">
     ${dataCard('Rivers', String(rivers.length), rivers.slice(0, 3).map(r => r.tags.name || 'Unnamed').join(', ') || '')}
     ${dataCard('Streams', String(streams.length))}
     ${dataCard('Water Bodies', String(waterBodies.length))}
@@ -728,7 +817,7 @@ function renderWater(results) {
 
 let _bioRendered = false;
 function renderBiodiversity(results) {
-  const el = document.getElementById('data-biodiversity');
+  const el = getDataEl('data-biodiversity');
   if (!el) return;
   const rs = results.species;
   const rt = results.threatened;
@@ -742,17 +831,15 @@ function renderBiodiversity(results) {
     const summary = summarizeSpeciesCounts(rs.data);
     if (summary.total > 0) {
       html += `<div class="auto-data-banner">
-        <span class="icon">\u{1F33F}</span>
         <span><strong>${summary.total.toLocaleString()} species</strong> observed within 5 km (iNaturalist)</span>
       </div>`;
 
       const groups = Object.entries(summary.groups).sort((a, b) => b[1] - a[1]);
       if (groups.length) {
-        html += `<h3>Species by Group</h3><div class="data-grid cols-3">
-          ${groups.map(([g, c]) => dataCard(g, String(c), 'species')).join('')}
-        </div>`;
+        html += `<h3>${t('lb.bio.speciesByGroup')}</h3>` + buildSpeciesBarChart(groups);
       }
 
+      // Most observed species with photo cards
       const top = summary.species.slice(0, 10);
       if (top.length) {
         html += `<h3>Most Observed</h3><div class="species-grid">
@@ -773,7 +860,7 @@ function renderBiodiversity(results) {
     html += errorBlock('Could not fetch biodiversity data.');
   }
 
-  // iNaturalist threatened species as notable species (replaces hardcoded KEY_SPECIES)
+  // Threatened species with photo cards
   if (rt.ok) {
     const topThreatened = summarizeSpeciesCounts(rt.data);
     if (topThreatened.species && topThreatened.species.length > 0) {
@@ -786,7 +873,6 @@ function renderBiodiversity(results) {
               <div class="species-scientific">${esc(sp.scientificName)}</div>
               <div class="species-meta">${sp.observationCount} observations</div>
             </div>
-            <span class="species-status" style="background:#CC6633;">Threatened</span>
           </div>`).join('')}
         </div>`;
     }
@@ -799,23 +885,33 @@ function renderBiodiversity(results) {
     if (gbifSummary.total > 0) {
       html += `<h3>GBIF Records (10 km)</h3>
         <div class="auto-data-banner">
-          <span class="icon">\u{1F4CA}</span>
           <span><strong>${gbifSummary.total.toLocaleString()}</strong> occurrence records in GBIF</span>
         </div>`;
       const kingdoms = Object.entries(gbifSummary.kingdoms).sort((a, b) => b[1] - a[1]);
       if (kingdoms.length) {
-        html += `<div class="data-grid cols-3">
-          ${kingdoms.map(([k, c]) => dataCard(k, String(c), 'records')).join('')}
-        </div>`;
+        html += `<table class="lb-kv-table">
+          ${kingdoms.map(([k, c]) => `<tr><td>${esc(k)}</td><td>${c.toLocaleString()} records</td></tr>`).join('')}
+        </table>`;
       }
     }
+  }
+
+  // Bioindicator callout
+  const totalSpecies = rs.ok ? summarizeSpeciesCounts(rs.data).total : 0;
+  const threatenedCount = rt.ok && rt.data ? summarizeSpeciesCounts(rt.data).total : 0;
+  if (totalSpecies > 0) {
+    const calloutType = threatenedCount > 20 ? 'warning' : '';
+    html += `<div class="lb-callout ${calloutType}">
+      <div class="lb-callout-title">${t('lb.bio.bioindicators')}</div>
+      <div class="lb-callout-body">${totalSpecies.toLocaleString()} species recorded within 5 km. ${threatenedCount > 0 ? threatenedCount + ' threatened species observed within 10 km.' : 'No threatened species detected nearby.'} ${threatenedCount > 20 ? 'Elevated conservation attention may be warranted.' : 'Species diversity appears typical for this region.'}</div>
+    </div>`;
   }
 
   el.innerHTML = html;
 }
 
 function renderFireRisk(results, lat, lng) {
-  const el = document.getElementById('data-fire');
+  const el = getDataEl('data-fire');
   if (!el) return;
   const r = results.forecast;
 
@@ -829,18 +925,22 @@ function renderFireRisk(results, lat, lng) {
     }
   }
 
+  const calloutType = fire.level === 'Very High' || fire.level === 'Extreme' ? 'danger' : fire.level === 'High' ? 'warning' : '';
   el.innerHTML = `
-    <div class="risk-grid">
-      <div class="risk-card" style="background:${fire.color}20;border:2px solid ${fire.color};">
-        <div class="risk-level" style="color:${fire.color};">${esc(fire.level)}</div>
-        <div class="risk-label">Estimated Fire Risk</div>
-        <div class="data-detail" style="margin-top:8px;">Based on temperature, precipitation, location, and season</div>
-      </div>
-    </div>`;
+    <div class="lb-callout ${calloutType}">
+      <div class="lb-callout-title">Fire Risk Assessment: ${esc(fire.level)}</div>
+      <div class="lb-callout-body">Based on current temperature, precipitation, location, and season.</div>
+    </div>
+    <table class="lb-kv-table">
+      <tr><td>Risk Level</td><td>${esc(fire.level)}</td></tr>
+      <tr><td>Risk Score</td><td>${fire.score}/10</td></tr>
+      <tr><td>Assessment Period</td><td>Current 7-day forecast</td></tr>
+      <tr><td>Data Sources</td><td>Open-Meteo, EFFIS</td></tr>
+    </table>`;
 }
 
 function renderProtected(results) {
-  const el = document.getElementById('data-protected');
+  const el = getDataEl('data-protected');
   if (!el || el.dataset.rendered) return;
   const r = results.protectedAreas;
   if (!r) return;
@@ -850,25 +950,19 @@ function renderProtected(results) {
 
   if (r.ok && r.data && r.data.length > 0) {
     html += `<h3>Nearby Protected Areas</h3>
-      <div class="data-grid">
-        ${r.data.map(pa => `<div class="data-item">
-          <div class="data-label">${esc(pa.type)}</div>
-          <div class="data-value">${esc(pa.nameEn || pa.name)}</div>
-          <div class="data-detail">${esc(pa.description)}</div>
-        </div>`).join('')}
-      </div>`;
+      <table class="lb-table">
+        <thead><tr><th>Type</th><th>Name</th><th>Description</th></tr></thead>
+        <tbody>
+          ${r.data.map(pa => `<tr>
+            <td>${esc(pa.type)}</td>
+            <td><strong>${esc(pa.nameEn || pa.name)}</strong></td>
+            <td>${esc(pa.description)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
   } else {
     html += '<p style="color:var(--muted);">No protected areas found within 25 km.</p>';
   }
-
-  html += `<h3 style="margin-top:24px;">Portuguese Zoning</h3>
-    <div class="data-grid">
-      ${Object.entries(PT_ZONING).map(([code, z]) => `<div class="data-item">
-        <div class="data-label">${esc(code)} \u2014 ${esc(z.nameEn)}</div>
-        <div class="data-value">${esc(z.name)}</div>
-        <div class="data-detail">${esc(z.description)}</div>
-      </div>`).join('')}
-    </div>`;
 
   el.innerHTML = html;
 }
@@ -877,20 +971,10 @@ function renderProtected(results) {
 // Phase 5A: New renderer functions
 // ---------------------------------------------------------------------------
 
-function renderAdminUnit(results) {
-  const el = document.getElementById('data-admin');
-  if (!el) return;
-  const r = results.admin;
-  if (!r || !r.ok || !r.data) return;
-
-  const admin = formatAdminUnit(r.data);
-  if (!admin) return;
-
-  el.innerHTML = `<div class="admin-unit">${esc(admin.label)}, ${esc(admin.country)}</div>`;
-}
+// renderAdminUnit removed — was Portugal-only (DGT). Address comes from create page now.
 
 function renderGeology(results) {
-  const el = document.getElementById('data-geology');
+  const el = getDataEl('data-geology');
   if (!el || el.dataset.rendered) return;
   const r = results.geology;
   if (!r) return;
@@ -921,7 +1005,7 @@ function renderGeology(results) {
 }
 
 function renderActiveFires(results) {
-  const el = document.getElementById('data-active-fires');
+  const el = getDataEl('data-active-fires');
   if (!el || el.dataset.rendered) return;
   const r = results.activeFires;
   if (!r) return;
@@ -939,7 +1023,6 @@ function renderActiveFires(results) {
     el.innerHTML = `
       <h3>Active Fire Detections</h3>
       <div class="auto-data-banner" style="border-color:#00CC00;">
-        <span class="icon">\\u{2705}</span>
         <span>No active fires detected within 50 km in the last 48 hours (NASA VIIRS)</span>
       </div>
     `;
@@ -949,7 +1032,6 @@ function renderActiveFires(results) {
   el.innerHTML = `
     <h3>Active Fire Detections</h3>
     <div class="auto-data-banner" style="border-color:#FF3300;background:rgba(255,51,0,0.05);">
-      <span class="icon">\\u{1F525}</span>
       <span><strong>${summary.count} fire detection${summary.count > 1 ? 's' : ''}</strong> within 50 km (NASA VIIRS, last 48h)</span>
     </div>
     <div class="data-grid cols-3">
@@ -960,72 +1042,11 @@ function renderActiveFires(results) {
   `;
 }
 
-function renderIpmaForecast(results) {
-  const el = document.getElementById('data-ipma');
-  if (!el || el.dataset.rendered) return;
-  const r = results.ipmaForecast;
-  if (!r) return;
-  el.dataset.rendered = 'true';
-
-  if (!r.ok || !r.data || !Array.isArray(r.data) || r.data.length === 0) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:14px;">IPMA forecast unavailable.</p>';
-    return;
-  }
-
-  const days = r.data.slice(0, 5);
-  el.innerHTML = `
-    <h3>Portuguese Official Forecast (IPMA)</h3>
-    <div class="data-grid cols-5">
-      ${days.map(d => {
-    const weatherDesc = WEATHER_TYPES[d.idWeatherType] || 'Unknown';
-    return dataCard(
-      d.forecastDate ? d.forecastDate.split('T')[0] : '—',
-      `${d.tMin || '—'}° – ${d.tMax || '—'}°C`,
-      weatherDesc
-    );
-  }).join('')}
-    </div>
-  `;
-}
-
-function renderDrought(results) {
-  const el = document.getElementById('data-drought');
-  if (!el || el.dataset.rendered) return;
-  const r = results.drought;
-  if (!r) return;
-  el.dataset.rendered = 'true';
-
-  if (!r.ok || !r.data) {
-    return; // Silent fail — drought data is supplementary
-  }
-
-  // IPMA drought data varies in format; try to extract PDSI
-  let pdsi = null;
-  if (Array.isArray(r.data) && r.data.length > 0) {
-    const latest = r.data[r.data.length - 1];
-    pdsi = latest.value || latest.pdsi || latest.mpdsi;
-  } else if (typeof r.data === 'object') {
-    pdsi = r.data.value || r.data.pdsi;
-  }
-
-  if (pdsi == null) return;
-
-  const drought = interpretDrought(parseFloat(pdsi));
-  el.innerHTML = `
-    <h3>Drought Status (PDSI)</h3>
-    <div class="risk-grid">
-      <div class="risk-card" style="background:${drought.color}20;border:2px solid ${drought.color};">
-        <div class="risk-level" style="color:${drought.color};">${esc(drought.level)}</div>
-        <div class="risk-label">Palmer Drought Severity Index</div>
-        <div class="data-detail" style="margin-top:8px;">PDSI value: ${parseFloat(pdsi).toFixed(2)} — Source: IPMA</div>
-      </div>
-    </div>
-  `;
-}
+// renderIpmaForecast and renderDrought removed — were Portugal-only (IPMA API)
 
 let _floodRendered = false;
 function renderFloodData(results) {
-  const el = document.getElementById('data-flood');
+  const el = getDataEl('data-flood');
   if (!el || _floodRendered) return;
   const r = results.flood;
   if (!r) return;
@@ -1048,7 +1069,7 @@ function renderFloodData(results) {
 }
 
 function renderInfrastructure(results, lat, lng) {
-  const el = document.getElementById('data-infrastructure');
+  const el = getDataEl('data-infrastructure');
   if (!el || el.dataset.rendered) return;
   const r = results.infrastructure;
   if (!r) return;
@@ -1254,4 +1275,201 @@ async function saveUserData() {
       fb.innerHTML = '<span style="color:var(--coral);font-weight:600;">Save failed. Please try again.</span>';
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// v2.0 New Renderers
+// ---------------------------------------------------------------------------
+
+const BAR_COLORS = {
+  'Birds': 'birds', 'Aves': 'birds',
+  'Mammalia': 'mammals', 'Mammals': 'mammals',
+  'Reptilia': 'reptiles', 'Reptiles': 'reptiles',
+  'Amphibia': 'amphibia', 'Amphibians': 'amphibia',
+  'Fungi': 'fungi',
+  'Plantae': 'plantae', 'Plants': 'plantae',
+  'Insecta': 'insecta', 'Insects': 'insecta',
+};
+
+function buildSpeciesBarChart(groups) {
+  if (!groups || !groups.length) return '';
+  const maxCount = Math.max(...groups.map(([, c]) => c));
+  return `<div class="lb-hbar-chart">
+    ${groups.map(([g, c]) => {
+      const pct = Math.max(Math.round((c / maxCount) * 100), 5);
+      const colorClass = BAR_COLORS[g] || 'default';
+      return `<div class="lb-hbar-row">
+        <div class="lb-hbar-label">${esc(g)}</div>
+        <div class="lb-hbar-track">
+          <div class="lb-hbar-fill ${colorClass}" style="width:${pct}%">${c} species</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="lb-figure-caption">Figure 2 \u2014 Species observations by taxonomic group (iNaturalist, 5 km radius)</div>`;
+}
+
+function buildClimateSvg(months, maxPrecip, maxTemp) {
+  // Chart dimensions
+  const W = 760, H = 340;
+  const pad = { top: 30, right: 60, bottom: 50, left: 50 };
+  const cw = W - pad.left - pad.right; // chart width
+  const ch = H - pad.top - pad.bottom; // chart height
+  const barW = Math.floor(cw / 12) - 6;
+
+  // Scale helpers
+  const precipCeil = Math.ceil(maxPrecip / 20) * 20 || 100;
+  const tempCeil = Math.ceil(maxTemp / 5) * 5 + 5;
+  const pY = (v) => pad.top + ch - (v / precipCeil) * ch;
+  const tY = (v) => pad.top + ch - (v / tempCeil) * ch;
+  const mX = (i) => pad.left + (i + 0.5) * (cw / 12);
+
+  // Rainfall bars
+  const bars = months.map((m, i) => {
+    const h = ((m.totalPrecip || 0) / precipCeil) * ch;
+    const x = mX(i) - barW / 2;
+    const y = pad.top + ch - h;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="#8ECAFF" opacity="0.7" rx="2"/>`;
+  }).join('');
+
+  // Temperature lines
+  const highPts = months.map((m, i) => `${mX(i)},${tY(m.avgHigh || 0)}`).join(' ');
+  const lowPts = months.map((m, i) => `${mX(i)},${tY(m.avgLow || 0)}`).join(' ');
+
+  // Filled area between high and low
+  const areaPath = months.map((m, i) => `${mX(i)},${tY(m.avgHigh || 0)}`).join(' ')
+    + ' ' + months.slice().reverse().map((m, i) => `${mX(11 - i)},${tY(m.avgLow || 0)}`).join(' ');
+
+  // Y-axis ticks (left = temp, right = precip)
+  const tempTicks = [];
+  for (let v = 0; v <= tempCeil; v += 5) {
+    tempTicks.push(`<line x1="${pad.left}" x2="${pad.left + cw}" y1="${tY(v)}" y2="${tY(v)}" stroke="#e0e0e0" stroke-width="0.5"/>
+      <text x="${pad.left - 8}" y="${tY(v) + 4}" text-anchor="end" font-size="10" fill="#666">${v}</text>`);
+  }
+  const precipTicks = [];
+  for (let v = 0; v <= precipCeil; v += 20) {
+    precipTicks.push(`<text x="${pad.left + cw + 8}" y="${pY(v) + 4}" text-anchor="start" font-size="10" fill="#666">${v}</text>`);
+  }
+
+  // X-axis labels
+  const xLabels = months.map((m, i) => `<text x="${mX(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="#666">${m.month}</text>`).join('');
+
+  // Dots on lines
+  const highDots = months.map((m, i) => `<circle cx="${mX(i)}" cy="${tY(m.avgHigh || 0)}" r="3.5" fill="#E8860C" stroke="#fff" stroke-width="1.5"/>`).join('');
+  const lowDots = months.map((m, i) => `<circle cx="${mX(i)}" cy="${tY(m.avgLow || 0)}" r="3.5" fill="#5BA4CF" stroke="#fff" stroke-width="1.5"/>`).join('');
+
+  return `<div style="overflow-x:auto;margin:16px 0;">
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:${W}px;font-family:Inter,sans-serif;">
+      <!-- Grid -->
+      ${tempTicks.join('')}
+      <!-- Bars -->
+      ${bars}
+      <!-- Filled area -->
+      <polygon points="${areaPath}" fill="#E8860C" opacity="0.12"/>
+      <!-- Lines -->
+      <polyline points="${highPts}" fill="none" stroke="#E8860C" stroke-width="2.5"/>
+      <polyline points="${lowPts}" fill="none" stroke="#5BA4CF" stroke-width="2.5"/>
+      <!-- Dots -->
+      ${highDots}
+      ${lowDots}
+      <!-- Axes -->
+      <line x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${pad.top + ch}" stroke="#333" stroke-width="1"/>
+      <line x1="${pad.left}" x2="${pad.left + cw}" y1="${pad.top + ch}" y2="${pad.top + ch}" stroke="#333" stroke-width="1"/>
+      <line x1="${pad.left + cw}" x2="${pad.left + cw}" y1="${pad.top}" y2="${pad.top + ch}" stroke="#ccc" stroke-width="0.5"/>
+      <!-- Axis labels -->
+      <text x="${pad.left - 35}" y="${H / 2}" text-anchor="middle" font-size="10" fill="#666" transform="rotate(-90,${pad.left - 35},${H / 2})">Temperature (\u00B0C)</text>
+      <text x="${pad.left + cw + 45}" y="${H / 2}" text-anchor="middle" font-size="10" fill="#666" transform="rotate(90,${pad.left + cw + 45},${H / 2})">Rainfall (mm)</text>
+      <!-- Right axis ticks -->
+      ${precipTicks.join('')}
+      <!-- X labels -->
+      ${xLabels}
+      <!-- Legend -->
+      <rect x="${W - 195}" y="8" width="185" height="56" fill="white" stroke="#ddd" rx="4"/>
+      <line x1="${W - 185}" x2="${W - 165}" y1="22" y2="22" stroke="#E8860C" stroke-width="2.5"/>
+      <circle cx="${W - 175}" cy="22" r="3" fill="#E8860C"/>
+      <text x="${W - 158}" y="26" font-size="10" fill="#333">High Temp (\u00B0C)</text>
+      <line x1="${W - 185}" x2="${W - 165}" y1="38" y2="38" stroke="#5BA4CF" stroke-width="2.5"/>
+      <circle cx="${W - 175}" cy="38" r="3" fill="#5BA4CF"/>
+      <text x="${W - 158}" y="42" font-size="10" fill="#333">Low Temp (\u00B0C)</text>
+      <rect x="${W - 185}" y="50" width="16" height="10" fill="#8ECAFF" opacity="0.7" rx="1"/>
+      <text x="${W - 158}" y="58" font-size="10" fill="#333">Rainfall (mm)</text>
+    </svg>
+  </div>`;
+}
+
+function renderSeasonalRiskCalendar(results) {
+  const el = getDataEl('data-risk-calendar');
+  if (!el || el.dataset.rendered) return;
+  const cr = results.climate;
+  if (!cr || !cr.ok || !cr.data) return;
+  el.dataset.rendered = 'true';
+
+  const months = cr.data;
+  const monthLabels = months.map(m => m.month);
+
+  el.innerHTML = `
+    <h3>${t('lb.risk.seasonalCalendar')}</h3>
+    <div style="overflow-x:auto;">
+      <table class="lb-table" style="font-size:12px;">
+        <thead><tr>
+          <th>Risk</th>
+          ${monthLabels.map(m => `<th style="text-align:center;padding:8px 6px;">${m}</th>`).join('')}
+        </tr></thead>
+        <tbody>
+          <tr><td><strong>Fire</strong></td>
+            ${months.map((m, i) => {
+              const level = (i >= 5 && i <= 8) ? 'High' : (i >= 3 && i <= 10) ? 'Mod' : 'Low';
+              const bg = level === 'High' ? '#EB5F5425' : level === 'Mod' ? '#E6A81718' : 'transparent';
+              return `<td style="background:${bg};text-align:center;">${level}</td>`;
+            }).join('')}
+          </tr>
+          <tr><td><strong>Flood</strong></td>
+            ${months.map(m => {
+              const level = (m.totalPrecip || 0) > 80 ? 'Elev.' : 'Low';
+              const bg = level !== 'Low' ? '#8ECAFF20' : 'transparent';
+              return `<td style="background:${bg};text-align:center;">${level}</td>`;
+            }).join('')}
+          </tr>
+          <tr><td><strong>Drought</strong></td>
+            ${months.map(m => {
+              const precip = m.totalPrecip || 0;
+              const level = precip < 10 ? 'High' : precip < 30 ? 'Mod' : 'Low';
+              const bg = level === 'High' ? '#E6A81720' : level === 'Mod' ? '#E6A81710' : 'transparent';
+              return `<td style="background:${bg};text-align:center;">${level}</td>`;
+            }).join('')}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lb-table-caption">Table 2 \u2014 Seasonal risk assessment derived from 30-year climate data and location factors</div>`;
+}
+
+function renderSources() {
+  return `
+    <h3>Environmental Data</h3>
+    <table class="lb-kv-table">
+      <tr><td>Weather & Climate</td><td>Open-Meteo (open-meteo.com) \u2014 Historical & forecast data</td></tr>
+      <tr><td>Soil Properties</td><td>SoilGrids (soilgrids.org) \u2014 ISRIC World Soil Information</td></tr>
+      <tr><td>Elevation</td><td>Open-Meteo Elevation API \u2014 SRTM 90m DEM</td></tr>
+      <tr><td>Geology</td><td>Macrostrat (macrostrat.org) \u2014 Geological map data</td></tr>
+    </table>
+    <h3>Biodiversity</h3>
+    <table class="lb-kv-table">
+      <tr><td>Species Observations</td><td>iNaturalist (inaturalist.org) \u2014 Community science records</td></tr>
+      <tr><td>Occurrence Records</td><td>GBIF (gbif.org) \u2014 Global Biodiversity Information Facility</td></tr>
+      <tr><td>Protected Areas</td><td>Natura 2000 Network \u2014 European Environment Agency</td></tr>
+    </table>
+    <h3>Risk & Hazards</h3>
+    <table class="lb-kv-table">
+      <tr><td>Fire Danger</td><td>EFFIS (effis.jrc.ec.europa.eu) \u2014 European Forest Fire Information System</td></tr>
+      <tr><td>Active Fires</td><td>NASA FIRMS \u2014 VIIRS satellite fire detection</td></tr>
+      <tr><td>Flood Hazard</td><td>GloFAS (globalfloods.eu) \u2014 Global Flood Awareness System</td></tr>
+    </table>
+    <h3>Land & Infrastructure</h3>
+    <table class="lb-kv-table">
+      <tr><td>Land Cover</td><td>CORINE, ESA WorldCover \u2014 Copernicus Land Monitoring Service</td></tr>
+      <tr><td>Infrastructure</td><td>OpenStreetMap via Overpass API</td></tr>
+      <tr><td>Geocoding</td><td>Nominatim / OpenStreetMap \u2014 Address and admin boundaries</td></tr>
+      <tr><td>Satellite Imagery</td><td>Sentinel-2 \u2014 Copernicus Open Access Hub</td></tr>
+    </table>`;
 }
