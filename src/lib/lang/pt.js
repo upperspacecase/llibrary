@@ -20,7 +20,7 @@ export const pt = {
 
   // Landing \u2014 Hero
   "landing.hero.tagline": "A sua terra vale mais<br>do que imagina.",
-  "landing.hero.sub": "Os mercados tradicionais subvalorizam as amenidades ambientais em 5–15%, dependendo da regi\u00E3o. Obtenha uma avalia\u00E7\u00E3o com IA que revela o valor ambiental oculto da sua propriedade e Explore conhecimento aberto sobre a sua regi\u00E3o. <span class=\"hero-source\">(Fonte: <a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\">pnas.org</a>)</span>",
+  "landing.hero.sub": "<a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\" >Os mercados tradicionais subvalorizam as amenidades ambientais em 5–15%</a>, dependendo da regi\u00E3o. Obtenha uma avalia\u00E7\u00E3o com IA que revela o valor ambiental oculto da sua propriedade e Explore conhecimento aberto sobre a sua regi\u00E3o.",
   "landing.hero.cta.primary": "Descobrir o Valor da Terra",
   "landing.hero.cta.secondary": "Explorar a Minha Regi\u00E3o",
 
@@ -371,7 +371,7 @@ export const pt = {
   "wiki.section.communityContributions": "Contribui\u00E7\u00F5es da Comunidade",
   "wiki.section.loadingContributions": "A carregar contribui\u00E7\u00F5es...",
   "wiki.section.communityNotes": "Notas da Comunidade",
-  "wiki.section.pendingReview": "Revis\u00E3o pendente",
+  "wiki.section.pendingReview": "Contribuições da comunidade",
   "wiki.section.communityInsights": "Perspetivas da comunidade",
   "wiki.section.dataAlerts": "alertas de dados",
   "wiki.section.needsVerification": "Necessita verifica\u00E7\u00E3o",

@@ -20,7 +20,7 @@ export const en = {
 
   // Landing — Hero
   "landing.hero.tagline": "Your land is worth more<br>than you know.",
-  "landing.hero.sub": "Traditional markets undervalue environmental amenities by 5–15% depending on region. Get an AI-powered valuation that uncovers your property's hidden environmental value and Explore open knowledge about your region. <span class=\"hero-source\">(Source: <a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\">pnas.org</a>)</span>",
+  "landing.hero.sub": "<a href=\"https://www.pnas.org/doi/10.1073/pnas.2012865117\" target=\"_blank\" rel=\"noopener\" >Traditional markets undervalue environmental amenities by 5–15%</a> depending on region. Get an AI-powered valuation that uncovers your property's hidden environmental value and Explore open knowledge about your region.",
   "landing.hero.cta.primary": "Discover Land Value",
   "landing.hero.cta.secondary": "Explore my Region",
 
@@ -374,7 +374,7 @@ export const en = {
   "wiki.section.communityContributions": "Community Contributions",
   "wiki.section.loadingContributions": "Loading contributions...",
   "wiki.section.communityNotes": "Community Notes",
-  "wiki.section.pendingReview": "Pending review",
+  "wiki.section.pendingReview": "Community submissions",
   "wiki.section.communityInsights": "Community insights",
   "wiki.section.dataAlerts": "data alerts",
   "wiki.section.needsVerification": "Needs verification",

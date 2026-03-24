@@ -8,7 +8,10 @@ export default async function handler(req, res) {
         const filter = { status: 'active' };
 
         if (section) filter.section = section;
-        if (type) filter.type = type;
+        if (type) {
+            const types = type.split(',').map(t => t.trim()).filter(Boolean);
+            filter.type = types.length > 1 ? { $in: types } : types[0];
+        }
 
         const maxResults = Math.min(parseInt(limit) || 50, 100);
 

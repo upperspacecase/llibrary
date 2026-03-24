@@ -53,6 +53,8 @@ export function applyTranslations() {
 }
 
 export function initI18n() {
+  document.documentElement.lang = currentLang;
+
   document.querySelectorAll('.lang-toggle').forEach(toggle => {
     const trigger = toggle.querySelector('.lang-toggle-trigger');
     const label = toggle.querySelector('.lang-toggle-label');
