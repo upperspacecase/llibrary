@@ -34,10 +34,16 @@
     </button>
     <div class="header-nav">
       <a href="#landbook" data-i18n="nav.landbook">LandBook</a>
-      <a href="/wiki" data-i18n="nav.commons">The Commons</a>
+      <a href="/commons" data-i18n="nav.commons">The Commons</a>
       <div class="lang-toggle">
-        <button data-lang="en" class="active">EN</button>
-        <button data-lang="pt">PT</button>
+        <button class="lang-toggle-trigger" aria-expanded="false">
+          <span class="lang-toggle-label">EN</span>
+          <svg class="lang-toggle-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="lang-toggle-menu">
+          <button data-lang="en">EN</button>
+          <button data-lang="pt">PT</button>
+        </div>
       </div>
     </div>
   </header>
@@ -72,9 +78,9 @@
   <!-- ===== THE COMMONS INTRO ===== -->
   <section class="commons-intro-section" id="featured-commons">
     <div class="container">
-      <div class="section-label">The Commons</div>
-      <h2 class="commons-intro-title">Collective intelligence for your region</h2>
-      <p class="commons-intro-desc">Explore local knowledge. Contribute what you know. Help build the most complete
+      <div class="section-label" data-i18n="landing.commons.label">The Commons</div>
+      <h2 class="commons-intro-title" data-i18n="landing.commons.title">Collective intelligence for your region</h2>
+      <p class="commons-intro-desc" data-i18n="landing.commons.desc">Explore local knowledge. Contribute what you know. Help build the most complete
         picture of your region—so better decisions get made by the people who live here.</p>
     </div>
   </section>
@@ -82,7 +88,7 @@
   <!-- ===== FEATURED COMMONS ===== -->
   <section class="featured-commons-section">
     <div class="container">
-      <p class="featured-commons-label">Featured Region</p>
+      <p class="featured-commons-label" data-i18n="landing.commons.featured">Featured Region</p>
       <a href="/wiki" class="featured-commons-card" aria-label="Explore Odemira region">
         <div class="featured-commons-img-wrap">
           <img src="/wiki/bioregion.png" alt="" class="featured-commons-img" />
@@ -92,7 +98,7 @@
               <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            Active
+            <span data-i18n="landing.commons.badge">Active</span>
           </div>
           <div class="featured-commons-overlay">
             <h3 class="featured-commons-name" id="fc-name">Odemira</h3>
@@ -102,11 +108,11 @@
         <div class="featured-commons-stats">
           <div class="featured-commons-stat">
             <span class="featured-commons-stat-value" id="fc-area">1720.6</span>
-            <span class="featured-commons-stat-unit">km²</span>
+            <span class="featured-commons-stat-unit" data-i18n="landing.commons.unit.area">km²</span>
           </div>
           <div class="featured-commons-stat">
             <span class="featured-commons-stat-value" id="fc-pop">31,488</span>
-            <span class="featured-commons-stat-unit">population</span>
+            <span class="featured-commons-stat-unit" data-i18n="landing.commons.unit.pop">population</span>
           </div>
           <span class="featured-commons-arrow" aria-hidden="true">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -123,17 +129,19 @@
   <!-- ===== ADD YOUR REGION ===== -->
   <section class="add-region-section">
     <div class="container">
-      <div class="section-label">Expand the Network</div>
-      <h2 class="add-region-title">Want LandLibrary in your region?</h2>
-      <p class="add-region-desc">Tell us where you are. We'll let you know when we launch near you.</p>
+      <div class="section-label" data-i18n="landing.region.label">Expand the Network</div>
+      <h2 class="add-region-title" data-i18n="landing.region.title">Want LandLibrary in your region?</h2>
+      <p class="add-region-desc" data-i18n="landing.region.desc">Tell us where you are. We'll let you know when we launch near you.</p>
 
       <div class="add-region-pills">
         <button class="add-region-pill" data-region="Algarve, Portugal">Algarve</button>
-        <button class="add-region-pill" data-region="Sintra, Portugal">Sintra</button>
-        <button class="add-region-pill" data-region="Douro Valley, Portugal">Douro Valley</button>
-        <button class="add-region-pill" data-region="Azores, Portugal">Azores</button>
-        <button class="add-region-pill" data-region="Lisbon Coast, Portugal">Lisbon Coast</button>
-        <button class="add-region-pill" data-region="Alentejo Interior, Portugal">Alentejo Interior</button>
+        <button class="add-region-pill" data-region="Provence, France">Provence</button>
+        <button class="add-region-pill" data-region="Andalusia, Spain">Andalusia</button>
+        <button class="add-region-pill" data-region="Peloponnese, Greece">Peloponnese</button>
+        <button class="add-region-pill" data-region="Cotswolds, England">Cotswolds</button>
+        <button class="add-region-pill" data-region="Willamette Valley, Oregon">Willamette Valley</button>
+        <button class="add-region-pill" data-region="Byron Bay, Australia">Byron Bay</button>
+        <button class="add-region-pill" data-region="Waikato, New Zealand">Waikato</button>
       </div>
 
       <div class="add-region-cta-wrap">
@@ -143,7 +151,7 @@
             <path d="M12 5v14" />
             <path d="M5 12h14" />
           </svg>
-          Add Your Region
+          <span data-i18n="landing.region.cta">Add Your Region</span>
         </button>
       </div>
     </div>
@@ -163,28 +171,28 @@
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         </div>
-        <h3>Thank you!</h3>
-        <p>We'll notify you when LandLibrary launches in your region.</p>
+        <h3 data-i18n="landing.region.modal.success.title">Thank you!</h3>
+        <p data-i18n="landing.region.modal.success.desc">We'll notify you when LandLibrary launches in your region.</p>
       </div>
 
       <!-- Form state -->
       <div class="add-region-form-state" id="add-region-form-state">
-        <h3>Add Your Region</h3>
-        <p class="add-region-modal-sub">Enter your location and email. We'll let you know when we expand to your area.
+        <h3 data-i18n="landing.region.modal.title">Add Your Region</h3>
+        <p class="add-region-modal-sub" data-i18n="landing.region.modal.desc">Enter your location and email. We'll let you know when we expand to your area.
         </p>
 
         <div class="add-region-fields">
           <div class="add-region-field">
-            <label for="add-region-location">Location</label>
+            <label for="add-region-location" data-i18n="landing.region.modal.location">Location</label>
             <input type="text" id="add-region-location" placeholder="e.g. Algarve, Portugal" />
           </div>
           <div class="add-region-field">
-            <label for="add-region-email">Email</label>
+            <label for="add-region-email" data-i18n="landing.region.modal.email">Email</label>
             <input type="email" id="add-region-email" placeholder="you@example.com" required />
           </div>
         </div>
 
-        <button class="add-region-submit" id="add-region-submit">Submit</button>
+        <button class="add-region-submit" id="add-region-submit" data-i18n="landing.region.modal.submit">Submit</button>
         <div class="add-region-feedback" id="add-region-feedback"></div>
       </div>
     </div>
@@ -201,7 +209,7 @@
       <div class="report-layout">
         <div class="report-preview">
           <div class="report-preview-card">
-            <div class="report-topo-header">TOPOGRAPHIC SURVEY</div>
+            <div class="report-topo-header" data-i18n="landing.lb.preview.topo">TOPOGRAPHIC SURVEY</div>
             <div class="report-topo-body">
               <div class="topo-lines">
                 <svg viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -228,7 +236,7 @@
               </div>
             </div>
             <div class="report-preview-footer">
-              <div class="report-sample-label">SAMPLE REPORT</div>
+              <div class="report-sample-label" data-i18n="landing.lb.preview.sample">SAMPLE REPORT</div>
               <div class="report-parcel-name">Parcel #4579-A</div>
               <div class="report-parcel-location">Odemira, Portugal</div>
             </div>
@@ -246,7 +254,7 @@
               <path d="M16 17H8" />
               <path d="M10 9H8" />
             </svg>
-            <span class="chapter-title">Overview</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.overview">Overview</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">02</span>
@@ -255,7 +263,7 @@
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" />
             </svg>
-            <span class="chapter-title">Map</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.map">Map</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">03</span>
@@ -264,7 +272,7 @@
               <path d="M3 17l4-4 4 4 4-8 6 6" />
               <path d="M3 21h18" />
             </svg>
-            <span class="chapter-title">Elevation &amp; Terrain</span>
+            <span class="chapter-title" data-i18n-html="landing.lb.ch.elevation">Elevation &amp; Terrain</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">04</span>
@@ -274,7 +282,7 @@
               <circle cx="12" cy="12" r="7" />
               <circle cx="12" cy="12" r="10" />
             </svg>
-            <span class="chapter-title">Soil</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.soil">Soil</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">05</span>
@@ -282,7 +290,7 @@
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
             </svg>
-            <span class="chapter-title">Water Features</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.water">Water Features</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">06</span>
@@ -290,7 +298,7 @@
               stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z" />
             </svg>
-            <span class="chapter-title">Weather &amp; Climate</span>
+            <span class="chapter-title" data-i18n-html="landing.lb.ch.weather">Weather &amp; Climate</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">07</span>
@@ -301,7 +309,7 @@
               <path d="M12 18c-2.5-3-4-5.5-4-8a4 4 0 1 1 8 0c0 2.5-1.5 5-4 8z" />
               <circle cx="12" cy="10" r="1" />
             </svg>
-            <span class="chapter-title">Biodiversity</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.biodiversity">Biodiversity</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">08</span>
@@ -310,7 +318,7 @@
               <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0" />
               <path d="M12 2a4 4 0 0 0-4 4c0 2 1.5 3.5 4 6 2.5-2.5 4-4 4-6a4 4 0 0 0-4-4z" />
             </svg>
-            <span class="chapter-title">Fire Risk</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.fire">Fire Risk</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">09</span>
@@ -320,7 +328,7 @@
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span class="chapter-title">Protected Areas</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.protected">Protected Areas</span>
           </div>
           <div class="report-chapter">
             <span class="chapter-num">10</span>
@@ -329,7 +337,7 @@
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            <span class="chapter-title">Your Knowledge</span>
+            <span class="chapter-title" data-i18n="landing.lb.ch.knowledge">Your Knowledge</span>
           </div>
         </div>
       </div>
@@ -355,33 +363,33 @@
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>
         </div>
-        <h3>Thank you!</h3>
-        <p>We'll get in touch soon.</p>
+        <h3 data-i18n="landing.waitlist.success.title">Thank you!</h3>
+        <p data-i18n="landing.waitlist.success.desc">We'll get in touch soon.</p>
       </div>
 
       <!-- Form state -->
       <div class="waitlist-form-state" id="waitlist-form-state">
-        <h3>Join the Waitlist</h3>
-        <p class="waitlist-sub">Pin your land on the map, tell us your address, and leave your email. We'll notify you
+        <h3 data-i18n="landing.waitlist.title">Join the Waitlist</h3>
+        <p class="waitlist-sub" data-i18n="landing.waitlist.desc">Pin your land on the map, tell us your address, and leave your email. We'll notify you
           when LandBook launches.</p>
 
         <div class="waitlist-map-wrap">
           <div id="waitlist-map" class="waitlist-map"></div>
-          <div class="waitlist-map-hint" id="waitlist-map-hint">Click the map to drop a pin on your land</div>
+          <div class="waitlist-map-hint" id="waitlist-map-hint" data-i18n="landing.waitlist.map.hint">Click the map to drop a pin on your land</div>
         </div>
 
         <div class="waitlist-fields">
           <div class="waitlist-field">
-            <label for="waitlist-address">Address</label>
+            <label for="waitlist-address" data-i18n="landing.waitlist.address">Address</label>
             <input type="text" id="waitlist-address" placeholder="e.g. Odemira, Portugal" />
           </div>
           <div class="waitlist-field">
-            <label for="waitlist-email">Email</label>
+            <label for="waitlist-email" data-i18n="landing.waitlist.email">Email</label>
             <input type="email" id="waitlist-email" placeholder="you@example.com" required />
           </div>
         </div>
 
-        <button class="waitlist-submit" id="waitlist-submit">Submit</button>
+        <button class="waitlist-submit" id="waitlist-submit" data-i18n="landing.waitlist.submit">Submit</button>
         <div class="waitlist-feedback" id="waitlist-feedback"></div>
       </div>
     </div>
@@ -396,7 +404,7 @@
       </div>
       <div class="footer-links">
         <a href="/" data-i18n="footer.home">Home</a>
-        <a href="/wiki" data-i18n="footer.commons">The Commons</a>
+        <a href="/commons" data-i18n="footer.commons">The Commons</a>
         <a href="#landbook" data-i18n="footer.landbook">LandBook</a>
       </div>
     </div>

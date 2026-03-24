@@ -370,6 +370,7 @@ export const en = {
   "wiki.hub.loadingResources": "Loading resources...",
 
   // Wiki section page — dynamic labels
+  "wiki.section.references": "References",
   "wiki.section.communityContributions": "Community Contributions",
   "wiki.section.loadingContributions": "Loading contributions...",
   "wiki.section.communityNotes": "Community Notes",
@@ -411,4 +412,63 @@ export const en = {
   "wiki.sections.risks": "Risks",
   "wiki.sections.culture": "Culture",
   "wiki.sections.community": "Community",
+
+  // Landing — Commons Section
+  "landing.commons.label": "The Commons",
+  "landing.commons.title": "Collective intelligence for your region",
+  "landing.commons.desc": "Explore local knowledge. Contribute what you know. Help build the most complete picture of your region\u2014so better decisions get made by the people who live here.",
+  "landing.commons.featured": "Featured Region",
+  "landing.commons.badge": "Active",
+  "landing.commons.unit.area": "km\u00B2",
+  "landing.commons.unit.pop": "population",
+
+  // Landing — Add Region
+  "landing.region.label": "Expand the Network",
+  "landing.region.title": "Want LandLibrary in your region?",
+  "landing.region.desc": "Tell us where you are. We\u2019ll let you know when we launch near you.",
+  "landing.region.cta": "Add Your Region",
+  "landing.region.modal.success.title": "Thank you!",
+  "landing.region.modal.success.desc": "We\u2019ll notify you when LandLibrary launches in your region.",
+  "landing.region.modal.title": "Add Your Region",
+  "landing.region.modal.desc": "Enter your location and email. We\u2019ll let you know when we expand to your area.",
+  "landing.region.modal.location": "Location",
+  "landing.region.modal.email": "Email",
+  "landing.region.modal.submit": "Submit",
+
+  // Landing — Report Chapters
+  "landing.lb.ch.overview": "Overview",
+  "landing.lb.ch.map": "Map",
+  "landing.lb.ch.elevation": "Elevation &amp; Terrain",
+  "landing.lb.ch.soil": "Soil",
+  "landing.lb.ch.water": "Water Features",
+  "landing.lb.ch.weather": "Weather &amp; Climate",
+  "landing.lb.ch.biodiversity": "Biodiversity",
+  "landing.lb.ch.fire": "Fire Risk",
+  "landing.lb.ch.protected": "Protected Areas",
+  "landing.lb.ch.knowledge": "Your Knowledge",
+  "landing.lb.preview.topo": "TOPOGRAPHIC SURVEY",
+  "landing.lb.preview.sample": "SAMPLE REPORT",
+
+  // Landing — Waitlist Modal
+  "landing.waitlist.success.title": "Thank you!",
+  "landing.waitlist.success.desc": "We\u2019ll get in touch soon.",
+  "landing.waitlist.title": "Join the Waitlist",
+  "landing.waitlist.desc": "Pin your land on the map, tell us your address, and leave your email. We\u2019ll notify you when LandBook launches.",
+  "landing.waitlist.map.hint": "Click the map to drop a pin on your land",
+  "landing.waitlist.address": "Address",
+  "landing.waitlist.email": "Email",
+  "landing.waitlist.submit": "Submit",
+
+  // Commons Hub Page
+  "commons.label": "The Commons",
+  "commons.title": "Bioregional knowledge,<br>built by the people who live there.",
+  "commons.desc": "Each region is a living wiki \u2014 land, water, climate, ecology, culture \u2014 contributed by locals and enriched with open data. Choose a region to explore.",
+  "commons.active": "Active Regions",
+  "commons.badge.live": "Live",
+  "commons.odemira.sections": "10 sections",
+  "commons.odemira.community": "Community-built",
+  "commons.request.label": "Expand the Network",
+  "commons.request.title": "Want LandLibrary in your region?",
+  "commons.request.desc": "We\u2019re growing across Europe and beyond. Tell us where you are \u2014 we\u2019ll let you know when we launch near you.",
+  "commons.request.cta": "Request Your Region",
 };

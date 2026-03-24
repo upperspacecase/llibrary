@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="/favicon1.jpg">
+  <title>The Commons — LandLibrary</title>
+  <meta name="description" content="Explore bioregional knowledge. Choose a region to dive into local land intelligence.">
+  <meta property="og:title" content="The Commons — LandLibrary">
+  <meta property="og:description" content="Explore bioregional knowledge. Choose a region to dive into local land intelligence.">
+  <meta property="og:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <header class="header page-header">
+    <a href="/" class="logo">
+      <img src="/logo.svg" alt="LandLibrary" class="logo-img">
+    </a>
+    <div class="header-nav">
+      <a href="/">Home</a>
+      <a href="/commons" class="active">The Commons</a>
+      <a href="/create">Create LandBook</a>
+      <div class="lang-toggle">
+        <button class="lang-toggle-trigger" aria-expanded="false">
+          <span class="lang-toggle-label">EN</span>
+          <svg class="lang-toggle-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="lang-toggle-menu">
+          <button data-lang="en">EN</button>
+          <button data-lang="pt">PT</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <div class="commons-hub-page">
+
+      <!-- Hero -->
+      <section class="commons-hub-hero">
+        <div class="container">
+          <div class="section-label" data-i18n="commons.label">The Commons</div>
+          <h1 class="commons-hub-title" data-i18n-html="commons.title">Bioregional knowledge,<br>built by the people who live there.</h1>
+          <p class="commons-hub-desc" data-i18n="commons.desc">Each region is a living wiki — land, water, climate, ecology, culture — contributed by locals and enriched with open data. Choose a region to explore.</p>
+        </div>
+      </section>
+
+      <!-- Active regions -->
+      <section class="commons-hub-regions">
+        <div class="container">
+          <p class="commons-hub-section-label" data-i18n="commons.active">Active Regions</p>
+          <div class="commons-hub-grid">
+
+            <a href="/wiki" class="commons-region-card commons-region-active">
+              <div class="commons-region-img-wrap">
+                <img src="/wiki/bioregion.png" alt="Odemira region" class="commons-region-img" />
+                <div class="commons-region-badge">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>
+                  <span data-i18n="commons.badge.live">Live</span>
+                </div>
+              </div>
+              <div class="commons-region-info">
+                <h3 class="commons-region-name">Odemira</h3>
+                <p class="commons-region-location">Southwest Alentejo, Portugal</p>
+                <div class="commons-region-stats">
+                  <span>1,720 km²</span>
+                  <span data-i18n="commons.odemira.sections">10 sections</span>
+                  <span data-i18n="commons.odemira.community">Community-built</span>
+                </div>
+              </div>
+              <span class="commons-region-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </span>
+            </a>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Request your region -->
+      <section class="commons-hub-request">
+        <div class="container">
+          <div class="commons-hub-request-inner">
+            <div class="section-label" data-i18n="commons.request.label">Expand the Network</div>
+            <h2 class="commons-hub-request-title" data-i18n="commons.request.title">Want LandLibrary in your region?</h2>
+            <p class="commons-hub-request-desc" data-i18n="commons.request.desc">We're growing across Europe and beyond. Tell us where you are — we'll let you know when we launch near you.</p>
+
+            <div class="commons-hub-request-pills">
+              <button class="add-region-pill" data-region="Algarve, Portugal">Algarve</button>
+              <button class="add-region-pill" data-region="Sintra, Portugal">Sintra</button>
+              <button class="add-region-pill" data-region="Douro Valley, Portugal">Douro Valley</button>
+              <button class="add-region-pill" data-region="Provence, France">Provence</button>
+              <button class="add-region-pill" data-region="Andalusia, Spain">Andalusia</button>
+              <button class="add-region-pill" data-region="Peloponnese, Greece">Peloponnese</button>
+              <button class="add-region-pill" data-region="Cotswolds, England">Cotswolds</button>
+              <button class="add-region-pill" data-region="Willamette Valley, Oregon">Willamette Valley</button>
+              <button class="add-region-pill" data-region="Byron Bay, Australia">Byron Bay</button>
+              <button class="add-region-pill" data-region="Waikato, New Zealand">Waikato</button>
+            </div>
+
+            <div class="commons-hub-request-cta-wrap">
+              <button class="add-region-cta" id="open-add-region">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                <span data-i18n="commons.request.cta">Request Your Region</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Add region modal (same as home page) -->
+  <div class="add-region-overlay" id="add-region-overlay" style="display:none;">
+    <div class="add-region-modal">
+      <button class="add-region-close" id="add-region-close">&times;</button>
+
+      <div class="add-region-success" id="add-region-success" style="display:none;">
+        <div class="add-region-success-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </div>
+        <h3 data-i18n="landing.region.modal.success.title">You're on the list!</h3>
+        <p data-i18n="landing.region.modal.success.desc">We'll email you as soon as we launch in your area.</p>
+      </div>
+
+      <div class="add-region-form-state" id="add-region-form-state">
+        <h3 data-i18n="landing.region.modal.title">Request Your Region</h3>
+        <p class="add-region-modal-sub" data-i18n="landing.region.modal.desc">Enter your location and email. We'll let you know when we expand to your area.</p>
+
+        <div class="add-region-fields">
+          <div class="add-region-field">
+            <label for="add-region-location" data-i18n="landing.region.modal.location">Location</label>
+            <input type="text" id="add-region-location" placeholder="e.g. Provence, France" />
+          </div>
+          <div class="add-region-field">
+            <label for="add-region-email" data-i18n="landing.region.modal.email">Email</label>
+            <input type="email" id="add-region-email" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <button class="add-region-submit" id="add-region-submit" data-i18n="landing.region.modal.submit">Submit</button>
+        <div class="add-region-feedback" id="add-region-feedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/pages/commons.js"></script>
+</body>
+
+</html>

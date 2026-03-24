@@ -12,6 +12,7 @@ import { initI18n, t } from '../lib/i18n.js';
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
   getAllSections, getSectionById,
+  getEventsCalendar, getLandmarks,
 } from '../lib/wiki-data.js';
 
 // Charts & dashboard
@@ -57,8 +58,39 @@ initI18n();
 const sidebar = document.getElementById('wiki-sidebar');
 const content = document.getElementById('wiki-content');
 
+// Mobile drawer refs
+const fab = document.getElementById('wiki-fab');
+const drawerBackdrop = document.getElementById('wiki-drawer-backdrop');
+const drawer = document.getElementById('wiki-drawer');
+const drawerNav = document.getElementById('wiki-drawer-nav');
+
 // ---- State ----
 let currentMap = null;
+
+// ---- Mobile drawer logic ----
+function openDrawer() {
+  fab.classList.add('is-open');
+  drawerBackdrop.classList.add('is-visible');
+  drawer.classList.add('is-open');
+}
+
+function closeDrawer() {
+  fab.classList.remove('is-open');
+  drawerBackdrop.classList.remove('is-visible');
+  drawer.classList.remove('is-open');
+}
+
+fab.addEventListener('click', () => {
+  if (drawer.classList.contains('is-open')) closeDrawer();
+  else openDrawer();
+});
+
+drawerBackdrop.addEventListener('click', closeDrawer);
+
+// Close drawer when a nav link is tapped
+drawerNav.addEventListener('click', (e) => {
+  if (e.target.closest('a')) closeDrawer();
+});
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -263,8 +295,7 @@ function addOverpassWays(map, ways, color = '#3388ff') {
 
 function renderSidebar(activeId) {
   const sections = getAllSections();
-  sidebar.innerHTML = `
-    <nav class="wiki-sidebar-nav">
+  const navHtml = `
       <a href="#hub" class="wiki-nav-link ${activeId === 'hub' ? 'active' : ''}">
         <span class="wiki-nav-title">${t('wiki.hub.title')}</span>
       </a>
@@ -274,8 +305,10 @@ function renderSidebar(activeId) {
           <span class="wiki-nav-title">${t('wiki.sections.' + s.id) || s.title}</span>
         </a>
       `).join('')}
-    </nav>
   `;
+
+  sidebar.innerHTML = `<nav class="wiki-sidebar-nav">${navHtml}</nav>`;
+  drawerNav.innerHTML = navHtml;
 }
 
 // ---------------------------------------------------------------------------
@@ -593,22 +626,6 @@ async function renderSection(sectionId) {
           <div id="wiki-data-content"></div>
         </section>
 
-        ${section.references && section.references.length ? `
-        <!-- References -->
-        <section class="wiki-references">
-          <h2 class="wiki-references-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-            References
-          </h2>
-          <ol class="wiki-references-list">
-            ${section.references.map(r => `
-              <li class="wiki-reference-item" value="${r.id}">
-                <a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a>
-              </li>
-            `).join('')}
-          </ol>
-        </section>
-        ` : ''}
       </div>
 
       <!-- Right column: Community Notes sidebar -->
@@ -750,13 +767,32 @@ async function renderSection(sectionId) {
           <button class="wiki-inline-contrib-close" id="wiki-contrib-modal-close">&times;</button>
         </div>
         <div class="wiki-inline-contrib-body">
-          <select id="wiki-contrib-modal-type" class="wiki-sidebar-contrib-select" style="margin-bottom:12px;">
-            <option value="story">Story / Experience</option>
-            <option value="tip">Practical Tip</option>
-            <option value="event">Event / Gathering</option>
-            <option value="place">Place / Location</option>
-            <option value="resource">Resource / Link</option>
-          </select>
+          <div class="wiki-contrib-type-pills" id="wiki-contrib-type-pills">
+            <button class="wiki-contrib-type-pill active" data-type="story">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+              Story
+            </button>
+            <button class="wiki-contrib-type-pill" data-type="tip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m6.34 6.34 2.83 2.83"/><path d="M2 12h4"/><path d="m17.66 6.34-2.83 2.83"/><path d="M22 12h-4"/><circle cx="12" cy="17" r="5"/></svg>
+              Tip
+            </button>
+            <button class="wiki-contrib-type-pill" data-type="event">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Event
+            </button>
+            <button class="wiki-contrib-type-pill" data-type="place">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              Place
+            </button>
+            <button class="wiki-contrib-type-pill" data-type="resource">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Link
+            </button>
+          </div>
+          <div class="wiki-contrib-link-input" id="wiki-contrib-link-input" style="display:none;">
+            <input type="url" id="wiki-contrib-modal-url" placeholder="Paste a URL\u2026" />
+            <div class="wiki-contrib-link-preview" id="wiki-contrib-link-preview"></div>
+          </div>
           <input type="text" id="wiki-contrib-modal-title" placeholder="${t('wiki.section.title')}" />
           <textarea id="wiki-contrib-modal-text" rows="4" placeholder="Share what you know\u2026"></textarea>
           <input type="text" id="wiki-contrib-modal-author" placeholder="${t('wiki.section.yourName')} (optional)" />
@@ -804,6 +840,23 @@ async function renderSection(sectionId) {
         </div>
       </div>
     </div>
+
+    ${section.references && section.references.length ? `
+    <!-- References — full width at very bottom -->
+    <section class="wiki-references">
+      <h2 class="wiki-references-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+        ${t('wiki.section.references') || 'References'}
+      </h2>
+      <ol class="wiki-references-list">
+        ${section.references.map(r => `
+          <li class="wiki-reference-item" value="${r.id}">
+            <a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a>
+          </li>
+        `).join('')}
+      </ol>
+    </section>
+    ` : ''}
   `;
 
   // Initialise map, contributions, sidebar, and toolbar after DOM insertion
@@ -977,7 +1030,7 @@ async function initLandMap(map) {
     }
   } catch (e) { console.warn('Elevation fetch failed:', e); }
 
-  addLandmarkMarkers(map, LANDMARKS);
+  addLandmarkMarkers(map, getLandmarks());
 }
 
 async function initWaterMap(map) {
@@ -1037,11 +1090,11 @@ function initAgricultureMap(map) {
     visible: true,
   });
 
-  addLandmarkMarkers(map, LANDMARKS.filter(l => l.type === 'town' || l.type === 'community'));
+  addLandmarkMarkers(map, getLandmarks().filter(l => ['town', 'village', 'community', 'vila', 'aldeia', 'comunidade'].includes(l.type)));
 }
 
 async function initCommunityMap(map) {
-  addLandmarkMarkers(map, LANDMARKS);
+  addLandmarkMarkers(map, getLandmarks());
   try {
     const data = await getPlaces(ODEMIRA.bbox);
     const nodes = extractNodes(data);
@@ -1386,7 +1439,7 @@ async function loadCommunityData(container) {
       <div class="wiki-data-card wiki-data-card-wide">
         <h3>Notable Places</h3>
         <ul>
-          ${LANDMARKS.map(lm =>
+          ${getLandmarks().map(lm =>
     `<li><strong>${lm.name}</strong> (${lm.type}) &mdash; ${lm.desc}</li>`
   ).join('')}
         </ul>
@@ -1398,7 +1451,7 @@ async function loadCommunityData(container) {
         <table class="wiki-events-table">
           <thead><tr><th>Month</th><th>Event</th><th>Location</th><th>Type</th></tr></thead>
           <tbody>
-            ${EVENTS_CALENDAR.map(e => `
+            ${getEventsCalendar().map(e => `
               <tr>
                 <td>${e.month}</td>
                 <td>${e.name}</td>
@@ -2063,12 +2116,78 @@ function initSidebarActions(sectionId) {
   }
 }
 
+function initContribTypePills(container) {
+  const pills = container.querySelectorAll('.wiki-contrib-type-pill');
+  const linkInput = container.querySelector('#wiki-contrib-link-input');
+
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      pills.forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      // Show/hide link input
+      if (linkInput) {
+        linkInput.style.display = pill.dataset.type === 'resource' ? '' : 'none';
+      }
+    });
+  });
+
+  // URL preview on paste/input
+  const urlInput = container.querySelector('#wiki-contrib-modal-url');
+  const previewEl = container.querySelector('#wiki-contrib-link-preview');
+  if (urlInput && previewEl) {
+    let debounceTimer = null;
+    urlInput.addEventListener('input', () => {
+      urlInput.style.borderColor = '';
+      clearTimeout(debounceTimer);
+      const url = urlInput.value.trim();
+      if (!url) { previewEl.innerHTML = ''; return; }
+      debounceTimer = setTimeout(() => fetchLinkPreview(url, previewEl), 500);
+    });
+  }
+}
+
+async function fetchLinkPreview(url, previewEl) {
+  // Validate URL
+  try { new URL(url); } catch { previewEl.innerHTML = ''; return; }
+
+  previewEl.innerHTML = '<div class="wiki-link-preview-loading"><span class="loading-spinner"></span></div>';
+
+  // Check for embeddable URLs (YouTube, Vimeo)
+  const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+
+  if (ytMatch) {
+    previewEl.innerHTML = `<div class="wiki-link-embed"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+    return;
+  }
+  if (vimeoMatch) {
+    previewEl.innerHTML = `<div class="wiki-link-embed"><iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+    return;
+  }
+
+  // For other URLs, show a thumbnail card using the favicon + domain
+  try {
+    const domain = new URL(url).hostname;
+    previewEl.innerHTML = `
+      <a href="${url}" target="_blank" rel="noopener noreferrer" class="wiki-link-preview-card">
+        <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" class="wiki-link-preview-favicon" />
+        <div class="wiki-link-preview-info">
+          <span class="wiki-link-preview-domain">${domain}</span>
+          <span class="wiki-link-preview-url">${url.length > 60 ? url.slice(0, 60) + '…' : url}</span>
+        </div>
+      </a>
+    `;
+  } catch {
+    previewEl.innerHTML = '';
+  }
+}
+
 function openContribModal(sectionId) {
   const overlay = document.getElementById('wiki-contrib-modal-overlay');
   const closeBtn = document.getElementById('wiki-contrib-modal-close');
   const cancelBtn = document.getElementById('wiki-contrib-modal-cancel');
   const submitBtn = document.getElementById('wiki-contrib-modal-submit');
-  const typeEl = document.getElementById('wiki-contrib-modal-type');
   const titleEl = document.getElementById('wiki-contrib-modal-title');
   const textEl = document.getElementById('wiki-contrib-modal-text');
   const authorEl = document.getElementById('wiki-contrib-modal-author');
@@ -2076,31 +2195,62 @@ function openContribModal(sectionId) {
   if (!overlay) return;
 
   // Reset form
-  if (typeEl) typeEl.selectedIndex = 0;
   if (titleEl) titleEl.value = '';
   if (textEl) { textEl.value = ''; textEl.style.borderColor = ''; }
   if (authorEl) authorEl.value = '';
   if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = t('wiki.section.submit'); }
 
+  // Reset type pills to 'story'
+  const pills = overlay.querySelectorAll('.wiki-contrib-type-pill');
+  pills.forEach(p => p.classList.toggle('active', p.dataset.type === 'story'));
+  const linkInput = document.getElementById('wiki-contrib-link-input');
+  if (linkInput) linkInput.style.display = 'none';
+  const urlEl = document.getElementById('wiki-contrib-modal-url');
+  if (urlEl) urlEl.value = '';
+  const previewEl = document.getElementById('wiki-contrib-link-preview');
+  if (previewEl) previewEl.innerHTML = '';
+
   // Restore body content if it was replaced by success message
   const modalBody = overlay.querySelector('.wiki-inline-contrib-body');
-  if (modalBody && !modalBody.querySelector('#wiki-contrib-modal-type')) {
+  if (modalBody && !modalBody.querySelector('.wiki-contrib-type-pills')) {
     modalBody.innerHTML = `
-      <select id="wiki-contrib-modal-type" class="wiki-sidebar-contrib-select" style="margin-bottom:12px;">
-        <option value="story">Story / Experience</option>
-        <option value="tip">Practical Tip</option>
-        <option value="event">Event / Gathering</option>
-        <option value="place">Place / Location</option>
-        <option value="resource">Resource / Link</option>
-      </select>
+      <div class="wiki-contrib-type-pills" id="wiki-contrib-type-pills">
+        <button class="wiki-contrib-type-pill active" data-type="story">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          Story
+        </button>
+        <button class="wiki-contrib-type-pill" data-type="tip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m6.34 6.34 2.83 2.83"/><path d="M2 12h4"/><path d="m17.66 6.34-2.83 2.83"/><path d="M22 12h-4"/><circle cx="12" cy="17" r="5"/></svg>
+          Tip
+        </button>
+        <button class="wiki-contrib-type-pill" data-type="event">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Event
+        </button>
+        <button class="wiki-contrib-type-pill" data-type="place">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Place
+        </button>
+        <button class="wiki-contrib-type-pill" data-type="resource">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Link
+        </button>
+      </div>
+      <div class="wiki-contrib-link-input" id="wiki-contrib-link-input" style="display:none;">
+        <input type="url" id="wiki-contrib-modal-url" placeholder="Paste a URL\u2026" />
+        <div class="wiki-contrib-link-preview" id="wiki-contrib-link-preview"></div>
+      </div>
       <input type="text" id="wiki-contrib-modal-title" placeholder="${t('wiki.section.title')}" />
       <textarea id="wiki-contrib-modal-text" rows="4" placeholder="Share what you know\u2026"></textarea>
       <input type="text" id="wiki-contrib-modal-author" placeholder="${t('wiki.section.yourName')} (optional)" />
     `;
   }
 
+  // Wire up pill type selection
+  initContribTypePills(overlay);
+
   overlay.style.display = 'flex';
-  if (textEl) textEl.focus();
+  if (titleEl) titleEl.focus();
 
   function closeModal() {
     overlay.style.display = 'none';
@@ -2120,13 +2270,22 @@ function openContribModal(sectionId) {
   if (submitBtn && newSubmitBtn) {
     submitBtn.replaceWith(newSubmitBtn);
     newSubmitBtn.addEventListener('click', async () => {
-      const tEl = document.getElementById('wiki-contrib-modal-type');
+      const activePill = overlay.querySelector('.wiki-contrib-type-pill.active');
+      const selectedType = activePill ? activePill.dataset.type : 'story';
       const tiEl = document.getElementById('wiki-contrib-modal-title');
       const txEl = document.getElementById('wiki-contrib-modal-text');
       const auEl = document.getElementById('wiki-contrib-modal-author');
+      const urlEl = document.getElementById('wiki-contrib-modal-url');
 
       const contentVal = txEl ? txEl.value.trim() : '';
-      if (!contentVal) {
+      const urlVal = urlEl ? urlEl.value.trim() : '';
+
+      // For resource type, require URL; for others require content
+      if (selectedType === 'resource' && !urlVal) {
+        if (urlEl) urlEl.style.borderColor = 'var(--coral, #e74c3c)';
+        return;
+      }
+      if (selectedType !== 'resource' && !contentVal) {
         if (txEl) txEl.style.borderColor = 'var(--coral, #e74c3c)';
         return;
       }
@@ -2135,16 +2294,19 @@ function openContribModal(sectionId) {
       newSubmitBtn.textContent = 'Submitting\u2026';
 
       try {
+        const payload = {
+          section: sectionId,
+          type: selectedType,
+          title: tiEl ? tiEl.value.trim() : '',
+          content: contentVal,
+          author: auEl ? auEl.value.trim() || 'Anonymous' : 'Anonymous',
+        };
+        if (urlVal) payload.url = urlVal;
+
         const res = await fetch('/api/wiki/contributions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            section: sectionId,
-            type: tEl ? tEl.value : 'story',
-            title: tiEl ? tiEl.value.trim() : '',
-            content: contentVal,
-            author: auEl ? auEl.value.trim() || 'Anonymous' : 'Anonymous',
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
@@ -2483,6 +2645,7 @@ async function route() {
 }
 
 window.addEventListener('hashchange', route);
+window.addEventListener('langchange', route);
 
 // Initial render
 route();

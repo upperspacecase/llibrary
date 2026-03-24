@@ -367,6 +367,7 @@ export const pt = {
   "wiki.hub.loadingResources": "A carregar recursos...",
 
   // P\u00E1gina de sec\u00E7\u00E3o wiki \u2014 r\u00F3tulos din\u00E2micos
+  "wiki.section.references": "Refer\u00EAncias",
   "wiki.section.communityContributions": "Contribui\u00E7\u00F5es da Comunidade",
   "wiki.section.loadingContributions": "A carregar contribui\u00E7\u00F5es...",
   "wiki.section.communityNotes": "Notas da Comunidade",
@@ -408,4 +409,63 @@ export const pt = {
   "wiki.sections.risks": "Riscos",
   "wiki.sections.culture": "Cultura",
   "wiki.sections.community": "Comunidade",
+
+  // Landing — Secção Os Comuns
+  "landing.commons.label": "Os Comuns",
+  "landing.commons.title": "Inteligência coletiva para a sua região",
+  "landing.commons.desc": "Explore conhecimento local. Contribua com o que sabe. Ajude a construir o retrato mais completo da sua região — para que melhores decisões sejam tomadas por quem aqui vive.",
+  "landing.commons.featured": "Região em Destaque",
+  "landing.commons.badge": "Ativo",
+  "landing.commons.unit.area": "km²",
+  "landing.commons.unit.pop": "população",
+
+  // Landing — Adicionar Região
+  "landing.region.label": "Expandir a Rede",
+  "landing.region.title": "Quer a LandLibrary na sua região?",
+  "landing.region.desc": "Diga-nos onde está. Avisamos quando lançarmos perto de si.",
+  "landing.region.cta": "Adicionar a Sua Região",
+  "landing.region.modal.success.title": "Obrigado!",
+  "landing.region.modal.success.desc": "Vamos notificá-lo quando a LandLibrary chegar à sua região.",
+  "landing.region.modal.title": "Adicionar a Sua Região",
+  "landing.region.modal.desc": "Insira a sua localização e email. Avisamos quando expandirmos para a sua área.",
+  "landing.region.modal.location": "Localização",
+  "landing.region.modal.email": "Email",
+  "landing.region.modal.submit": "Submeter",
+
+  // Landing — Capítulos do Relatório
+  "landing.lb.ch.overview": "Visão Geral",
+  "landing.lb.ch.map": "Mapa",
+  "landing.lb.ch.elevation": "Elevação &amp; Terreno",
+  "landing.lb.ch.soil": "Solo",
+  "landing.lb.ch.water": "Recursos Hídricos",
+  "landing.lb.ch.weather": "Clima &amp; Meteorologia",
+  "landing.lb.ch.biodiversity": "Biodiversidade",
+  "landing.lb.ch.fire": "Risco de Incêndio",
+  "landing.lb.ch.protected": "Áreas Protegidas",
+  "landing.lb.ch.knowledge": "O Seu Conhecimento",
+  "landing.lb.preview.topo": "LEVANTAMENTO TOPOGRÁFICO",
+  "landing.lb.preview.sample": "RELATÓRIO DE AMOSTRA",
+
+  // Landing — Modal Lista de Espera
+  "landing.waitlist.success.title": "Obrigado!",
+  "landing.waitlist.success.desc": "Entraremos em contacto em breve.",
+  "landing.waitlist.title": "Entrar na Lista de Espera",
+  "landing.waitlist.desc": "Marque a sua terra no mapa, indique a morada e deixe o seu email. Avisamos quando o LandBook for lançado.",
+  "landing.waitlist.map.hint": "Clique no mapa para marcar a sua terra",
+  "landing.waitlist.address": "Morada",
+  "landing.waitlist.email": "Email",
+  "landing.waitlist.submit": "Submeter",
+
+  // Página Hub Os Comuns
+  "commons.label": "Os Comuns",
+  "commons.title": "Conhecimento bio-regional,<br>construído por quem aqui vive.",
+  "commons.desc": "Cada região é uma wiki viva — terra, água, clima, ecologia, cultura — contribuída por locais e enriquecida com dados abertos. Escolha uma região para explorar.",
+  "commons.active": "Regiões Ativas",
+  "commons.badge.live": "Ativo",
+  "commons.odemira.sections": "10 secções",
+  "commons.odemira.community": "Construído pela comunidade",
+  "commons.request.label": "Expandir a Rede",
+  "commons.request.title": "Quer a LandLibrary na sua região?",
+  "commons.request.desc": "Estamos a crescer pela Europa e além. Diga-nos onde está — avisamos quando lançarmos perto de si.",
+  "commons.request.cta": "Solicitar a Sua Região",
 };

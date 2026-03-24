@@ -1,7 +1,14 @@
 /**
  * Odemira regional wiki content — structured data from WIKI_CONTENT.md.
  * 10 sections matching the researched region profile.
+ * Language-aware: imports PT translations and switches based on current lang.
  */
+
+import { SECTIONS_PT, EVENTS_CALENDAR_PT, LANDMARKS_PT } from './wiki-data-pt.js';
+
+function getLang() {
+  try { return localStorage.getItem('lll-lang') || 'en'; } catch { return 'en'; }
+}
 
 // Odemira municipality reference coordinates
 export const ODEMIRA = {
@@ -640,9 +647,19 @@ export const LANDMARKS = [
 ];
 
 export function getSectionById(id) {
-  return SECTIONS[id] || null;
+  const sections = getLang() === 'pt' ? SECTIONS_PT : SECTIONS;
+  return sections[id] || null;
 }
 
 export function getAllSections() {
-  return Object.values(SECTIONS);
+  const sections = getLang() === 'pt' ? SECTIONS_PT : SECTIONS;
+  return Object.values(sections);
+}
+
+export function getEventsCalendar() {
+  return getLang() === 'pt' ? EVENTS_CALENDAR_PT : EVENTS_CALENDAR;
+}
+
+export function getLandmarks() {
+  return getLang() === 'pt' ? LANDMARKS_PT : LANDMARKS;
 }
