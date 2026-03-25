@@ -402,7 +402,7 @@ a {
 .hero-tagline {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(51px, 7vw, 87px);
-  line-height: 0.98;
+  line-height: 0.7;
   margin-bottom: 24px;
   color: var(--white);
 }
@@ -611,6 +611,7 @@ a {
 .commons-intro-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 0.85;
   margin-bottom: 20px;
 }
 
@@ -1053,6 +1054,7 @@ a {
 .report-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(28px, 3.5vw, 42px);
+  line-height: 0.85;
   margin-bottom: 16px;
 }
 
@@ -1315,7 +1317,7 @@ a {
 .footer-cta-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(32px, 4vw, 52px);
-  line-height: 1.15;
+  line-height: 0.8;
   margin-bottom: 16px;
   color: var(--cream);
 }
@@ -6659,7 +6661,7 @@ a {
 .about-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(24px, 3vw, 36px);
-  line-height: 1.35;
+  line-height: 0.95;
   margin-bottom: 40px;
   max-width: 720px;
 }
