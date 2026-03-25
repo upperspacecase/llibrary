@@ -611,7 +611,7 @@ a {
 .commons-intro-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(28px, 3.5vw, 42px);
-  line-height: 0.85;
+  line-height: 1.09;
   margin-bottom: 20px;
 }
 
@@ -1054,7 +1054,7 @@ a {
 .report-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(28px, 3.5vw, 42px);
-  line-height: 0.85;
+  line-height: 1.09;
   margin-bottom: 16px;
 }
 
@@ -1317,7 +1317,7 @@ a {
 .footer-cta-title {
   font-family: 'DM Serif Display', serif;
   font-size: clamp(32px, 4vw, 52px);
-  line-height: 0.8;
+  line-height: 1.09;
   margin-bottom: 16px;
   color: var(--cream);
 }
@@ -1637,7 +1637,7 @@ a {
 .commons-hub-title {
   font-family: 'DM Serif Display', serif;
   font-size: 40px;
-  line-height: 1.2;
+  line-height: 1.09;
   margin: 12px 0 16px;
 }
 
@@ -1954,7 +1954,7 @@ a {
 .wiki-hub-hero h1 {
   font-size: clamp(28px, 3.5vw, 42px);
   margin-bottom: 12px;
-  line-height: 1.15;
+  line-height: 1.09;
 }
 
 .wiki-hub-description {
@@ -2105,7 +2105,7 @@ a {
 .wiki-hub-card h3 {
   font-size: 18px;
   margin-bottom: 4px;
-  line-height: 1.2;
+  line-height: 1.09;
 }
 
 .wiki-hub-card p {
@@ -3350,7 +3350,7 @@ a {
 .lb-cover h1 {
   font-size: clamp(36px, 5vw, 56px);
   margin-bottom: 8px;
-  line-height: 1.15;
+  line-height: 1.09;
 }
 
 .lb-cover-location {
@@ -4741,7 +4741,7 @@ a {
 /* Section title */
 .wiki-section-title {
   font-size: clamp(28px, 4vw, 42px);
-  line-height: 1.15;
+  line-height: 1.09;
   margin-bottom: 12px;
 }
 
