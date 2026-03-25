@@ -257,3 +257,112 @@ if (arSubmitBtn) {
         }
     });
 }
+
+// ==========================================================================
+// Feedback Modal
+// ==========================================================================
+
+const fbOverlay = document.getElementById('feedback-overlay');
+const fbCloseBtn = document.getElementById('feedback-close');
+const fbFormState = document.getElementById('feedback-form-state');
+const fbSuccess = document.getElementById('feedback-success');
+const fbSubmitBtn = document.getElementById('feedback-submit');
+const fbComment = document.getElementById('feedback-comment');
+const fbEmail = document.getElementById('feedback-email');
+const fbFeedback = document.getElementById('feedback-feedback');
+const fbOpenBtn = document.getElementById('open-feedback');
+
+if (fbOpenBtn && fbOverlay) {
+    fbOpenBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (fbFormState) fbFormState.style.display = '';
+        if (fbSuccess) fbSuccess.style.display = 'none';
+        if (fbFeedback) fbFeedback.textContent = '';
+        if (fbSubmitBtn) { fbSubmitBtn.disabled = false; fbSubmitBtn.textContent = 'Submit'; }
+        if (fbComment) fbComment.value = '';
+        if (fbEmail) fbEmail.value = '';
+        fbOverlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => { if (fbComment) fbComment.focus(); }, 100);
+    });
+
+    fbCloseBtn?.addEventListener('click', () => {
+        fbOverlay.style.display = 'none';
+        document.body.style.overflow = '';
+    });
+
+    fbOverlay.addEventListener('click', (e) => {
+        if (e.target === fbOverlay) {
+            fbOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    });
+
+    fbSubmitBtn?.addEventListener('click', async () => {
+        const comment = fbComment ? fbComment.value.trim() : '';
+        const email = fbEmail ? fbEmail.value.trim() : '';
+
+        if (!comment) {
+            if (fbComment) fbComment.style.borderColor = 'var(--coral, #e74c3c)';
+            if (fbFeedback) fbFeedback.textContent = 'Please enter your feedback.';
+            return;
+        }
+
+        fbSubmitBtn.disabled = true;
+        fbSubmitBtn.textContent = 'Submitting...';
+        if (fbFeedback) fbFeedback.textContent = '';
+
+        try {
+            const res = await fetch('/api/waitlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email || null, address: comment, type: 'feedback' }),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || 'Failed to submit');
+            }
+            if (fbFormState) fbFormState.style.display = 'none';
+            if (fbSuccess) fbSuccess.style.display = 'flex';
+        } catch (err) {
+            if (fbFeedback) fbFeedback.textContent = 'Error: ' + err.message;
+            fbSubmitBtn.disabled = false;
+            fbSubmitBtn.textContent = 'Submit';
+        }
+    });
+}
+
+// ==========================================================================
+// Footer Newsletter
+// ==========================================================================
+
+const nlForm = document.getElementById('footer-newsletter-form');
+const nlEmail = document.getElementById('footer-newsletter-email');
+const nlSubmit = document.getElementById('footer-newsletter-submit');
+
+if (nlForm) {
+    nlForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = nlEmail ? nlEmail.value.trim() : '';
+        if (!email || !email.includes('@')) return;
+
+        nlSubmit.disabled = true;
+        const origHTML = nlSubmit.innerHTML;
+        nlSubmit.innerHTML = '<span>Submitting...</span>';
+
+        try {
+            const res = await fetch('/api/waitlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, type: 'newsletter' }),
+            });
+            if (!res.ok) throw new Error('Failed');
+            nlSubmit.innerHTML = '<span>Thank you!</span>';
+            nlEmail.value = '';
+            setTimeout(() => { nlSubmit.innerHTML = origHTML; nlSubmit.disabled = false; }, 3000);
+        } catch (err) {
+            nlSubmit.innerHTML = origHTML;
+            nlSubmit.disabled = false;
+        }
+    });
+}

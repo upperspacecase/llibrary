@@ -25,7 +25,7 @@
             <a href="/about">About</a>
             <a href="/create">Create LandBook</a>
             <a href="/commons">Regional Commons</a>
-            <a href="/chat">Chat with Land</a>
+            <a href="#" onclick="event.preventDefault();showComingSoon()">Chat with Land</a>
             <div class="lang-toggle">
                 <button class="lang-toggle-trigger" aria-expanded="false">
                     <span class="lang-toggle-label">EN</span>
@@ -59,6 +59,7 @@
         </main>
     </div>
 
+    <script>function showComingSoon(){var o=document.createElement('div');o.className='coming-soon-overlay';o.innerHTML='<div class="coming-soon-card"><h3>Coming Soon</h3><p>This feature is under development.</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>';o.addEventListener('click',function(e){if(e.target===o)o.remove()});document.body.appendChild(o)}</script>
     <script type="module" src="/src/pages/preview.js"></script>
 </body>
 
