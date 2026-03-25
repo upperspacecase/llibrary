@@ -6,6 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        about: resolve(__dirname, 'about.html'),
         commons: resolve(__dirname, 'commons.html'),
         wiki: resolve(__dirname, 'wiki.html'),
         chat: resolve(__dirname, 'chat.html'),
