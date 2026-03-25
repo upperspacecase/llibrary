@@ -362,7 +362,7 @@ a {
 /* ---- HERO (Landing) ---- */
 .hero {
   position: relative;
-  height: 100vh;
+  height: 100dvh;
   min-height: 600px;
   display: flex;
   flex-direction: column;
@@ -6512,6 +6512,64 @@ a {
 
   .wiki-upload-dropzone {
     padding: 28px 16px;
+  }
+}
+
+/* ========================================
+   READ MORE LINK
+   ======================================== */
+.read-more-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 15px;
+  transition: color 0.2s;
+}
+.read-more-link:hover {
+  color: #1a1a1a;
+}
+
+/* ========================================
+   ABOUT PAGE
+   ======================================== */
+.about-page {
+  padding: 100px 0;
+}
+.about-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.35;
+  margin-bottom: 40px;
+  max-width: 720px;
+}
+.about-body {
+  max-width: 680px;
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.about-body p {
+  margin-bottom: 20px;
+}
+.about-subtitle {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 2.5vw, 30px);
+  color: #1a1a1a;
+  margin-top: 48px;
+  margin-bottom: 8px;
+}
+.about-principles-intro {
+  margin-bottom: 24px;
+}
+.about-principles p {
+  margin-bottom: 16px;
+}
+.about-principles strong {
+  color: #1a1a1a;
+}
+
+@media (max-width: 768px) {
+  .about-page {
+    padding: 60px 0;
   }
 }
 

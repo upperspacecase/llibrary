@@ -7,13 +7,13 @@ export const en = {
   "nav.directory": "Directory",
   "nav.add": "Add Property",
   "nav.landbook": "LandBook",
-  "nav.commons": "The Commons",
+  "nav.commons": "Regional Commons",
   "nav.pricing": "Pricing",
 
   // Footer
   "footer.tagline": "Your land is worth more than you know.",
   "footer.home": "Home",
-  "footer.commons": "The Commons",
+  "footer.commons": "Regional Commons",
   "footer.landbook": "LandBook",
   "footer.pricing": "Pricing",
   "footer.brand": "LandLibrary",

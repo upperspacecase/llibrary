@@ -7,13 +7,13 @@ export const pt = {
   "nav.directory": "Diret\u00F3rio",
   "nav.add": "Adicionar Propriedade",
   "nav.landbook": "LandBook",
-  "nav.commons": "Os Comuns",
+  "nav.commons": "Comuns Regionais",
   "nav.pricing": "Pre\u00E7os",
 
   // Rodap\u00E9
   "footer.tagline": "A sua terra vale mais do que imagina.",
   "footer.home": "In\u00EDcio",
-  "footer.commons": "Os Comuns",
+  "footer.commons": "Comuns Regionais",
   "footer.landbook": "LandBook",
   "footer.pricing": "Pre\u00E7os",
   "footer.brand": "LandLibrary",
