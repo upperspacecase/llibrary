@@ -9,11 +9,26 @@
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n, t } from '../lib/i18n.js';
-import {
-  ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
-  getAllSections, getSectionById,
-  getEventsCalendar, getLandmarks,
-} from '../lib/wiki-data.js';
+import { getRegionData, DEFAULT_REGION } from '../lib/wiki-data.js';
+
+// ---- Determine active region from URL ----
+const regionParam = new URLSearchParams(window.location.search).get('region') || DEFAULT_REGION;
+const _rd = getRegionData(regionParam);
+
+// These variables are used throughout the file — region-aware
+const REGION_DATA = _rd.REGION;
+const SECTIONS = _rd.SECTIONS;
+const EVENTS_CALENDAR = _rd.EVENTS_CALENDAR;
+const LANDMARKS = _rd.LANDMARKS;
+
+// Backward compat: ODEMIRA is now REGION_DATA for all region references
+const ODEMIRA = REGION_DATA;
+
+// Local region-aware helper functions (override imports)
+function getAllSections() { return Object.values(SECTIONS); }
+function getSectionById(id) { return SECTIONS[id] || null; }
+function getEventsCalendar() { return EVENTS_CALENDAR; }
+function getLandmarks() { return LANDMARKS; }
 
 // Charts & dashboard
 import {
@@ -69,6 +84,11 @@ const drawerNav = document.getElementById('wiki-drawer-nav');
 
 // ---- State ----
 let currentMap = null;
+
+// Set page title and chat panel title dynamically
+document.title = `${REGION_DATA.name} Wiki — LandLibrary`;
+const chatTitleEl = document.querySelector('.chat-panel-title');
+if (chatTitleEl) chatTitleEl.textContent = `Ask about ${REGION_DATA.name}`;
 
 // ---- Mobile drawer logic ----
 function openDrawer() {
@@ -346,15 +366,15 @@ async function renderHub() {
     <div class="wiki-hub-breadcrumb">
       <a href="/">${t('wiki.hub.breadcrumb.commons')}</a>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-      <span>${t('wiki.hub.breadcrumb.odemira')}</span>
+      <span>${REGION_DATA.name}</span>
     </div>
 
     <section class="wiki-hub-hero">
       <div class="wiki-hub-hero-left">
-        <h1>${t('wiki.hub.hero.title')}</h1>
+        <h1>${REGION_DATA.name} Wiki</h1>
         <p class="wiki-hub-description">
-          ${ODEMIRA.subtitle} — A municipality in the Beja District of Portugal's Alentejo region,
-          encompassing approximately ${ODEMIRA.area.toLocaleString()} km² of coastal and inland ecosystems.
+          ${REGION_DATA.subtitle} —
+          ${SECTIONS.bioregion?.intro ? SECTIONS.bioregion.intro.split('.').slice(0, 2).join('.') + '.' : `Encompassing approximately ${REGION_DATA.area.toLocaleString()} km².`}
         </p>
         <div class="wiki-hub-meta">
           <span class="wiki-hub-meta-item">

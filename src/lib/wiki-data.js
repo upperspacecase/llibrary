@@ -663,3 +663,23 @@ export function getEventsCalendar() {
 export function getLandmarks() {
   return getLang() === 'pt' ? LANDMARKS_PT : LANDMARKS;
 }
+
+// ---- Multi-region support ----
+import { getRegion as _getRegion, getAllRegions, getLiveRegions, REGIONS, DEFAULT_REGION } from './regions/index.js';
+export { REGIONS, DEFAULT_REGION, getAllRegions, getLiveRegions };
+export { _getRegion as getRegion };
+
+/**
+ * Get all data for a specific region by ID.
+ * Returns { REGION, SECTIONS, EVENTS_CALENDAR, LANDMARKS }.
+ * Falls back to Odemira (default) if region not found.
+ */
+export function getRegionData(regionId) {
+  const region = _getRegion(regionId);
+  return {
+    REGION: region.REGION,
+    SECTIONS: region.SECTIONS,
+    EVENTS_CALENDAR: region.EVENTS_CALENDAR,
+    LANDMARKS: region.LANDMARKS,
+  };
+}

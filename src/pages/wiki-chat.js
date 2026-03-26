@@ -9,10 +9,10 @@ import { escapeHtml } from '../lib/utils.js';
 
 initI18n();
 
-const STORAGE_KEY = 'lll-chat-messages';
 const MAX_MESSAGES = 50;
-const activeRegion = 'odemira';
+const activeRegion = new URLSearchParams(window.location.search).get('region') || 'odemira';
 const regionName = activeRegion.charAt(0).toUpperCase() + activeRegion.slice(1);
+const STORAGE_KEY = `lll-chat-messages-${activeRegion}`;
 
 // DOM
 const toggle = document.getElementById('chat-toggle');
