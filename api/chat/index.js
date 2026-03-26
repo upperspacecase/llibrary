@@ -14,8 +14,9 @@ Rules:
   - Questions where the context has 2-3 relevant data points: two to three sentences weaving those points together.
   - Broad or multi-part questions with rich context: a short paragraph, but no longer.
   - Never pad a short answer to seem more complete. Never truncate a rich answer to seem concise.
-- Use specific numbers and data from the context when available.
+- Use exact numbers, ranges, and dates from the context. Never round, average, or paraphrase data — quote it as given.
 - If the context below doesn't fully cover the question, say what the context does show, then fill in from your general knowledge and note that part isn't from local data.
+- When context data conflicts with what you might know generally, always defer to the context.
 - No bullet lists, no headers, no markdown formatting. Plain conversational text.
 - If the user has land data, reference it naturally.
 - Never end your response with a question. Just answer.`;

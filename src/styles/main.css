@@ -2822,15 +2822,14 @@ a {
   font-weight: 500;
   color: var(--black);
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: var(--radius);
-  transition: background 0.2s, color 0.2s;
+  padding: 0;
+  opacity: 0.65;
+  transition: opacity 0.2s;
 }
 
 .chat-toggle-btn:hover,
 .chat-toggle-btn.active {
-  background: var(--green);
-  color: var(--black);
+  opacity: 1;
 }
 
 .chat-panel {
