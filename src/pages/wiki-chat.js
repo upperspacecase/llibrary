@@ -12,6 +12,7 @@ initI18n();
 const STORAGE_KEY = 'lll-chat-messages';
 const MAX_MESSAGES = 50;
 const activeRegion = 'odemira';
+const regionName = activeRegion.charAt(0).toUpperCase() + activeRegion.slice(1);
 
 // DOM
 const toggle = document.getElementById('chat-toggle');
@@ -78,7 +79,7 @@ function renderMessages() {
   messagesEl.innerHTML = messages.map(m => {
     const isUser = m.role === 'user';
     const avatarClass = isUser ? 'user' : 'assistant';
-    const avatarLabel = isUser ? 'You' : 'Land';
+    const avatarLabel = isUser ? 'You' : regionName;
     return `
       <div class="chat-panel-message ${avatarClass}">
         <div class="chat-panel-avatar ${avatarClass}">${escapeHtml(avatarLabel.substring(0, 2).toUpperCase())}</div>
