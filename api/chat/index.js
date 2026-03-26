@@ -3,8 +3,10 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import { getCollection } from '../_db.js';
 
 const INDEX_NAME = 'land-library';
+const DEFAULT_REGION = 'odemira';
 
-const SYSTEM_PROMPT = `You are a knowledgeable guide to the Odemira bioregion in southern Portugal. Warm but brief — like a neighbor giving a quick answer over the fence.
+function buildSystemPrompt(region) {
+  return `You are a knowledgeable guide to the ${region} bioregion. Warm but brief — like a neighbor giving a quick answer over the fence.
 
 Rules:
 - Keep answers to 1-3 sentences MAX. Aim for 2. Never more than one short paragraph. Brevity is everything.
@@ -13,9 +15,8 @@ Rules:
 - If the context doesn't cover the question, say so in one sentence and suggest what topic might help.
 - No bullet lists, no headers, no markdown formatting. Just plain conversational text.
 - If the user has land data, reference it naturally but briefly.
-
-Key facts for reference:
-Odemira: largest municipality in Portugal, 1,720.6 km², ~31,488 people. Alentejo Litoral, 44% in PNSACV natural park. 110 km coastline. Major issues: water scarcity (Santa Clara dam at 36-37%), greenhouse expansion, fire risk, rural change.`;
+- All your knowledge about this region comes from the context provided below. Do not make up facts.`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -24,16 +25,18 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const { message, history = [], landbookId } = body;
+  const { message, history = [], landbookId, region = DEFAULT_REGION } = body;
 
   if (!message) {
     return res.status(400).json({ error: 'message is required' });
   }
 
+  const namespace = region.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+
   try {
-    // 1. Query Pinecone for relevant context
+    // 1. Query Pinecone for relevant context (namespaced by region)
     const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-    const index = pc.index(INDEX_NAME);
+    const index = pc.index(INDEX_NAME).namespace(namespace);
 
     // Embed the query using Pinecone's built-in model
     const queryEmbedding = await pc.inference.embed({
@@ -83,7 +86,7 @@ export default async function handler(req, res) {
     }
 
     // 4. Build messages for Claude
-    const systemPrompt = SYSTEM_PROMPT + context + landbookContext;
+    const systemPrompt = buildSystemPrompt(region) + context + landbookContext;
 
     const apiMessages = history
       .filter(m => m.role === 'user' || m.role === 'assistant')

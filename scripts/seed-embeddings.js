@@ -129,8 +129,12 @@ function chunkWikiSections(sections) {
 }
 
 async function main() {
+  const region = process.argv[2] || 'odemira';
+  const namespace = region.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+  console.log(`Seeding region: ${region} (namespace: ${namespace})`);
+
   const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-  const index = pc.index(INDEX_NAME);
+  const index = pc.index(INDEX_NAME).namespace(namespace);
 
   // Wait for index to be ready
   console.log('Checking index status...');
@@ -185,7 +189,7 @@ async function main() {
     console.log(`  Upserted ${upserted}/${chunks.length}`);
   }
 
-  console.log(`\nDone! Embedded ${upserted} chunks into ${INDEX_NAME}`);
+  console.log(`\nDone! Embedded ${upserted} chunks into ${INDEX_NAME}/${namespace}`);
 
   // Verify
   const stats = await index.describeIndexStats();

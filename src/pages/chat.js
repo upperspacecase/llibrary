@@ -7,6 +7,7 @@ initI18n();
 // ---- Chat State ----
 const messages = [];
 let activeLandbookId = null;
+let activeRegion = 'odemira';
 const messagesEl = document.getElementById('chat-messages');
 const inputEl = document.getElementById('chat-input');
 const sendBtn = document.getElementById('chat-send');
@@ -105,6 +106,7 @@ async function sendToBackend(query) {
       message: query,
       history,
       landbookId: activeLandbookId,
+      region: activeRegion,
     }),
   });
 
@@ -122,6 +124,9 @@ function initFromParams() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('landbook')) {
     activeLandbookId = params.get('landbook');
+  }
+  if (params.get('region')) {
+    activeRegion = params.get('region');
   }
 }
 

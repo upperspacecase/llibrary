@@ -145,11 +145,12 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-  const { sources = ['wiki', 'contributions', 'landbooks'] } = body;
+  const { sources = ['wiki', 'contributions', 'landbooks'], region = 'odemira' } = body;
+  const namespace = region.toLowerCase().replace(/[^a-z0-9-]/g, '-');
 
   try {
     const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
-    const index = pc.index(INDEX_NAME);
+    const index = pc.index(INDEX_NAME).namespace(namespace);
 
     const allChunks = [];
     const results = { wiki: 0, contributions: 0, landbooks: 0 };
