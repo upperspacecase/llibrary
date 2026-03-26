@@ -21,6 +21,9 @@
     <a href="/" class="logo">
       <img src="/logo.svg" alt="LandLibrary" class="logo-img">
     </a>
+    <button class="mobile-menu-btn" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
     <div class="header-nav">
       <a href="/about">About</a>
       <a href="/create">Create LandBook</a>
@@ -49,8 +52,8 @@
       <div id="chat-messages" class="chat-messages"></div>
       <div class="chat-input-area">
         <div class="chat-input-row">
-          <textarea id="chat-input" class="chat-input" placeholder="Ask about water, soil, fire risk, biodiversity..." rows="1"></textarea>
-          <button id="chat-send" class="chat-send">&#8593;</button>
+          <textarea id="chat-input" class="chat-input" placeholder="Ask about water, soil, fire risk, biodiversity..." rows="1" aria-label="Chat message"></textarea>
+          <button id="chat-send" class="chat-send" aria-label="Send message">&#8593;</button>
         </div>
       </div>
     </div>

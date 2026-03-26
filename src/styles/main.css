@@ -586,7 +586,8 @@ a {
   transition: all 0.3s;
 }
 
-.header.scrolled .mobile-menu-btn span {
+.header.scrolled .mobile-menu-btn span,
+.header.page-header .mobile-menu-btn span {
   background: var(--black);
 }
 
@@ -2665,7 +2666,7 @@ a {
 .chat-layout {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 72px);
+  height: calc(100dvh - 72px);
 }
 
 .chat-header {
@@ -2767,6 +2768,8 @@ a {
 }
 
 .chat-send {
+  min-width: 44px;
+  min-height: 44px;
   padding: 12px 24px;
   background: var(--coral);
   color: var(--cream);
@@ -4642,12 +4645,34 @@ a {
     font-size: 24px;
   }
 
+  .chat-header {
+    padding: 16px;
+  }
+
+  .chat-header h1 {
+    font-size: 20px;
+  }
+
   .chat-messages {
     padding: 16px;
   }
 
   .chat-input-area {
-    padding: 16px;
+    padding: 12px 16px 16px;
+  }
+
+  .chat-input {
+    font-size: 16px;
+  }
+
+  .chat-suggestions {
+    padding: 0 16px;
+  }
+
+  .chat-suggestion {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 
   .landbook-container {

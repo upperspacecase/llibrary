@@ -4,6 +4,22 @@ import { escapeHtml } from '../lib/utils.js';
 
 initI18n();
 
+// ---- Mobile Menu ----
+const menuBtn = document.querySelector('.mobile-menu-btn');
+const headerNav = document.querySelector('.header-nav');
+if (menuBtn && headerNav) {
+  menuBtn.addEventListener('click', () => {
+    menuBtn.classList.toggle('open');
+    headerNav.classList.toggle('open');
+  });
+  headerNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      menuBtn.classList.remove('open');
+      headerNav.classList.remove('open');
+    });
+  });
+}
+
 // ---- Chat State ----
 const messages = [];
 let activeLandbookId = null;
@@ -146,6 +162,14 @@ if (inputEl) {
   inputEl.addEventListener('input', () => {
     inputEl.style.height = 'auto';
     inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+  });
+}
+
+// ---- Mobile keyboard: keep input visible ----
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    document.querySelector('.chat-layout').style.height =
+      window.visualViewport.height - 72 + 'px';
   });
 }
 
