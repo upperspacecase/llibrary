@@ -27,7 +27,7 @@
       <a href="/about">About</a>
       <a href="/create">Create LandBook</a>
       <a href="/commons" class="active">Regional Commons</a>
-      <a href="/chat?region=odemira">Chat with Land</a>
+      <button class="chat-toggle-btn" id="chat-toggle">Chat with Land</button>
       <div class="lang-toggle">
         <button class="lang-toggle-trigger" aria-expanded="false">
           <span class="lang-toggle-label">EN</span>
@@ -63,10 +63,29 @@
     <nav id="wiki-drawer-nav"></nav>
   </div>
 
+  <!-- Floating chat panel -->
+  <div class="chat-panel" id="chat-panel">
+    <div class="chat-panel-header">
+      <span class="chat-panel-title" data-i18n="chat.title">Ask about Odemira</span>
+      <button class="chat-panel-close" id="chat-panel-close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="chat-panel-messages" id="chat-panel-messages"></div>
+    <div class="chat-panel-suggestions" id="chat-panel-suggestions"></div>
+    <div class="chat-panel-input-area">
+      <textarea class="chat-panel-input" id="chat-panel-input" rows="1" placeholder="Ask anything about the region..."></textarea>
+      <button class="chat-panel-send" id="chat-panel-send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="m22 2-11 11"/></svg>
+      </button>
+    </div>
+  </div>
+
   <script>
     function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>LandBook is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
   </script>
   <script type="module" src="/src/pages/wiki.js"></script>
+  <script type="module" src="/src/pages/wiki-chat.js"></script>
 </body>
 
 </html>
