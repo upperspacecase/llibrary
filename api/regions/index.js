@@ -84,10 +84,10 @@ async function getRegions(_req, res) {
       }
     }
 
-    // Sort by votes descending, take top 20
+    // Sort by votes descending, take top 8
     const regions = Array.from(voteMap.values())
       .sort((a, b) => b.votes - a.votes)
-      .slice(0, 20);
+      .slice(0, 8);
 
     return res.status(200).json({ regions });
   } catch (err) {

@@ -32,6 +32,7 @@ const statAddress = document.getElementById('stat-address');
 const statArea = document.getElementById('stat-area');
 const statPerimeter = document.getElementById('stat-perimeter');
 const btnCreate = document.getElementById('btn-create');
+const emailInput = document.getElementById('email-input');
 const instructions = document.getElementById('map-instructions');
 const toolbar = document.getElementById('map-toolbar');
 const btnUndo = document.getElementById('btn-undo');
@@ -177,10 +178,10 @@ function closePolygon() {
 
   fitToCoords(map, boundaryPoints, { padding: 80 });
 
-  if (instructions) instructions.textContent = 'Boundary set. Click Generate to create your landbook.';
+  if (instructions) instructions.textContent = 'Boundary set. Enter your email and click Generate.';
   updateStats();
   if (resultPanel) resultPanel.style.display = 'block';
-  if (btnCreate) btnCreate.disabled = false;
+  updateCreateButton();
 }
 
 function undoLastPoint() {
@@ -218,6 +219,15 @@ function updateStats() {
   if (statArea) statArea.textContent = ha >= 1 ? `${ha.toFixed(2)} ha` : formatArea(area);
   if (statPerimeter) statPerimeter.textContent = formatDistance(perimeter);
 }
+
+// Email validation — button requires both closed boundary + valid email
+function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
+
+function updateCreateButton() {
+  if (btnCreate) btnCreate.disabled = !(isClosed && isValidEmail(emailInput?.value.trim()));
+}
+
+if (emailInput) emailInput.addEventListener('input', updateCreateButton);
 
 // Toolbar buttons
 if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
@@ -347,6 +357,7 @@ if (btnCreate) {
         area: area,
         perimeter: perimeter,
         address: selectedAddress || '',
+        email: emailInput ? emailInput.value.trim() : '',
       });
 
       window.location.href = `/landbook?id=${landbook.id}`;

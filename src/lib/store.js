@@ -88,6 +88,7 @@ export async function saveLandbook(data) {
     area: data.area || null,
     perimeter: data.perimeter || null,
     address: data.address || '',
+    email: data.email || '',
     autoData: createAutoData(),
     userReported: createUserReported(),
     created: new Date().toISOString(),

@@ -17,6 +17,7 @@ const columns = {
         { key: 'created', label: 'Created', format: formatDate },
     ],
     landbooks: [
+        { key: 'email', label: 'Email' },
         { key: 'address', label: 'Address' },
         { key: 'area', label: 'Area', format: v => v ? `${Number(v).toLocaleString()} m2` : '-' },
         { key: 'created', label: 'Created', format: formatDate },

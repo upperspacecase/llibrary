@@ -10,6 +10,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
         const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const email = (body.email || '').trim().toLowerCase();
         const doc = {
             id: body.id || crypto.randomUUID(),
             boundary: body.boundary || [],
@@ -17,12 +18,24 @@ export default async function handler(req, res) {
             area: body.area || null,
             perimeter: body.perimeter || null,
             address: body.address || '',
+            email,
             autoData: body.autoData || {},
             userReported: body.userReported || {},
             created: body.created || new Date().toISOString(),
             updated: new Date().toISOString(),
         };
         await landbooks.insertOne(doc);
+
+        // Upsert email into waitlist (single source of truth for contacts)
+        if (email) {
+            const waitlist = await getCollection('waitlist');
+            await waitlist.updateOne(
+                { email },
+                { $setOnInsert: { email, address: body.address || '', location: null, createdAt: new Date() } },
+                { upsert: true }
+            );
+        }
+
         return res.status(201).json(doc);
     }
 
