@@ -23,6 +23,16 @@ const FALLBACK_REGIONS = [
   'Willamette Valley, Oregon',
   'Byron Bay, Australia',
   'Waikato, New Zealand',
+  'Tuscany, Italy',
+  'Crete, Greece',
+  'Dordogne, France',
+  'Lake District, England',
+  'Minho, Portugal',
+  'Cork, Ireland',
+  'Mallorca, Spain',
+  'Puglia, Italy',
+  'Central Otago, New Zealand',
+  'Margaret River, Australia',
 ].map(name => ({ name, votes: 0 }));
 
 export async function initRegionRequest(container) {
@@ -61,7 +71,7 @@ export async function initRegionRequest(container) {
 function renderSection(regions) {
   const pillsHTML = regions.map(r => {
     const display = r.name.split(',')[0].trim();
-    const countLabel = r.votes > 0 ? ` <span class="region-pill-count">${r.votes}</span>` : '';
+    const countLabel = ` <span class="region-pill-count">${r.votes}</span>`;
     return `<button class="add-region-pill" data-region="${escHTML(r.name)}">${escHTML(display)}${countLabel}</button>`;
   }).join('');
 

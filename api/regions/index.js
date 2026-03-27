@@ -12,6 +12,16 @@ const SEED_REGIONS = [
   'Willamette Valley, Oregon',
   'Byron Bay, Australia',
   'Waikato, New Zealand',
+  'Tuscany, Italy',
+  'Crete, Greece',
+  'Dordogne, France',
+  'Lake District, England',
+  'Minho, Portugal',
+  'Cork, Ireland',
+  'Mallorca, Spain',
+  'Puglia, Italy',
+  'Central Otago, New Zealand',
+  'Margaret River, Australia',
 ];
 
 export default async function handler(req, res) {
@@ -29,27 +39,31 @@ async function getRegions(_req, res) {
     const col = await getCollection('waitlist');
 
     // Aggregate vote counts from waitlist entries that have a region name.
-    // Historical data used either 'address' (home page) or 'location' (commons page) as the field.
+    // Exclude feedback/newsletter entries which use 'address' for other purposes.
+    // Historical data used either 'address' (home page) or 'location' as string (commons page).
     const pipeline = [
+      { $match: { type: { $nin: ['feedback', 'newsletter'] } } },
       {
         $addFields: {
-          region: {
-            $cond: {
-              if: { $and: [{ $ne: ['$address', ''] }, { $ne: ['$address', null] }] },
-              then: '$address',
-              else: {
-                $cond: {
-                  if: { $and: [{ $isString: '$location' }, { $ne: ['$location', ''] }] },
-                  then: '$location',
-                  else: null,
+          _region: {
+            $switch: {
+              branches: [
+                {
+                  case: { $and: [{ $gt: ['$address', ''] }, { $ne: ['$address', null] }] },
+                  then: '$address',
                 },
-              },
+                {
+                  case: { $and: [{ $eq: [{ $type: '$location' }, 'string'] }, { $gt: ['$location', ''] }] },
+                  then: '$location',
+                },
+              ],
+              default: null,
             },
           },
         },
       },
-      { $match: { region: { $ne: null } } },
-      { $group: { _id: { $toLower: '$region' }, name: { $first: '$region' }, votes: { $sum: 1 } } },
+      { $match: { _region: { $ne: null } } },
+      { $group: { _id: { $toLower: '$_region' }, name: { $first: '$_region' }, votes: { $sum: 1 } } },
       { $sort: { votes: -1 } },
       { $limit: 50 },
     ];
