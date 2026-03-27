@@ -490,7 +490,7 @@ export const en = {
   "commons.title": "Regional knowledge,<br>built by the people who live there.",
   "commons.desc": "Each region is a living wiki \u2014 land, water, climate, ecology, culture \u2014 contributed by locals and enriched with open data. Choose a region to explore.",
   "commons.active": "Active Regions",
-  "commons.badge.live": "Live",
+  "commons.badge.live": "Live Chat",
   "commons.odemira.sections": "10 sections",
   "commons.odemira.community": "Community-built",
   "commons.request.label": "Expand the Network",

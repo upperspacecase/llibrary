@@ -461,7 +461,7 @@ export const pt = {
   "commons.title": "Conhecimento bio-regional,<br>construído por quem aqui vive.",
   "commons.desc": "Cada região é uma wiki viva — terra, água, clima, ecologia, cultura — contribuída por locais e enriquecida com dados abertos. Escolha uma região para explorar.",
   "commons.active": "Regiões Ativas",
-  "commons.badge.live": "Ativo",
+  "commons.badge.live": "Chat ao Vivo",
   "commons.odemira.sections": "10 secções",
   "commons.odemira.community": "Construído pela comunidade",
   "commons.request.label": "Expandir a Rede",

@@ -809,6 +809,27 @@ a {
   color: var(--cream);
 }
 
+.region-pill-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 10px;
+  background: var(--card-border, #e0dcd4);
+  color: var(--muted, #6b6b6b);
+}
+
+.add-region-pill:hover .region-pill-count {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--cream);
+}
+
 .add-region-cta-wrap {
   margin-top: 8px;
 }
@@ -2839,14 +2860,16 @@ a {
   position: fixed;
   top: 72px;
   right: 24px;
+  bottom: 24px;
   width: 400px;
-  height: calc(100vh - 96px);
+  max-height: calc(100vh - 96px);
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   z-index: 1000;
   opacity: 0;
   transform: translateY(-8px);
@@ -3039,8 +3062,9 @@ a {
   .chat-panel {
     right: 0;
     top: 60px;
+    bottom: 0;
     width: 100%;
-    height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
     border-radius: 12px 12px 0 0;
     border-right: none;
     border-left: none;

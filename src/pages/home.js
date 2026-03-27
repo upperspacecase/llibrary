@@ -2,8 +2,10 @@ import '../styles/main.css';
 import { initI18n } from '../lib/i18n.js';
 import { ODEMIRA } from '../lib/wiki-data.js';
 import { createMap, mapboxgl, addMarker } from '../lib/mapbox.js';
+import { initRegionRequest } from '../lib/region-request.js';
 
 initI18n();
+initRegionRequest(document.getElementById('region-request-container'));
 
 // Populate featured commons card from ODEMIRA data
 const fcName = document.getElementById('fc-name');
@@ -158,105 +160,6 @@ setupWaitlistModal({
     feedbackId: 'library-waitlist-feedback',
     type: 'library',
 });
-
-// ==========================================================================
-// Add Region Modal
-// ==========================================================================
-
-const arOverlay = document.getElementById('add-region-overlay');
-const arCloseBtn = document.getElementById('add-region-close');
-const arFormState = document.getElementById('add-region-form-state');
-const arSuccessState = document.getElementById('add-region-success');
-const arSubmitBtn = document.getElementById('add-region-submit');
-const arLocationInput = document.getElementById('add-region-location');
-const arEmailInput = document.getElementById('add-region-email');
-const arFeedback = document.getElementById('add-region-feedback');
-const arOpenBtn = document.getElementById('open-add-region');
-
-function openAddRegionModal(prefill) {
-    if (!arOverlay) return;
-    // Reset to form state
-    if (arFormState) arFormState.style.display = '';
-    if (arSuccessState) arSuccessState.style.display = 'none';
-    if (arFeedback) arFeedback.textContent = '';
-    if (arSubmitBtn) { arSubmitBtn.disabled = false; arSubmitBtn.textContent = 'Submit'; }
-
-    if (arLocationInput) arLocationInput.value = prefill || '';
-    arOverlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-
-    // Focus the right field
-    setTimeout(() => {
-        if (prefill && arEmailInput) arEmailInput.focus();
-        else if (arLocationInput) arLocationInput.focus();
-    }, 100);
-}
-
-function closeAddRegionModal() {
-    if (arOverlay) {
-        arOverlay.style.display = 'none';
-        document.body.style.overflow = '';
-    }
-}
-
-// Pill clicks → pre-fill location and open modal
-document.querySelectorAll('.add-region-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-        openAddRegionModal(pill.dataset.region || '');
-    });
-});
-
-// CTA button → open modal (no pre-fill)
-if (arOpenBtn) {
-    arOpenBtn.addEventListener('click', () => openAddRegionModal(''));
-}
-
-// Close
-if (arCloseBtn) arCloseBtn.addEventListener('click', closeAddRegionModal);
-if (arOverlay) {
-    arOverlay.addEventListener('click', (e) => {
-        if (e.target === arOverlay) closeAddRegionModal();
-    });
-}
-
-// Submit
-if (arSubmitBtn) {
-    arSubmitBtn.addEventListener('click', async () => {
-        const email = arEmailInput ? arEmailInput.value.trim() : '';
-        const address = arLocationInput ? arLocationInput.value.trim() : '';
-
-        if (!email || !email.includes('@')) {
-            if (arEmailInput) arEmailInput.style.borderColor = 'var(--coral, #e74c3c)';
-            if (arFeedback) arFeedback.textContent = 'Please enter a valid email address.';
-            return;
-        }
-
-        arSubmitBtn.disabled = true;
-        arSubmitBtn.textContent = 'Submitting…';
-        if (arFeedback) arFeedback.textContent = '';
-
-        try {
-            const res = await fetch('/api/waitlist', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, address, location: null }),
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || 'Failed to submit');
-            }
-
-            // Show success
-            if (arFormState) arFormState.style.display = 'none';
-            if (arSuccessState) arSuccessState.style.display = 'flex';
-        } catch (err) {
-            if (arFeedback) arFeedback.textContent = 'Error: ' + err.message;
-            arSubmitBtn.disabled = false;
-            arSubmitBtn.textContent = 'Submit';
-        }
-    });
-}
 
 // ==========================================================================
 // Feedback Modal

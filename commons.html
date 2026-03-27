@@ -84,76 +84,9 @@
         </div>
       </section>
 
-      <!-- Request your region -->
-      <section class="commons-hub-request">
-        <div class="container">
-          <div class="commons-hub-request-inner">
-            <div class="section-label" data-i18n="commons.request.label">Expand the Network</div>
-            <h2 class="commons-hub-request-title" data-i18n="commons.request.title">Want LandLibrary in your region?</h2>
-            <p class="commons-hub-request-desc" data-i18n="commons.request.desc">Tell us where you are — we'll let you know when we launch near you.</p>
+      <!-- Request your region (rendered by region-request.js) -->
+      <section class="commons-hub-request" id="region-request-container"></section>
 
-            <div class="commons-hub-request-pills">
-              <button class="add-region-pill" data-region="Algarve, Portugal">Algarve</button>
-              <button class="add-region-pill" data-region="Sintra, Portugal">Sintra</button>
-              <button class="add-region-pill" data-region="Douro Valley, Portugal">Douro Valley</button>
-              <button class="add-region-pill" data-region="Provence, France">Provence</button>
-              <button class="add-region-pill" data-region="Andalusia, Spain">Andalusia</button>
-              <button class="add-region-pill" data-region="Peloponnese, Greece">Peloponnese</button>
-              <button class="add-region-pill" data-region="Cotswolds, England">Cotswolds</button>
-              <button class="add-region-pill" data-region="Willamette Valley, Oregon">Willamette Valley</button>
-              <button class="add-region-pill" data-region="Byron Bay, Australia">Byron Bay</button>
-              <button class="add-region-pill" data-region="Waikato, New Zealand">Waikato</button>
-            </div>
-
-            <div class="commons-hub-request-cta-wrap">
-              <button class="add-region-cta" id="open-add-region">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 5v14" />
-                  <path d="M5 12h14" />
-                </svg>
-                <span data-i18n="commons.request.cta">Request Your Region</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-  <!-- Add region modal (same as home page) -->
-  <div class="add-region-overlay" id="add-region-overlay" style="display:none;">
-    <div class="add-region-modal">
-      <button class="add-region-close" id="add-region-close">&times;</button>
-
-      <div class="add-region-success" id="add-region-success" style="display:none;">
-        <div class="add-region-success-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-        </div>
-        <h3 data-i18n="landing.region.modal.success.title">You're on the list!</h3>
-        <p data-i18n="landing.region.modal.success.desc">We'll email you as soon as we launch in your area.</p>
-      </div>
-
-      <div class="add-region-form-state" id="add-region-form-state">
-        <h3 data-i18n="landing.region.modal.title">Request Your Region</h3>
-        <p class="add-region-modal-sub" data-i18n="landing.region.modal.desc">Enter your location and email. We'll let you know when we expand to your area.</p>
-
-        <div class="add-region-fields">
-          <div class="add-region-field">
-            <label for="add-region-location" data-i18n="landing.region.modal.location">Location</label>
-            <input type="text" id="add-region-location" placeholder="e.g. Provence, France" />
-          </div>
-          <div class="add-region-field">
-            <label for="add-region-email" data-i18n="landing.region.modal.email">Email</label>
-            <input type="email" id="add-region-email" placeholder="you@example.com" required />
-          </div>
-        </div>
-
-        <button class="add-region-submit" id="add-region-submit" data-i18n="landing.region.modal.submit">Submit</button>
-        <div class="add-region-feedback" id="add-region-feedback"></div>
-      </div>
     </div>
   </div>
 
