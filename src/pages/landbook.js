@@ -1408,21 +1408,225 @@ function attachNoteDeleteHandlers() {
 }
 
 // ---------------------------------------------------------------------------
-// Capture View (placeholder for Phase 4)
+// Capture View
 // ---------------------------------------------------------------------------
 
+let captureUploading = false;
+
 function renderCaptureView(container) {
+  const captures = landbook.captures || [];
+
   container.innerHTML = `
-    <div class="flex items-center justify-center h-full min-h-[60vh]">
-      <div class="text-center max-w-sm px-6">
-        <div class="w-12 h-12 rounded-full bg-accent-terra/10 flex items-center justify-center text-accent-terra mx-auto mb-4">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    <div class="max-w-4xl mx-auto px-6 lg:px-12 pt-8 pb-16">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-serif text-earth-900 mb-1">Land Capture</h2>
+          <p class="text-earth-500 text-sm">${captures.length} photo${captures.length !== 1 ? 's' : ''}</p>
         </div>
-        <h3 class="font-serif text-xl text-earth-900 mb-2">Land Capture</h3>
-        <p class="text-earth-500 text-sm">Document your land with photos and observations. Coming soon.</p>
+        <div class="flex gap-2">
+          <label class="px-4 py-2.5 bg-earth-900 text-white rounded-lg text-sm font-medium hover:opacity-80 transition-opacity cursor-pointer flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Upload
+            <input type="file" id="capture-file" accept="image/*" class="hidden" multiple>
+          </label>
+          <label class="lg:hidden px-4 py-2.5 border border-earth-200 text-earth-900 rounded-lg text-sm font-medium hover:bg-earth-50 transition-colors cursor-pointer flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Camera
+            <input type="file" id="capture-camera" accept="image/*" capture="environment" class="hidden">
+          </label>
+        </div>
+      </div>
+
+      <!-- Upload progress -->
+      <div id="capture-upload-status" class="hidden mb-6">
+        <div class="flex items-center gap-3 bg-earth-50 border border-earth-200 rounded-lg px-4 py-3">
+          <div class="w-5 h-5 border-2 border-earth-300 border-t-earth-600 rounded-full animate-spin shrink-0"></div>
+          <span class="text-sm text-earth-600" id="capture-upload-text">Uploading...</span>
+        </div>
+      </div>
+
+      <!-- Gallery -->
+      <div id="capture-gallery">
+        ${captures.length > 0 ? renderCaptureGallery(captures) : renderCaptureEmpty()}
+      </div>
+
+      <!-- Lightbox -->
+      <div id="capture-lightbox" class="hidden fixed inset-0 z-50 bg-black/90 flex items-center justify-center" style="backdrop-filter: blur(4px);">
+        <button id="lightbox-close" class="absolute top-4 right-4 text-white/80 hover:text-white z-10">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <img id="lightbox-img" class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg" src="" alt="">
+        <div id="lightbox-note" class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/80 text-sm max-w-md text-center"></div>
       </div>
     </div>
   `;
+
+  // File input handlers
+  const fileInput = document.getElementById('capture-file');
+  const cameraInput = document.getElementById('capture-camera');
+  if (fileInput) fileInput.addEventListener('change', (e) => handleCaptureFiles(e.target.files));
+  if (cameraInput) cameraInput.addEventListener('change', (e) => handleCaptureFiles(e.target.files));
+
+  // Lightbox close
+  const lightbox = document.getElementById('capture-lightbox');
+  const closeBtn = document.getElementById('lightbox-close');
+  if (closeBtn) closeBtn.addEventListener('click', () => lightbox?.classList.add('hidden'));
+  if (lightbox) lightbox.addEventListener('click', (e) => { if (e.target === lightbox) lightbox.classList.add('hidden'); });
+
+  // Gallery click handlers
+  attachCaptureHandlers();
+}
+
+function renderCaptureEmpty() {
+  return `
+    <div class="border-2 border-dashed border-earth-200 rounded-xl py-16 text-center">
+      <div class="w-12 h-12 rounded-full bg-accent-terra/10 flex items-center justify-center text-accent-terra mx-auto mb-4">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </div>
+      <p class="text-earth-500 text-sm mb-1">No photos yet</p>
+      <p class="text-earth-400 text-xs">Upload photos or use your camera to document your land</p>
+    </div>
+  `;
+}
+
+function renderCaptureGallery(captures) {
+  return `<div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+    ${captures.slice().reverse().map(c => `
+      <div class="group relative rounded-lg overflow-hidden border border-earth-200 bg-earth-50">
+        <img src="${c.url}" alt="${esc(c.note || '')}" class="w-full h-48 object-cover cursor-pointer capture-img" data-url="${c.url}" data-note="${esc(c.note || '')}" loading="lazy">
+        <div class="p-3">
+          ${c.note ? `<p class="text-sm text-earth-800 mb-1 line-clamp-2">${esc(c.note)}</p>` : ''}
+          <p class="text-xs text-earth-400">${formatDateShort(c.created)}</p>
+        </div>
+        <button class="capture-delete absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white/80 hover:bg-black/70 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" data-capture-id="${c.id}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
+function attachCaptureHandlers() {
+  // Lightbox open
+  document.querySelectorAll('.capture-img').forEach(img => {
+    img.addEventListener('click', () => {
+      const lightbox = document.getElementById('capture-lightbox');
+      const lbImg = document.getElementById('lightbox-img');
+      const lbNote = document.getElementById('lightbox-note');
+      if (lightbox && lbImg) {
+        lbImg.src = img.dataset.url;
+        if (lbNote) lbNote.textContent = img.dataset.note || '';
+        lightbox.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Delete
+  document.querySelectorAll('.capture-delete').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const captureId = btn.dataset.captureId;
+      if (!captureId) return;
+      btn.disabled = true;
+      await deleteCapturePhoto(captureId);
+    });
+  });
+}
+
+async function handleCaptureFiles(files) {
+  if (!files || !files.length || captureUploading) return;
+  captureUploading = true;
+
+  const status = document.getElementById('capture-upload-status');
+  const statusText = document.getElementById('capture-upload-text');
+  if (status) status.classList.remove('hidden');
+
+  for (let i = 0; i < files.length; i++) {
+    if (statusText) statusText.textContent = `Uploading ${i + 1} of ${files.length}...`;
+
+    try {
+      const base64 = await fileToBase64(files[i]);
+
+      // Prompt for note on first/single upload
+      let note = '';
+      if (files.length === 1) {
+        note = prompt('Add a note for this photo (optional):') || '';
+      }
+
+      const res = await fetch('/api/captures', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          landbookId: landbook.id,
+          image: base64,
+          note,
+        }),
+      });
+
+      if (res.ok) {
+        const capture = await res.json();
+        if (!landbook.captures) landbook.captures = [];
+        landbook.captures.push(capture);
+      }
+    } catch (err) {
+      console.error('Upload failed:', err);
+    }
+  }
+
+  if (status) status.classList.add('hidden');
+  captureUploading = false;
+
+  // Re-render gallery
+  const gallery = document.getElementById('capture-gallery');
+  if (gallery) {
+    gallery.innerHTML = landbook.captures?.length > 0
+      ? renderCaptureGallery(landbook.captures)
+      : renderCaptureEmpty();
+    attachCaptureHandlers();
+  }
+
+  // Update count
+  const countEl = document.querySelector('#view-capture p.text-earth-500');
+  if (countEl) countEl.textContent = `${landbook.captures?.length || 0} photo${(landbook.captures?.length || 0) !== 1 ? 's' : ''}`;
+
+  // Reset file inputs
+  const fileInput = document.getElementById('capture-file');
+  const cameraInput = document.getElementById('capture-camera');
+  if (fileInput) fileInput.value = '';
+  if (cameraInput) cameraInput.value = '';
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function deleteCapturePhoto(captureId) {
+  try {
+    await fetch('/api/captures', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ landbookId: landbook.id, captureId }),
+    });
+
+    if (landbook.captures) {
+      landbook.captures = landbook.captures.filter(c => c.id !== captureId);
+    }
+
+    const gallery = document.getElementById('capture-gallery');
+    if (gallery) {
+      gallery.innerHTML = landbook.captures?.length > 0
+        ? renderCaptureGallery(landbook.captures)
+        : renderCaptureEmpty();
+      attachCaptureHandlers();
+    }
+  } catch (err) {
+    console.error('Delete failed:', err);
+  }
 }
 
 // ---------------------------------------------------------------------------
