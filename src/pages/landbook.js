@@ -1131,32 +1131,280 @@ function renderLayerToggles(map) {
 // Chat View (placeholder for Phase 3)
 // ---------------------------------------------------------------------------
 
+let chatHistory = [];
+let chatLoading = false;
+
 function renderChatView(container) {
+  const suggestions = [
+    'What is the soil like on my land?',
+    'What species have been observed nearby?',
+    'What are the main risks for my property?',
+    'How is the water availability?',
+    'What crops would grow well here?',
+    'Describe the climate patterns',
+  ];
+
   container.innerHTML = `
-    <div class="flex items-center justify-center h-full min-h-[60vh]">
-      <div class="text-center max-w-sm px-6">
-        <div class="w-12 h-12 rounded-full bg-accent-leaf/10 flex items-center justify-center text-accent-leaf mx-auto mb-4">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <div class="flex flex-col h-full" style="min-height: calc(100vh - 80px);">
+      <!-- Messages -->
+      <div id="chat-messages" class="flex-1 overflow-y-auto px-6 lg:px-12 pt-6 pb-4">
+        <div class="max-w-2xl mx-auto">
+          <!-- Welcome -->
+          <div class="text-center py-8" id="chat-welcome">
+            <div class="w-12 h-12 rounded-full bg-accent-leaf/10 flex items-center justify-center text-accent-leaf mx-auto mb-4">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <h3 class="font-serif text-xl text-earth-900 mb-2">Chat with your Land</h3>
+            <p class="text-earth-500 text-sm mb-6">Ask anything about your property, its ecosystem, risks, or potential.</p>
+            <div class="flex flex-wrap justify-center gap-2">
+              ${suggestions.map(s => `<button class="chat-suggestion px-3 py-1.5 text-xs border border-earth-200 rounded-full text-earth-600 hover:border-earth-400 hover:text-earth-900 transition-colors">${esc(s)}</button>`).join('')}
+            </div>
+          </div>
         </div>
-        <h3 class="font-serif text-xl text-earth-900 mb-2">Chat with your Land</h3>
-        <p class="text-earth-500 text-sm">Ask questions about your landbook data, get insights, and explore your property's potential. Coming soon.</p>
+      </div>
+
+      <!-- Input -->
+      <div class="border-t border-earth-200 bg-white px-6 lg:px-12 py-4">
+        <div class="max-w-2xl mx-auto flex gap-3">
+          <textarea id="chat-input" rows="1" placeholder="Ask about your land..." class="flex-1 px-4 py-3 border border-earth-200 rounded-xl text-sm bg-earth-50 focus:outline-none focus:border-earth-500 resize-none overflow-hidden" style="max-height: 120px;"></textarea>
+          <button id="chat-send" class="px-4 py-3 bg-earth-900 text-white rounded-xl text-sm font-medium hover:opacity-80 transition-opacity shrink-0 self-end">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   `;
+
+  // Suggestion clicks
+  container.querySelectorAll('.chat-suggestion').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById('chat-input');
+      if (input) { input.value = btn.textContent; sendChatMessage(); }
+    });
+  });
+
+  // Input handlers
+  const input = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('chat-send');
+
+  if (input) {
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
+    });
+  }
+  if (sendBtn) sendBtn.addEventListener('click', sendChatMessage);
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  if (!input || chatLoading) return;
+  const message = input.value.trim();
+  if (!message) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  chatLoading = true;
+
+  // Hide welcome
+  const welcome = document.getElementById('chat-welcome');
+  if (welcome) welcome.remove();
+
+  // Append user message
+  appendChatBubble('user', message);
+
+  // Show typing indicator
+  const typingId = appendChatBubble('assistant', null, true);
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message,
+        history: chatHistory.slice(-10),
+        landbookId: landbook.id,
+        region: landbook.address || 'general',
+      }),
+    });
+
+    const data = await res.json();
+    const reply = data.message || 'Sorry, I could not generate a response.';
+
+    // Remove typing, show reply
+    removeChatBubble(typingId);
+    appendChatBubble('assistant', reply);
+
+    chatHistory.push({ role: 'user', content: message });
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch (err) {
+    console.error('Chat error:', err);
+    removeChatBubble(typingId);
+    appendChatBubble('assistant', 'Something went wrong. Please try again.');
+  }
+
+  chatLoading = false;
+}
+
+let chatBubbleCounter = 0;
+
+function appendChatBubble(role, text, isTyping = false) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return null;
+
+  const wrapper = container.querySelector('.max-w-2xl');
+  const id = `chat-bubble-${++chatBubbleCounter}`;
+  const isUser = role === 'user';
+
+  const bubble = document.createElement('div');
+  bubble.id = id;
+  bubble.className = `flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`;
+
+  if (isTyping) {
+    bubble.innerHTML = `<div class="max-w-[80%] px-4 py-3 rounded-2xl bg-earth-100 text-earth-900 text-sm">
+      <div class="flex gap-1 items-center h-5">
+        <span class="w-1.5 h-1.5 bg-earth-400 rounded-full animate-bounce" style="animation-delay: 0ms;"></span>
+        <span class="w-1.5 h-1.5 bg-earth-400 rounded-full animate-bounce" style="animation-delay: 150ms;"></span>
+        <span class="w-1.5 h-1.5 bg-earth-400 rounded-full animate-bounce" style="animation-delay: 300ms;"></span>
+      </div>
+    </div>`;
+  } else {
+    bubble.innerHTML = `<div class="max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${isUser ? 'bg-earth-900 text-white' : 'bg-earth-100 text-earth-900'}">${esc(text)}</div>`;
+  }
+
+  wrapper.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+  return id;
+}
+
+function removeChatBubble(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
 }
 
 // ---------------------------------------------------------------------------
-// Vault View (placeholder for Phase 3)
+// Vault View
 // ---------------------------------------------------------------------------
 
 function renderVaultView(container) {
+  const notes = landbook.vaultNotes || [];
+
   container.innerHTML = `
     <div class="max-w-3xl mx-auto px-6 lg:px-12 pt-8 pb-16">
-      <h2 class="text-2xl font-serif text-earth-900 mb-6">Knowledge Vault</h2>
-      <p class="text-earth-500 text-sm mb-8">Record what you know about your land -- goals, infrastructure, challenges, history.</p>
+      <h2 class="text-2xl font-serif text-earth-900 mb-2">Knowledge Vault</h2>
+      <p class="text-earth-500 text-sm mb-8">Record observations, notes, and knowledge about your land.</p>
+
+      <!-- Add Note -->
+      <div class="mb-10">
+        <div class="flex gap-3">
+          <textarea id="vault-note-input" rows="2" placeholder="Add a note about your land..." class="flex-1 px-4 py-3 border border-earth-200 rounded-xl text-sm bg-white focus:outline-none focus:border-earth-500 resize-none"></textarea>
+          <button id="vault-note-add" class="px-5 py-3 bg-earth-900 text-white rounded-xl text-sm font-medium hover:opacity-80 transition-opacity self-end shrink-0">Add</button>
+        </div>
+      </div>
+
+      <!-- Notes Timeline -->
+      <div id="vault-notes-list" class="mb-12">
+        ${notes.length > 0 ? renderNotesList(notes) : '<p class="text-earth-400 text-sm text-center py-6">No notes yet. Add your first observation above.</p>'}
+      </div>
+
+      <!-- Divider -->
+      <div class="border-t border-earth-200 pt-10 mb-6">
+        <h3 class="text-xl font-serif text-earth-900 mb-2">Land Profile</h3>
+        <p class="text-earth-500 text-sm mb-6">Detailed information about your land's use, infrastructure, and goals.</p>
+      </div>
+
+      <!-- User Reported Form -->
       <div id="vault-form-container">${renderUserForm(landbook)}</div>
     </div>
   `;
+
+  // Add note handler
+  const addBtn = document.getElementById('vault-note-add');
+  const noteInput = document.getElementById('vault-note-input');
+  if (addBtn && noteInput) {
+    addBtn.addEventListener('click', () => addVaultNote());
+    noteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addVaultNote(); }
+    });
+  }
+}
+
+function renderNotesList(notes) {
+  return notes.slice().reverse().map(note => `
+    <div class="flex gap-4 py-4 border-b border-earth-100 group">
+      <div class="w-2 h-2 rounded-full bg-accent-leaf mt-2 shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm text-earth-900 leading-relaxed whitespace-pre-wrap">${esc(note.text)}</p>
+        <p class="text-xs text-earth-400 mt-1">${formatDate(note.created)}</p>
+      </div>
+      <button class="vault-note-delete opacity-0 group-hover:opacity-100 text-earth-400 hover:text-accent-terra transition-opacity shrink-0 self-start" data-note-id="${note.id}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+async function addVaultNote() {
+  const input = document.getElementById('vault-note-input');
+  if (!input || !landbook) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const note = {
+    id: crypto.randomUUID(),
+    text,
+    created: new Date().toISOString(),
+  };
+
+  // Optimistic update
+  if (!landbook.vaultNotes) landbook.vaultNotes = [];
+  landbook.vaultNotes.push(note);
+  input.value = '';
+
+  // Re-render notes list
+  const list = document.getElementById('vault-notes-list');
+  if (list) list.innerHTML = renderNotesList(landbook.vaultNotes);
+
+  // Attach delete handlers
+  attachNoteDeleteHandlers();
+
+  // Persist
+  try {
+    await updateLandbook(landbook.id, { vaultNotes: landbook.vaultNotes });
+  } catch (err) {
+    console.error('Failed to save note:', err);
+  }
+}
+
+async function deleteVaultNote(noteId) {
+  if (!landbook || !landbook.vaultNotes) return;
+  landbook.vaultNotes = landbook.vaultNotes.filter(n => n.id !== noteId);
+
+  const list = document.getElementById('vault-notes-list');
+  if (list) {
+    list.innerHTML = landbook.vaultNotes.length > 0
+      ? renderNotesList(landbook.vaultNotes)
+      : '<p class="text-earth-400 text-sm text-center py-6">No notes yet. Add your first observation above.</p>';
+  }
+  attachNoteDeleteHandlers();
+
+  try {
+    await updateLandbook(landbook.id, { vaultNotes: landbook.vaultNotes });
+  } catch (err) {
+    console.error('Failed to delete note:', err);
+  }
+}
+
+function attachNoteDeleteHandlers() {
+  document.querySelectorAll('.vault-note-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const noteId = btn.dataset.noteId;
+      if (noteId) deleteVaultNote(noteId);
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------
