@@ -434,6 +434,46 @@ function renderOverviewTab(el) {
         </div>
       </section>
     </div>
+
+    <!-- Risk Assessment -->
+    <div class="mt-10 pt-8 border-t border-earth-200">
+      <h2 class="text-xl font-serif text-earth-900 mb-6">Risk Assessment</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4" id="overview-risk">
+        <div class="bg-earth-50 border border-earth-200 rounded-lg p-4 text-center">
+          <div class="text-xs text-earth-500 uppercase tracking-wider mb-1">Fire Risk</div>
+          <div id="risk-fire-label" class="text-lg font-serif text-earth-900">\u2014</div>
+          <div id="risk-fire-score" class="text-xs text-earth-400 mt-1"></div>
+        </div>
+        <div class="bg-earth-50 border border-earth-200 rounded-lg p-4 text-center">
+          <div class="text-xs text-earth-500 uppercase tracking-wider mb-1">Flood Risk</div>
+          <div id="risk-flood-label" class="text-lg font-serif text-earth-900">\u2014</div>
+          <div id="risk-flood-score" class="text-xs text-earth-400 mt-1"></div>
+        </div>
+        <div class="bg-earth-50 border border-earth-200 rounded-lg p-4 text-center">
+          <div class="text-xs text-earth-500 uppercase tracking-wider mb-1">Drought Risk</div>
+          <div id="risk-drought-label" class="text-lg font-serif text-earth-900">\u2014</div>
+          <div id="risk-drought-score" class="text-xs text-earth-400 mt-1"></div>
+        </div>
+      </div>
+      <div id="overview-active-fires" class="mt-4"></div>
+      <div id="overview-flood-discharge" class="mt-4"></div>
+    </div>
+
+    <!-- Nearest Services -->
+    <div class="mt-10 pt-8 border-t border-earth-200">
+      <h2 class="text-xl font-serif text-earth-900 mb-6">Nearest Services</h2>
+      <div id="overview-infrastructure" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <p class="text-earth-400 text-sm col-span-full text-center py-4">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Water Features -->
+    <div class="mt-10 pt-8 border-t border-earth-200">
+      <h2 class="text-xl font-serif text-earth-900 mb-6">Water Features</h2>
+      <div id="overview-water" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <p class="text-earth-400 text-sm col-span-full text-center py-4">Loading...</p>
+      </div>
+    </div>
   `;
 }
 
@@ -566,6 +606,37 @@ function renderEcosystemData() {
           </tbody>
         </table>
       </div>
+    </div>`;
+  }
+
+  // GBIF occurrence records
+  if (rg && rg.ok && rg.data) {
+    const gbifSummary = summarizeOccurrences(rg.data);
+    if (gbifSummary.total > 0) {
+      const kingdoms = Object.entries(gbifSummary.kingdoms).sort((a, b) => b[1] - a[1]);
+      html += `<div>
+        <h3 class="text-lg font-serif text-earth-900 mb-4">GBIF Records (10 km)</h3>
+        <div class="bg-accent-water/5 border border-accent-water/20 rounded-lg px-4 py-3 text-sm mb-4">
+          <strong>${gbifSummary.total.toLocaleString()}</strong> occurrence records in the Global Biodiversity Information Facility
+        </div>
+        ${kingdoms.length ? `<div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          ${kingdoms.map(([k, c]) => `<div class="flex justify-between items-center border border-earth-200 rounded-lg px-4 py-3">
+            <span class="text-sm font-medium text-earth-800">${esc(k)}</span>
+            <span class="text-sm text-earth-500">${c.toLocaleString()}</span>
+          </div>`).join('')}
+        </div>` : ''}
+      </div>`;
+    }
+  }
+
+  // Bioindicator summary callout
+  const totalSpecies = rs && rs.ok ? summarizeSpeciesCounts(rs.data).total : 0;
+  const threatenedCount = rt && rt.ok && rt.data ? summarizeSpeciesCounts(rt.data).total : 0;
+  if (totalSpecies > 0) {
+    const isElevated = threatenedCount > 20;
+    html += `<div class="border rounded-lg p-5 ${isElevated ? 'border-amber-300 bg-amber-50' : 'border-accent-leaf/20 bg-accent-leaf/5'}">
+      <h4 class="font-medium text-sm text-earth-900 mb-1">Bioindicator Summary</h4>
+      <p class="text-sm text-earth-600 leading-relaxed">${totalSpecies.toLocaleString()} species recorded within 5 km. ${threatenedCount > 0 ? threatenedCount + ' threatened species observed within 10 km.' : 'No threatened species detected nearby.'} ${isElevated ? 'Elevated conservation attention may be warranted.' : 'Species diversity appears typical for this region.'}</p>
     </div>`;
   }
 
@@ -720,6 +791,24 @@ function renderClimateData() {
       </div>
     </div>`;
 
+    // Wind & atmospheric summary
+    const winds = daily.wind_speed_10m_max ? daily.wind_speed_10m_max.filter(v => v != null) : [];
+    const uvMax = daily.uv_index_max ? daily.uv_index_max.filter(v => v != null) : [];
+    if (winds.length > 0 || uvMax.length > 0) {
+      const avgWind = winds.length ? (winds.reduce((s, v) => s + v, 0) / winds.length).toFixed(1) : null;
+      const peakWind = winds.length ? Math.max(...winds).toFixed(1) : null;
+      const maxUv = uvMax.length ? Math.max(...uvMax).toFixed(1) : null;
+      const uvLabel = maxUv ? (parseFloat(maxUv) >= 8 ? 'Very High' : parseFloat(maxUv) >= 6 ? 'High' : parseFloat(maxUv) >= 3 ? 'Moderate' : 'Low') : '';
+      html += `<div>
+        <h3 class="text-lg font-serif text-earth-900 mb-4">Wind and Atmospheric</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          ${avgWind ? soilCard('Avg Wind Speed', `${avgWind} km/h`, '7-day average') : ''}
+          ${peakWind ? soilCard('Peak Gusts', `${peakWind} km/h`, '7-day maximum') : ''}
+          ${maxUv ? soilCard('UV Index', maxUv, uvLabel) : ''}
+        </div>
+      </div>`;
+    }
+
     // 7-day forecast
     if (times.length > 0) {
       html += `<div>
@@ -753,13 +842,23 @@ function renderClimateData() {
     }
   }
 
-  // Climate averages
+  // Climate averages + chart + seasonal patterns
   if (rc && rc.ok && rc.data) {
     const months = rc.data;
     const frost = estimateFrostDates(months);
+    const maxPrecip = Math.max(...months.map(m => m.totalPrecip || 0), 1);
+    const maxTemp = Math.max(...months.map(m => m.avgHigh || 0), 1);
 
+    // SVG climate chart
     html += `<div>
-      <h3 class="text-lg font-serif text-earth-900 mb-4">Monthly Climate Averages</h3>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Climate Profile</h3>
+      ${buildClimateSvg(months, maxPrecip, maxTemp)}
+      <p class="text-xs text-earth-400 text-center mt-2">30-year average temperature and rainfall (Open-Meteo)</p>
+    </div>`;
+
+    // Monthly table
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Monthly Averages</h3>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead><tr class="border-b border-earth-200">
@@ -775,16 +874,95 @@ function renderClimateData() {
               <td class="py-2 pr-4">${m.avgLow != null ? `${Math.round(m.avgLow)}\u00B0C` : '\u2014'}</td>
               <td class="py-2">${m.totalPrecip != null ? `${Math.round(m.totalPrecip)} mm` : '\u2014'}</td>
             </tr>`).join('')}
+            <tr class="border-t-2 border-earth-900 font-semibold">
+              <td class="py-2 pr-4">Annual</td>
+              <td class="py-2 pr-4">${Math.round(months.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12)}\u00B0C</td>
+              <td class="py-2 pr-4">${Math.round(months.reduce((s, m) => s + (m.avgLow || 0), 0) / 12)}\u00B0C</td>
+              <td class="py-2">${Math.round(months.reduce((s, m) => s + (m.totalPrecip || 0), 0))} mm</td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>`;
 
-    // Frost info
-    html += `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      ${soilCard('Last Frost', frost?.lastFrost || 'None (frost-free)')}
-      ${soilCard('First Frost', frost?.firstFrost || 'None (frost-free)')}
-      ${soilCard('Growing Season', frost ? (frost.lastFrost && frost.firstFrost ? `${frost.lastFrost} to ${frost.firstFrost}` : 'Year-round') : '\u2014')}
+    // Seasonal patterns
+    const seasons = [
+      { name: 'Winter', range: 'Dec\u2013Feb', months: [11, 0, 1] },
+      { name: 'Spring', range: 'Mar\u2013May', months: [2, 3, 4] },
+      { name: 'Summer', range: 'Jun\u2013Aug', months: [5, 6, 7] },
+      { name: 'Autumn', range: 'Sep\u2013Nov', months: [8, 9, 10] },
+    ];
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Seasonal Patterns</h3>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${seasons.map(s => {
+          const sMonths = s.months.map(i => months[i]);
+          const avgH = Math.round(sMonths.reduce((a, m) => a + (m.avgHigh || 0), 0) / 3);
+          const avgL = Math.round(sMonths.reduce((a, m) => a + (m.avgLow || 0), 0) / 3);
+          const rain = Math.round(sMonths.reduce((a, m) => a + (m.totalPrecip || 0), 0));
+          const isWet = rain > 150;
+          const isHot = avgH > 28;
+          return `<div class="border rounded-lg p-4 ${isHot ? 'border-accent-terra/30 bg-accent-terra/5' : isWet ? 'border-accent-water/30 bg-accent-water/5' : 'border-earth-200 bg-earth-50'}">
+            <div class="font-medium text-earth-900 text-sm">${s.name}</div>
+            <div class="text-xs text-earth-500 mb-2">${s.range}</div>
+            <div class="text-sm text-earth-800">${avgL}\u2013${avgH}\u00B0C</div>
+            <div class="text-sm text-earth-500">${rain} mm rain</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+    // Frost analysis
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Frost Analysis</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        ${soilCard('Last Frost', frost?.lastFrost || 'None (frost-free)')}
+        ${soilCard('First Frost', frost?.firstFrost || 'None (frost-free)')}
+        ${soilCard('Growing Season', frost ? (frost.lastFrost && frost.firstFrost ? `${frost.lastFrost} to ${frost.firstFrost}` : 'Year-round') : '\u2014')}
+      </div>
+    </div>`;
+
+    // Seasonal risk calendar
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Seasonal Risk Calendar</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs">
+          <thead><tr class="border-b border-earth-200">
+            <th class="text-left py-2 pr-2 font-semibold text-earth-500 uppercase tracking-wider">Risk</th>
+            ${months.map(m => `<th class="text-center py-2 px-1 font-semibold text-earth-500">${m.month}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            <tr class="border-b border-earth-100">
+              <td class="py-2 pr-2 font-medium text-earth-800">Fire</td>
+              ${months.map(m => {
+                const temp = m.avgHigh || 0;
+                const precip = m.totalPrecip || 0;
+                const level = (temp > 28 && precip < 15) ? 'High' : (temp > 22 && precip < 40) ? 'Mod' : 'Low';
+                const bg = level === 'High' ? 'bg-red-50 text-red-700' : level === 'Mod' ? 'bg-amber-50 text-amber-700' : 'text-earth-400';
+                return `<td class="text-center py-2 px-1 ${bg}">${level}</td>`;
+              }).join('')}
+            </tr>
+            <tr class="border-b border-earth-100">
+              <td class="py-2 pr-2 font-medium text-earth-800">Flood</td>
+              ${months.map(m => {
+                const level = (m.totalPrecip || 0) > 80 ? 'Elev.' : 'Low';
+                const bg = level !== 'Low' ? 'bg-blue-50 text-blue-700' : 'text-earth-400';
+                return `<td class="text-center py-2 px-1 ${bg}">${level}</td>`;
+              }).join('')}
+            </tr>
+            <tr class="border-b border-earth-100">
+              <td class="py-2 pr-2 font-medium text-earth-800">Drought</td>
+              ${months.map(m => {
+                const precip = m.totalPrecip || 0;
+                const level = precip < 10 ? 'High' : precip < 30 ? 'Mod' : 'Low';
+                const bg = level === 'High' ? 'bg-amber-50 text-amber-700' : level === 'Mod' ? 'bg-amber-50/50 text-amber-600' : 'text-earth-400';
+                return `<td class="text-center py-2 px-1 ${bg}">${level}</td>`;
+              }).join('')}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-earth-400 mt-2">Derived from 30-year climate data and location factors</p>
     </div>`;
   }
 
@@ -793,6 +971,78 @@ function renderClimateData() {
   }
 
   el.innerHTML = html;
+}
+
+// ---------------------------------------------------------------------------
+// Climate SVG Chart
+// ---------------------------------------------------------------------------
+
+function buildClimateSvg(months, maxPrecip, maxTemp) {
+  const W = 760, H = 340;
+  const pad = { top: 30, right: 60, bottom: 50, left: 50 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+  const barW = Math.floor(cw / 12) - 6;
+
+  const precipCeil = Math.ceil(maxPrecip / 20) * 20 || 100;
+  const tempCeil = Math.ceil(maxTemp / 5) * 5 + 5;
+  const pY = (v) => pad.top + ch - (v / precipCeil) * ch;
+  const tY = (v) => pad.top + ch - (v / tempCeil) * ch;
+  const mX = (i) => pad.left + (i + 0.5) * (cw / 12);
+
+  const bars = months.map((m, i) => {
+    const h = ((m.totalPrecip || 0) / precipCeil) * ch;
+    const x = mX(i) - barW / 2;
+    const y = pad.top + ch - h;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="#6A9C98" opacity="0.5" rx="2"/>`;
+  }).join('');
+
+  const highPts = months.map((m, i) => `${mX(i)},${tY(m.avgHigh || 0)}`).join(' ');
+  const lowPts = months.map((m, i) => `${mX(i)},${tY(m.avgLow || 0)}`).join(' ');
+  const areaPath = months.map((m, i) => `${mX(i)},${tY(m.avgHigh || 0)}`).join(' ')
+    + ' ' + months.slice().reverse().map((m, i) => `${mX(11 - i)},${tY(m.avgLow || 0)}`).join(' ');
+
+  const tempTicks = [];
+  for (let v = 0; v <= tempCeil; v += 5) {
+    tempTicks.push(`<line x1="${pad.left}" x2="${pad.left + cw}" y1="${tY(v)}" y2="${tY(v)}" stroke="#E5E3DC" stroke-width="0.5"/>
+      <text x="${pad.left - 8}" y="${tY(v) + 4}" text-anchor="end" font-size="10" fill="#6E7C73">${v}</text>`);
+  }
+  const precipTicks = [];
+  for (let v = 0; v <= precipCeil; v += 20) {
+    precipTicks.push(`<text x="${pad.left + cw + 8}" y="${pY(v) + 4}" text-anchor="start" font-size="10" fill="#6E7C73">${v}</text>`);
+  }
+
+  const xLabels = months.map((m, i) => `<text x="${mX(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="#6E7C73">${m.month}</text>`).join('');
+  const highDots = months.map((m, i) => `<circle cx="${mX(i)}" cy="${tY(m.avgHigh || 0)}" r="3.5" fill="#C07C60" stroke="#fff" stroke-width="1.5"/>`).join('');
+  const lowDots = months.map((m, i) => `<circle cx="${mX(i)}" cy="${tY(m.avgLow || 0)}" r="3.5" fill="#517A63" stroke="#fff" stroke-width="1.5"/>`).join('');
+
+  return `<div class="overflow-x-auto">
+    <svg viewBox="0 0 ${W} ${H}" class="w-full" style="max-width:${W}px;font-family:Inter,sans-serif;">
+      ${tempTicks.join('')}
+      ${bars}
+      <polygon points="${areaPath}" fill="#C07C60" opacity="0.08"/>
+      <polyline points="${highPts}" fill="none" stroke="#C07C60" stroke-width="2.5"/>
+      <polyline points="${lowPts}" fill="none" stroke="#517A63" stroke-width="2.5"/>
+      ${highDots}
+      ${lowDots}
+      <line x1="${pad.left}" x2="${pad.left}" y1="${pad.top}" y2="${pad.top + ch}" stroke="#2D3730" stroke-width="1"/>
+      <line x1="${pad.left}" x2="${pad.left + cw}" y1="${pad.top + ch}" y2="${pad.top + ch}" stroke="#2D3730" stroke-width="1"/>
+      <line x1="${pad.left + cw}" x2="${pad.left + cw}" y1="${pad.top}" y2="${pad.top + ch}" stroke="#E5E3DC" stroke-width="0.5"/>
+      <text x="${pad.left - 35}" y="${H / 2}" text-anchor="middle" font-size="10" fill="#6E7C73" transform="rotate(-90,${pad.left - 35},${H / 2})">Temperature (\u00B0C)</text>
+      <text x="${pad.left + cw + 45}" y="${H / 2}" text-anchor="middle" font-size="10" fill="#6E7C73" transform="rotate(90,${pad.left + cw + 45},${H / 2})">Rainfall (mm)</text>
+      ${precipTicks.join('')}
+      ${xLabels}
+      <rect x="${W - 195}" y="8" width="185" height="56" fill="white" stroke="#E5E3DC" rx="4"/>
+      <line x1="${W - 185}" x2="${W - 165}" y1="22" y2="22" stroke="#C07C60" stroke-width="2.5"/>
+      <circle cx="${W - 175}" cy="22" r="3" fill="#C07C60"/>
+      <text x="${W - 158}" y="26" font-size="10" fill="#2D3730">High Temp (\u00B0C)</text>
+      <line x1="${W - 185}" x2="${W - 165}" y1="38" y2="38" stroke="#517A63" stroke-width="2.5"/>
+      <circle cx="${W - 175}" cy="38" r="3" fill="#517A63"/>
+      <text x="${W - 158}" y="42" font-size="10" fill="#2D3730">Low Temp (\u00B0C)</text>
+      <rect x="${W - 185}" y="50" width="16" height="10" fill="#6A9C98" opacity="0.5" rx="1"/>
+      <text x="${W - 158}" y="58" font-size="10" fill="#2D3730">Rainfall (mm)</text>
+    </svg>
+  </div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -1081,6 +1331,11 @@ function onDataUpdate(key) {
   // Update scorecard
   updateScorecard();
 
+  // Update overview risk/infrastructure sections
+  updateOverviewRisk(key);
+  updateOverviewInfrastructure(key);
+  updateOverviewWater(key);
+
   // Re-render active tab if its data arrived
   const tabDataMap = {
     'Ecosystem': ['species', 'threatened', 'gbif', 'protectedAreas'],
@@ -1093,6 +1348,157 @@ function onDataUpdate(key) {
       renderDashTab();
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Overview: Risk, Infrastructure, Water
+// ---------------------------------------------------------------------------
+
+function updateOverviewRisk(key) {
+  if (key !== 'riskScores' && key !== 'activeFires' && key !== 'flood') return;
+
+  // Risk scores
+  const rr = apiResults.riskScores;
+  if (rr && rr.ok && rr.data) {
+    const setRisk = (id, score, label) => {
+      const labelEl = document.getElementById(`risk-${id}-label`);
+      const scoreEl = document.getElementById(`risk-${id}-score`);
+      if (labelEl) labelEl.textContent = label;
+      if (scoreEl) scoreEl.textContent = `${score}/100`;
+    };
+    setRisk('fire', rr.data.fire, rr.data.fireLabel);
+    setRisk('flood', rr.data.flood, rr.data.floodLabel);
+    setRisk('drought', rr.data.drought, rr.data.droughtLabel);
+  }
+
+  // Active fires
+  const af = apiResults.activeFires;
+  if (af && key === 'activeFires') {
+    const el = document.getElementById('overview-active-fires');
+    if (!el) return;
+    if (af.ok) {
+      const fires = af.data || [];
+      const summary = summarizeFireDetections(fires);
+      if (summary.count === 0) {
+        el.innerHTML = `<div class="bg-accent-leaf/5 border border-accent-leaf/20 rounded-lg px-4 py-3 text-sm">
+          No active fires detected within 50 km in the last 48 hours (NASA VIIRS)
+        </div>`;
+      } else {
+        el.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-800">
+          <strong>${summary.count} fire detection${summary.count > 1 ? 's' : ''}</strong> within 50 km (NASA VIIRS, last 48h)
+          ${summary.highConfidence ? ` \u2014 ${summary.highConfidence} high confidence` : ''}
+        </div>`;
+      }
+    }
+  }
+
+  // Flood discharge
+  const fl = apiResults.flood;
+  if (fl && key === 'flood') {
+    const el = document.getElementById('overview-flood-discharge');
+    if (!el) return;
+    if (fl.ok && fl.data) {
+      const analysis = analyzeFloodRisk(fl.data);
+      el.innerHTML = `<div class="grid grid-cols-3 gap-4">
+        ${soilCard('Current Discharge', `${analysis.current} m\u00B3/s`)}
+        ${soilCard('30-day Avg', `${analysis.average} m\u00B3/s`)}
+        ${soilCard('Status', analysis.level, `${analysis.ratio}x average`)}
+      </div>`;
+    }
+  }
+}
+
+function updateOverviewInfrastructure(key) {
+  if (key !== 'infrastructure') return;
+  const el = document.getElementById('overview-infrastructure');
+  if (!el) return;
+
+  const r = apiResults.infrastructure;
+  if (!r || !r.ok || !r.data) {
+    el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No infrastructure data available.</p>';
+    return;
+  }
+
+  const nodes = extractNodes(r.data);
+  if (nodes.length === 0) {
+    el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No nearby services found.</p>';
+    return;
+  }
+
+  const [lat, lng] = landbook.center;
+  const amenities = nodes.map(n => ({
+    lat: n.lat, lng: n.lon,
+    name: n.tags?.name || n.tags?.amenity || n.tags?.shop || n.tags?.tourism || 'Unnamed',
+    type: n.tags?.amenity || n.tags?.shop || n.tags?.tourism || 'other',
+    tags: n.tags,
+  }));
+
+  const withDistances = calculateDistances([lat, lng], amenities);
+  const nearestByCategory = {};
+  withDistances.forEach(a => {
+    const cat = getCategoryKey(a);
+    if (!nearestByCategory[cat] || a.distanceKm < nearestByCategory[cat].distanceKm) {
+      nearestByCategory[cat] = a;
+    }
+  });
+
+  const items = Object.entries(nearestByCategory).slice(0, 6);
+  if (items.length === 0) {
+    el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No nearby services found.</p>';
+    return;
+  }
+
+  el.innerHTML = items.map(([cat, a]) => `
+    <div class="bg-earth-50 border border-earth-200 rounded-lg p-4">
+      <div class="text-xs text-earth-500 uppercase tracking-wider mb-1">${esc(cat)}</div>
+      <div class="text-sm font-medium text-earth-900 truncate">${esc(a.name)}</div>
+      <div class="text-sm text-earth-500 mt-1">${a.distanceKm.toFixed(1)} km</div>
+    </div>
+  `).join('');
+}
+
+function getCategoryKey(amenity) {
+  const type = amenity.type || '';
+  if (['hospital', 'pharmacy', 'doctors', 'clinic'].includes(type)) return 'Health';
+  if (['school', 'university', 'library'].includes(type)) return 'Education';
+  if (['supermarket', 'convenience'].includes(type)) return 'Shopping';
+  if (['post_office', 'bank', 'community_centre'].includes(type)) return 'Services';
+  if (['hotel', 'guest_house', 'camp_site'].includes(type)) return 'Tourism';
+  return 'Other';
+}
+
+function updateOverviewWater(key) {
+  if (key !== 'water') return;
+  const el = document.getElementById('overview-water');
+  if (!el) return;
+
+  const r = apiResults.water;
+  if (!r || !r.ok || !r.data) {
+    el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No water data available.</p>';
+    return;
+  }
+
+  const nodes = extractNodes(r.data);
+  const ways = extractWays(r.data);
+  const rivers = ways.filter(w => w.tags && w.tags.waterway === 'river');
+  const streams = ways.filter(w => w.tags && w.tags.waterway === 'stream');
+  const wells = nodes.filter(n => n.tags && n.tags.man_made === 'water_well');
+  const springs = nodes.filter(n => n.tags && n.tags.natural === 'spring');
+  const waterBodies = ways.filter(w => w.tags && w.tags.natural === 'water');
+
+  const total = rivers.length + streams.length + wells.length + springs.length + waterBodies.length;
+  if (total === 0) {
+    el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No water features found nearby.</p>';
+    return;
+  }
+
+  el.innerHTML = `
+    ${soilCard('Rivers', String(rivers.length), rivers.slice(0, 3).map(r => r.tags.name || 'Unnamed').join(', ') || '')}
+    ${soilCard('Streams', String(streams.length))}
+    ${soilCard('Water Bodies', String(waterBodies.length))}
+    ${soilCard('Wells', String(wells.length))}
+    ${soilCard('Springs', String(springs.length))}
+  `;
 }
 
 function updateKPIs() {
