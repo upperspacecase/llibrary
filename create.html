@@ -51,38 +51,45 @@
         </div>
       </div>
       <div class="create-sidebar">
-        <h2>Create Your Landbook</h2>
-        <p class="create-desc">Search for your location, then click on the map to draw your land boundary.</p>
+        <div class="create-sidebar-content">
+          <h2>Create Your Landbook</h2>
+          <p class="create-desc">Search for your location, then click on the map to draw your land boundary.</p>
 
-        <div class="create-search" style="position:relative;">
-          <input type="text" id="search-input" placeholder="Search for your land..." autocomplete="off">
-          <button class="btn-small" id="btn-search">Find</button>
-          <ul class="search-suggestions" id="search-suggestions"></ul>
+          <div class="create-search" style="position:relative;">
+            <input type="text" id="search-input" placeholder="Search for your land..." autocomplete="off">
+            <button class="btn-small" id="btn-search">Find</button>
+            <ul class="search-suggestions" id="search-suggestions"></ul>
+          </div>
+
+          <!-- Shown after boundary is placed -->
+          <div id="boundary-result" style="display:none;">
+            <div class="create-address-row">
+              <span class="create-address-label">Address</span>
+              <span class="create-address-value" id="stat-address">Custom boundary</span>
+            </div>
+            <div class="create-metrics">
+              <div class="create-metric">
+                <div class="create-metric-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="1"/><path d="M8 4v16"/></svg>
+                </div>
+                <div class="create-metric-value"><span id="stat-area">&mdash;</span></div>
+                <div class="create-metric-label">Total Area</div>
+              </div>
+              <div class="create-metric">
+                <div class="create-metric-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" stroke-dasharray="4 4"/></svg>
+                </div>
+                <div class="create-metric-value"><span id="stat-perimeter">&mdash;</span></div>
+                <div class="create-metric-label">Perimeter</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Shown after boundary is placed -->
-        <div id="boundary-result" style="display:none;">
-          <div class="create-stat" style="margin-bottom:12px;">
-            <span class="stat-label">Address</span>
-            <span class="stat-value" id="stat-address">&mdash;</span>
-          </div>
-          <div style="display:flex;gap:12px;margin-bottom:24px;">
-            <div class="lb-metric-badge" style="flex:1;">
-              <div class="badge-value" id="stat-area">&mdash;</div>
-              <div class="badge-label">Area</div>
-            </div>
-            <div class="lb-metric-badge" style="flex:1;">
-              <div class="badge-value" id="stat-perimeter">&mdash;</div>
-              <div class="badge-label">Perimeter</div>
-            </div>
-          </div>
-          <p style="font-size:13px;color:var(--muted);margin-bottom:16px;">Drag the points to adjust your boundary.</p>
-          <div style="margin-bottom:12px;">
-            <label for="email-input" style="font-size:13px;font-weight:500;display:block;margin-bottom:4px;">Email</label>
-            <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit;background:var(--white);box-sizing:border-box;">
-          </div>
-          <button class="btn-primary" id="btn-create" disabled style="width:100%;text-align:center;">Generate Landbook</button>
-          <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;">Your data stays private.</p>
+        <div class="create-sidebar-footer" id="boundary-footer" style="display:none;">
+          <p class="create-footer-hint">Drag the points to adjust your boundary.</p>
+          <button class="btn-create-generate" id="btn-create" disabled>Generate Landbook</button>
+          <p class="create-footer-privacy">Your data stays private.</p>
         </div>
       </div>
     </div>

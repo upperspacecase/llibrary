@@ -5,62 +5,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/jpeg" href="/favicon1.jpg">
-  <title>Landbook — Libraries</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
-    rel="stylesheet">
-  <meta property="og:title" content="Landbook — Libraries">
+  <title>Landbook — LandLibrary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta property="og:title" content="Landbook — LandLibrary">
   <meta property="og:image" content="https://llibrary-eight.vercel.app/metaimage.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://llibrary-eight.vercel.app/metaimage.png">
 </head>
 
-<body>
+<body class="bg-earth-50 text-earth-900 font-sans antialiased">
 
-  <header class="header page-header">
-    <a href="/" class="logo">
-      <img src="/logo.svg" alt="LandLibrary" class="logo-img">
-    </a>
-    <div class="header-nav">
-      <a href="/about">About</a>
-      <a href="/create">Create LandBook</a>
-      <a href="/commons">Regional Commons</a>
-      <div class="lang-toggle">
-        <button class="lang-toggle-trigger" aria-expanded="false">
-          <span class="lang-toggle-label">EN</span>
-          <svg class="lang-toggle-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="lang-toggle-menu">
-          <button data-lang="en">EN</button>
-          <button data-lang="pt">PT</button>
-        </div>
+  <!-- App Shell -->
+  <div class="flex h-screen w-full overflow-hidden">
+
+    <!-- Desktop Sidebar -->
+    <aside id="sidebar" class="hidden lg:flex w-[260px] bg-earth-100 flex-col border-r border-earth-200/50 shrink-0">
+      <div class="px-6 pt-6 pb-4">
+        <h1 class="font-sans font-semibold text-lg tracking-[0.2em] text-earth-900 uppercase">LandBook</h1>
+        <p id="sidebar-subtitle" class="text-[11px] text-earth-500 uppercase tracking-widest mt-0.5"></p>
       </div>
-    </div>
-  </header>
-
-  <div class="landbook-layout">
-    <!-- Sidebar Navigation -->
-    <aside class="landbook-sidebar" id="landbook-sidebar">
-      <nav class="landbook-nav" id="landbook-nav">
+      <nav id="sidebar-nav" class="px-4 flex flex-col gap-1 mt-2">
         <!-- JS populates -->
       </nav>
-      <div class="landbook-sidebar-actions" id="landbook-sidebar-actions">
-        <!-- Share + Export buttons populated by JS -->
-      </div>
     </aside>
 
-    <!-- Main Report Content -->
-    <main class="landbook-main" id="landbook-content">
-      <div class="loading-block">
-        <div class="loading-spinner"></div>
-        <span data-i18n="landbook.loading">Loading your landbook...</span>
+    <!-- Main Content -->
+    <main id="app-main" class="flex-1 overflow-y-auto overflow-x-hidden relative pb-24 lg:pb-0">
+      <!-- Loading state -->
+      <div id="loading-view" class="flex items-center justify-center h-full">
+        <div class="text-center">
+          <div class="w-8 h-8 border-2 border-earth-300 border-t-earth-800 rounded-full animate-spin mx-auto mb-4"></div>
+          <p class="text-earth-500 text-sm">Loading your landbook...</p>
+        </div>
       </div>
+
+      <!-- Not found state -->
+      <div id="notfound-view" class="hidden flex items-center justify-center h-full">
+        <div class="text-center max-w-sm px-6">
+          <h3 class="font-serif text-2xl mb-2">Landbook not found</h3>
+          <p class="text-earth-500 mb-6">This landbook may have been removed or the link is incorrect.</p>
+          <a href="/create" class="inline-block px-6 py-3 bg-earth-900 text-white rounded-lg font-medium text-sm hover:opacity-80 transition-opacity">Create a Landbook</a>
+        </div>
+      </div>
+
+      <!-- View containers (toggled by JS) -->
+      <div id="view-dashboard" class="hidden"></div>
+      <div id="view-map" class="hidden"></div>
+      <div id="view-chat" class="hidden"></div>
+      <div id="view-vault" class="hidden"></div>
+      <div id="view-capture" class="hidden"></div>
     </main>
+
+    <!-- Mobile Bottom Nav -->
+    <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-earth-50 border-t border-earth-200 flex justify-around items-center px-4 h-20 pb-4">
+      <!-- JS populates -->
+    </div>
   </div>
 
-  <script>
-    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
-  </script>
   <script type="module" src="/src/pages/landbook.js"></script>
 </body>
 

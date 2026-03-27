@@ -28,11 +28,11 @@ const searchInput = document.getElementById('search-input');
 const btnSearch = document.getElementById('btn-search');
 const suggestionsEl = document.getElementById('search-suggestions');
 const resultPanel = document.getElementById('boundary-result');
+const boundaryFooter = document.getElementById('boundary-footer');
 const statAddress = document.getElementById('stat-address');
 const statArea = document.getElementById('stat-area');
 const statPerimeter = document.getElementById('stat-perimeter');
 const btnCreate = document.getElementById('btn-create');
-const emailInput = document.getElementById('email-input');
 const instructions = document.getElementById('map-instructions');
 const toolbar = document.getElementById('map-toolbar');
 const btnUndo = document.getElementById('btn-undo');
@@ -178,9 +178,10 @@ function closePolygon() {
 
   fitToCoords(map, boundaryPoints, { padding: 80 });
 
-  if (instructions) instructions.textContent = 'Boundary set. Enter your email and click Generate.';
+  if (instructions) instructions.textContent = 'Boundary set. Click Generate to create your landbook.';
   updateStats();
   if (resultPanel) resultPanel.style.display = 'block';
+  if (boundaryFooter) boundaryFooter.style.display = 'block';
   updateCreateButton();
 }
 
@@ -207,6 +208,7 @@ function clearAll() {
   if (toolbar) toolbar.style.display = 'none';
   if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
   if (resultPanel) resultPanel.style.display = 'none';
+  if (boundaryFooter) boundaryFooter.style.display = 'none';
   if (btnCreate) btnCreate.disabled = true;
 }
 
@@ -216,18 +218,21 @@ function updateStats() {
   const perimeter = polygonPerimeter(boundaryPoints);
   const ha = sqmToHectares(area);
   if (statAddress) statAddress.textContent = selectedAddress || 'Custom boundary';
-  if (statArea) statArea.textContent = ha >= 1 ? `${ha.toFixed(2)} ha` : formatArea(area);
-  if (statPerimeter) statPerimeter.textContent = formatDistance(perimeter);
+  if (statArea) {
+    if (ha >= 1) {
+      statArea.innerHTML = `${ha.toFixed(2)}<span class="unit">ha</span>`;
+    } else {
+      statArea.innerHTML = formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
+    }
+  }
+  if (statPerimeter) {
+    statPerimeter.innerHTML = formatDistance(perimeter).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
+  }
 }
-
-// Email validation — button requires both closed boundary + valid email
-function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
 
 function updateCreateButton() {
-  if (btnCreate) btnCreate.disabled = !(isClosed && isValidEmail(emailInput?.value.trim()));
+  if (btnCreate) btnCreate.disabled = !isClosed;
 }
-
-if (emailInput) emailInput.addEventListener('input', updateCreateButton);
 
 // Toolbar buttons
 if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
