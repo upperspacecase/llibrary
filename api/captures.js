@@ -72,7 +72,7 @@ async function deleteCapture(req, res) {
 
     // Delete from Vercel Blob
     if (capture?.blobPathname) {
-      try { await del(capture.url); } catch (e) { console.warn('Blob delete failed:', e); }
+      try { await del(capture.blobPathname); } catch (e) { console.warn('Blob delete failed:', e); }
     }
 
     // Remove from landbook

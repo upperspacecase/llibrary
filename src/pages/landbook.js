@@ -205,15 +205,17 @@ function switchView(viewId) {
   if (viewEl) {
     viewEl.classList.remove('hidden');
 
-    // Render if empty
-    if (!viewEl.dataset.rendered) {
+    // Dashboard always re-renders (tabs + scores need fresh DOM)
+    if (viewId === 'dashboard') {
+      renderView(viewId, viewEl);
+    } else if (!viewEl.dataset.rendered) {
       viewEl.dataset.rendered = 'true';
       renderView(viewId, viewEl);
     }
 
-    // Special: map needs resize after becoming visible
+    // Map needs resize after becoming visible
     if (viewId === 'map' && mapInstance) {
-      setTimeout(() => mapInstance.resize(), 100);
+      setTimeout(() => mapInstance.resize(), 200);
     }
   }
 
@@ -335,7 +337,7 @@ function renderDashboard(container) {
       <nav class="flex gap-1 mb-0 border-b border-earth-200/60 overflow-x-auto" id="dash-tabs">
         ${DASHBOARD_TABS.map(tab => `
           <button data-tab="${tab}" class="px-5 py-2.5 whitespace-nowrap transition-all relative -mb-px text-sm ${tab === activeDashTab
-            ? 'text-earth-900 font-medium bg-earth-900/10 rounded-t-lg border border-earth-300 border-b-earth-900 border-b-2'
+            ? 'text-earth-900 font-medium bg-earth-100 rounded-t-lg border border-earth-200 border-b-white border-b-2'
             : 'text-earth-500 hover:text-earth-900 hover:bg-earth-50 rounded-t-lg border border-transparent'}">${tab}</button>
         `).join('')}
       </nav>
@@ -365,7 +367,7 @@ function updateDashTabs() {
   tabs.querySelectorAll('[data-tab]').forEach(btn => {
     const isActive = btn.dataset.tab === activeDashTab;
     btn.className = `px-5 py-2.5 whitespace-nowrap transition-all relative -mb-px text-sm ${isActive
-      ? 'text-earth-900 font-medium bg-earth-900/10 rounded-t-lg border border-earth-300 border-b-earth-900 border-b-2'
+      ? 'text-earth-900 font-medium bg-earth-100 rounded-t-lg border border-earth-200 border-b-white border-b-2'
       : 'text-earth-500 hover:text-earth-900 hover:bg-earth-50 rounded-t-lg border border-transparent'}`;
   });
 }
@@ -379,6 +381,20 @@ function renderDashTab() {
     case 'Ecosystem': renderEcosystemTab(el); break;
     case 'Terrain': renderTerrainTab(el); break;
     case 'Climate': renderClimateTab(el); break;
+  }
+
+  // Re-apply cached data to freshly rendered DOM
+  reapplyCachedData();
+}
+
+function reapplyCachedData() {
+  updateKPIs();
+  updateScorecard();
+  // Re-apply overview sections from cache
+  for (const key of Object.keys(apiResults)) {
+    updateOverviewRisk(key);
+    updateOverviewInfrastructure(key);
+    updateOverviewWater(key);
   }
 }
 
@@ -517,7 +533,7 @@ function renderEcosystemData() {
   const rg = apiResults.gbif;
   const rp = apiResults.protectedAreas;
 
-  if (!rs && !rt) return; // not loaded yet
+  if (!rs && !rt && !rg && !rp) return;
 
   let html = '';
 
@@ -670,7 +686,7 @@ function renderTerrainData() {
   const rc = apiResults.soilClass;
   const rg = apiResults.geology;
 
-  if (!re && !rs) return;
+  if (!re && !rs && !rc && !rg) return;
 
   let html = '';
 
@@ -1053,9 +1069,9 @@ function renderMapView(container) {
   const boundary = landbook.boundary || [];
 
   container.innerHTML = `
-    <div class="h-full flex flex-col" style="min-height: calc(100vh - 80px);">
-      <div id="map-container" class="flex-1 relative">
-        <div id="landbook-map" class="w-full h-full"></div>
+    <div class="flex flex-col" style="height: calc(100vh - 80px);">
+      <div id="map-container" class="flex-1 relative" style="min-height: 400px;">
+        <div id="landbook-map" class="absolute inset-0"></div>
         <div id="map-layer-toggles" class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg border border-earth-200 p-3 shadow-sm max-w-xs"></div>
       </div>
     </div>
