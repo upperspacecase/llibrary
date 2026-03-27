@@ -15,11 +15,11 @@ import { getWaterFeatures, getInfrastructure, extractNodes, extractWays } from '
 import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '../api/inaturalist.js';
 import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
 import { CORINE_WMS, getCorineWmsParams, WORLDCOVER_WMS, getWorldCoverWmsParams } from '../api/copernicus.js';
-import { EFFIS_WMS, getFireDangerWmsParams, estimateFireRisk } from '../api/effis.js';
+import { EFFIS_WMS, getFireDangerWmsParams } from '../api/effis.js';
 import { NATURA2000_WMS, getNatura2000WmsParams, getProtectedAreas } from '../api/natura2000.js';
 import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
 import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
-import { calculateDistances, categorizeAmenities } from '../api/openrouteservice.js';
+import { calculateDistances } from '../api/openrouteservice.js';
 import { getGeology, parseGeology, getGeologyDescription } from '../api/macrostrat.js';
 import { fetchRiskScores } from '../api/risk-scores.js';
 
@@ -60,7 +60,7 @@ const NAV_ITEMS = [
   },
 ];
 
-const DASHBOARD_TABS = ['Overview', 'Ecosystem', 'Terrain', 'Climate'];
+const DASHBOARD_TABS = ['Overview', 'Ecosystem', 'Terrain', 'Climate', 'Sources'];
 
 // ---------------------------------------------------------------------------
 // State
@@ -145,7 +145,7 @@ function renderNav() {
   // Desktop sidebar
   if (sidebarNav) {
     sidebarNav.innerHTML = NAV_ITEMS.map(item => `
-      <button data-view="${item.id}" class="flex items-center gap-4 px-4 py-3 w-full text-left rounded-lg transition-colors text-sm ${item.id === activeView ? 'text-earth-900 bg-earth-900/10 font-semibold' : 'text-earth-500 hover:text-earth-900'}">
+      <button data-view="${item.id}" aria-label="${item.label}" class="flex items-center gap-4 px-4 py-3 w-full text-left rounded-lg transition-colors duration-200 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-leaf/50 ${item.id === activeView ? 'text-earth-900 bg-earth-200/50 font-semibold' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-200/30'}">
         <span class="opacity-70">${item.icon}</span>
         <span>${item.label}</span>
       </button>
@@ -160,7 +160,7 @@ function renderNav() {
   // Mobile bottom nav
   if (mobileNav) {
     mobileNav.innerHTML = NAV_ITEMS.map(item => `
-      <button data-view="${item.id}" class="flex flex-col items-center gap-1.5 transition-colors ${item.id === activeView ? 'text-earth-900' : 'text-earth-400 hover:text-earth-900'}">
+      <button data-view="${item.id}" aria-label="${item.label}" class="flex flex-col items-center gap-1.5 transition-colors duration-200 cursor-pointer min-w-[44px] min-h-[44px] justify-center focus:outline-none focus:ring-2 focus:ring-accent-leaf/50 rounded-lg ${item.id === activeView ? 'text-earth-900' : 'text-earth-400 hover:text-earth-900'}">
         ${item.mobileIcon}
         <span class="text-[10px] font-medium">${item.label}</span>
       </button>
@@ -178,14 +178,14 @@ function updateNavHighlight() {
   if (sidebarNav) {
     sidebarNav.querySelectorAll('[data-view]').forEach(btn => {
       const isActive = btn.dataset.view === activeView;
-      btn.className = `flex items-center gap-4 px-4 py-3 w-full text-left rounded-lg transition-colors text-sm ${isActive ? 'text-earth-900 bg-earth-900/10 font-semibold' : 'text-earth-500 hover:text-earth-900'}`;
+      btn.className = `flex items-center gap-4 px-4 py-3 w-full text-left rounded-lg transition-colors duration-200 text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent-leaf/50 ${isActive ? 'text-earth-900 bg-earth-200/50 font-semibold' : 'text-earth-500 hover:text-earth-900 hover:bg-earth-200/30'}`;
     });
   }
   // Mobile
   if (mobileNav) {
     mobileNav.querySelectorAll('[data-view]').forEach(btn => {
       const isActive = btn.dataset.view === activeView;
-      btn.className = `flex flex-col items-center gap-1.5 transition-colors ${isActive ? 'text-earth-900' : 'text-earth-400 hover:text-earth-900'}`;
+      btn.className = `flex flex-col items-center gap-1.5 transition-colors duration-200 cursor-pointer min-w-[44px] min-h-[44px] justify-center focus:outline-none focus:ring-2 focus:ring-accent-leaf/50 rounded-lg ${isActive ? 'text-earth-900' : 'text-earth-400 hover:text-earth-900'}`;
     });
   }
 }
@@ -381,6 +381,7 @@ function renderDashTab() {
     case 'Ecosystem': renderEcosystemTab(el); break;
     case 'Terrain': renderTerrainTab(el); break;
     case 'Climate': renderClimateTab(el); break;
+    case 'Sources': renderSourcesTab(el); break;
   }
 
   // Re-apply cached data to freshly rendered DOM
@@ -1059,6 +1060,62 @@ function buildClimateSvg(months, maxPrecip, maxTemp) {
       <text x="${W - 158}" y="58" font-size="10" fill="#2D3730">Rainfall (mm)</text>
     </svg>
   </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Sources Tab
+// ---------------------------------------------------------------------------
+
+function renderSourcesTab(el) {
+  const sourceLink = (label, url, desc) =>
+    `<tr class="border-b border-earth-100 hover:bg-earth-50/50 transition-colors">
+      <td class="py-3 pr-4 font-medium text-sm text-earth-900">${esc(label)}</td>
+      <td class="py-3 pr-4 text-sm text-earth-600">${esc(desc)}</td>
+      <td class="py-3 text-sm"><a href="${url}" target="_blank" rel="noopener noreferrer" class="text-accent-leaf hover:underline focus:outline-none focus:ring-2 focus:ring-accent-leaf/50 rounded">${url.replace('https://', '')}</a></td>
+    </tr>`;
+
+  const sectionHead = (title) =>
+    `<tr><td colspan="3" class="pt-6 pb-2 text-xs font-semibold uppercase tracking-wider text-earth-500">${title}</td></tr>`;
+
+  el.innerHTML = `
+    <div>
+      <p class="text-sm text-earth-500 mb-6">All environmental data in this landbook is sourced from open scientific databases and satellite systems. Click any link to visit the original data provider.</p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead><tr class="border-b border-earth-200">
+            <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider w-1/4">Source</th>
+            <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider w-1/3">Data Provided</th>
+            <th class="text-left py-2 font-semibold text-earth-500 text-xs uppercase tracking-wider">Link</th>
+          </tr></thead>
+          <tbody>
+            ${sectionHead('Environmental Data')}
+            ${sourceLink('Open-Meteo', 'https://open-meteo.com', 'Weather forecasts, climate averages, elevation (SRTM 90m DEM)')}
+            ${sourceLink('SoilGrids', 'https://soilgrids.org', 'Soil properties, texture, pH, organic carbon, WRB classification')}
+            ${sourceLink('Macrostrat', 'https://macrostrat.org', 'Geological map data, bedrock lithology, formations')}
+
+            ${sectionHead('Biodiversity')}
+            ${sourceLink('iNaturalist', 'https://inaturalist.org', 'Community science species observations and photos')}
+            ${sourceLink('GBIF', 'https://gbif.org', 'Global Biodiversity Information Facility occurrence records')}
+            ${sourceLink('Natura 2000', 'https://natura2000.eea.europa.eu', 'European protected areas network')}
+
+            ${sectionHead('Risk and Hazards')}
+            ${sourceLink('EFFIS', 'https://effis.jrc.ec.europa.eu', 'European Forest Fire Information System')}
+            ${sourceLink('NASA FIRMS', 'https://firms.modaps.eosdis.nasa.gov', 'VIIRS satellite active fire detection')}
+            ${sourceLink('GloFAS', 'https://globalfloods.eu', 'Global Flood Awareness System, river discharge')}
+
+            ${sectionHead('Land and Infrastructure')}
+            ${sourceLink('CORINE / ESA WorldCover', 'https://land.copernicus.eu', 'Land cover classification, satellite imagery')}
+            ${sourceLink('OpenStreetMap', 'https://openstreetmap.org', 'Infrastructure, water features, amenities (via Overpass API)')}
+            ${sourceLink('Sentinel-2', 'https://dataspace.copernicus.eu', 'High-resolution satellite imagery')}
+
+            ${sectionHead('Maps and Geocoding')}
+            ${sourceLink('Mapbox', 'https://mapbox.com', 'Interactive maps, geocoding, satellite tiles')}
+            ${sourceLink('Nominatim', 'https://nominatim.org', 'Address and administrative boundary data')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 // ---------------------------------------------------------------------------

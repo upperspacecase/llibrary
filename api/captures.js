@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { put, del } from '@vercel/blob';
 import { getCollection } from './_db.js';
 
@@ -27,7 +28,7 @@ async function uploadCapture(req, res) {
   try {
     // Upload to Vercel Blob
     const buffer = Buffer.from(image.split(',')[1] || image, 'base64');
-    const filename = `captures/${landbookId}/${crypto.randomUUID()}.jpg`;
+    const filename = `captures/${landbookId}/${randomUUID()}.jpg`;
 
     const blob = await put(filename, buffer, {
       access: 'public',
@@ -36,7 +37,7 @@ async function uploadCapture(req, res) {
 
     // Create capture record
     const capture = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       url: blob.url,
       blobPathname: blob.pathname,
       note: note || '',
