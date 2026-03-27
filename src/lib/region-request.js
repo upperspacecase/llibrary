@@ -12,19 +12,34 @@ import { t } from './i18n.js';
 const PLUS_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>';
 const CHECK_SVG = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green, #2d6a4f)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>';
 
+const FALLBACK_REGIONS = [
+  'Algarve, Portugal',
+  'Sintra, Portugal',
+  'Douro Valley, Portugal',
+  'Provence, France',
+  'Andalusia, Spain',
+  'Peloponnese, Greece',
+  'Cotswolds, England',
+  'Willamette Valley, Oregon',
+  'Byron Bay, Australia',
+  'Waikato, New Zealand',
+].map(name => ({ name, votes: 0 }));
+
 export async function initRegionRequest(container) {
   if (!container) return;
 
-  // Fetch regions from API
-  let regions = [];
+  // Fetch regions from API, fall back to hardcoded seeds
+  let regions = FALLBACK_REGIONS;
   try {
     const res = await fetch('/api/regions');
     if (res.ok) {
       const data = await res.json();
-      regions = data.regions || [];
+      if (data.regions && data.regions.length > 0) {
+        regions = data.regions;
+      }
     }
   } catch {
-    // Fallback: show empty pills section
+    // Use fallback regions
   }
 
   // Render section
