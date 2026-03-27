@@ -1135,7 +1135,12 @@ function renderMapView(container) {
   `;
 
   if (boundary.length) {
-    initMap(boundary, landbook.center);
+    // Delay map init to ensure container has dimensions after becoming visible
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        initMap(boundary, landbook.center);
+      });
+    });
   }
 }
 
