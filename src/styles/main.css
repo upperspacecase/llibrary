@@ -3269,6 +3269,34 @@ a {
   cursor: not-allowed;
 }
 
+.create-email-field {
+  margin-bottom: 16px;
+}
+
+.create-email-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.create-email-field input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--white);
+  box-sizing: border-box;
+}
+
+.create-email-field input:focus {
+  outline: none;
+  border-color: #999;
+  box-shadow: 0 0 0 1px #999;
+}
+
 .create-footer-privacy {
   font-size: 12px;
   color: #A39E93;

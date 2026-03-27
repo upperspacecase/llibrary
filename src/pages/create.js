@@ -27,12 +27,11 @@ let selectedAddress = '';
 const searchInput = document.getElementById('search-input');
 const btnSearch = document.getElementById('btn-search');
 const suggestionsEl = document.getElementById('search-suggestions');
-const resultPanel = document.getElementById('boundary-result');
-const boundaryFooter = document.getElementById('boundary-footer');
 const statAddress = document.getElementById('stat-address');
 const statArea = document.getElementById('stat-area');
 const statPerimeter = document.getElementById('stat-perimeter');
 const btnCreate = document.getElementById('btn-create');
+const emailInput = document.getElementById('email-input');
 const instructions = document.getElementById('map-instructions');
 const toolbar = document.getElementById('map-toolbar');
 const btnUndo = document.getElementById('btn-undo');
@@ -180,8 +179,6 @@ function closePolygon() {
 
   if (instructions) instructions.textContent = 'Boundary set. Click Generate to create your landbook.';
   updateStats();
-  if (resultPanel) resultPanel.style.display = 'block';
-  if (boundaryFooter) boundaryFooter.style.display = 'block';
   updateCreateButton();
 }
 
@@ -207,8 +204,9 @@ function clearAll() {
   updateDrawing();
   if (toolbar) toolbar.style.display = 'none';
   if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
-  if (resultPanel) resultPanel.style.display = 'none';
-  if (boundaryFooter) boundaryFooter.style.display = 'none';
+  if (statAddress) statAddress.textContent = '\u2014';
+  if (statArea) statArea.textContent = '\u2014';
+  if (statPerimeter) statPerimeter.textContent = '\u2014';
   if (btnCreate) btnCreate.disabled = true;
 }
 
@@ -230,9 +228,13 @@ function updateStats() {
   }
 }
 
+function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
+
 function updateCreateButton() {
-  if (btnCreate) btnCreate.disabled = !isClosed;
+  if (btnCreate) btnCreate.disabled = !(isClosed && isValidEmail(emailInput?.value.trim()));
 }
+
+if (emailInput) emailInput.addEventListener('input', updateCreateButton);
 
 // Toolbar buttons
 if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);

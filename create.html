@@ -61,11 +61,10 @@
             <ul class="search-suggestions" id="search-suggestions"></ul>
           </div>
 
-          <!-- Shown after boundary is placed -->
-          <div id="boundary-result" style="display:none;">
+          <div id="boundary-result">
             <div class="create-address-row">
               <span class="create-address-label">Address</span>
-              <span class="create-address-value" id="stat-address">Custom boundary</span>
+              <span class="create-address-value" id="stat-address">&mdash;</span>
             </div>
             <div class="create-metrics">
               <div class="create-metric">
@@ -86,8 +85,12 @@
           </div>
         </div>
 
-        <div class="create-sidebar-footer" id="boundary-footer" style="display:none;">
-          <p class="create-footer-hint">Drag the points to adjust your boundary.</p>
+        <div class="create-sidebar-footer" id="boundary-footer">
+          <p class="create-footer-hint">Draw your boundary on the map, then generate.</p>
+          <div class="create-email-field">
+            <label for="email-input">Email</label>
+            <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+          </div>
           <button class="btn-create-generate" id="btn-create" disabled>Generate Landbook</button>
           <p class="create-footer-privacy">Your data stays private.</p>
         </div>
