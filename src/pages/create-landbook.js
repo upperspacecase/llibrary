@@ -1,15 +1,15 @@
 /**
- * Submit Land — Info capture
- * Same map/boundary flow as landbook creation, but submits to
- * the submissions collection with optional file uploads.
- *
- * The original landbook generator is preserved in create-landbook.js.
+ * Create Landbook
+ * 1. Type address → autocomplete → map flies to location
+ * 2. Click on map to draw boundary points
+ * 3. Close boundary (click near first point or "Close Boundary" button)
+ * 4. Click Generate → save → open landbook
  */
 
 import '../styles/main.css';
 import { createMap, mapboxgl, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n, t } from '../lib/i18n.js';
-import { saveSubmission } from '../lib/store.js';
+import { saveLandbook } from '../lib/store.js';
 import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, formatDistance, sqmToHectares } from '../lib/geo.js';
 
 initI18n();
@@ -32,10 +32,6 @@ const statArea = document.getElementById('stat-area');
 const statPerimeter = document.getElementById('stat-perimeter');
 const btnCreate = document.getElementById('btn-create');
 const emailInput = document.getElementById('email-input');
-const notesInput = document.getElementById('notes-input');
-const fileInput = document.getElementById('file-input');
-const fileList = document.getElementById('file-list');
-const submitSuccess = document.getElementById('submit-success');
 const instructions = document.getElementById('map-instructions');
 const toolbar = document.getElementById('map-toolbar');
 const btnUndo = document.getElementById('btn-undo');
@@ -181,7 +177,7 @@ function closePolygon() {
 
   fitToCoords(map, boundaryPoints, { padding: 80 });
 
-  if (instructions) instructions.textContent = 'Boundary set. Fill in your details and submit.';
+  if (instructions) instructions.textContent = 'Boundary set. Click Generate to create your landbook.';
   updateStats();
   updateCreateButton();
 }
@@ -244,22 +240,6 @@ if (emailInput) emailInput.addEventListener('input', updateCreateButton);
 if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
 if (btnClear) btnClear.addEventListener('click', clearAll);
 if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.length >= 3 && !isClosed) closePolygon(); });
-
-// ---------------------------------------------------------------------------
-// File upload preview
-// ---------------------------------------------------------------------------
-
-if (fileInput) {
-  fileInput.addEventListener('change', () => {
-    if (!fileList) return;
-    fileList.innerHTML = '';
-    for (const file of fileInput.files) {
-      const li = document.createElement('li');
-      li.textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
-      fileList.appendChild(li);
-    }
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Mapbox Geocoding Autocomplete
@@ -363,7 +343,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------------------------------------------------------------------------
-// Submit
+// Generate Landbook
 // ---------------------------------------------------------------------------
 
 if (btnCreate) {
@@ -371,33 +351,28 @@ if (btnCreate) {
     if (!isClosed || boundaryPoints.length < 3) return;
 
     btnCreate.disabled = true;
-    btnCreate.textContent = 'Submitting...';
+    btnCreate.textContent = 'Generating...';
 
     const area = polygonArea(boundaryPoints);
     const perimeter = polygonPerimeter(boundaryPoints);
     const centroid = polygonCentroid(boundaryPoints);
 
-    const files = fileInput ? Array.from(fileInput.files) : [];
-
     try {
-      await saveSubmission({
+      const landbook = await saveLandbook({
         boundary: boundaryPoints,
         center: centroid,
         area: area,
         perimeter: perimeter,
         address: selectedAddress || '',
         email: emailInput ? emailInput.value.trim() : '',
-        notes: notesInput ? notesInput.value.trim() : '',
-      }, files);
+      });
 
-      // Show success, hide form controls
-      btnCreate.style.display = 'none';
-      if (submitSuccess) submitSuccess.style.display = 'flex';
+      window.location.href = `/landbook?id=${landbook.id}`;
     } catch (err) {
-      console.error('Failed to save submission:', err);
+      console.error('Failed to save landbook:', err);
       btnCreate.disabled = false;
-      btnCreate.textContent = 'Submit';
-      alert('Failed to submit. Please try again.');
+      btnCreate.textContent = 'Generate Landbook';
+      alert('Failed to save. Please try again.');
     }
   });
 }

@@ -132,6 +132,40 @@ export async function deleteLandbook(id) {
 }
 
 // ---------------------------------------------------------------------------
+// Submissions — via /api/submissions
+// ---------------------------------------------------------------------------
+
+/**
+ * Create a new submission with optional file uploads.
+ * @param {object} data - { boundary, center, area, perimeter, address, email, notes }
+ * @param {File[]} files - array of File objects to upload
+ * @returns {Promise<object>} - the saved submission document
+ */
+export async function saveSubmission(data, files = []) {
+  const formData = new FormData();
+  formData.append('id', crypto.randomUUID());
+  formData.append('boundary', JSON.stringify(data.boundary || []));
+  formData.append('center', JSON.stringify(data.center || null));
+  formData.append('area', data.area || '');
+  formData.append('perimeter', data.perimeter || '');
+  formData.append('address', data.address || '');
+  formData.append('email', data.email || '');
+  formData.append('notes', data.notes || '');
+
+  for (const file of files) {
+    formData.append('files', file);
+  }
+
+  const res = await fetch(`${API_BASE}/submissions`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error(`Failed to save submission: ${res.status}`);
+  return res.json();
+}
+
+// ---------------------------------------------------------------------------
 // Property CRUD — via /api/properties
 // ---------------------------------------------------------------------------
 

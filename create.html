@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/jpeg" href="/favicon1.jpg">
-  <title>Create Your Landbook — Libraries</title>
+  <title>Submit Your Land — Libraries</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap"
     rel="stylesheet">
   <meta property="og:title" content="Create Your Landbook — Libraries">
@@ -51,8 +51,8 @@
       </div>
       <div class="create-sidebar">
         <div class="create-sidebar-content">
-          <h2>Create Your Landbook</h2>
-          <p class="create-desc">Search for your location, then click on the map to draw your land boundary.</p>
+          <h2>Submit Your Land</h2>
+          <p class="create-desc">Search for your location, draw your boundary, and upload any supporting files.</p>
 
           <div class="create-search" style="position:relative;">
             <input type="text" id="search-input" placeholder="Search for your land..." autocomplete="off">
@@ -85,13 +85,27 @@
         </div>
 
         <div class="create-sidebar-footer" id="boundary-footer">
-          <p class="create-footer-hint">Draw your boundary on the map, then generate.</p>
+          <p class="create-footer-hint">Draw your boundary on the map, then submit.</p>
           <div class="create-email-field">
             <label for="email-input">Email</label>
             <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
           </div>
-          <button class="btn-create-generate" id="btn-create" disabled>Generate Landbook</button>
+          <div class="create-notes-field">
+            <label for="notes-input">Notes (optional)</label>
+            <textarea id="notes-input" rows="3" placeholder="Anything we should know about this land..."></textarea>
+          </div>
+          <div class="create-upload-field">
+            <label for="file-input">Upload files (optional)</label>
+            <p class="create-upload-hint">PDF, images, or ZIP -- up to 10 MB total</p>
+            <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip">
+            <ul class="create-file-list" id="file-list"></ul>
+          </div>
+          <button class="btn-create-generate" id="btn-create" disabled>Submit</button>
           <p class="create-footer-privacy">Your data stays private.</p>
+          <div class="create-success" id="submit-success" style="display:none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <p>Submission received. We'll be in touch.</p>
+          </div>
         </div>
       </div>
     </div>
