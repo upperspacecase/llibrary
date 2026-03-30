@@ -248,20 +248,27 @@ if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.leng
 const dropzone = document.getElementById('dropzone');
 let selectedFiles = [];
 
+function addFiles(newFiles) {
+  for (const file of newFiles) {
+    selectedFiles.push(file);
+  }
+  renderFileList();
+}
+
 function renderFileList() {
   if (!fileList) return;
   fileList.innerHTML = '';
-  for (const file of selectedFiles) {
+  selectedFiles.forEach((file, i) => {
     const li = document.createElement('li');
-    li.textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+    li.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>${i + 1}. ${file.name} (${(file.size / 1024).toFixed(0)} KB)</span>`;
     fileList.appendChild(li);
-  }
+  });
 }
 
 if (fileInput) {
   fileInput.addEventListener('change', () => {
-    selectedFiles = Array.from(fileInput.files);
-    renderFileList();
+    addFiles(Array.from(fileInput.files));
+    fileInput.value = '';
   });
 }
 
@@ -277,8 +284,7 @@ if (dropzone) {
     e.preventDefault();
     dropzone.classList.remove('drag-over');
     if (e.dataTransfer.files.length) {
-      selectedFiles = Array.from(e.dataTransfer.files);
-      renderFileList();
+      addFiles(Array.from(e.dataTransfer.files));
     }
   });
 }
