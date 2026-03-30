@@ -147,13 +147,17 @@ export async function saveSubmission(data, files = []) {
   const submissionId = crypto.randomUUID();
   const uploadedFiles = [];
 
-  // Upload files client-side to Vercel Blob
+  // Upload files to Vercel Blob via streaming endpoint
   for (const file of files) {
     const res = await fetch(`${API_BASE}/submissions/upload?filename=submissions/${submissionId}/${file.name}`, {
       method: 'POST',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
       body: file,
     });
-    if (!res.ok) throw new Error(`File upload failed: ${file.name}`);
+    if (!res.ok) {
+      const err = await res.text().catch(() => res.status);
+      throw new Error(`File upload failed (${file.name}): ${err}`);
+    }
     const blob = await res.json();
     uploadedFiles.push({
       name: file.name,

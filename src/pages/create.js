@@ -419,7 +419,7 @@ if (btnCreate) {
       console.error('Failed to save submission:', err);
       btnCreate.disabled = false;
       btnCreate.textContent = 'Submit';
-      alert('Failed to submit. Please try again.');
+      alert(`Failed to submit: ${err.message}`);
     }
   });
 }
