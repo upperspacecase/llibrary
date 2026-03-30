@@ -4,6 +4,15 @@ export const config = {
   api: { bodyParser: false },
 };
 
+function collectBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -16,8 +25,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const blob = await put(filename, req, {
+    const buffer = await collectBody(req);
+    const contentType = req.headers['content-type'] || 'application/octet-stream';
+
+    const blob = await put(filename, buffer, {
       access: 'public',
+      contentType,
     });
 
     return res.status(200).json({ url: blob.url });
