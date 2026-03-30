@@ -10,7 +10,7 @@ import '../styles/main.css';
 import { createMap, mapboxgl, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n, t } from '../lib/i18n.js';
 import { saveSubmission } from '../lib/store.js';
-import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, formatDistance, sqmToHectares } from '../lib/geo.js';
+import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, sqmToHectares } from '../lib/geo.js';
 
 initI18n();
 
@@ -29,7 +29,7 @@ const btnSearch = document.getElementById('btn-search');
 const suggestionsEl = document.getElementById('search-suggestions');
 const statAddress = document.getElementById('stat-address');
 const statArea = document.getElementById('stat-area');
-const statPerimeter = document.getElementById('stat-perimeter');
+const mapPrompt = document.getElementById('map-prompt');
 const btnCreate = document.getElementById('btn-create');
 const emailInput = document.getElementById('email-input');
 const notesInput = document.getElementById('notes-input');
@@ -129,8 +129,9 @@ map.on('load', () => {
 function addPoint(latlng) {
   boundaryPoints.push(latlng);
 
-  if (boundaryPoints.length === 1 && toolbar) {
-    toolbar.style.display = 'flex';
+  if (boundaryPoints.length === 1) {
+    if (toolbar) toolbar.style.display = 'flex';
+    if (mapPrompt) mapPrompt.style.display = 'none';
   }
 
   if (instructions) {
@@ -210,14 +211,13 @@ function clearAll() {
   if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
   if (statAddress) statAddress.textContent = '\u2014';
   if (statArea) statArea.textContent = '\u2014';
-  if (statPerimeter) statPerimeter.textContent = '\u2014';
+  if (mapPrompt) mapPrompt.style.display = '';
   if (btnCreate) btnCreate.disabled = true;
 }
 
 function updateStats() {
   if (boundaryPoints.length < 3) return;
   const area = polygonArea(boundaryPoints);
-  const perimeter = polygonPerimeter(boundaryPoints);
   const ha = sqmToHectares(area);
   if (statAddress) statAddress.textContent = selectedAddress || 'Custom boundary';
   if (statArea) {
@@ -226,9 +226,6 @@ function updateStats() {
     } else {
       statArea.innerHTML = formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
     }
-  }
-  if (statPerimeter) {
-    statPerimeter.innerHTML = formatDistance(perimeter).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
   }
 }
 

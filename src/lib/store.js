@@ -137,28 +137,49 @@ export async function deleteLandbook(id) {
 
 /**
  * Create a new submission with optional file uploads.
+ * Files are uploaded client-side directly to Vercel Blob (bypasses serverless size limits),
+ * then the submission with blob URLs is saved via the API.
  * @param {object} data - { boundary, center, area, perimeter, address, email, notes }
  * @param {File[]} files - array of File objects to upload
  * @returns {Promise<object>} - the saved submission document
  */
 export async function saveSubmission(data, files = []) {
-  const formData = new FormData();
-  formData.append('id', crypto.randomUUID());
-  formData.append('boundary', JSON.stringify(data.boundary || []));
-  formData.append('center', JSON.stringify(data.center || null));
-  formData.append('area', data.area || '');
-  formData.append('perimeter', data.perimeter || '');
-  formData.append('address', data.address || '');
-  formData.append('email', data.email || '');
-  formData.append('notes', data.notes || '');
+  const submissionId = crypto.randomUUID();
+  const uploadedFiles = [];
 
+  // Upload files client-side to Vercel Blob
   for (const file of files) {
-    formData.append('files', file);
+    const res = await fetch(`${API_BASE}/submissions/upload?filename=submissions/${submissionId}/${file.name}`, {
+      method: 'POST',
+      body: file,
+    });
+    if (!res.ok) throw new Error(`File upload failed: ${file.name}`);
+    const blob = await res.json();
+    uploadedFiles.push({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: blob.url,
+    });
   }
+
+  // Save submission with blob URLs
+  const doc = {
+    id: submissionId,
+    boundary: data.boundary || [],
+    center: data.center || null,
+    area: data.area || null,
+    perimeter: data.perimeter || null,
+    address: data.address || '',
+    email: data.email || '',
+    notes: data.notes || '',
+    files: uploadedFiles,
+  };
 
   const res = await fetch(`${API_BASE}/submissions`, {
     method: 'POST',
-    body: formData,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(doc),
   });
 
   if (!res.ok) throw new Error(`Failed to save submission: ${res.status}`);

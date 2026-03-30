@@ -41,6 +41,7 @@
     <div class="create-layout">
       <div class="create-map-area">
         <div id="create-map"></div>
+        <div class="create-map-prompt" id="map-prompt">Draw your boundary on the map, then submit.</div>
         <div class="create-map-instructions" id="map-instructions" data-i18n="create.instructions">Click on the map to
           start drawing your land boundary</div>
         <div class="create-map-toolbar" id="map-toolbar" style="display:none;">
@@ -55,7 +56,7 @@
           <p class="create-desc">Search for your location, draw your boundary, and upload any supporting files.</p>
 
           <div class="create-search" style="position:relative;">
-            <input type="text" id="search-input" placeholder="Search for your land..." autocomplete="off">
+            <input type="text" id="search-input" placeholder="Search by address..." autocomplete="off">
             <button class="btn-small" id="btn-search">Find</button>
             <ul class="search-suggestions" id="search-suggestions"></ul>
           </div>
@@ -65,27 +66,14 @@
               <span class="create-address-label">Address</span>
               <span class="create-address-value" id="stat-address">&mdash;</span>
             </div>
-            <div class="create-metrics">
-              <div class="create-metric">
-                <div class="create-metric-icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="1"/><path d="M8 4v16"/></svg>
-                </div>
-                <div class="create-metric-value"><span id="stat-area">&mdash;</span></div>
-                <div class="create-metric-label">Total Area</div>
-              </div>
-              <div class="create-metric">
-                <div class="create-metric-icon">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7A7A7A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" stroke-dasharray="4 4"/></svg>
-                </div>
-                <div class="create-metric-value"><span id="stat-perimeter">&mdash;</span></div>
-                <div class="create-metric-label">Perimeter</div>
-              </div>
+            <div class="create-address-row">
+              <span class="create-address-label">Total Area</span>
+              <span class="create-address-value" id="stat-area">&mdash;</span>
             </div>
           </div>
         </div>
 
         <div class="create-sidebar-footer" id="boundary-footer">
-          <p class="create-footer-hint">Draw your boundary on the map, then submit.</p>
           <div class="create-email-field">
             <label for="email-input">Email</label>
             <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
