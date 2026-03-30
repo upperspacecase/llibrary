@@ -11,7 +11,7 @@ export const config = {
 function parseForm(req) {
   return new Promise((resolve, reject) => {
     const form = new IncomingForm({
-      maxFileSize: 10 * 1024 * 1024,
+      maxFileSize: 55 * 1024 * 1024,
       multiples: true,
     });
     form.parse(req, (err, fields, files) => {

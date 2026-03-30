@@ -95,9 +95,16 @@
             <textarea id="notes-input" rows="3" placeholder="Anything we should know about this land..."></textarea>
           </div>
           <div class="create-upload-field">
-            <label for="file-input">Upload files (optional)</label>
-            <p class="create-upload-hint">PDF, images, or ZIP -- up to 10 MB total</p>
-            <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip">
+            <label>Upload files (optional)</label>
+            <div class="create-dropzone" id="dropzone">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <p class="dropzone-text">Drag and drop files here or <span class="dropzone-link">Choose here</span></p>
+              <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip" class="dropzone-input">
+            </div>
+            <div class="create-upload-meta">
+              <span>Supported formats: PDF, JPG, PNG, ZIP</span>
+              <span>Maximum size: 55 MB</span>
+            </div>
             <ul class="create-file-list" id="file-list"></ul>
           </div>
           <button class="btn-create-generate" id="btn-create" disabled>Submit</button>

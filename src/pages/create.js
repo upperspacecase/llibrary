@@ -246,17 +246,42 @@ if (btnClear) btnClear.addEventListener('click', clearAll);
 if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.length >= 3 && !isClosed) closePolygon(); });
 
 // ---------------------------------------------------------------------------
-// File upload preview
+// File upload — drag & drop + file input
 // ---------------------------------------------------------------------------
+const dropzone = document.getElementById('dropzone');
+let selectedFiles = [];
+
+function renderFileList() {
+  if (!fileList) return;
+  fileList.innerHTML = '';
+  for (const file of selectedFiles) {
+    const li = document.createElement('li');
+    li.textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+    fileList.appendChild(li);
+  }
+}
 
 if (fileInput) {
   fileInput.addEventListener('change', () => {
-    if (!fileList) return;
-    fileList.innerHTML = '';
-    for (const file of fileInput.files) {
-      const li = document.createElement('li');
-      li.textContent = `${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
-      fileList.appendChild(li);
+    selectedFiles = Array.from(fileInput.files);
+    renderFileList();
+  });
+}
+
+if (dropzone) {
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('drag-over');
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove('drag-over');
+  });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) {
+      selectedFiles = Array.from(e.dataTransfer.files);
+      renderFileList();
     }
   });
 }
@@ -377,7 +402,7 @@ if (btnCreate) {
     const perimeter = polygonPerimeter(boundaryPoints);
     const centroid = polygonCentroid(boundaryPoints);
 
-    const files = fileInput ? Array.from(fileInput.files) : [];
+    const files = selectedFiles;
 
     try {
       await saveSubmission({
