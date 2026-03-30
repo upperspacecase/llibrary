@@ -29,6 +29,7 @@ export default async function handler(req, res) {
     const contentType = req.headers['content-type'] || 'application/octet-stream';
 
     const blob = await put(filename, buffer, {
+      access: 'private',
       contentType,
     });
 
