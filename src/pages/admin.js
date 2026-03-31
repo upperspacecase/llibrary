@@ -10,6 +10,7 @@ const columns = {
     waitlist: [
         { key: 'email', label: 'Email' },
         { key: 'address', label: 'Address' },
+        { key: 'files', label: 'Attachments', format: formatFiles },
         { key: 'createdAt', label: 'Signed up', format: formatDate },
     ],
     properties: [
@@ -36,13 +37,6 @@ const columns = {
         { key: 'fileType', label: 'Type' },
         { key: 'created', label: 'Created', format: formatDate },
     ],
-    submissions: [
-        { key: 'email', label: 'Email' },
-        { key: 'address', label: 'Address' },
-        { key: 'notes', label: 'Notes' },
-        { key: 'files', label: 'Attachments', format: formatFiles },
-        { key: 'created', label: 'Submitted', format: formatDate },
-    ],
 };
 
 function formatDate(v) {
@@ -61,16 +55,18 @@ async function downloadFile(url, filename) {
         const res = await fetch('/api/admin/download', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password, url }),
+            body: JSON.stringify({ password, url, filename }),
         });
         if (!res.ok) throw new Error('Download failed');
-        const { downloadUrl } = await res.json();
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = downloadUrl;
+        a.href = blobUrl;
         a.download = filename;
         document.body.appendChild(a);
         a.click();
         a.remove();
+        URL.revokeObjectURL(blobUrl);
     } catch (err) {
         console.error('Download error:', err);
         alert('Failed to download file.');
@@ -119,6 +115,23 @@ async function loadData() {
     if (!res.ok) return;
 
     data = await res.json();
+
+    // Merge submission attachments into waitlist rows by email
+    if (data.submissions?.length && data.waitlist?.length) {
+        const filesByEmail = {};
+        for (const sub of data.submissions) {
+            if (sub.email && sub.files?.length) {
+                if (!filesByEmail[sub.email]) filesByEmail[sub.email] = [];
+                filesByEmail[sub.email].push(...sub.files);
+            }
+        }
+        for (const entry of data.waitlist) {
+            if (entry.email && filesByEmail[entry.email]) {
+                entry.files = filesByEmail[entry.email];
+            }
+        }
+    }
+
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('dashboard-view').style.display = 'block';
     renderStats();
@@ -133,7 +146,6 @@ function renderStats() {
         { label: 'Landbooks', count: data.landbooks?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
-        { label: 'Submissions', count: data.submissions?.length || 0 },
     ];
 
     document.getElementById('stats-row').innerHTML = stats.map(s => `
