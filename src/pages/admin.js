@@ -36,12 +36,45 @@ const columns = {
         { key: 'fileType', label: 'Type' },
         { key: 'created', label: 'Created', format: formatDate },
     ],
+    submissions: [
+        { key: 'email', label: 'Email' },
+        { key: 'address', label: 'Address' },
+        { key: 'notes', label: 'Notes' },
+        { key: 'files', label: 'Attachments', format: formatFiles },
+        { key: 'created', label: 'Submitted', format: formatDate },
+    ],
 };
 
 function formatDate(v) {
     if (!v) return '-';
     const d = new Date(v);
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatFiles(files) {
+    if (!files || !files.length) return '-';
+    return `__FILES__${JSON.stringify(files)}`;
+}
+
+async function downloadFile(url, filename) {
+    try {
+        const res = await fetch('/api/admin/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, url }),
+        });
+        if (!res.ok) throw new Error('Download failed');
+        const { downloadUrl } = await res.json();
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (err) {
+        console.error('Download error:', err);
+        alert('Failed to download file.');
+    }
 }
 
 // ---- Auth ----
@@ -100,6 +133,7 @@ function renderStats() {
         { label: 'Landbooks', count: data.landbooks?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
+        { label: 'Submissions', count: data.submissions?.length || 0 },
     ];
 
     document.getElementById('stats-row').innerHTML = stats.map(s => `
@@ -141,10 +175,27 @@ function renderTable() {
         const cells = cols.map(c => {
             const raw = row[c.key];
             const val = c.format ? c.format(raw) : (raw ?? '-');
-            return `<td>${escapeHtml(String(val))}</td>`;
+            const str = String(val);
+            if (str.startsWith('__FILES__')) {
+                try {
+                    const files = JSON.parse(str.slice(9));
+                    const links = files.map(f =>
+                        `<button class="admin-file-btn" data-url="${escapeHtml(f.url)}" data-name="${escapeHtml(f.name)}">${escapeHtml(f.name)}</button>`
+                    ).join(' ');
+                    return `<td class="admin-files-cell">${links}</td>`;
+                } catch { return `<td>-</td>`; }
+            }
+            return `<td>${escapeHtml(str)}</td>`;
         }).join('');
         return `<tr>${cells}</tr>`;
     }).join('');
+
+    // Bind download click handlers
+    body.querySelectorAll('.admin-file-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            downloadFile(btn.dataset.url, btn.dataset.name);
+        });
+    });
 }
 
 function escapeHtml(s) {
@@ -286,6 +337,31 @@ style.textContent = `
     }
     .admin-table tr:hover td {
         background: rgba(0,0,0,0.02);
+    }
+    .admin-files-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        max-width: 400px;
+        white-space: normal;
+    }
+    .admin-file-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        background: var(--cream, #f5f0eb);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--black);
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .admin-file-btn:hover {
+        background: var(--border);
     }
 `;
 document.head.appendChild(style);
