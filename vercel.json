@@ -12,6 +12,10 @@
     {
       "source": "/wiki/:section",
       "destination": "/wiki.html"
+    },
+    {
+      "source": "/report/:slug",
+      "destination": "/report.html"
     }
   ]
 }

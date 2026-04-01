@@ -978,4 +978,31 @@ select.addEventListener('change', () => {
   if (v) showVersion(v);
 });
 
+// ── Share button ────────────────────────────────────────
+const shareBtn = document.getElementById('share-btn');
+shareBtn.addEventListener('click', async () => {
+  const currentId = select.value;
+  if (!currentId) return;
+
+  shareBtn.textContent = 'Sharing...';
+  shareBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/reports/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ report_id: currentId }),
+    });
+    const data = await res.json();
+    const url = `${window.location.origin}${data.url}`;
+
+    await navigator.clipboard.writeText(url);
+    shareBtn.textContent = 'Copied!';
+    setTimeout(() => { shareBtn.textContent = 'Share'; shareBtn.disabled = false; }, 2000);
+  } catch (err) {
+    shareBtn.textContent = 'Failed';
+    setTimeout(() => { shareBtn.textContent = 'Share'; shareBtn.disabled = false; }, 2000);
+  }
+});
+
 loadVersions();

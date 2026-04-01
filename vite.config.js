@@ -21,6 +21,7 @@ export default defineConfig({
         passport: resolve(__dirname, 'passport.html'),
         directory: resolve(__dirname, 'directory.html'),
         'report-preview': resolve(__dirname, 'report-preview.html'),
+        report: resolve(__dirname, 'report.html'),
       },
     },
   },

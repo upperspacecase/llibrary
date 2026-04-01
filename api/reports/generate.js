@@ -1246,7 +1246,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
   <div class="cover-top">
-    <img src="/landbook-logo.png" alt="LandBook" style="height:48px;margin-bottom:8px;" />
+    <img src="/landbook-logo.png" alt="LandBook" style="height:96px;margin-bottom:8px;" />
     <div class="cover-tagline">Field notes for knowing<br>your land better.</div>
   </div>
   <div class="cover-middle">
