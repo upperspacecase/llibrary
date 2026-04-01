@@ -1246,7 +1246,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
   <div class="cover-top">
-    <div class="cover-title">LAND<em>BOOK</em></div>
+    <img src="/landbook-logo.png" alt="LandBook" style="height:48px;margin-bottom:8px;" />
     <div class="cover-tagline">Field notes for knowing<br>your land better.</div>
   </div>
   <div class="cover-middle">
@@ -1256,7 +1256,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   </div>
   <div class="cover-bottom">
     <div class="cover-produced">Produced by</div>
-    <div class="cover-brand">LANDLIBRARY</div>
+    <img src="/landlibrary-logo.png" alt="LandLibrary" style="height:28px;margin-bottom:12px;" />
     <div class="cover-meta">Date: ${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} | Version: MVP0.1</div>
     <div class="cover-disclaimer"><strong>Disclaimer</strong><br>This assessment represents conditions at time of documentation. Land characteristics evolve; verify critical details before decisions.</div>
   </div>
