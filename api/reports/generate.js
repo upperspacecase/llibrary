@@ -894,8 +894,71 @@ export default async function handler(req, res) {
     if (!lat || !lng) return res.status(400).json({ error: 'No coordinates in submission' });
 
     const areaHa = sub.area ? (sub.area / 10000) : 0;
+    const forceRefresh = body.force_refresh === true;
 
-    // ── Fetch all data in parallel ───────────────────────
+    // ── Reuse existing data snapshot if available ────────
+    const reports = await getCollection('report_versions');
+    const existingReport = await reports.findOne(
+      { submission_id: sub.id, data_snapshot: { $ne: null } },
+      { sort: { created: -1 } }
+    );
+
+    if (existingReport?.data_snapshot?.dynamic && !forceRefresh) {
+      // Rebuild HTML from existing data — same data, potentially new layout
+      const dataSnapshot = existingReport.data_snapshot;
+      const dd = dataSnapshot.dynamic;
+      const prop = dataSnapshot.submission;
+      const maps = dataSnapshot.maps;
+      const soil = dd.soil;
+      const geo = dd.geology;
+      const annualRainfall = dd.annualRainfall;
+      const annualMeanTemp = dd.annualMeanTemp;
+      const summerMean = dd.summerMean;
+      const winterMean = dd.winterMean;
+      const frostDays = dd.frostDays;
+      const growingSeason = dd.growingSeason;
+      const gbifTotal = dd.gbif?.total || 0;
+      const gbifKingdoms = dd.gbif?.kingdoms || {};
+      const protectedAreaNames = dd.protectedAreas;
+      const elevation = dd.elevation;
+      const climate = dd.climate;
+      const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      const parish = dd.adminUnit?.parish || '';
+      const municipality = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
+      const locationLine = [parish, municipality, 'Portugal'].filter(Boolean).join(', ');
+      const climateZone = annualMeanTemp && annualRainfall
+        ? (parseFloat(annualMeanTemp) > 14 && annualRainfall < 800 ? 'Csa (Hot-summer Mediterranean)' : parseFloat(annualMeanTemp) > 14 ? 'Csb (Warm-summer Mediterranean)' : 'Cfb (Oceanic)')
+        : 'Mediterranean (estimated)';
+
+      const speciesGroups = Object.entries(dd.species.groups || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const maxSpecies = speciesGroups.length > 0 ? Math.max(...speciesGroups.map(s => s[1])) : 1;
+
+      // Rebuild HTML with same data snapshot
+      const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
+
+      const count = await reports.countDocuments();
+      const doc = {
+        id: crypto.randomUUID(),
+        version: `v${count + 1}`,
+        name: `${prop.address.split(',')[0]} — Real API Data`,
+        created: new Date().toISOString(),
+        locked_sections: [],
+        html_content: html,
+        data_snapshot: dataSnapshot,
+        submission_id: sub.id,
+        reused_data_from: existingReport.id,
+      };
+
+      await reports.insertOne(doc);
+      return res.status(201).json({
+        id: doc.id, version: doc.version, name: doc.name, created: doc.created,
+        apis_called: 0, dynamic_data_points: Object.keys(dd).length,
+        note: `Reused data snapshot from ${existingReport.version} (${existingReport.id}). Pass force_refresh: true to re-fetch.`,
+      });
+    }
+
+    // ── Fetch all data in parallel (first generation only) ──
     const [
       elevation,
       forecast,
@@ -1136,37 +1199,49 @@ export default async function handler(req, res) {
 
     // ── Build HTML ───────────────────────────────────────
     const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    const ds = dataSnapshot;
-    const dd = ds.dynamic;
-    const prop = ds.submission;
+    const dd = dataSnapshot.dynamic;
+    const prop = dataSnapshot.submission;
 
-    // Parish/municipality from DGT or address parse
     const parish = dd.adminUnit?.parish || '';
-    const municipality = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
-    const district = dd.adminUnit?.district || '';
-    const locationLine = [parish, municipality, 'Portugal'].filter(Boolean).join(', ');
-
-    // Determine climate zone (simplified)
+    const municipalityDisplay = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
+    const locationLine = [parish, municipalityDisplay, 'Portugal'].filter(Boolean).join(', ');
     const climateZone = annualMeanTemp && annualRainfall
       ? (parseFloat(annualMeanTemp) > 14 && annualRainfall < 800 ? 'Csa (Hot-summer Mediterranean)' : parseFloat(annualMeanTemp) > 14 ? 'Csb (Warm-summer Mediterranean)' : 'Cfb (Oceanic)')
       : 'Mediterranean (estimated)';
-
-    // Monthly temps and rain for chart
-    const monthlyTemp = climate ? climate.map(m => Math.round((m.avgHigh + m.avgLow) / 2)) : [10,11,13,15,18,22,26,26,23,18,13,10];
-    const monthlyRain = climate ? climate.map(m => m.totalPrecip) : [];
-
-    // Species groups for bar chart
-    const speciesGroups = Object.entries(dd.species.groups || {})
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8);
+    const speciesGroups = Object.entries(dd.species.groups || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const maxSpecies = speciesGroups.length > 0 ? Math.max(...speciesGroups.map(s => s[1])) : 1;
 
-    // Soil composition bars
-    const soilBars = soil ? [
-      soil.classification ? { label: soil.classification, pct: soil.classificationProb || 100 } : null,
-    ].filter(Boolean) : [];
+    const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality: municipalityDisplay, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
 
-    const html = `
+    // ── Save to DB ───────────────────────────────────────
+    const count = await reports.countDocuments();
+
+    const doc = {
+      id: crypto.randomUUID(),
+      version: `v${count + 1}`,
+      name: `${prop.address.split(',')[0]} — Real API Data`,
+      created: new Date().toISOString(),
+      locked_sections: [],
+      html_content: html,
+      data_snapshot: dataSnapshot,
+      submission_id: sub.id,
+    };
+
+    await reports.insertOne(doc);
+
+    return res.status(201).json({
+      id: doc.id, version: doc.version, name: doc.name, created: doc.created,
+      apis_called: 18, dynamic_data_points: Object.keys(dd).length,
+    });
+  } catch (err) {
+    console.error('Report generation error:', err);
+    return res.status(500).json({ error: 'Generation failed', detail: err.message, stack: err.stack });
+  }
+}
+
+// ── HTML Template Builder ────────────────────────────────
+function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng }) {
+  return `
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
   <div class="cover-top">
@@ -1682,7 +1757,7 @@ export default async function handler(req, res) {
     <thead><tr><th>Category</th><th>Source</th><th>Resolution</th><th>Status</th></tr></thead>
     <tbody>
       <tr><td class="label">Elevation</td><td>Open-Meteo DEM</td><td>Point</td><td style="color:green;font-weight:600;">${elevation != null ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
-      <tr><td class="label">Weather Forecast</td><td>Open-Meteo</td><td>7-day</td><td style="color:green;font-weight:600;">${forecast ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Weather Forecast</td><td>Open-Meteo</td><td>7-day</td><td style="color:green;font-weight:600;">${dd.forecast ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Climate History</td><td>Open-Meteo Archive</td><td>1 year</td><td style="color:green;font-weight:600;">${climate ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Soil Properties</td><td>SoilGrids 2.0 (ISRIC)</td><td>250m</td><td style="color:green;font-weight:600;">${soil ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Geology</td><td>Macrostrat</td><td>Variable</td><td style="color:green;font-weight:600;">${geo ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
@@ -1722,7 +1797,7 @@ export default async function handler(req, res) {
       <tr><td>Address</td><td>Submission (Mapbox geocoded)</td><td>${prop.address}</td></tr>
       <tr><td>Email</td><td>Submission</td><td>${prop.email}</td></tr>
       <tr><td>Elevation</td><td>Open-Meteo DEM</td><td>${elevation != null ? elevation + 'm' : 'FAILED'}</td></tr>
-      <tr><td>7-day forecast</td><td>Open-Meteo Forecast</td><td>${forecast ? forecast.daily.time.length + ' days' : 'FAILED'}</td></tr>
+      <tr><td>7-day forecast</td><td>Open-Meteo Forecast</td><td>${dd.forecast ? dd.forecast.time?.length + ' days' : 'FAILED'}</td></tr>
       <tr><td>Climate averages</td><td>Open-Meteo Archive</td><td>${climate ? '12 months' : 'FAILED'}</td></tr>
       <tr><td>Annual mean temp</td><td>Derived from climate</td><td>${annualMeanTemp || 'N/A'}&deg;C</td></tr>
       <tr><td>Annual rainfall</td><td>Derived from climate</td><td>${annualRainfall || 'N/A'}mm</td></tr>
@@ -1778,34 +1853,4 @@ export default async function handler(req, res) {
   </table>
 </div>
     `;
-
-    // ── Save to DB ───────────────────────────────────────
-    const reports = await getCollection('report_versions');
-    const count = await reports.countDocuments();
-
-    const doc = {
-      id: crypto.randomUUID(),
-      version: `v${count + 1}`,
-      name: `${prop.address.split(',')[0]} — Real API Data`,
-      created: new Date().toISOString(),
-      locked_sections: [],
-      html_content: html,
-      data_snapshot: dataSnapshot,
-      submission_id: sub.id,
-    };
-
-    await reports.insertOne(doc);
-
-    return res.status(201).json({
-      id: doc.id,
-      version: doc.version,
-      name: doc.name,
-      created: doc.created,
-      apis_called: 15,
-      dynamic_data_points: Object.entries(dd).filter(([, v]) => v != null && v !== false).length,
-    });
-  } catch (err) {
-    console.error('Report generation error:', err);
-    return res.status(500).json({ error: 'Generation failed', detail: err.message, stack: err.stack });
-  }
 }
