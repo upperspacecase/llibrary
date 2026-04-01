@@ -1169,18 +1169,21 @@ export default async function handler(req, res) {
     const html = `
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
-  <div class="cover-badge">LANDBOOK MVP v3.0</div>
-  <div class="cover-property">${dd.propertyName}</div>
-  <div class="cover-location">${locationLine} &middot; ${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</div>
-  <div class="cover-kpi">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value">${prop.areaHa}</div><div class="kpi-label">Hectares</div><div class="kpi-sub">${prop.area ? Math.round(prop.area).toLocaleString() + ' m&sup2;' : ''}</div></div>
-      <div class="kpi-card"><div class="kpi-value">&euro;${Math.round(dd.valuation.total / 1000)}K</div><div class="kpi-label">Est. Value</div><div class="kpi-sub" style="font-size:9px;opacity:0.5;">SYNTHETIC</div></div>
-      <div class="kpi-card"><div class="kpi-value">${dd.bioScore}/10</div><div class="kpi-label">Bio Score</div><div class="kpi-sub">${dd.species.total} species nearby</div></div>
-      <div class="kpi-card"><div class="kpi-value">${dd.waterScore}/10</div><div class="kpi-label">Water Security</div><div class="kpi-sub">${dd.waterFeatures.total} features found</div></div>
-    </div>
+  <div class="cover-top">
+    <div class="cover-title">LAND<em>BOOK</em></div>
+    <div class="cover-tagline">Field notes for knowing<br>your land better.</div>
   </div>
-  <div class="cover-date">Report generated ${now}</div>
+  <div class="cover-middle">
+    <div class="cover-coords">${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</div>
+    <div class="cover-property">${dd.propertyName}</div>
+    <div class="cover-address">${prop.address.split(',').slice(0, 2).join(',')},<br>${prop.address.split(',').slice(2).join(',').trim()}</div>
+  </div>
+  <div class="cover-bottom">
+    <div class="cover-produced">Produced by</div>
+    <div class="cover-brand">LANDLIBRARY</div>
+    <div class="cover-meta">Date: ${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} | Version: MVP0.1</div>
+    <div class="cover-disclaimer"><strong>Disclaimer</strong><br>This assessment represents conditions at time of documentation. Land characteristics evolve; verify critical details before decisions.</div>
+  </div>
 </div>
 
 <!-- SECTION 1: EXECUTIVE SUMMARY -->

@@ -184,26 +184,61 @@ style.textContent = `
 
   /* ── Cover page ── */
   .cover-page {
-    background: var(--green); color: white; text-align: center;
-    padding: 80px 56px 60px; min-height: 500px;
-    display: flex; flex-direction: column; justify-content: center;
+    background: #F8F6F2; color: #1a1a1a; text-align: center;
+    padding: 0; min-height: 900px;
+    display: flex; flex-direction: column;
+    background-image: url('/landbook-cover-bg.png');
+    background-size: cover; background-position: center;
+    position: relative;
   }
-  .cover-page .section-number,
-  .cover-page .section-title { color: white; }
-  .cover-badge {
-    display: inline-block; padding: 4px 14px; border-radius: 20px;
-    font-size: 11px; font-weight: 700; letter-spacing: 1px;
-    background: rgba(255,255,255,0.15); margin-bottom: 32px;
+  .cover-top {
+    padding: 60px 56px 0; flex: 0;
   }
-  .cover-property { font-size: 42px; font-weight: 900; margin-bottom: 8px; line-height: 1.1; }
-  .cover-location { font-size: 16px; opacity: 0.8; margin-bottom: 40px; }
-  .cover-kpi .kpi-card {
-    background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);
+  .cover-title {
+    font-size: 38px; font-weight: 400; letter-spacing: 2px;
+    margin-bottom: 16px; color: #1a1a1a;
   }
-  .cover-kpi .kpi-value { color: white; }
-  .cover-kpi .kpi-label { color: rgba(255,255,255,0.7); }
-  .cover-kpi .kpi-sub { color: rgba(255,255,255,0.5); }
-  .cover-date { font-size: 12px; opacity: 0.5; margin-top: 40px; }
+  .cover-title em { font-style: italic; font-weight: 400; }
+  .cover-tagline {
+    font-size: 14px; color: #999; font-weight: 400; letter-spacing: 0.5px;
+  }
+  .cover-middle {
+    flex: 1; display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 40px 56px;
+  }
+  .cover-coords {
+    font-size: 18px; color: #888; font-weight: 400;
+    letter-spacing: 2px; margin-bottom: 12px;
+  }
+  .cover-property {
+    font-size: 42px; font-weight: 400; margin-bottom: 12px;
+    line-height: 1.1; color: #1a1a1a; letter-spacing: 1px;
+  }
+  .cover-address {
+    font-size: 15px; color: #888; font-weight: 400; line-height: 1.6;
+  }
+  .cover-bottom {
+    padding: 0 56px 24px; text-align: center;
+  }
+  .cover-produced {
+    font-size: 13px; color: #999; margin-bottom: 4px;
+  }
+  .cover-brand {
+    font-size: 20px; font-weight: 700; letter-spacing: 3px;
+    color: #1a1a1a; margin-bottom: 12px;
+  }
+  .cover-meta {
+    font-size: 12px; color: #aaa; letter-spacing: 1px;
+    padding-bottom: 20px; border-bottom: 1px solid #ddd;
+    margin-bottom: 20px;
+  }
+  .cover-disclaimer {
+    font-size: 11px; color: #aaa; line-height: 1.5;
+    max-width: 500px; margin: 0 auto;
+  }
+  .cover-disclaimer strong { color: #888; }
+  .cover-date { display: none; }
 
   /* ── Risk matrix ── */
   .risk-matrix {
