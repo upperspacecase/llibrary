@@ -56,7 +56,8 @@ function wmsGetMapUrl(wmsBase, layers, bbox, width = 700, height = 440, extraPar
     TRANSPARENT: 'true',
     ...extraParams,
   });
-  return `${wmsBase}?${params.toString()}`;
+  const separator = wmsBase.includes('?') ? '&' : '?';
+  return `${wmsBase}${separator}${params.toString()}`;
 }
 
 function mapboxWithWmsOverlay(boundary, center, wmsUrl, style = 'light-v11', width = 700, height = 440) {
@@ -1271,17 +1272,17 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <table class="data-table">
     <thead><tr><th>Attribute</th><th>Value</th><th>Source</th></tr></thead>
     <tbody>
-      <tr><td class="label">Coordinates</td><td class="value">${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</td><td>Submission (DYNAMIC)</td></tr>
-      <tr><td class="label">Elevation</td><td class="value">${elevation != null ? elevation + 'm' : 'N/A'}</td><td>${elevation != null ? 'Open-Meteo DEM (DYNAMIC)' : 'FAILED'}</td></tr>
-      <tr><td class="label">Area</td><td class="value">${prop.areaHa} ha (${Math.round(prop.area).toLocaleString()} m&sup2;)</td><td>Calculated from boundary (DYNAMIC)</td></tr>
-      <tr><td class="label">Perimeter</td><td class="value">${prop.perimeter ? prop.perimeter + 'm' : 'N/A'}</td><td>Calculated from boundary (DYNAMIC)</td></tr>
-      <tr><td class="label">Address</td><td class="value">${prop.address}</td><td>Mapbox geocoding (DYNAMIC)</td></tr>
-      <tr><td class="label">Parish</td><td class="value">${parish || 'N/A'}</td><td>${parish ? 'DGT API (DYNAMIC)' : 'UNAVAILABLE'}</td></tr>
-      <tr><td class="label">Municipality</td><td class="value">${municipality || 'N/A'}</td><td>${municipality ? 'DGT API (DYNAMIC)' : 'UNAVAILABLE'}</td></tr>
-      <tr><td class="label">Climate Zone</td><td class="value">${climateZone}</td><td>${climate ? 'Derived from climate data (DYNAMIC)' : 'ESTIMATED'}</td></tr>
-      <tr><td class="label">Zoning</td><td class="value">${dd.landCover.breakdown.length > 0 ? dd.landCover.breakdown[0].label : 'Not available'}</td><td>${dd.landCover.breakdown.length > 0 ? dd.landCover.source + ' (DYNAMIC)' : 'UNAVAILABLE'}</td></tr>
-      <tr><td class="label">Aspect</td><td class="value">${dd.terrainProfile?.aspect || 'Not available'}</td><td>${dd.terrainProfile ? 'Multi-point DEM (DYNAMIC)' : 'UNAVAILABLE'}</td></tr>
-      <tr><td class="label">Slope</td><td class="value">${dd.terrainProfile ? dd.terrainProfile.slopePct + '% — ' + dd.terrainProfile.slopeCategory : 'Not available'}</td><td>${dd.terrainProfile ? 'Multi-point DEM (DYNAMIC)' : 'UNAVAILABLE'}</td></tr>
+      <tr><td class="label">Coordinates</td><td class="value">${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</td><td>Submission</td></tr>
+      <tr><td class="label">Elevation</td><td class="value">${elevation != null ? elevation + 'm' : 'N/A'}</td><td>${elevation != null ? 'Open-Meteo DEM' : 'FAILED'}</td></tr>
+      <tr><td class="label">Area</td><td class="value">${prop.areaHa} ha (${Math.round(prop.area).toLocaleString()} m&sup2;)</td><td>Calculated from boundary</td></tr>
+      <tr><td class="label">Perimeter</td><td class="value">${prop.perimeter ? prop.perimeter + 'm' : 'N/A'}</td><td>Calculated from boundary</td></tr>
+      <tr><td class="label">Address</td><td class="value">${prop.address}</td><td>Mapbox geocoding</td></tr>
+      <tr><td class="label">Parish</td><td class="value">${parish || 'N/A'}</td><td>${parish ? 'DGT API' : 'UNAVAILABLE'}</td></tr>
+      <tr><td class="label">Municipality</td><td class="value">${municipality || 'N/A'}</td><td>${municipality ? 'DGT API' : 'UNAVAILABLE'}</td></tr>
+      <tr><td class="label">Climate Zone</td><td class="value">${climateZone}</td><td>${climate ? 'Derived from climate data' : 'ESTIMATED'}</td></tr>
+      <tr><td class="label">Zoning</td><td class="value">${dd.landCover.breakdown.length > 0 ? dd.landCover.breakdown[0].label : 'Not available'}</td><td>${dd.landCover.breakdown.length > 0 ? dd.landCover.source + '' : 'UNAVAILABLE'}</td></tr>
+      <tr><td class="label">Aspect</td><td class="value">${dd.terrainProfile?.aspect || 'Not available'}</td><td>${dd.terrainProfile ? 'Multi-point DEM' : 'UNAVAILABLE'}</td></tr>
+      <tr><td class="label">Slope</td><td class="value">${dd.terrainProfile ? dd.terrainProfile.slopePct + '% — ' + dd.terrainProfile.slopeCategory : 'Not available'}</td><td>${dd.terrainProfile ? 'Multi-point DEM' : 'UNAVAILABLE'}</td></tr>
     </tbody>
   </table>
 
@@ -1296,13 +1297,13 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <div class="cards-grid">
     ${dd.opportunities.map(o => `<div class="card"><div class="card-icon">${o.icon}</div><div class="card-title">${o.title}</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">${o.reason}</div></div>`).join('')}
   </div>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from property scores and data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from property scores and data</div>
 
   <h3>1.4 Risk Summary</h3>
   <div class="risk-row"><div class="risk-dot ${dd.risks.fire.cls}"></div><div class="risk-label">Fire Risk</div><div class="risk-value">${dd.risks.fire.out5}/5 (${dd.risks.fire.level}) — score: ${dd.risks.fire.score}</div></div>
   <div class="risk-row"><div class="risk-dot ${dd.risks.flood.cls}"></div><div class="risk-label">Flood Risk</div><div class="risk-value">${dd.risks.flood.out5}/5 (${dd.risks.flood.level}) — score: ${dd.risks.flood.score}</div></div>
   <div class="risk-row"><div class="risk-dot ${dd.risks.drought.cls}"></div><div class="risk-label">Drought Risk</div><div class="risk-value">${dd.risks.drought.out5}/5 (${dd.risks.drought.level}) — score: ${dd.risks.drought.score}</div></div>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: Computed from Open-Meteo forecast data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: Computed from Open-Meteo forecast data</div>
 </div>
 
 <!-- SECTION 2: NATURAL CAPITAL SCORECARD -->
@@ -1395,7 +1396,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <div class="kpi-card"><div class="kpi-value">${dd.terrainProfile.aspect}</div><div class="kpi-label">Aspect</div><div class="kpi-sub">Primary orientation</div></div>
     <div class="kpi-card"><div class="kpi-value">${dd.terrainProfile.avg}m</div><div class="kpi-label">Mean Elevation</div><div class="kpi-sub">Open-Meteo DEM</div></div>
   </div>
-  <div style="font-size:11px;color:var(--text-muted);">Source: Multi-point DEM sampling (${dd.terrainProfile.elevations.length} points) via Open-Meteo (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: Multi-point DEM sampling (${dd.terrainProfile.elevations.length} points) via Open-Meteo</div>
   ` : `<div class="kpi-card"><div class="kpi-value">${elevation != null ? elevation + 'm' : 'N/A'}</div><div class="kpi-label">Elevation at Center</div></div>`}
 
   <h3>4.2 Soil Composition</h3>
@@ -1414,13 +1415,13 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Bulk Density</td><td class="value">${soil.bulkDensity || 'N/A'} g/cm³</td><td>0–5cm</td></tr>
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: SoilGrids 2.0 (ISRIC) — 250m resolution (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: SoilGrids 2.0 (ISRIC) — 250m resolution</div>
   ` : '<div style="background:var(--bg);padding:16px;border-radius:8px;color:var(--text-muted);">Soil data unavailable — SoilGrids API did not return data for this location.</div>'}
 
   <h3>4.3 Land Cover</h3>
   ${dd.landCover.breakdown.length > 0 ? `
   ${dd.landCover.breakdown.map(lc => `<div class="bar-row"><div class="bar-label">${lc.label}</div><div class="bar-track"><div class="bar-fill sky" style="width:${lc.pct}%">${lc.pct}%</div></div></div>`).join('')}
-  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: ${dd.landCover.source} — ${dd.landCover.sampleCount} sample points (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: ${dd.landCover.source} — ${dd.landCover.sampleCount} sample points</div>
   ` : '<div style="background:var(--bg);padding:16px;border-radius:8px;color:var(--text-muted);font-size:13px;">Land cover classification unavailable for this location.</div>'}
 
   <h3>4.4 Water Resources</h3>
@@ -1430,14 +1431,14 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <div class="kpi-card"><div class="kpi-value">${dd.waterFeatures.waterways}</div><div class="kpi-label">Waterways</div></div>
     <div class="kpi-card"><div class="kpi-value">${dd.waterFeatures.waterBodies}</div><div class="kpi-label">Water Bodies</div></div>
   </div>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: OpenStreetMap via Overpass API (DYNAMIC) — depends on OSM contributor coverage</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: OpenStreetMap via Overpass API — depends on OSM contributor coverage</div>
 
   <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
     <div class="score-label" style="font-size:14px;font-weight:700;">Water Security Index</div>
     <div class="score-track" style="flex:1;height:14px;"><div class="score-fill" style="width:${dd.waterScore * 10}%;background:var(--sky-dark);"></div></div>
     <div class="score-value" style="color:var(--sky-dark);">${dd.waterScore}/10</div>
   </div>
-  <div style="font-size:11px;color:var(--text-muted);">Computed from water feature count + rainfall (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Computed from water feature count + rainfall</div>
 </div>
 
 <!-- SECTION 5: CLIMATE PROFILE -->
@@ -1451,18 +1452,18 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <table class="data-table">
     <thead><tr><th>Metric</th><th>Value</th><th>Source</th></tr></thead>
     <tbody>
-      <tr><td class="label">Annual Mean Temp</td><td class="value">${annualMeanTemp}&deg;C</td><td>Open-Meteo Archive (DYNAMIC)</td></tr>
-      <tr><td class="label">Summer Mean (Jun–Aug)</td><td class="value">${summerMean}&deg;C</td><td>Open-Meteo Archive (DYNAMIC)</td></tr>
-      <tr><td class="label">Winter Mean (Dec–Feb)</td><td class="value">${winterMean}&deg;C</td><td>Open-Meteo Archive (DYNAMIC)</td></tr>
-      <tr><td class="label">Annual Rainfall</td><td class="value">${annualRainfall}mm</td><td>Open-Meteo Archive (DYNAMIC)</td></tr>
-      <tr><td class="label">Growing Season</td><td class="value">~${growingSeason} days</td><td>Derived (DYNAMIC)</td></tr>
-      <tr><td class="label">Frost Days/Year</td><td class="value">${frostDays} days</td><td>Estimated from monthly lows (DYNAMIC)</td></tr>
+      <tr><td class="label">Annual Mean Temp</td><td class="value">${annualMeanTemp}&deg;C</td><td>Open-Meteo Archive</td></tr>
+      <tr><td class="label">Summer Mean (Jun–Aug)</td><td class="value">${summerMean}&deg;C</td><td>Open-Meteo Archive</td></tr>
+      <tr><td class="label">Winter Mean (Dec–Feb)</td><td class="value">${winterMean}&deg;C</td><td>Open-Meteo Archive</td></tr>
+      <tr><td class="label">Annual Rainfall</td><td class="value">${annualRainfall}mm</td><td>Open-Meteo Archive</td></tr>
+      <tr><td class="label">Growing Season</td><td class="value">~${growingSeason} days</td><td>Derived</td></tr>
+      <tr><td class="label">Frost Days/Year</td><td class="value">${frostDays} days</td><td>Estimated from monthly lows</td></tr>
     </tbody>
   </table>
   ` : '<div style="background:var(--bg);padding:16px;border-radius:8px;color:var(--text-muted);">Climate archive data unavailable.</div>'}
 
   <h3>5.2 Monthly Temperature & Rainfall</h3>
-  ${climate ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Source: Open-Meteo historical archive (DYNAMIC)</div>` : '<div style="color:var(--text-muted);">No climate data to chart.</div>'}
+  ${climate ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Source: Open-Meteo historical archive</div>` : '<div style="color:var(--text-muted);">No climate data to chart.</div>'}
 
   <h3>5.3 IPMA Forecast</h3>
   ${dd.ipmaForecast ? `
@@ -1472,7 +1473,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       ${dd.ipmaForecast.map(f => `<tr><td class="label">${f.forecastDate || '—'}</td><td>${f.tMin || '—'}&deg;C</td><td class="value">${f.tMax || '—'}&deg;C</td><td>${f.precipitaProb || '—'}%</td></tr>`).join('')}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: IPMA — ${dd.ipmaLocation?.name || 'nearest station'} (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: IPMA — ${dd.ipmaLocation?.name || 'nearest station'}</div>
   ` : '<div style="background:var(--bg);padding:12px;border-radius:8px;color:var(--text-muted);font-size:13px;">IPMA forecast not available for this location.</div>'}
 
   <h3>5.4 Seasonal Risk Calendar</h3>
@@ -1480,7 +1481,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <div class="season-grid">
     ${dd.seasonalCalendar.map(s => `<div class="season-card"><div class="period">${s.period}</div><span class="risk-tag ${s.tag}">${s.risk}</span><div style="margin-top:6px;color:var(--text-muted);">${s.notes}</div></div>`).join('')}
   </div>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from monthly climate data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from monthly climate data</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No climate data for seasonal calendar.</div>'}
 </div>
 
@@ -1494,7 +1495,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   ${speciesGroups.length > 0 ? speciesGroups.map(([group, count]) =>
     `<div class="bar-row"><div class="bar-label">${group}</div><div class="bar-track"><div class="bar-fill green" style="width:${(count / maxSpecies * 100).toFixed(0)}%">${count}</div></div></div>`
   ).join('') : '<div style="color:var(--text-muted);">No species data available.</div>'}
-  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: iNaturalist community observations — 15km radius (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: iNaturalist community observations — 15km radius</div>
 
   <h3>6.2 Notable Species</h3>
   ${dd.species.topSpecies.length > 0 ? `
@@ -1514,12 +1515,12 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       ${dd.threatened.topSpecies.slice(0, 6).map(s => `<tr><td class="value">${s.name}</td><td>${s.group}</td><td>${s.count}</td></tr>`).join('')}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: iNaturalist threatened species — 25km radius (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: iNaturalist threatened species — 25km radius</div>
   ` : ''}
 
   <h3>6.4 GBIF Occurrence Data</h3>
   <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
-    <div class="kpi-card"><div class="kpi-value">${gbifTotal.toLocaleString()}</div><div class="kpi-label">Total Occurrences</div><div class="kpi-sub">GBIF database (DYNAMIC)</div></div>
+    <div class="kpi-card"><div class="kpi-value">${gbifTotal.toLocaleString()}</div><div class="kpi-label">Total Occurrences</div><div class="kpi-sub">GBIF database</div></div>
     <div class="kpi-card"><div class="kpi-value">${Object.keys(gbifKingdoms).length}</div><div class="kpi-label">Kingdoms</div><div class="kpi-sub">${Object.entries(gbifKingdoms).map(([k, v]) => k + ': ' + v).join(', ') || 'N/A'}</div></div>
   </div>
 
@@ -1531,7 +1532,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       ${protectedAreaNames.map(p => `<tr><td class="value">${p.name}</td><td>${p.type}</td></tr>`).join('')}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: Overpass API / Natura 2000 (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: Overpass API / Natura 2000</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No protected areas found within 25km radius.</div>'}
 </div>
 
@@ -1548,7 +1549,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       ${geo.map(g => `<tr><td class="value">${g.name}</td><td>${g.lithology}</td><td>${g.environment}</td><td>${g.period}</td><td>${g.ageMa || '—'}</td></tr>`).join('')}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: Macrostrat (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: Macrostrat</div>
   ` : '<div style="background:var(--bg);padding:16px;border-radius:8px;color:var(--text-muted);">Geology data not available — Macrostrat may not cover this region.</div>'}
 </div>
 
@@ -1562,12 +1563,12 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <table class="data-table">
     <thead><tr><th>Risk</th><th>Score</th><th>Level</th><th>Basis</th></tr></thead>
     <tbody>
-      <tr><td class="label">Fire</td><td class="value">${dd.risks.fire.score}/100</td><td><span class="risk-tag ${dd.risks.fire.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.fire.level.toUpperCase()}</span></td><td>Temp, precip, wind, season (DYNAMIC)</td></tr>
-      <tr><td class="label">Drought</td><td class="value">${dd.risks.drought.score}/100</td><td><span class="risk-tag ${dd.risks.drought.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.drought.level.toUpperCase()}</span></td><td>Precip vs seasonal avg (DYNAMIC)</td></tr>
-      <tr><td class="label">Flood</td><td class="value">${dd.risks.flood.score}/100</td><td><span class="risk-tag ${dd.risks.flood.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.flood.level.toUpperCase()}</span></td><td>Recent precipitation (DYNAMIC)</td></tr>
+      <tr><td class="label">Fire</td><td class="value">${dd.risks.fire.score}/100</td><td><span class="risk-tag ${dd.risks.fire.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.fire.level.toUpperCase()}</span></td><td>Temp, precip, wind, season</td></tr>
+      <tr><td class="label">Drought</td><td class="value">${dd.risks.drought.score}/100</td><td><span class="risk-tag ${dd.risks.drought.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.drought.level.toUpperCase()}</span></td><td>Precip vs seasonal avg</td></tr>
+      <tr><td class="label">Flood</td><td class="value">${dd.risks.flood.score}/100</td><td><span class="risk-tag ${dd.risks.flood.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.flood.level.toUpperCase()}</span></td><td>Recent precipitation</td></tr>
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Scores computed from Open-Meteo 7-day forecast data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Scores computed from Open-Meteo 7-day forecast data</div>
 
   <h3>8.2 Flood Discharge Data</h3>
   ${dd.flood.current ? `
@@ -1576,7 +1577,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <div class="kpi-card"><div class="kpi-value">${dd.flood.average}</div><div class="kpi-label">Average m&sup3;/s</div></div>
     <div class="kpi-card"><div class="kpi-value">${dd.flood.max}</div><div class="kpi-label">Max m&sup3;/s</div></div>
   </div>
-  <div style="font-size:11px;color:var(--text-muted);">Source: GloFAS via Open-Meteo Flood API (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: GloFAS via Open-Meteo Flood API</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No river discharge data available for this grid cell.</div>'}
 
   <h3>8.3 Wildfire History</h3>
@@ -1588,7 +1589,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <ul class="checklist">
     ${dd.mitigations.map(m => `<li><span class="check-box"></span>${m}</li>`).join('')}
   </ul>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from risk scores, water, and soil data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from risk scores, water, and soil data</div>
 </div>
 
 <!-- SECTION 9: NEARBY INFRASTRUCTURE -->
@@ -1604,7 +1605,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       ${Object.entries(dd.infrastructure).sort((a, b) => b[1] - a[1]).map(([type, count]) => `<tr><td class="label">${type}</td><td class="value">${count}</td></tr>`).join('')}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Source: OpenStreetMap via Overpass API (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: OpenStreetMap via Overpass API</div>
   ` : '<div style="color:var(--text-muted);">No infrastructure data found nearby.</div>'}
 </div>
 
@@ -1615,49 +1616,41 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <div class="section-subtitle">Available geospatial layers</div>
 
   <div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--amber);font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-    10 map layers rendered below using Mapbox Static API and WMS GetMap requests (DYNAMIC).
+    10 map layers rendered below using Mapbox Static API and WMS GetMap requests.
   </div>
 
   <div class="map-grid">
     <div class="map-item">
       ${maps.satellite ? `<img src="${maps.satellite}" alt="Satellite + Boundary" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Satellite + Boundary (no Mapbox token)</div>'}
-      <div class="map-label">1. Satellite Base & Boundary — Mapbox Static API (DYNAMIC)</div>
+      <div class="map-label">Satellite & Boundary</div>
     </div>
     <div class="map-item">
-      ${maps.topography ? `<img src="${maps.topography}" alt="Topography" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Topography (no Mapbox token)</div>'}
-      <div class="map-label">2. Topography & Hydrology — Mapbox Outdoors (DYNAMIC)</div>
-    </div>
-    <div class="map-item">
-      <img src="${maps.soilClay}" alt="Soil Clay Content" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">3. Soil — Clay Content 0-5cm — SoilGrids WMS (DYNAMIC)</div>
-    </div>
-    <div class="map-item">
-      <img src="${maps.landCoverCorine}" alt="Land Cover CORINE" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">4a. Land Cover — CORINE 2018 (DYNAMIC)</div>
-    </div>
-    <div class="map-item">
-      <img src="${maps.landCoverWorldcover}" alt="Land Cover WorldCover" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">4b. Land Cover — ESA WorldCover 10m (DYNAMIC)</div>
-    </div>
-    <div class="map-item">
-      <img src="${maps.landCoverCOS}" alt="Land Cover COS" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">4c. Land Use — DGT COS 2018 (Portugal) (DYNAMIC)</div>
+      ${maps.topography ? `<img src="${maps.topography}" alt="Topography" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Topography</div>'}
+      <div class="map-label">Topography & Hydrology</div>
     </div>
     <div class="map-item">
       ${maps.waterResources ? `<img src="${maps.waterResources}" alt="Water Resources" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Water Resources</div>'}
-      <div class="map-label">5. Water Resources — Mapbox + Overpass (DYNAMIC)</div>
+      <div class="map-label">Water Resources</div>
     </div>
     <div class="map-item">
-      <img src="${maps.fireDanger}" alt="Fire Danger" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">6a. Fire Danger Forecast — EFFIS FWI (DYNAMIC)</div>
+      <img src="${maps.soilClay}" alt="Soil Clay Content" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>Soil layer unavailable</div>'" />
+      <div class="map-label">Soil — Clay Content</div>
     </div>
     <div class="map-item">
-      <img src="${maps.burnedAreas}" alt="Burned Areas" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">6b. Historical Burned Areas — EFFIS FIRMS (DYNAMIC)</div>
+      <img src="${maps.soilPh}" alt="Soil pH" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>Soil pH layer unavailable</div>'" />
+      <div class="map-label">Soil — pH</div>
     </div>
     <div class="map-item">
-      <img src="${maps.natura2000}" alt="Natura 2000" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
-      <div class="map-label">7. Biodiversity — Natura 2000 Sites (DYNAMIC)</div>
+      <img src="${maps.landCoverCorine}" alt="Land Cover CORINE" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>CORINE layer unavailable</div>'" />
+      <div class="map-label">Land Cover — CORINE 2018</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.landCoverWorldcover}" alt="Land Cover WorldCover" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>WorldCover layer unavailable</div>'" />
+      <div class="map-label">Land Cover — ESA WorldCover</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.fireDanger}" alt="Fire Danger" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>EFFIS layer unavailable</div>'" />
+      <div class="map-label">Fire Danger Forecast</div>
     </div>
   </div>
 </div>
@@ -1697,7 +1690,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <tbody>${dd.carbon.details.map(d => `<tr><td class="label">${d.label}</td><td>${d.area}</td><td>${d.rate}</td><td class="value">${d.stock} tCO₂e</td></tr>`).join('')}</tbody>
   </table>
   ` : ''}
-  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Estimated from land cover × published literature values (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Estimated from land cover × published literature values</div>
 
   <h3 style="margin-top:32px;">Regional Comparison</h3>
   <table class="data-table">
@@ -1710,7 +1703,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Soil Organic Carbon</td><td class="value">${soil?.organicCarbon || 'N/A'} g/kg</td><td>${dd.regional.soilOC || 'N/A'} g/kg</td><td>${soil?.organicCarbon && dd.regional.soilOC ? (parseFloat(soil.organicCarbon) > parseFloat(dd.regional.soilOC) ? '↑ Higher' : '↓ Lower') : '—'}</td></tr>
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Regional values sampled ~20km from property center (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Regional values sampled ~20km from property center</div>
 
   <h3 style="margin-top:32px;">Valuation Scenarios</h3>
   <table class="data-table">
@@ -1745,7 +1738,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <h3>Long-term (2–5 years)</h3>
   <ul class="checklist">${dd.nextSteps.longTerm.map(s => `<li><span class="check-box"></span>${s}</li>`).join('')}</ul>
 
-  <div style="font-size:11px;color:var(--text-muted);margin-top:12px;">Derived from risk scores, water features, biodiversity, and soil data (DYNAMIC)</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:12px;">Derived from risk scores, water features, biodiversity, and soil data</div>
 </div>
 
 <!-- SECTION 13: METHODOLOGY & SOURCES -->
