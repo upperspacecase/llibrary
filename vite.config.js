@@ -20,6 +20,7 @@ export default defineConfig({
         onboard: resolve(__dirname, 'onboard.html'),
         passport: resolve(__dirname, 'passport.html'),
         directory: resolve(__dirname, 'directory.html'),
+        'report-preview': resolve(__dirname, 'report-preview.html'),
       },
     },
   },

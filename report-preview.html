@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="/favicon1.jpg">
+  <title>LandBook Report Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Version selector bar -->
+  <div id="version-bar">
+    <div class="version-bar-inner">
+      <span class="version-label">LandBook Report</span>
+      <select id="version-select">
+        <option value="">Loading versions...</option>
+      </select>
+      <span id="version-date" class="version-date"></span>
+    </div>
+  </div>
+
+  <!-- Report renders here -->
+  <div id="report-container"></div>
+
+  <script type="module" src="/src/pages/report-preview.js"></script>
+</body>
+
+</html>
