@@ -15,7 +15,7 @@
     },
     {
       "source": "/report/:slug",
-      "destination": "/report-view.html"
+      "destination": "/api/report/:slug"
     }
   ]
 }

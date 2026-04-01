@@ -939,9 +939,14 @@ export default async function handler(req, res) {
       const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
 
       const count = await reports.countDocuments();
+      const version = `v${count + 1}`;
+      const slugBase = prop.address.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const slug = `${slugBase}-${version}`;
+
       const doc = {
         id: crypto.randomUUID(),
-        version: `v${count + 1}`,
+        version,
+        slug,
         name: `${prop.address.split(',')[0]} — Real API Data`,
         created: new Date().toISOString(),
         locked_sections: [],
@@ -953,7 +958,7 @@ export default async function handler(req, res) {
 
       await reports.insertOne(doc);
       return res.status(201).json({
-        id: doc.id, version: doc.version, name: doc.name, created: doc.created,
+        id: doc.id, version: doc.version, slug: doc.slug, name: doc.name, created: doc.created,
         apis_called: 0, dynamic_data_points: Object.keys(dd).length,
         note: `Reused data snapshot from ${existingReport.version} (${existingReport.id}). Pass force_refresh: true to re-fetch.`,
       });
@@ -1217,9 +1222,14 @@ export default async function handler(req, res) {
     // ── Save to DB ───────────────────────────────────────
     const count = await reports.countDocuments();
 
+    const version = `v${count + 1}`;
+    const slugBase = prop.address.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    const slug = `${slugBase}-${version}`;
+
     const doc = {
       id: crypto.randomUUID(),
-      version: `v${count + 1}`,
+      version,
+      slug,
       name: `${prop.address.split(',')[0]} — Real API Data`,
       created: new Date().toISOString(),
       locked_sections: [],

@@ -9,10 +9,10 @@ export default async function handler(req, res) {
   const { slug } = req.query;
 
   try {
-    const shared = await getCollection('shared_reports');
-    const doc = await shared.findOne({ slug });
+    const reports = await getCollection('report_versions');
+    const doc = await reports.findOne({ slug });
     if (!doc) return res.status(404).json({ error: 'Report not found' });
-    return res.status(200).json(doc);
+    return res.status(200).json({ slug: doc.slug, html_content: doc.html_content, version: doc.version, created: doc.created });
   } catch (err) {
     console.error('Shared report fetch error:', err);
     return res.status(500).json({ error: 'Fetch failed', detail: err.message });

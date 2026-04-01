@@ -959,7 +959,7 @@ async function loadVersions() {
   }
 
   select.innerHTML = versions.map(v =>
-    `<option value="${v.id}">${v.version} — ${v.name}</option>`
+    `<option value="${v.id}">${v.version} — ${v.name}${v.slug ? ' (/report/' + v.slug + ')' : ''}</option>`
   ).join('');
 
   // Show first (most recent) version
@@ -984,25 +984,23 @@ shareBtn.addEventListener('click', async () => {
   const currentId = select.value;
   if (!currentId) return;
 
-  shareBtn.textContent = 'Sharing...';
-  shareBtn.disabled = true;
+  const v = versions.find(v => v.id === currentId);
+  if (!v?.slug) {
+    shareBtn.textContent = 'No slug';
+    setTimeout(() => { shareBtn.textContent = 'Share'; }, 2000);
+    return;
+  }
 
+  const url = `${window.location.origin}/report/${v.slug}`;
   try {
-    const res = await fetch('/api/reports/share', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ report_id: currentId }),
-    });
-    const data = await res.json();
-    const url = `${window.location.origin}${data.url}`;
-
     await navigator.clipboard.writeText(url);
     shareBtn.textContent = 'Copied!';
-    setTimeout(() => { shareBtn.textContent = 'Share'; shareBtn.disabled = false; }, 2000);
-  } catch (err) {
-    shareBtn.textContent = 'Failed';
-    setTimeout(() => { shareBtn.textContent = 'Share'; shareBtn.disabled = false; }, 2000);
+  } catch {
+    // Fallback
+    prompt('Share URL:', url);
+    shareBtn.textContent = 'Share';
   }
+  setTimeout(() => { shareBtn.textContent = 'Share'; }, 2000);
 });
 
 loadVersions();
