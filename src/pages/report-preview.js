@@ -257,6 +257,7 @@ style.textContent = `
   }
   .map-grid .map-item { text-align: center; }
   .map-grid .map-item .map-placeholder { height: 160px; }
+  .map-grid .map-item img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); }
   .map-grid .map-label { font-size: 11px; font-weight: 600; color: var(--text-muted); margin-top: 6px; }
 
   /* ── Sources ── */

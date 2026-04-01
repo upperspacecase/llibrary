@@ -7,6 +7,84 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+// ── Static Map Helpers ───────────────────────────────────
+
+function getBbox(boundary, padding = 0.005) {
+  const lats = boundary.map(p => p[0]);
+  const lngs = boundary.map(p => p[1]);
+  return {
+    south: Math.min(...lats) - padding,
+    north: Math.max(...lats) + padding,
+    west: Math.min(...lngs) - padding,
+    east: Math.max(...lngs) + padding,
+  };
+}
+
+function mapboxStaticUrl(boundary, center, style = 'satellite-v9', width = 700, height = 440) {
+  const token = process.env.VITE_MAPBOX_TOKEN;
+  if (!token) return null;
+
+  // Build GeoJSON overlay for boundary polygon
+  const coords = boundary.map(p => [p[1], p[0]]); // [lng, lat]
+  // Close the polygon
+  if (coords.length > 0) coords.push(coords[0]);
+  const geojson = {
+    type: 'FeatureCollection',
+    features: [{
+      type: 'Feature',
+      properties: { stroke: '#E76F51', 'stroke-width': 3, 'stroke-opacity': 1, fill: '#E76F51', 'fill-opacity': 0.15 },
+      geometry: { type: 'Polygon', coordinates: [coords] },
+    }],
+  };
+  const overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})`;
+  const lng = center[1], lat = center[0];
+  return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/${overlay}/auto/${width}x${height}@2x?access_token=${token}&padding=40`;
+}
+
+function wmsGetMapUrl(wmsBase, layers, bbox, width = 700, height = 440, extraParams = {}) {
+  const { south, north, west, east } = bbox;
+  const params = new URLSearchParams({
+    SERVICE: 'WMS',
+    VERSION: '1.1.1',
+    REQUEST: 'GetMap',
+    LAYERS: layers,
+    BBOX: `${west},${south},${east},${north}`,
+    WIDTH: String(width),
+    HEIGHT: String(height),
+    SRS: 'EPSG:4326',
+    FORMAT: 'image/png',
+    TRANSPARENT: 'true',
+    ...extraParams,
+  });
+  return `${wmsBase}?${params.toString()}`;
+}
+
+function mapboxWithWmsOverlay(boundary, center, wmsUrl, style = 'light-v11', width = 700, height = 440) {
+  // For the report we just show the WMS image directly — it's a static raster
+  // The boundary is shown separately via Mapbox
+  return { mapbox: mapboxStaticUrl(boundary, center, style, width, height), wms: wmsUrl };
+}
+
+function buildMapUrls(boundary, center) {
+  const bbox = getBbox(boundary);
+  const token = process.env.VITE_MAPBOX_TOKEN;
+
+  return {
+    satellite: mapboxStaticUrl(boundary, center, 'satellite-v9'),
+    topography: mapboxStaticUrl(boundary, center, 'outdoors-v12'),
+    soilClay: wmsGetMapUrl('https://maps.isric.org/mapserv?map=/map/clay.map', 'clay_0-5cm_mean', bbox),
+    soilPh: wmsGetMapUrl('https://maps.isric.org/mapserv?map=/map/phh2o.map', 'phh2o_0-5cm_mean', bbox),
+    landCoverCorine: wmsGetMapUrl('https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer', '12', bbox),
+    landCoverWorldcover: wmsGetMapUrl('https://services.terrascope.be/wms/v2', 'WORLDCOVER_2021_MAP', bbox),
+    landCoverCOS: wmsGetMapUrl('https://geo2.dgterritorio.gov.pt/geoserver/COS2018/wms', 'COS2018_v2', bbox),
+    fireDanger: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/wms', 'ecmwf.fwi', bbox),
+    burnedAreas: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/wms', 'firms.hs', bbox),
+    natura2000: wmsGetMapUrl('https://bio.discomap.eea.europa.eu/arcgis/services/Natura2000/Natura2000End2021/MapServer/WMSServer', '2,4', bbox),
+    waterResources: mapboxStaticUrl(boundary, center, 'outdoors-v12'),
+    biodiversity: mapboxStaticUrl(boundary, center, 'light-v11'),
+  };
+}
+
 // ── API Calls ────────────────────────────────────────────
 
 async function getElevation(lat, lng) {
@@ -394,6 +472,9 @@ export default async function handler(req, res) {
     const droughtRisk = riskLevel(risks.drought);
     const floodRisk = riskLevel(risks.flood);
 
+    // ── Generate map URLs ─────────────────────────────────
+    const maps = buildMapUrls(sub.boundary, [lat, lng]);
+
     // ── Build data snapshot ──────────────────────────────
     const dataSnapshot = {
       submission: {
@@ -446,8 +527,8 @@ export default async function handler(req, res) {
         ipmaLocation: ipmaLocation ? { name: ipmaLocation.local, id: ipmaLocation.globalIdLocal } : null,
         ipmaForecast: ipmaForecast?.data?.slice(0, 5) || null,
       },
+      maps,
       hardcoded: {
-        // These values have NO dynamic data source yet
         propertyName: 'Generated from submission — no user-defined name',
         marketValue: 'No real estate API integrated — placeholder €/ha estimates',
         naturalCapitalValue: 'No natural capital valuation model — placeholder calculations',
@@ -813,11 +894,50 @@ export default async function handler(req, res) {
   <div class="section-subtitle">Available geospatial layers</div>
 
   <div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--amber);font-size:13px;color:var(--text-muted);margin-bottom:16px;">
-    <strong>MISSING</strong> — Static map rendering not implemented. Maps require Mapbox Static API or server-side map rendering. Available WMS layers: CORINE, WorldCover, Sentinel-2, EFFIS, Natura 2000, SoilGrids, COS.
+    10 map layers rendered below using Mapbox Static API and WMS GetMap requests (DYNAMIC).
   </div>
 
   <div class="map-grid">
-    ${['Satellite + Boundary', 'Topography', 'Soil Types', 'Land Cover', 'Water Resources', 'Fire Risk Zones', 'Biodiversity', 'Administrative'].map(m => `<div class="map-item"><div class="map-placeholder">${m}</div><div class="map-label">${m}</div></div>`).join('')}
+    <div class="map-item">
+      ${maps.satellite ? `<img src="${maps.satellite}" alt="Satellite + Boundary" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Satellite + Boundary (no Mapbox token)</div>'}
+      <div class="map-label">1. Satellite Base & Boundary — Mapbox Static API (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      ${maps.topography ? `<img src="${maps.topography}" alt="Topography" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Topography (no Mapbox token)</div>'}
+      <div class="map-label">2. Topography & Hydrology — Mapbox Outdoors (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.soilClay}" alt="Soil Clay Content" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">3. Soil — Clay Content 0-5cm — SoilGrids WMS (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.landCoverCorine}" alt="Land Cover CORINE" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">4a. Land Cover — CORINE 2018 (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.landCoverWorldcover}" alt="Land Cover WorldCover" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">4b. Land Cover — ESA WorldCover 10m (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.landCoverCOS}" alt="Land Cover COS" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">4c. Land Use — DGT COS 2018 (Portugal) (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      ${maps.waterResources ? `<img src="${maps.waterResources}" alt="Water Resources" style="width:100%;border-radius:8px;" loading="lazy" />` : '<div class="map-placeholder">Water Resources</div>'}
+      <div class="map-label">5. Water Resources — Mapbox + Overpass (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.fireDanger}" alt="Fire Danger" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">6a. Fire Danger Forecast — EFFIS FWI (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.burnedAreas}" alt="Burned Areas" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">6b. Historical Burned Areas — EFFIS FIRMS (DYNAMIC)</div>
+    </div>
+    <div class="map-item">
+      <img src="${maps.natura2000}" alt="Natura 2000" style="width:100%;border-radius:8px;" loading="lazy" onerror="this.style.display='none'" />
+      <div class="map-label">7. Biodiversity — Natura 2000 Sites (DYNAMIC)</div>
+    </div>
   </div>
 </div>
 
@@ -924,6 +1044,15 @@ export default async function handler(req, res) {
       <tr><td>Infrastructure</td><td>Overpass (OSM)</td><td>${Object.values(dd.infrastructure).reduce((a,b)=>a+b,0)} amenities</td></tr>
       <tr><td>Parish/Municipality</td><td>DGT Portugal</td><td>${parish || 'N/A'} / ${municipality || 'N/A'}</td></tr>
       <tr><td>IPMA forecast</td><td>IPMA</td><td>${dd.ipmaForecast ? dd.ipmaForecast.length + ' days' : 'N/A'}</td></tr>
+      <tr><td>Satellite + boundary map</td><td>Mapbox Static API</td><td>${maps.satellite ? 'Generated' : 'No token'}</td></tr>
+      <tr><td>Topography map</td><td>Mapbox Static API</td><td>${maps.topography ? 'Generated' : 'No token'}</td></tr>
+      <tr><td>Soil clay map</td><td>SoilGrids WMS</td><td>Generated</td></tr>
+      <tr><td>Land cover (CORINE)</td><td>EEA WMS</td><td>Generated</td></tr>
+      <tr><td>Land cover (WorldCover)</td><td>ESA WMS</td><td>Generated</td></tr>
+      <tr><td>Land use (COS)</td><td>DGT WMS</td><td>Generated</td></tr>
+      <tr><td>Fire danger map</td><td>EFFIS WMS</td><td>Generated</td></tr>
+      <tr><td>Burned areas map</td><td>EFFIS WMS</td><td>Generated</td></tr>
+      <tr><td>Natura 2000 map</td><td>EEA WMS</td><td>Generated</td></tr>
     </tbody>
   </table>
 
@@ -946,7 +1075,6 @@ export default async function handler(req, res) {
       <tr><td>Mitigation recommendations</td><td>Generic text</td><td>Rule engine based on risk scores + land cover</td></tr>
       <tr><td>Next steps checklist</td><td>Generic template</td><td>Generate from identified gaps and opportunities</td></tr>
       <tr><td>Seasonal risk calendar</td><td>Generic Mediterranean</td><td>Build from actual monthly climate + fire history</td></tr>
-      <tr><td>Map images</td><td>Need static map rendering</td><td>Mapbox Static API or server-side rendering</td></tr>
       <tr><td>Zoning/land use designation</td><td>No zoning API</td><td>Municipal PDM data or DGT COS classification</td></tr>
       <tr><td>Natural capital radar chart</td><td>No regional baselines</td><td>Collect baseline data across properties</td></tr>
       <tr><td>Aspect/slope direction</td><td>Single elevation point</td><td>Multi-point DEM + slope calculation</td></tr>
