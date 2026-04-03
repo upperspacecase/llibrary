@@ -398,6 +398,11 @@ if (btnCreate) {
   btnCreate.addEventListener('click', async () => {
     if (!isClosed || boundaryPoints.length < 3) return;
 
+    if (!selectedAddress) {
+      alert('Please search for and select an address before submitting.');
+      return;
+    }
+
     btnCreate.disabled = true;
     btnCreate.textContent = 'Submitting...';
 

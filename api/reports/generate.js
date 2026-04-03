@@ -1,4 +1,154 @@
 import { getCollection } from '../_db.js';
+import { put } from '@vercel/blob';
+
+const SITE_ORIGIN = 'https://llibrary-eight.vercel.app';
+
+// ── Reverse geocode helper ──────────────────────────────
+async function reverseGeocode(lat, lng) {
+  const token = process.env.VITE_MAPBOX_TOKEN;
+  if (!token) return null;
+  const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${token}&types=address,place,locality&limit=1`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const data = await res.json();
+  const feat = data.features?.[0];
+  if (!feat) return null;
+  return feat.place_name || null;
+}
+
+// ── Blob upload helper ──────────────────────────────────
+async function uploadReportBlob(slug, innerHtml, version) {
+  const fullHtml = buildFullPage(innerHtml, version);
+  const blob = await put(`reports/${slug}.html`, fullHtml, {
+    access: 'private',
+    contentType: 'text/html; charset=utf-8',
+    addRandomSuffix: false,
+  });
+  return blob.url;
+}
+
+function buildFullPage(htmlContent, version) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="${SITE_ORIGIN}/favicon1.jpg">
+  <title>LandBook Report — ${version}</title>
+  <meta property="og:title" content="LandBook Report — ${version}">
+  <meta property="og:image" content="${SITE_ORIGIN}/metaimage.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="${SITE_ORIGIN}/metaimage.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--green:#1B4332;--green-light:#2D6A4F;--green-pale:#D8F3DC;--terra:#BC6C25;--terra-light:#DDA15E;--sky:#90E0EF;--sky-dark:#0077B6;--amber:#F4A261;--red:#E76F51;--bg:#F8F6F2;--white:#FFFFFF;--text:#1a1a1a;--text-muted:#6b7280;--border:#e5e2db;--font:'Inter',-apple-system,sans-serif}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--font);background:#e5e2db;color:var(--text);-webkit-font-smoothing:antialiased}
+    #report-container{max-width:850px;margin:24px auto;padding:0 16px}
+    .report-page{background:var(--white);border-radius:4px;box-shadow:0 1px 8px rgba(0,0,0,0.08);margin-bottom:24px;padding:56px 56px 48px;page-break-after:always}
+    .section-number{font-size:11px;font-weight:700;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+    .section-title{font-size:26px;font-weight:800;color:var(--green);margin-bottom:8px;line-height:1.2}
+    .section-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:32px}
+    h3{font-size:15px;font-weight:700;color:var(--green);margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green-pale)}
+    .data-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
+    .data-table th{text-align:left;font-weight:600;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:2px solid var(--border)}
+    .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+    .data-table tr:last-child td{border-bottom:none}
+    .data-table .label{color:var(--text-muted);font-weight:500}
+    .data-table .value{font-weight:600}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}
+    .kpi-card{background:var(--bg);border-radius:10px;padding:20px 16px;text-align:center;border:1px solid var(--border)}
+    .kpi-value{font-size:28px;font-weight:800;color:var(--green);line-height:1}
+    .kpi-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:8px}
+    .kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+    .cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+    .card{background:var(--bg);border-radius:8px;padding:16px;border:1px solid var(--border);text-align:center}
+    .card-icon{font-size:24px;margin-bottom:6px}
+    .card-title{font-size:12px;font-weight:700;color:var(--green)}
+    .risk-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+    .risk-row:last-child{border-bottom:none}
+    .risk-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+    .risk-dot.low{background:#22c55e}.risk-dot.moderate{background:var(--amber)}.risk-dot.high{background:var(--red)}
+    .risk-label{font-size:13px;font-weight:600;flex:1}
+    .risk-value{font-size:13px;color:var(--text-muted)}
+    .chart-container{margin:20px 0;text-align:center}
+    .chart-container svg{max-width:100%}
+    .bar-row{display:flex;align-items:center;gap:12px;margin:6px 0}
+    .bar-label{width:140px;font-size:12px;font-weight:500;text-align:right;flex-shrink:0}
+    .bar-track{flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;color:white}
+    .bar-fill.green{background:var(--green)}.bar-fill.terra{background:var(--terra)}.bar-fill.sky{background:var(--sky-dark)}.bar-fill.amber{background:var(--amber)}.bar-fill.red{background:var(--red)}
+    .checklist{list-style:none}
+    .checklist li{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;align-items:flex-start;gap:8px}
+    .checklist li:last-child{border-bottom:none}
+    .check-box{width:16px;height:16px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:1px}
+    .cover-page{background:#F8F6F2;color:#1a1a1a;text-align:center;padding:0;min-height:900px;display:flex;flex-direction:column;background-image:url('${SITE_ORIGIN}/landbook-cover-bg.png');background-size:cover;background-position:center}
+    .cover-top{padding:60px 56px 0}
+    .cover-tagline{font-size:14px;color:#999;font-weight:400;letter-spacing:.5px;font-style:italic}
+    .cover-middle{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 56px}
+    .cover-property{font-size:48px;font-weight:400;margin-bottom:12px;line-height:1.1;color:#1a1a1a;letter-spacing:1px}
+    .cover-address{font-size:20px;color:#666;font-weight:400;line-height:1.6;margin-bottom:8px}
+    .cover-coords{font-size:14px;color:#aaa;font-weight:400;letter-spacing:2px;margin-top:4px}
+    .cover-bottom{padding:0 56px 24px;text-align:center}
+    .cover-brand{font-size:20px;font-weight:700;letter-spacing:3px;color:#1a1a1a;margin-bottom:12px}
+    .cover-meta{font-size:12px;color:#aaa;letter-spacing:1px;margin-bottom:20px}
+    .cover-disclaimer{font-size:11px;color:#aaa;line-height:1.5;max-width:500px;margin:0 auto}
+    .cover-disclaimer strong{color:#888}
+    .season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+    .season-card{background:var(--bg);border-radius:8px;padding:14px;font-size:12px;border:1px solid var(--border)}
+    .season-card .period{font-weight:700;color:var(--green);margin-bottom:4px}
+    .season-card .risk-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin:4px 0}
+    .season-card .risk-tag.moderate{background:#fef3c7;color:#92400e}
+    .season-card .risk-tag.high{background:#fee2e2;color:#991b1b}
+    .season-card .risk-tag.low{background:#dcfce7;color:#166534}
+    .score-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+    .score-label{width:120px;font-size:12px;font-weight:600}
+    .score-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+    .score-fill{height:100%;border-radius:5px;background:var(--green)}
+    .score-value{width:50px;font-size:13px;font-weight:700;color:var(--green);text-align:right}
+    .map-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:16px 0}
+    .map-grid .map-item{text-align:center}
+    .map-grid .map-item .map-placeholder{height:160px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px}
+    .map-grid .map-item img{width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
+    .map-grid .map-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px}
+    .source-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;background:var(--green-pale);color:var(--green);margin:2px 4px 2px 0}
+    .disclaimer{background:var(--bg);border-radius:8px;padding:20px;font-size:11px;color:var(--text-muted);line-height:1.6;border-left:3px solid var(--amber)}
+    @media(max-width:768px){
+      #report-container{margin:12px auto;padding:0 8px}
+      .report-page{padding:28px 20px 24px;margin-bottom:12px}
+      .section-title{font-size:20px}
+      .section-subtitle{font-size:13px;margin-bottom:20px}
+      h3{font-size:14px;margin:20px 0 10px}
+      .data-table{font-size:12px;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .data-table th,.data-table td{padding:8px 8px;white-space:nowrap}
+      .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+      .kpi-value{font-size:22px}
+      .cards-grid{grid-template-columns:1fr;gap:8px}
+      .cover-page{min-height:auto;min-height:100dvh}
+      .cover-top{padding:40px 24px 0}
+      .cover-top img{height:64px!important}
+      .cover-middle{padding:24px 24px}
+      .cover-property{font-size:28px}
+      .cover-address{font-size:16px}
+      .cover-coords{font-size:12px}
+      .cover-bottom{padding:0 24px 20px}
+      .bar-row{flex-wrap:wrap}
+      .bar-label{width:100%;text-align:left;margin-bottom:2px}
+      .season-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+      .score-label{width:80px;font-size:11px}
+      .map-grid{grid-template-columns:1fr}
+      .chart-container svg{max-width:100%;height:auto}
+      .disclaimer{padding:14px;font-size:10px}
+    }
+    @media print{body{background:white}#report-container{max-width:none;margin:0;padding:0}.report-page{box-shadow:none;border-radius:0;margin-bottom:0}.cover-page{min-height:100vh}}
+  </style>
+</head>
+<body>
+  <div id="report-container">${htmlContent}</div>
+</body>
+</html>`;
+}
 
 // ── Fetch helpers (server-side, no browser APIs) ─────────
 async function fetchJSON(url) {
@@ -894,6 +1044,17 @@ export default async function handler(req, res) {
     const lng = sub.center?.[1] || sub.center?.lng;
     if (!lat || !lng) return res.status(400).json({ error: 'No coordinates in submission' });
 
+    // Reverse geocode if submission has no address
+    if (!sub.address) {
+      const geocoded = await reverseGeocode(lat, lng);
+      if (geocoded) {
+        sub.address = geocoded;
+        // Persist back to submission so future reports use it
+        await submissions.updateOne({ id: sub.id }, { $set: { address: geocoded } });
+        console.log(`  Reverse geocoded address: ${geocoded}`);
+      }
+    }
+
     const areaHa = sub.area ? (sub.area / 10000) : 0;
     const forceRefresh = body.force_refresh === true;
 
@@ -925,9 +1086,8 @@ export default async function handler(req, res) {
       const climate = dd.climate;
       const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-      const parish = dd.adminUnit?.parish || '';
       const municipality = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
-      const locationLine = [parish, municipality, 'Portugal'].filter(Boolean).join(', ');
+      const locationLine = [municipality, 'Portugal'].filter(Boolean).join(', ');
       const climateZone = annualMeanTemp && annualRainfall
         ? (parseFloat(annualMeanTemp) > 14 && annualRainfall < 800 ? 'Csa (Hot-summer Mediterranean)' : parseFloat(annualMeanTemp) > 14 ? 'Csb (Warm-summer Mediterranean)' : 'Cfb (Oceanic)')
         : 'Mediterranean (estimated)';
@@ -936,12 +1096,21 @@ export default async function handler(req, res) {
       const maxSpecies = speciesGroups.length > 0 ? Math.max(...speciesGroups.map(s => s[1])) : 1;
 
       // Rebuild HTML with same data snapshot
-      const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
+      const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
 
       const count = await reports.countDocuments();
       const version = `v${count + 1}`;
       const slugBase = prop.address.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const slug = `${slugBase}-${version}`;
+
+      // Upload self-contained HTML to Vercel Blob
+      let blob_url = null;
+      try {
+        blob_url = await uploadReportBlob(slug, html, version);
+        console.log(`  Blob uploaded: ${blob_url}`);
+      } catch (blobErr) {
+        console.error('Blob upload failed (falling back to DB):', blobErr.message);
+      }
 
       const doc = {
         id: crypto.randomUUID(),
@@ -951,6 +1120,7 @@ export default async function handler(req, res) {
         created: new Date().toISOString(),
         locked_sections: [],
         html_content: html,
+        blob_url,
         data_snapshot: dataSnapshot,
         submission_id: sub.id,
         reused_data_from: existingReport.id,
@@ -959,6 +1129,7 @@ export default async function handler(req, res) {
       await reports.insertOne(doc);
       return res.status(201).json({
         id: doc.id, version: doc.version, slug: doc.slug, name: doc.name, created: doc.created,
+        blob_url: doc.blob_url,
         apis_called: 0, dynamic_data_points: Object.keys(dd).length,
         note: `Reused data snapshot from ${existingReport.version} (${existingReport.id}). Pass force_refresh: true to re-fetch.`,
       });
@@ -1208,16 +1379,15 @@ export default async function handler(req, res) {
     const dd = dataSnapshot.dynamic;
     const prop = dataSnapshot.submission;
 
-    const parish = dd.adminUnit?.parish || '';
     const municipalityDisplay = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
-    const locationLine = [parish, municipalityDisplay, 'Portugal'].filter(Boolean).join(', ');
+    const locationLine = [municipalityDisplay, 'Portugal'].filter(Boolean).join(', ');
     const climateZone = annualMeanTemp && annualRainfall
       ? (parseFloat(annualMeanTemp) > 14 && annualRainfall < 800 ? 'Csa (Hot-summer Mediterranean)' : parseFloat(annualMeanTemp) > 14 ? 'Csb (Warm-summer Mediterranean)' : 'Cfb (Oceanic)')
       : 'Mediterranean (estimated)';
     const speciesGroups = Object.entries(dd.species.groups || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const maxSpecies = speciesGroups.length > 0 ? Math.max(...speciesGroups.map(s => s[1])) : 1;
 
-    const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality: municipalityDisplay, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
+    const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality: municipalityDisplay, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
 
     // ── Save to DB ───────────────────────────────────────
     const count = await reports.countDocuments();
@@ -1225,6 +1395,15 @@ export default async function handler(req, res) {
     const version = `v${count + 1}`;
     const slugBase = prop.address.split(',')[0].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     const slug = `${slugBase}-${version}`;
+
+    // Upload self-contained HTML to Vercel Blob
+    let blob_url = null;
+    try {
+      blob_url = await uploadReportBlob(slug, html, version);
+      console.log(`  Blob uploaded: ${blob_url}`);
+    } catch (blobErr) {
+      console.error('Blob upload failed (falling back to DB):', blobErr.message);
+    }
 
     const doc = {
       id: crypto.randomUUID(),
@@ -1234,6 +1413,7 @@ export default async function handler(req, res) {
       created: new Date().toISOString(),
       locked_sections: [],
       html_content: html,
+      blob_url,
       data_snapshot: dataSnapshot,
       submission_id: sub.id,
     };
@@ -1241,7 +1421,8 @@ export default async function handler(req, res) {
     await reports.insertOne(doc);
 
     return res.status(201).json({
-      id: doc.id, version: doc.version, name: doc.name, created: doc.created,
+      id: doc.id, version: doc.version, slug: doc.slug, name: doc.name, created: doc.created,
+      blob_url: doc.blob_url,
       apis_called: 18, dynamic_data_points: Object.keys(dd).length,
     });
   } catch (err) {
@@ -1251,22 +1432,21 @@ export default async function handler(req, res) {
 }
 
 // ── HTML Template Builder ────────────────────────────────
-function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, parish, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng }) {
+function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng }) {
   return `
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
   <div class="cover-top">
-    <img src="/landbook-logo.png" alt="LandBook" style="height:96px;margin-bottom:8px;" />
-    <div class="cover-tagline">Field notes for knowing<br>your land better.</div>
+    <img src="${SITE_ORIGIN}/landbook-logo.png" alt="LandBook" style="height:96px;margin-bottom:8px;" />
+    <div class="cover-tagline">Notes from the field.</div>
   </div>
   <div class="cover-middle">
-    <div class="cover-coords">${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</div>
     <div class="cover-property">${dd.propertyName}</div>
     <div class="cover-address">${prop.address.split(',').slice(0, 2).join(',')},<br>${prop.address.split(',').slice(2).join(',').trim()}</div>
+    <div class="cover-coords">${lat.toFixed(4)}&deg;N, ${Math.abs(lng).toFixed(4)}&deg;W</div>
   </div>
   <div class="cover-bottom">
-    <div class="cover-produced">Produced by</div>
-    <img src="/landlibrary-logo.png" alt="LandLibrary" style="height:28px;margin-bottom:12px;" />
+    <img src="${SITE_ORIGIN}/landlibrary-logo.png" alt="LandLibrary" style="height:28px;margin-bottom:12px;" />
     <div class="cover-meta">Date: ${new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })} | Version: MVP0.1</div>
     <div class="cover-disclaimer"><strong>Disclaimer</strong><br>This assessment represents conditions at time of documentation. Land characteristics evolve; verify critical details before decisions.</div>
   </div>
@@ -1287,7 +1467,6 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Area</td><td class="value">${prop.areaHa} ha (${Math.round(prop.area).toLocaleString()} m&sup2;)</td><td>Calculated from boundary</td></tr>
       <tr><td class="label">Perimeter</td><td class="value">${prop.perimeter ? prop.perimeter + 'm' : 'N/A'}</td><td>Calculated from boundary</td></tr>
       <tr><td class="label">Address</td><td class="value">${prop.address}</td><td>Mapbox geocoding</td></tr>
-      <tr><td class="label">Parish</td><td class="value">${parish || 'N/A'}</td><td>${parish ? 'DGT API' : 'UNAVAILABLE'}</td></tr>
       <tr><td class="label">Municipality</td><td class="value">${municipality || 'N/A'}</td><td>${municipality ? 'DGT API' : 'UNAVAILABLE'}</td></tr>
       <tr><td class="label">Climate Zone</td><td class="value">${climateZone}</td><td>${climate ? 'Derived from climate data' : 'ESTIMATED'}</td></tr>
       <tr><td class="label">Zoning</td><td class="value">${dd.landCover.breakdown.length > 0 ? dd.landCover.breakdown[0].label : 'Not available'}</td><td>${dd.landCover.breakdown.length > 0 ? dd.landCover.source + '' : 'UNAVAILABLE'}</td></tr>
@@ -1824,7 +2003,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td>Water security score</td><td>Computed</td><td>${dd.waterScore}/10</td></tr>
       <tr><td>Bio score</td><td>Computed</td><td>${dd.bioScore}/10</td></tr>
       <tr><td>Infrastructure</td><td>Overpass (OSM)</td><td>${Object.values(dd.infrastructure).reduce((a,b)=>a+b,0)} amenities</td></tr>
-      <tr><td>Parish/Municipality</td><td>DGT Portugal</td><td>${parish || 'N/A'} / ${municipality || 'N/A'}</td></tr>
+      <tr><td>Municipality</td><td>DGT Portugal</td><td>${municipality || 'N/A'}</td></tr>
       <tr><td>IPMA forecast</td><td>IPMA</td><td>${dd.ipmaForecast ? dd.ipmaForecast.length + ' days' : 'N/A'}</td></tr>
       <tr><td>Terrain profile (slope/aspect)</td><td>Open-Meteo multi-point DEM</td><td>${dd.terrainProfile ? dd.terrainProfile.elevations.length + ' points sampled' : 'FAILED'}</td></tr>
       <tr><td>Land cover breakdown</td><td>${dd.landCover.source}</td><td>${dd.landCover.sampleCount} grid points classified</td></tr>

@@ -15,6 +15,11 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const email = (body.email || '').trim().toLowerCase();
+    const address = (body.address || '').trim();
+
+    if (!address) {
+      return res.status(400).json({ error: 'Address is required' });
+    }
 
     const doc = {
       id: body.id || crypto.randomUUID(),

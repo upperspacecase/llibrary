@@ -41,7 +41,8 @@ export default async function handler(req, res) {
       slug: finalSlug,
       report_id,
       version: report.version,
-      html_content: report.html_content,
+      blob_url: report.blob_url || null,
+      html_content: report.blob_url ? null : report.html_content,
       created: new Date().toISOString(),
     };
 
