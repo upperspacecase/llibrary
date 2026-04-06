@@ -26,12 +26,10 @@ const step2 = document.getElementById('step-2');
 const step3 = document.getElementById('step-3');
 
 // Step 1 refs
-const searchInput = document.getElementById('search-input');
+const postcodeInput = document.getElementById('postcode-input');
 const btnSearch = document.getElementById('btn-search');
-const suggestionsEl = document.getElementById('search-suggestions');
 const statArea = document.getElementById('stat-area');
 const mapPrompt = document.getElementById('map-prompt');
-const postcodeInput = document.getElementById('postcode-input');
 const btnContinue = document.getElementById('btn-continue');
 const instructions = document.getElementById('map-instructions');
 const btnReset = document.getElementById('btn-reset');
@@ -265,45 +263,9 @@ function updateContinueButton() {
 if (postcodeInput) postcodeInput.addEventListener('input', updateContinueButton);
 
 
-// ---------------------------------------------------------------------------
-// Confirm toast
-// ---------------------------------------------------------------------------
-let activeToast = null;
-
-function showConfirmToast(message, onConfirm) {
-  if (activeToast) activeToast.remove();
-
-  const toast = document.createElement('div');
-  toast.className = 'confirm-toast';
-  toast.innerHTML = `
-    <span class="confirm-toast-msg">${esc(message)}</span>
-    <div class="confirm-toast-actions">
-      <button class="confirm-toast-btn confirm-toast-btn--cancel">${t('create.cancel') || 'Cancel'}</button>
-      <button class="confirm-toast-btn confirm-toast-btn--confirm">${t('create.resetAction') || 'Reset'}</button>
-    </div>`;
-
-  const dismiss = () => {
-    toast.classList.add('toast-exit');
-    toast.addEventListener('animationend', () => toast.remove());
-    if (activeToast === toast) activeToast = null;
-    clearTimeout(autoTimer);
-  };
-
-  toast.querySelector('.confirm-toast-btn--cancel').addEventListener('click', dismiss);
-  toast.querySelector('.confirm-toast-btn--confirm').addEventListener('click', () => {
-    dismiss();
-    onConfirm();
-  });
-
-  const autoTimer = setTimeout(dismiss, 6000);
-  (mapArea || document.body).appendChild(toast);
-  activeToast = toast;
-}
-
+// Reset button — direct, no confirmation
 if (btnReset) {
-  btnReset.addEventListener('click', () => {
-    showConfirmToast(t('create.resetConfirm') || "Reset boundary? You'll need to redraw.", clearAll);
-  });
+  btnReset.addEventListener('click', clearAll);
 }
 
 // ---------------------------------------------------------------------------
@@ -409,110 +371,35 @@ if (dropzone) {
 }
 
 // ---------------------------------------------------------------------------
-// Mapbox Geocoding Autocomplete (location search — still useful for finding land)
+// Postcode geocoding — Find button flies map to the postcode
 // ---------------------------------------------------------------------------
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
-let debounceTimer = null;
 
-function onSearchInput() {
-  const query = searchInput.value.trim();
-  if (query.length < 3) { hideSuggestions(); return; }
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => fetchSuggestions(query), 300);
-}
-
-async function fetchSuggestions(query) {
+async function findPostcode() {
+  const query = postcodeInput ? postcodeInput.value.trim() : '';
+  if (query.length < 3) return;
   try {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&autocomplete=true&limit=5&types=postcode,place,locality,neighborhood`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=postcode,place,locality`;
     const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
     if (data.features && data.features.length > 0) {
-      showSuggestions(data.features);
-    } else {
-      hideSuggestions();
+      const [lng, lat] = data.features[0].center;
+      map.flyTo({ center: [lng, lat], zoom: 16 });
+      if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
     }
   } catch (err) {
     console.error('Geocoding error:', err);
   }
+  updateContinueButton();
 }
 
-function showSuggestions(features) {
-  suggestionsEl.innerHTML = features.map((f, i) => {
-    const name = f.text || f.place_name;
-    const context = f.place_name || '';
-    return `<li data-index="${i}">
-      <div class="suggestion-name">${esc(name)}</div>
-      <div class="suggestion-context">${esc(context)}</div>
-    </li>`;
-  }).join('');
-  suggestionsEl.classList.add('active');
-  suggestionsEl._features = features;
-  suggestionsEl.querySelectorAll('li').forEach(li => {
-    li.addEventListener('click', () => {
-      selectSuggestion(suggestionsEl._features[parseInt(li.dataset.index)]);
-    });
+if (btnSearch) btnSearch.addEventListener('click', findPostcode);
+if (postcodeInput) {
+  postcodeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); findPostcode(); }
   });
 }
-
-function hideSuggestions() {
-  suggestionsEl.classList.remove('active');
-  suggestionsEl.innerHTML = '';
-}
-
-function esc(str) {
-  if (!str) return '';
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function selectSuggestion(feature) {
-  hideSuggestions();
-  searchInput.value = feature.place_name || feature.text;
-
-  const [lng, lat] = feature.center;
-  map.flyTo({ center: [lng, lat], zoom: 16 });
-
-  // Auto-fill post code if the selected feature is a postcode type
-  if (feature.place_type?.includes('postcode') && postcodeInput) {
-    postcodeInput.value = feature.text;
-    updateContinueButton();
-  }
-
-  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
-}
-
-if (searchInput) {
-  searchInput.addEventListener('input', onSearchInput);
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (suggestionsEl._features && suggestionsEl._features.length > 0) {
-        selectSuggestion(suggestionsEl._features[0]);
-      } else {
-        const query = searchInput.value.trim();
-        if (query.length >= 3) fetchSuggestions(query);
-      }
-    }
-    if (e.key === 'Escape') hideSuggestions();
-  });
-}
-
-if (btnSearch) {
-  btnSearch.addEventListener('click', () => {
-    if (suggestionsEl._features && suggestionsEl._features.length > 0) {
-      selectSuggestion(suggestionsEl._features[0]);
-    } else {
-      const query = searchInput ? searchInput.value.trim() : '';
-      if (query.length >= 3) fetchSuggestions(query);
-    }
-  });
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.create-search')) hideSuggestions();
-});
 
 map.on('style.load', () => {
   initMapLayers();

@@ -50,12 +50,11 @@
         <div class="create-step" id="step-1">
           <div class="create-sidebar-content">
             <h2>Submit Your Land</h2>
-            <p class="create-desc">Find your area on the map, draw your boundary, and enter your post code.</p>
+            <p class="create-desc">Enter your post code or use your location to find your land, then draw your boundary.</p>
 
             <div class="create-search" style="position:relative;">
-              <input type="text" id="search-input" placeholder="Search by location..." autocomplete="off">
+              <input type="text" id="postcode-input" placeholder="Enter post code..." autocomplete="postal-code">
               <button class="btn-small" id="btn-search">Find</button>
-              <ul class="search-suggestions" id="search-suggestions"></ul>
             </div>
 
             <button class="btn-geolocate-sidebar" id="btn-geolocate" type="button">
@@ -68,15 +67,11 @@
                 <span class="create-address-label">Total Area</span>
                 <span class="create-address-value" id="stat-area">&mdash;</span>
               </div>
-              <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset</button>
+              <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
             </div>
           </div>
 
           <div class="create-sidebar-footer">
-            <div class="create-field">
-              <label for="postcode-input">Post code</label>
-              <input type="text" id="postcode-input" placeholder="e.g. 7630-174" autocomplete="postal-code">
-            </div>
             <button class="btn-create-generate" id="btn-continue" disabled>Continue</button>
             <p class="create-footer-privacy">Your data stays private.</p>
           </div>
