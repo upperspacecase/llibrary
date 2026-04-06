@@ -135,7 +135,7 @@ async function loadData() {
 
     // Aggregate region requests from waitlist
     const regionMap = new Map();
-    for (const entry of (data.waitlist || [])) {
+    for (const entry of (raw.waitlist || [])) {
         if (entry.type !== 'region-request' || !entry.address) continue;
         const key = entry.address.toLowerCase();
         if (!regionMap.has(key)) {
@@ -279,26 +279,39 @@ function renderTable() {
 // ---- Data Pipeline ----
 function renderPipelineEmpty() {
     document.getElementById('pipeline-tbody').innerHTML =
-        '<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0;">Click <strong>Test All</strong> to check every data source.</td></tr>';
+        '<tr><td colspan="8" class="admin-muted" style="text-align:center; padding:40px 0;">Click <strong>Test All</strong> to check every data source.</td></tr>';
     document.getElementById('pipeline-summary').textContent = '';
 }
 
 function getStatusInfo(s) {
     if (s.error === 'Retired (domain offline)') return { cls: 'retired', label: 'Retired' };
     if (s.ok) return { cls: 'ok', label: 'Healthy' };
+    if (s.error?.startsWith('Partial:')) return { cls: 'partial', label: 'Partial' };
     if (s.needsKey && s.error?.includes('No API key')) return { cls: 'nokey', label: 'No Key' };
     if (s.error === 'Timeout') return { cls: 'timeout', label: 'Timeout' };
     return { cls: 'fail', label: 'Failing' };
 }
 
+function formatScope(scope) {
+    const map = { global: 'Global', portugal: 'PT only', europe: 'Europe' };
+    return map[scope] || scope || '—';
+}
+
+function formatAuth(auth) {
+    const map = { open: 'Open', env: 'Env key', 'api-key': 'API key' };
+    return map[auth] || auth || '—';
+}
+
 function updatePipelineSummary(sources) {
     const summary = document.getElementById('pipeline-summary');
     const ok = sources.filter(s => s.ok).length;
-    const fail = sources.filter(s => !s.ok && !s.needsKey && s.error !== 'Retired (domain offline)').length;
+    const partial = sources.filter(s => !s.ok && s.error?.startsWith('Partial:')).length;
+    const fail = sources.filter(s => !s.ok && !s.needsKey && s.error !== 'Retired (domain offline)' && s.error !== 'Timeout' && !s.error?.startsWith('Partial:')).length;
     const timeout = sources.filter(s => !s.ok && s.error === 'Timeout').length;
-    const noKey = sources.filter(s => !s.ok && s.needsKey).length;
+    const noKey = sources.filter(s => !s.ok && s.needsKey && s.error?.includes('No API key')).length;
     const retired = sources.filter(s => s.error === 'Retired (domain offline)').length;
     let parts = [`<strong>${ok}</strong> healthy`];
+    if (partial) parts.push(`<strong style="color:#b8860b">${partial}</strong> partial`);
     if (fail) parts.push(`<strong style="color:var(--coral)">${fail}</strong> failing`);
     if (timeout) parts.push(`<strong style="color:#b8860b">${timeout}</strong> timeout`);
     if (noKey) parts.push(`<strong style="color:var(--muted)">${noKey}</strong> need key`);
@@ -314,15 +327,31 @@ function renderPipeline(sources) {
         const { cls, label } = getStatusInfo(s);
         const httpCode = s.status ? s.status : '—';
         const responseTime = s.ms ? `${s.ms}ms` : '—';
-        const errorMsg = (!s.ok && s.error && s.error !== 'Timeout' && !s.error.includes('No API key') && s.error !== 'Retired (domain offline)') ? `<div class="admin-pipeline-error">${escapeHtml(s.error)}</div>` : '';
+        const errorMsg = (!s.ok && s.error && s.error !== 'Timeout' && !s.error.includes('No API key') && s.error !== 'Retired (domain offline)' && !s.error.startsWith('Partial:')) ? `<div class="admin-pipeline-error">${escapeHtml(s.error)}</div>` : '';
+        const notesHtml = s.notes ? `<div class="admin-pipeline-note">${escapeHtml(s.notes)}</div>` : '';
+
+        // Sub-query breakdown for sources like Overpass
+        let subHtml = '';
+        if (s.subResults?.length) {
+            subHtml = '<div class="admin-pipeline-subs">' + s.subResults.map(sq => {
+                const sqCls = sq.ok ? 'ok' : 'fail';
+                return `<span class="admin-pipeline-sub ${sqCls}">${escapeHtml(sq.name)} ${sq.status || '—'} ${sq.ms}ms</span>`;
+            }).join('') + '</div>';
+        } else if (s.subQueries?.length) {
+            subHtml = '<div class="admin-pipeline-subs">' + s.subQueries.map(name =>
+                `<span class="admin-pipeline-sub pending">${escapeHtml(name)}</span>`
+            ).join('') + '</div>';
+        }
 
         return `
         <tr class="admin-pipeline-row ${cls}" data-source-id="${s.id}">
             <td><span class="admin-pipeline-badge ${cls}">${label}</span></td>
-            <td class="admin-pipeline-name">${escapeHtml(s.name)}${errorMsg}</td>
+            <td class="admin-pipeline-name">${escapeHtml(s.name)}${errorMsg}${notesHtml}${subHtml}</td>
             <td class="admin-pipeline-mono">${httpCode}</td>
             <td class="admin-pipeline-mono">${responseTime}</td>
             <td class="admin-pipeline-feeds-cell">${s.feeds.map(f => `<span class="admin-pipeline-feed">${escapeHtml(f)}</span>`).join('')}</td>
+            <td><span class="admin-pipeline-scope ${s.scope || ''}">${formatScope(s.scope)}</span></td>
+            <td><span class="admin-pipeline-auth ${s.auth || ''}">${formatAuth(s.auth)}</span></td>
             <td><button class="admin-pipeline-test-btn" data-source="${s.id}" title="Test this source">Re-test</button></td>
         </tr>`;
     }).join('');
@@ -339,7 +368,7 @@ async function testAllSources() {
     btn.textContent = 'Testing...';
     btn.disabled = true;
     document.getElementById('pipeline-tbody').innerHTML =
-        '<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0;">Testing all sources... this may take a few seconds.</td></tr>';
+        '<tr><td colspan="8" class="admin-muted" style="text-align:center; padding:40px 0;">Testing all sources... this may take a few seconds.</td></tr>';
 
     try {
         const res = await fetch('/api/admin/pipeline', {
@@ -353,7 +382,7 @@ async function testAllSources() {
         renderPipeline(pipelineResults);
     } catch (err) {
         document.getElementById('pipeline-tbody').innerHTML =
-            `<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0; color:var(--coral)">Error: ${escapeHtml(err.message)}</td></tr>`;
+            `<tr><td colspan="8" class="admin-muted" style="text-align:center; padding:40px 0; color:var(--coral)">Error: ${escapeHtml(err.message)}</td></tr>`;
     } finally {
         btn.textContent = 'Test All';
         btn.disabled = false;
@@ -456,7 +485,7 @@ style.textContent = `
     .admin-error { color: var(--coral); font-size: 14px; margin-top: 12px; min-height: 20px; }
 
     .admin-container {
-        max-width: 1100px;
+        max-width: 1300px;
         margin: 0 auto;
         padding: 32px 24px 60px;
     }
@@ -667,6 +696,10 @@ style.textContent = `
         background: #e9ecef;
         color: #999;
     }
+    .admin-pipeline-badge.partial {
+        background: #fff3cd;
+        color: #856404;
+    }
     .admin-pipeline-badge.testing {
         background: #fff3cd;
         color: #856404;
@@ -676,6 +709,7 @@ style.textContent = `
     .admin-pipeline-name {
         font-weight: 600;
         font-size: 13px;
+        white-space: normal;
     }
     .admin-pipeline-row.retired .admin-pipeline-name {
         text-decoration: line-through;
@@ -686,6 +720,68 @@ style.textContent = `
         color: var(--coral, #e74c3c);
         margin-top: 2px;
         font-weight: 400;
+    }
+    .admin-pipeline-note {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 400;
+        margin-top: 2px;
+        font-style: italic;
+    }
+    .admin-pipeline-subs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 3px;
+        margin-top: 4px;
+    }
+    .admin-pipeline-sub {
+        display: inline-block;
+        padding: 1px 6px;
+        font-size: 10px;
+        font-weight: 500;
+        border-radius: 3px;
+        white-space: nowrap;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .admin-pipeline-sub.ok {
+        background: #d4edda;
+        color: #1b5e20;
+    }
+    .admin-pipeline-sub.fail {
+        background: #fde8e8;
+        color: #c62828;
+    }
+    .admin-pipeline-sub.pending {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    .admin-pipeline-scope, .admin-pipeline-auth {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        border-radius: 3px;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+    .admin-pipeline-scope {
+        background: var(--cream, #f5f0eb);
+        color: var(--muted);
+    }
+    .admin-pipeline-scope.portugal {
+        background: #e8f0fe;
+        color: #1a56db;
+    }
+    .admin-pipeline-scope.europe {
+        background: #e8f0fe;
+        color: #5b7fa6;
+    }
+    .admin-pipeline-auth {
+        background: var(--cream, #f5f0eb);
+        color: var(--muted);
+    }
+    .admin-pipeline-auth.env, .admin-pipeline-auth.api-key {
+        background: #fff3cd;
+        color: #856404;
     }
     .admin-pipeline-mono {
         font-family: 'SF Mono', 'Fira Code', monospace;
