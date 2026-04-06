@@ -250,18 +250,11 @@ async function getForecast(lat, lng) {
 
 async function getClimateAverages(lat, lng) {
   const endYear = new Date().getFullYear() - 1;
-  const startYear = endYear - 29;
-  const months = [];
-  for (let m = 1; m <= 12; m++) {
-    const start = `${startYear}-${String(m).padStart(2,'0')}-01`;
-    const lastDay = new Date(endYear, m, 0).getDate();
-    const end = `${endYear}-${String(m).padStart(2,'0')}-${lastDay}`;
-    months.push({ m, start, end });
-  }
-  // Fetch one year of historical data to approximate monthly averages
-  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${endYear}-01-01&end_date=${endYear}-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+  const startYear = endYear - 4; // 5-year window for stable averages
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startYear}-01-01&end_date=${endYear}-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
   const data = await fetchJSON(url);
   if (!data?.daily) return null;
+  const numYears = endYear - startYear + 1;
   const result = [];
   const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   for (let m = 0; m < 12; m++) {
@@ -269,7 +262,8 @@ async function getClimateAverages(lat, lng) {
     if (indices.length === 0) { result.push({ month: monthNames[m], avgHigh: 0, avgLow: 0, totalPrecip: 0 }); continue; }
     const avgHigh = indices.reduce((s, i) => s + (data.daily.temperature_2m_max[i] || 0), 0) / indices.length;
     const avgLow = indices.reduce((s, i) => s + (data.daily.temperature_2m_min[i] || 0), 0) / indices.length;
-    const totalPrecip = indices.reduce((s, i) => s + (data.daily.precipitation_sum[i] || 0), 0);
+    // Total precip averaged across years (sum all days in month, divide by num years)
+    const totalPrecip = indices.reduce((s, i) => s + (data.daily.precipitation_sum[i] || 0), 0) / numYears;
     result.push({ month: monthNames[m], avgHigh: Math.round(avgHigh * 10) / 10, avgLow: Math.round(avgLow * 10) / 10, totalPrecip: Math.round(totalPrecip) });
   }
   return result;
@@ -355,6 +349,28 @@ async function getInfrastructure(lat, lng) {
   const query = `[out:json][timeout:15];(node["amenity"~"school|hospital|pharmacy|post_office|bank"](${bbox});node["shop"](${bbox});node["tourism"](${bbox}););out tags;`;
   const data = await fetchJSON(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
   return data?.elements || [];
+}
+
+async function getActiveFires(lat, lng, radiusKm = 50) {
+  const key = process.env.VITE_FIRMS_KEY;
+  if (!key) return { fires: [], status: 'NO_KEY' };
+  const degOffset = radiusKm / 111;
+  const lngOffset = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+  const bbox = `${lng - lngOffset},${lat - degOffset},${lng + lngOffset},${lat + degOffset}`;
+  const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/VIIRS_SNPP_NRT/${bbox}/2`;
+  const res = await fetch(url);
+  if (!res.ok) return { fires: [], status: `HTTP_${res.status}` };
+  const text = await res.text();
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return { fires: [], status: 'OK' };
+  const headers = lines[0].split(',').map(h => h.trim());
+  const fires = lines.slice(1).map(line => {
+    const v = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = v[i]?.trim(); });
+    return { lat: parseFloat(obj.latitude), lng: parseFloat(obj.longitude), brightness: parseFloat(obj.bright_ti4 || obj.brightness), confidence: obj.confidence, frp: parseFloat(obj.frp), date: obj.acq_date, time: obj.acq_time, dayNight: obj.daynight };
+  }).filter(f => !isNaN(f.lat) && !isNaN(f.lng));
+  return { fires, status: 'OK' };
 }
 
 async function getAdminUnit(lat, lng) {
@@ -1084,6 +1100,8 @@ export default async function handler(req, res) {
       const protectedAreaNames = dd.protectedAreas;
       const elevation = dd.elevation;
       const climate = dd.climate;
+      // Ensure fireSummary exists for old snapshots
+      if (!dd.fireSummary) dd.fireSummary = { count: 0, highConfidence: 0, maxFrp: null, dates: [], status: 'NOT_FETCHED' };
       const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
       const municipality = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
@@ -1136,6 +1154,12 @@ export default async function handler(req, res) {
     }
 
     // ── Fetch all data in parallel (first generation only) ──
+    const apiStatus = {};
+    function tracked(name, promise, fallback) {
+      return promise.then(result => { apiStatus[name] = 'OK'; return result; })
+        .catch(err => { apiStatus[name] = `FAILED: ${err.message || err}`; return fallback; });
+    }
+
     const [
       elevation,
       forecast,
@@ -1155,31 +1179,36 @@ export default async function handler(req, res) {
       terrainProfile,
       landCover,
       regional,
+      activeFires,
     ] = await Promise.all([
-      getElevation(lat, lng).catch(() => null),
-      getForecast(lat, lng).catch(() => null),
-      getClimateAverages(lat, lng).catch(() => null),
-      getSoilData(lat, lng).catch(() => ({ properties: null, classification: null })),
-      getGeology(lat, lng).catch(() => null),
-      getSpeciesCounts(lat, lng).catch(() => null),
-      getThreatenedSpecies(lat, lng).catch(() => null),
-      getGBIF(lat, lng).catch(() => null),
-      getFloodData(lat, lng).catch(() => null),
-      getRiskScores(lat, lng).catch(() => ({ fire: 0, drought: 0, flood: 0 })),
-      getProtectedAreas(lat, lng).catch(() => []),
-      getWaterFeatures(lat, lng).catch(() => []),
-      getInfrastructure(lat, lng).catch(() => []),
-      getAdminUnit(lat, lng).catch(() => null),
-      getNearestForecastLocation(lat, lng).catch(() => null),
-      getMultiPointElevation(sub.boundary, [lat, lng]).catch(() => null),
-      getLandCoverGrid(sub.boundary, [lat, lng]).catch(() => ({ source: 'FAILED', breakdown: [], sampleCount: 0 })),
-      getRegionalComparisons(lat, lng).catch(() => ({})),
+      tracked('elevation', getElevation(lat, lng), null),
+      tracked('forecast', getForecast(lat, lng), null),
+      tracked('climate', getClimateAverages(lat, lng), null),
+      tracked('soil', getSoilData(lat, lng), { properties: null, classification: null }),
+      tracked('geology', getGeology(lat, lng), null),
+      tracked('species', getSpeciesCounts(lat, lng), null),
+      tracked('threatened', getThreatenedSpecies(lat, lng), null),
+      tracked('gbif', getGBIF(lat, lng), null),
+      tracked('flood', getFloodData(lat, lng), null),
+      tracked('riskScores', getRiskScores(lat, lng), { fire: 0, drought: 0, flood: 0 }),
+      tracked('protectedAreas', getProtectedAreas(lat, lng), []),
+      tracked('waterFeatures', getWaterFeatures(lat, lng), []),
+      tracked('infrastructure', getInfrastructure(lat, lng), []),
+      tracked('adminUnit', getAdminUnit(lat, lng), null),
+      tracked('ipmaLocation', getNearestForecastLocation(lat, lng), null),
+      tracked('terrainProfile', getMultiPointElevation(sub.boundary, [lat, lng]), null),
+      tracked('landCover', getLandCoverGrid(sub.boundary, [lat, lng]), { source: 'FAILED', breakdown: [], sampleCount: 0 }),
+      tracked('regional', getRegionalComparisons(lat, lng), {}),
+      tracked('activeFires', getActiveFires(lat, lng), { fires: [], status: 'FAILED' }),
     ]);
 
     // IPMA forecast (needs location ID from previous call)
-    const ipmaForecast = ipmaLocation?.globalIdLocal
-      ? await getIPMAForecast(ipmaLocation.globalIdLocal).catch(() => null)
-      : null;
+    let ipmaForecast = null;
+    if (ipmaLocation?.globalIdLocal) {
+      ipmaForecast = await tracked('ipmaForecast', getIPMAForecast(ipmaLocation.globalIdLocal), null);
+    } else {
+      apiStatus.ipmaForecast = 'SKIPPED: no location ID';
+    }
 
     // ── Process data ─────────────────────────────────────
     const soil = parseSoil(soilRaw);
@@ -1203,6 +1232,16 @@ export default async function handler(req, res) {
         };
       }
     }
+
+    // Active fires summary
+    const fireDetections = activeFires?.fires || [];
+    const fireSummary = {
+      count: fireDetections.length,
+      highConfidence: fireDetections.filter(f => f.confidence === 'high' || f.confidence === 'h').length,
+      maxFrp: fireDetections.length > 0 ? Math.max(...fireDetections.map(f => f.frp || 0)).toFixed(1) : null,
+      dates: [...new Set(fireDetections.map(f => f.date))].sort(),
+      status: activeFires?.status || apiStatus.activeFires || 'UNKNOWN',
+    };
 
     // Climate summary
     const annualRainfall = climate ? climate.reduce((s, m) => s + m.totalPrecip, 0) : null;
@@ -1367,8 +1406,10 @@ export default async function handler(req, res) {
         agriculture,
         comparables,
         radarDims,
+        fireSummary,
       },
       maps,
+      apiStatus,
       hardcoded: {
         note: 'All previously hardcoded items are now calculated or synthetic. Market valuation and regional comparables use synthetic estimates marked accordingly.',
       },
@@ -1423,7 +1464,7 @@ export default async function handler(req, res) {
     return res.status(201).json({
       id: doc.id, version: doc.version, slug: doc.slug, name: doc.name, created: doc.created,
       blob_url: doc.blob_url,
-      apis_called: 18, dynamic_data_points: Object.keys(dd).length,
+      apis_called: 19, dynamic_data_points: Object.keys(dd).length,
     });
   } catch (err) {
     console.error('Report generation error:', err);
@@ -1769,10 +1810,19 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   <div style="font-size:11px;color:var(--text-muted);">Source: GloFAS via Open-Meteo Flood API</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No river discharge data available for this grid cell.</div>'}
 
-  <h3>8.3 Wildfire History</h3>
-  <div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--amber);font-size:13px;color:var(--text-muted);">
-    <strong>MISSING</strong> — Historical fire scar data not queried. EFFIS WMS layers available but would need per-property raster intersection.
+  <h3>8.3 Active Fire Detections (48h)</h3>
+  ${dd.fireSummary.status === 'OK' ? (dd.fireSummary.count > 0 ? `
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--red);">${dd.fireSummary.count}</div><div class="kpi-label">Detections</div><div class="kpi-sub">Within 50km, last 48h</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.fireSummary.highConfidence}</div><div class="kpi-label">High Confidence</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.fireSummary.maxFrp}</div><div class="kpi-label">Max FRP (MW)</div><div class="kpi-sub">Fire Radiative Power</div></div>
   </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: NASA FIRMS VIIRS 375m — dates: ${dd.fireSummary.dates.join(', ')}</div>
+  ` : '<div style="background:var(--green-pale);padding:16px;border-radius:8px;font-size:13px;border-left:3px solid var(--green);">No active fire detections within 50km in the last 48 hours.<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: NASA FIRMS VIIRS 375m</div></div>')
+  : dd.fireSummary.status === 'NO_KEY'
+    ? '<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--amber);font-size:13px;color:var(--text-muted);"><strong>UNAVAILABLE</strong> — NASA FIRMS API key not configured (VITE_FIRMS_KEY).</div>'
+    : `<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--red);font-size:13px;color:var(--text-muted);"><strong>API ERROR</strong> — NASA FIRMS query failed (${dd.fireSummary.status}). Fire detection data could not be retrieved.</div>`
+  }
 
   <h3>8.4 Mitigation Recommendations</h3>
   <ul class="checklist">
@@ -1940,7 +1990,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <tbody>
       <tr><td class="label">Elevation</td><td>Open-Meteo DEM</td><td>Point</td><td style="color:green;font-weight:600;">${elevation != null ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Weather Forecast</td><td>Open-Meteo</td><td>7-day</td><td style="color:green;font-weight:600;">${dd.forecast ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
-      <tr><td class="label">Climate History</td><td>Open-Meteo Archive</td><td>1 year</td><td style="color:green;font-weight:600;">${climate ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Climate History</td><td>Open-Meteo Archive</td><td>5-year average</td><td style="color:green;font-weight:600;">${climate ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Soil Properties</td><td>SoilGrids 2.0 (ISRIC)</td><td>250m</td><td style="color:green;font-weight:600;">${soil ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Geology</td><td>Macrostrat</td><td>Variable</td><td style="color:green;font-weight:600;">${geo ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Species</td><td>iNaturalist</td><td>15km radius</td><td style="color:green;font-weight:600;">${dd.species.total > 0 ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
@@ -1952,6 +2002,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Water Features</td><td>Overpass (OSM)</td><td>2km bbox</td><td style="color:green;font-weight:600;">DYNAMIC ✓</td></tr>
       <tr><td class="label">Infrastructure</td><td>Overpass (OSM)</td><td>5km bbox</td><td style="color:green;font-weight:600;">DYNAMIC ✓</td></tr>
       <tr><td class="label">Admin Boundaries</td><td>DGT Portugal</td><td>1:25,000</td><td style="color:green;font-weight:600;">${dd.adminUnit ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Active Fires</td><td>NASA FIRMS VIIRS</td><td>50km radius</td><td style="color:green;font-weight:600;">${dd.fireSummary.status === 'OK' ? 'DYNAMIC ✓' : dd.fireSummary.status === 'NO_KEY' ? 'NO KEY ✗' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">IPMA Forecast</td><td>IPMA</td><td>Nearest station</td><td style="color:green;font-weight:600;">${dd.ipmaForecast ? 'DYNAMIC ✓' : 'NO DATA'}</td></tr>
     </tbody>
   </table>
