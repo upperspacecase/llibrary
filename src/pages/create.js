@@ -353,6 +353,46 @@ function getPillValue(groupId) {
 }
 
 // ---------------------------------------------------------------------------
+// File upload (in extras modal)
+// ---------------------------------------------------------------------------
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const fileList = document.getElementById('file-list');
+let selectedFiles = [];
+
+function addFiles(newFiles) {
+  for (const file of newFiles) selectedFiles.push(file);
+  renderFileList();
+}
+
+function renderFileList() {
+  if (!fileList) return;
+  fileList.innerHTML = '';
+  selectedFiles.forEach((file, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>${i + 1}. ${file.name} (${(file.size / 1024).toFixed(0)} KB)</span>`;
+    fileList.appendChild(li);
+  });
+}
+
+if (fileInput) {
+  fileInput.addEventListener('change', () => {
+    addFiles(Array.from(fileInput.files));
+    fileInput.value = '';
+  });
+}
+
+if (dropzone) {
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('drag-over'); });
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files.length) addFiles(Array.from(e.dataTransfer.files));
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Submit validation with inline errors
 // ---------------------------------------------------------------------------
 const errPostcode = document.getElementById('err-postcode');
@@ -477,6 +517,21 @@ if (btnSaveExtras) {
     btnSaveExtras.textContent = 'Saving...';
 
     try {
+      // Upload files if any
+      const uploadedFiles = [];
+      const API_BASE = window.location.origin;
+      for (const file of selectedFiles) {
+        const res = await fetch(`${API_BASE}/api/submissions/upload?filename=submissions/${submissionId}/${file.name}`, {
+          method: 'POST',
+          headers: { 'Content-Type': file.type || 'application/octet-stream' },
+          body: file,
+        });
+        if (res.ok) {
+          const blob = await res.json();
+          uploadedFiles.push({ name: file.name, size: file.size, type: file.type, url: blob.url });
+        }
+      }
+
       await updateSubmission(submissionId, {
         landCondition: getChipValues('landCondition'),
         landUse: getChipValues('landUse'),
@@ -487,6 +542,7 @@ if (btnSaveExtras) {
         landGoals: getChipValues('landGoals'),
         helpNeeded: getChipValues('helpNeeded'),
         notes: notesInput ? notesInput.value.trim() : '',
+        ...(uploadedFiles.length ? { files: uploadedFiles } : {}),
       });
     } catch (err) {
       console.error('Failed to save extras:', err);

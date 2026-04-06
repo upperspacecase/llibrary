@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       const allowed = [
         'landCondition', 'landUse', 'zoning',
         'waterReliability', 'waterSource',
-        'challenges', 'landGoals', 'helpNeeded', 'notes',
+        'challenges', 'landGoals', 'helpNeeded', 'notes', 'files',
       ];
       const updates = {};
       for (const key of allowed) {

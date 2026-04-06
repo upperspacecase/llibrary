@@ -3735,6 +3735,18 @@ a {
   font-weight: 500;
   transition: all 0.15s;
   color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.create-pill svg {
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.create-pill.active svg {
+  opacity: 1;
 }
 
 .create-pill:hover {
