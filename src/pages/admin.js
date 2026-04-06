@@ -4,6 +4,8 @@ import '../styles/main.css';
 let data = {};
 let activeTab = 'submissions';
 let password = '';
+let pipelineResults = null;
+let pipelineTesting = false;
 
 // ---- Column configs per collection ----
 const columns = {
@@ -175,7 +177,19 @@ document.querySelector('.admin-tabs').addEventListener('click', e => {
     document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
     activeTab = tab.dataset.tab;
-    renderTable();
+
+    const tableView = document.getElementById('table-view');
+    const pipelineView = document.getElementById('pipeline-view');
+
+    if (activeTab === 'pipeline') {
+        tableView.style.display = 'none';
+        pipelineView.style.display = 'block';
+        if (!pipelineResults) renderPipelineEmpty();
+    } else {
+        tableView.style.display = 'block';
+        pipelineView.style.display = 'none';
+        renderTable();
+    }
 });
 
 // ---- Table ----
@@ -261,6 +275,110 @@ function renderTable() {
         });
     });
 }
+
+// ---- Data Pipeline ----
+function renderPipelineEmpty() {
+    document.getElementById('pipeline-grid').innerHTML =
+        '<p class="admin-muted" style="text-align:center; padding:40px 0;">Click <strong>Test All</strong> to check every data source.</p>';
+    document.getElementById('pipeline-summary').textContent = '';
+}
+
+function renderPipeline(sources) {
+    const grid = document.getElementById('pipeline-grid');
+    const summary = document.getElementById('pipeline-summary');
+
+    const ok = sources.filter(s => s.ok).length;
+    const fail = sources.filter(s => !s.ok && !s.needsKey).length;
+    const noKey = sources.filter(s => !s.ok && s.needsKey).length;
+    summary.innerHTML = `<strong>${ok}</strong> healthy &nbsp;&middot;&nbsp; <strong style="color:var(--coral)">${fail}</strong> failing &nbsp;&middot;&nbsp; <strong style="color:var(--muted)">${noKey}</strong> need key`;
+
+    grid.innerHTML = sources.map(s => {
+        const statusClass = s.ok ? 'ok' : (s.needsKey && !s.ok && s.error?.includes('No API key')) ? 'nokey' : 'fail';
+        const statusLabel = statusClass === 'ok' ? `${s.status} &middot; ${s.ms}ms`
+            : statusClass === 'nokey' ? 'No key'
+            : s.error || `HTTP ${s.status}`;
+        const statusDot = statusClass === 'ok' ? '#2d6a4f' : statusClass === 'nokey' ? 'var(--muted)' : 'var(--coral)';
+
+        return `
+        <div class="admin-pipeline-card ${statusClass}">
+            <div class="admin-pipeline-header">
+                <span class="admin-pipeline-dot" style="background:${statusDot}"></span>
+                <span class="admin-pipeline-name">${escapeHtml(s.name)}</span>
+                <button class="admin-pipeline-test-btn" data-source="${s.id}" title="Test this source">Re-test</button>
+            </div>
+            <div class="admin-pipeline-status">${statusLabel}</div>
+            <div class="admin-pipeline-feeds">${s.feeds.map(f => `<span class="admin-pipeline-feed">${escapeHtml(f)}</span>`).join('')}</div>
+        </div>`;
+    }).join('');
+
+    // Bind individual test buttons
+    grid.querySelectorAll('.admin-pipeline-test-btn').forEach(btn => {
+        btn.addEventListener('click', () => testSingleSource(btn.dataset.source));
+    });
+}
+
+async function testAllSources() {
+    if (pipelineTesting) return;
+    pipelineTesting = true;
+    const btn = document.getElementById('test-all-btn');
+    btn.textContent = 'Testing...';
+    btn.disabled = true;
+    document.getElementById('pipeline-grid').innerHTML =
+        '<p class="admin-muted" style="text-align:center; padding:40px 0;">Testing all sources... this may take a few seconds.</p>';
+
+    try {
+        const res = await fetch('/api/admin/pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+        });
+        if (!res.ok) throw new Error('Pipeline test failed');
+        const result = await res.json();
+        pipelineResults = result.sources;
+        renderPipeline(pipelineResults);
+    } catch (err) {
+        document.getElementById('pipeline-grid').innerHTML =
+            `<p class="admin-muted" style="text-align:center; padding:40px 0; color:var(--coral)">Error: ${escapeHtml(err.message)}</p>`;
+    } finally {
+        btn.textContent = 'Test All';
+        btn.disabled = false;
+        pipelineTesting = false;
+    }
+}
+
+async function testSingleSource(sourceId) {
+    const card = document.querySelector(`[data-source="${sourceId}"]`).closest('.admin-pipeline-card');
+    const btn = card.querySelector('.admin-pipeline-test-btn');
+    btn.textContent = '...';
+    btn.disabled = true;
+    card.classList.remove('ok', 'fail', 'nokey');
+    card.classList.add('testing');
+
+    try {
+        const res = await fetch('/api/admin/pipeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password, source: sourceId }),
+        });
+        if (!res.ok) throw new Error('Test failed');
+        const result = await res.json();
+
+        // Update cached results
+        if (pipelineResults) {
+            const idx = pipelineResults.findIndex(s => s.id === sourceId);
+            if (idx >= 0) pipelineResults[idx] = result;
+        }
+
+        renderPipeline(pipelineResults || [result]);
+    } catch {
+        btn.textContent = 'Re-test';
+        btn.disabled = false;
+        card.classList.remove('testing');
+        card.classList.add('fail');
+    }
+}
+
+document.getElementById('test-all-btn').addEventListener('click', testAllSources);
 
 function escapeHtml(s) {
     const div = document.createElement('div');
@@ -470,6 +588,96 @@ style.textContent = `
     .admin-status-badge.rejected {
         background: #fde8e8;
         color: #c0392b;
+    }
+
+    /* Pipeline */
+    .admin-pipeline-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+    }
+    .admin-pipeline-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        transition: border-color 0.2s;
+    }
+    .admin-pipeline-card.ok {
+        border-left: 3px solid #2d6a4f;
+    }
+    .admin-pipeline-card.fail {
+        border-left: 3px solid var(--coral, #e74c3c);
+    }
+    .admin-pipeline-card.nokey {
+        border-left: 3px solid var(--muted, #999);
+    }
+    .admin-pipeline-card.testing {
+        border-left: 3px solid #f0c040;
+        opacity: 0.7;
+    }
+    .admin-pipeline-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+    .admin-pipeline-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .admin-pipeline-name {
+        font-weight: 600;
+        font-size: 14px;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .admin-pipeline-test-btn {
+        padding: 3px 10px;
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 600;
+        background: var(--cream, #f5f0eb);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .admin-pipeline-test-btn:hover {
+        color: var(--black);
+        border-color: var(--black);
+    }
+    .admin-pipeline-test-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+    .admin-pipeline-status {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 10px;
+    }
+    .admin-pipeline-card.fail .admin-pipeline-status {
+        color: var(--coral, #e74c3c);
+    }
+    .admin-pipeline-feeds {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .admin-pipeline-feed {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        background: var(--cream, #f5f0eb);
+        border-radius: 3px;
+        color: var(--muted);
+        white-space: nowrap;
     }
 `;
 document.head.appendChild(style);

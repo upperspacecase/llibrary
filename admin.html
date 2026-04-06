@@ -43,14 +43,25 @@
         <button class="admin-tab" data-tab="contributions">Contributions</button>
         <button class="admin-tab" data-tab="resources">Resources</button>
         <button class="admin-tab" data-tab="regions">Regions</button>
+        <button class="admin-tab" data-tab="pipeline">Data Pipeline</button>
       </div>
 
-      <div class="admin-table-wrap">
+      <div class="admin-table-wrap" id="table-view">
         <table class="admin-table" id="data-table">
           <thead id="table-head"></thead>
           <tbody id="table-body"></tbody>
         </table>
         <p id="empty-msg" class="admin-muted" style="display:none; text-align:center; padding:40px 0;">No records yet.</p>
+      </div>
+
+      <div id="pipeline-view" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <div>
+            <span id="pipeline-summary" class="admin-muted"></span>
+          </div>
+          <button id="test-all-btn" class="admin-btn" style="width:auto; padding:8px 20px; font-size:13px;">Test All</button>
+        </div>
+        <div id="pipeline-grid" class="admin-pipeline-grid"></div>
       </div>
 
     </div>
