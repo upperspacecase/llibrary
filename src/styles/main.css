@@ -3133,6 +3133,43 @@ a {
   z-index: 50;
 }
 
+.create-map-style-toggle {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  display: flex;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--pill);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.map-style-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.map-style-btn:first-child {
+  border-right: 1px solid #e0dcc8;
+}
+
+.map-style-btn.active {
+  background: #2d6a4f;
+  color: #fff;
+}
+
+.map-style-btn:not(.active):hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .create-sidebar {
   border-left: 1px solid var(--border);
   background: var(--white);

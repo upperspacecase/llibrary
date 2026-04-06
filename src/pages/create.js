@@ -55,13 +55,22 @@ const POLY_SRC = 'draw-polygon';
 const POLY_FILL = 'draw-polygon-fill';
 const POLY_LINE = 'draw-polygon-line';
 
+const MAP_STYLES = {
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+  map: 'mapbox://styles/mapbox/outdoors-v12',
+};
+let currentStyle = 'satellite';
+
 const map = createMap('create-map', {
   center: [-8.6400, 37.5967],
   zoom: 10,
-  satellite: false,
+  satellite: true,
 });
 
-map.on('load', () => {
+// ---------------------------------------------------------------------------
+// Map layer init (reusable after style switch)
+// ---------------------------------------------------------------------------
+function initMapLayers() {
   // Drawing points
   map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
@@ -87,6 +96,25 @@ map.on('load', () => {
   map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
   map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
   map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 }, layout: { visibility: 'none' } });
+
+  // Restore state after style switch
+  if (boundaryPoints.length > 0) {
+    updateDrawing();
+    if (isClosed) {
+      map.setLayoutProperty(POINTS_LAYER, 'visibility', 'none');
+      map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'none');
+      map.setLayoutProperty(LINE_LAYER, 'visibility', 'none');
+      const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+      ring.push([...ring[0]]);
+      setGeoJSONSource(map, POLY_SRC, { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} });
+      map.setLayoutProperty(POLY_FILL, 'visibility', 'visible');
+      map.setLayoutProperty(POLY_LINE, 'visibility', 'visible');
+    }
+  }
+}
+
+map.on('load', () => {
+  initMapLayers();
 
   if (instructions) instructions.textContent = 'Search for your land to get started';
   if (toolbar) toolbar.style.display = 'none';
@@ -388,6 +416,29 @@ if (btnSearch) {
 
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.create-search')) hideSuggestions();
+});
+
+// ---------------------------------------------------------------------------
+// Map style toggle (Satellite / Map)
+// ---------------------------------------------------------------------------
+const styleToggle = document.getElementById('map-style-toggle');
+if (styleToggle) {
+  styleToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.map-style-btn');
+    if (!btn || btn.classList.contains('active')) return;
+    const styleName = btn.dataset.style;
+    currentStyle = styleName;
+    styleToggle.querySelectorAll('.map-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    map.setStyle(MAP_STYLES[styleName]);
+  });
+}
+
+map.on('style.load', () => {
+  // Re-init layers after any style change (including initial load is handled by map.on('load'))
+  if (!map.getSource(POINTS_SRC)) {
+    initMapLayers();
+  }
 });
 
 // ---------------------------------------------------------------------------
