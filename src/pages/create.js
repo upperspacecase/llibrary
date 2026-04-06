@@ -117,8 +117,6 @@ function initMapLayers() {
 }
 
 map.on('load', () => {
-  initMapLayers();
-
   if (instructions) instructions.textContent = 'Search for your land to get started';
   if (toolbar) toolbar.style.display = 'none';
 
@@ -509,10 +507,7 @@ if (styleToggle) {
 }
 
 map.on('style.load', () => {
-  // Re-init layers after any style change (including initial load is handled by map.on('load'))
-  if (!map.getSource(POINTS_SRC)) {
-    initMapLayers();
-  }
+  initMapLayers();
 });
 
 // ---------------------------------------------------------------------------
