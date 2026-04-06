@@ -1,5 +1,5 @@
 /**
- * Submit Land — single form + optional extras modal
+ * LandBook Initial Capture — single sidebar form + optional extras modal
  */
 
 import '../styles/main.css';
@@ -15,7 +15,7 @@ initI18n();
 // ---------------------------------------------------------------------------
 let boundaryPoints = [];
 let isClosed = false;
-let submissionId = null; // set after initial submit
+let submissionId = null;
 
 // ---------------------------------------------------------------------------
 // DOM refs
@@ -23,20 +23,21 @@ let submissionId = null; // set after initial submit
 const postcodeInput = document.getElementById('postcode-input');
 const btnSearch = document.getElementById('btn-search');
 const statArea = document.getElementById('stat-area');
+const areaOverrideRow = document.getElementById('area-override-row');
+const areaOverride = document.getElementById('area-override');
 const mapPrompt = document.getElementById('map-prompt');
 const instructions = document.getElementById('map-instructions');
 const btnReset = document.getElementById('btn-reset');
 const btnGeolocate = document.getElementById('btn-geolocate');
-const mapArea = document.querySelector('.create-map-area');
-const emailInput = document.getElementById('email-input');
+const nameInput = document.getElementById('name-input');
+const contactInput = document.getElementById('contact-input');
 const btnSubmit = document.getElementById('btn-submit');
+const mapArea = document.querySelector('.create-map-area');
 
-// Modal refs
+// Modal
 const extrasModal = document.getElementById('extras-modal');
-const useIntent = document.getElementById('use-intent');
-const infrastructure = document.getElementById('infrastructure');
-const vegetation = document.getElementById('vegetation');
 const notesInput = document.getElementById('notes-input');
+const notesCount = document.getElementById('notes-count');
 const btnSkipExtras = document.getElementById('btn-skip-extras');
 const btnSaveExtras = document.getElementById('btn-save-extras');
 
@@ -61,20 +62,11 @@ const map = createMap('create-map', {
 
 function initMapLayers() {
   map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({
-    id: POINTS_LAYER, type: 'circle', source: POINTS_SRC,
-    paint: { 'circle-radius': 6, 'circle-color': '#52b788', 'circle-stroke-color': '#2d6a4f', 'circle-stroke-width': 2 },
-  });
+  map.addLayer({ id: POINTS_LAYER, type: 'circle', source: POINTS_SRC, paint: { 'circle-radius': 6, 'circle-color': '#52b788', 'circle-stroke-color': '#2d6a4f', 'circle-stroke-width': 2 } });
   map.addSource(FIRST_POINT_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({
-    id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC,
-    paint: { 'circle-radius': 8, 'circle-color': '#40916c', 'circle-stroke-color': '#1b4332', 'circle-stroke-width': 2 },
-  });
+  map.addLayer({ id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC, paint: { 'circle-radius': 8, 'circle-color': '#40916c', 'circle-stroke-color': '#1b4332', 'circle-stroke-width': 2 } });
   map.addSource(LINE_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
-  map.addLayer({
-    id: LINE_LAYER, type: 'line', source: LINE_SRC,
-    paint: { 'line-color': '#2d6a4f', 'line-width': 2, 'line-dasharray': [6, 4] },
-  });
+  map.addLayer({ id: LINE_LAYER, type: 'line', source: LINE_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2, 'line-dasharray': [6, 4] } });
   map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
   map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
   map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 }, layout: { visibility: 'none' } });
@@ -103,8 +95,7 @@ map.on('load', () => {
     if (boundaryPoints.length >= 3) {
       const firstPx = map.project([boundaryPoints[0][1], boundaryPoints[0][0]]);
       const clickPx = map.project([e.lngLat.lng, e.lngLat.lat]);
-      const dist = Math.sqrt((firstPx.x - clickPx.x) ** 2 + (firstPx.y - clickPx.y) ** 2);
-      if (dist <= 20) { closePolygon(); return; }
+      if (Math.sqrt((firstPx.x - clickPx.x) ** 2 + (firstPx.y - clickPx.y) ** 2) <= 20) { closePolygon(); return; }
     }
     addPoint(latlng);
   });
@@ -114,8 +105,7 @@ map.on('load', () => {
     if (boundaryPoints.length >= 3) {
       const firstPx = map.project([boundaryPoints[0][1], boundaryPoints[0][0]]);
       const mousePx = map.project([e.lngLat.lng, e.lngLat.lat]);
-      const dist = Math.sqrt((firstPx.x - mousePx.x) ** 2 + (firstPx.y - mousePx.y) ** 2);
-      map.getCanvas().style.cursor = dist <= 20 ? 'pointer' : 'crosshair';
+      map.getCanvas().style.cursor = Math.sqrt((firstPx.x - mousePx.x) ** 2 + (firstPx.y - mousePx.y) ** 2) <= 20 ? 'pointer' : 'crosshair';
     } else {
       map.getCanvas().style.cursor = boundaryPoints.length > 0 ? 'crosshair' : '';
     }
@@ -135,9 +125,7 @@ if (btnGeolocate) {
       (pos) => {
         btnGeolocate.classList.remove('locating');
         map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16 });
-        if (instructions && boundaryPoints.length === 0) {
-          instructions.textContent = 'Click on the map to start drawing your boundary';
-        }
+        if (instructions && boundaryPoints.length === 0) instructions.textContent = 'Click on the map to start drawing your boundary';
       },
       () => { btnGeolocate.classList.remove('locating'); },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -163,17 +151,11 @@ async function findPostcode() {
       map.flyTo({ center: [lng, lat], zoom: 16 });
       if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
     }
-  } catch (err) {
-    console.error('Geocoding error:', err);
-  }
+  } catch (err) { console.error('Geocoding error:', err); }
 }
 
 if (btnSearch) btnSearch.addEventListener('click', findPostcode);
-if (postcodeInput) {
-  postcodeInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); findPostcode(); }
-  });
-}
+if (postcodeInput) postcodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); findPostcode(); } });
 
 // ---------------------------------------------------------------------------
 // Drawing
@@ -190,21 +172,11 @@ function addPoint(latlng) {
 }
 
 function updateDrawing() {
-  setGeoJSONSource(map, LINE_SRC, {
-    type: 'Feature', geometry: { type: 'LineString', coordinates: boundaryPoints.map(([lat, lng]) => [lng, lat]) }, properties: {},
-  });
-  setGeoJSONSource(map, POINTS_SRC, {
-    type: 'FeatureCollection',
-    features: boundaryPoints.slice(1).map(([lat, lng], idx) => ({
-      type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { idx: idx + 1 },
-    })),
-  });
+  setGeoJSONSource(map, LINE_SRC, { type: 'Feature', geometry: { type: 'LineString', coordinates: boundaryPoints.map(([lat, lng]) => [lng, lat]) }, properties: {} });
+  setGeoJSONSource(map, POINTS_SRC, { type: 'FeatureCollection', features: boundaryPoints.slice(1).map(([lat, lng], i) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { idx: i + 1 } })) });
   if (boundaryPoints.length > 0) {
     const [lat, lng] = boundaryPoints[0];
-    setGeoJSONSource(map, FIRST_POINT_SRC, {
-      type: 'FeatureCollection',
-      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }],
-    });
+    setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }] });
   } else {
     setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [] });
   }
@@ -224,6 +196,7 @@ function closePolygon() {
   fitToCoords(map, boundaryPoints, { padding: 80 });
   if (instructions) instructions.textContent = 'Boundary set. Fill in your details and submit.';
   if (btnReset) btnReset.style.display = '';
+  if (areaOverrideRow) areaOverrideRow.style.display = 'flex';
   updateStats();
   updateSubmitState();
 }
@@ -241,6 +214,8 @@ function clearAll() {
   if (statArea) statArea.textContent = '\u2014';
   if (mapPrompt) mapPrompt.style.display = '';
   if (btnReset) btnReset.style.display = 'none';
+  if (areaOverrideRow) areaOverrideRow.style.display = 'none';
+  if (areaOverride) areaOverride.value = '';
   updateSubmitState();
 }
 
@@ -253,14 +228,40 @@ function updateStats() {
       ? `${ha.toFixed(2)}<span class="unit">ha</span>`
       : formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
   }
+  if (areaOverride) areaOverride.placeholder = ha.toFixed(2);
 }
 
 if (btnReset) btnReset.addEventListener('click', clearAll);
 
 // ---------------------------------------------------------------------------
-// Pill-group toggle
+// Contact toggle — switch between email and WhatsApp
 // ---------------------------------------------------------------------------
-document.querySelectorAll('.create-pill-group').forEach(group => {
+const contactMethodGroup = document.getElementById('contact-method');
+if (contactMethodGroup) {
+  contactMethodGroup.addEventListener('click', (e) => {
+    const pill = e.target.closest('.create-pill');
+    if (!pill) return;
+    contactMethodGroup.querySelectorAll('.create-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    if (contactInput) {
+      if (pill.dataset.value === 'whatsapp') {
+        contactInput.type = 'tel';
+        contactInput.placeholder = '+351...';
+        contactInput.autocomplete = 'tel';
+      } else {
+        contactInput.type = 'email';
+        contactInput.placeholder = 'you@example.com';
+        contactInput.autocomplete = 'email';
+      }
+    }
+    updateSubmitState();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Pill-group toggle (generic, for modal)
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.create-pill-group--single').forEach(group => {
   group.addEventListener('click', (e) => {
     const pill = e.target.closest('.create-pill');
     if (!pill) return;
@@ -275,47 +276,51 @@ function getPillValue(groupId) {
 }
 
 // ---------------------------------------------------------------------------
-// Submit validation — boundary + postcode + email
+// Submit validation
 // ---------------------------------------------------------------------------
-function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
-
 function updateSubmitState() {
   const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
-  const hasEmail = isValidEmail(emailInput?.value.trim());
-  if (btnSubmit) btnSubmit.disabled = !(isClosed && hasPostcode && hasEmail);
+  const hasName = nameInput && nameInput.value.trim().length > 0;
+  const hasContact = contactInput && contactInput.value.trim().length > 3;
+  if (btnSubmit) btnSubmit.disabled = !(isClosed && hasPostcode && hasName && hasContact);
 }
 
 if (postcodeInput) postcodeInput.addEventListener('input', updateSubmitState);
-if (emailInput) emailInput.addEventListener('input', updateSubmitState);
+if (nameInput) nameInput.addEventListener('input', updateSubmitState);
+if (contactInput) contactInput.addEventListener('input', updateSubmitState);
 
 // ---------------------------------------------------------------------------
-// Submit — creates submission, then shows extras modal
+// Notes character count
+// ---------------------------------------------------------------------------
+if (notesInput && notesCount) {
+  notesInput.addEventListener('input', () => { notesCount.textContent = notesInput.value.length; });
+}
+
+// ---------------------------------------------------------------------------
+// Submit — core data, then show extras modal
 // ---------------------------------------------------------------------------
 if (btnSubmit) {
   btnSubmit.addEventListener('click', async () => {
     if (!isClosed || boundaryPoints.length < 3) return;
-
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Submitting...';
 
-    const area = polygonArea(boundaryPoints);
-    const perimeter = polygonPerimeter(boundaryPoints);
-    const centroid = polygonCentroid(boundaryPoints);
+    const calculatedArea = polygonArea(boundaryPoints);
+    const overrideHa = areaOverride ? parseFloat(areaOverride.value) : 0;
+    const area = overrideHa > 0 ? overrideHa * 10000 : calculatedArea;
 
     try {
       const result = await saveSubmission({
         boundary: boundaryPoints,
-        center: centroid,
+        center: polygonCentroid(boundaryPoints),
         area,
-        perimeter,
-        postcode: postcodeInput ? postcodeInput.value.trim() : '',
-        email: emailInput ? emailInput.value.trim() : '',
-        contactPreference: getPillValue('contact-pref'),
+        perimeter: polygonPerimeter(boundaryPoints),
+        postcode: postcodeInput.value.trim(),
+        name: nameInput ? nameInput.value.trim() : '',
+        contactMethod: getPillValue('contact-method'),
+        contact: contactInput ? contactInput.value.trim() : '',
       });
-
       submissionId = result.id;
-
-      // Show extras modal
       if (extrasModal) extrasModal.style.display = 'flex';
     } catch (err) {
       console.error('Failed to save submission:', err);
@@ -327,11 +332,21 @@ if (btnSubmit) {
 }
 
 // ---------------------------------------------------------------------------
-// Extras modal — optional details added to the same submission
+// Chip grid helpers — collect checked values + other text
+// ---------------------------------------------------------------------------
+function getChipValues(groupName) {
+  const checked = [];
+  document.querySelectorAll(`.create-chip-grid[data-group="${groupName}"] input:checked`).forEach(cb => checked.push(cb.value));
+  const other = document.querySelector(`.create-chip-other[data-group="${groupName}"]`);
+  if (other && other.value.trim()) checked.push(other.value.trim());
+  return checked;
+}
+
+// ---------------------------------------------------------------------------
+// Extras modal — PATCH optional data onto submission
 // ---------------------------------------------------------------------------
 function closeModal() {
   if (extrasModal) extrasModal.style.display = 'none';
-  // Show success in the sidebar
   const sidebar = document.querySelector('.create-sidebar');
   if (sidebar) {
     sidebar.innerHTML = `
@@ -350,29 +365,26 @@ if (btnSkipExtras) btnSkipExtras.addEventListener('click', closeModal);
 if (btnSaveExtras) {
   btnSaveExtras.addEventListener('click', async () => {
     if (!submissionId) { closeModal(); return; }
-
     btnSaveExtras.disabled = true;
     btnSaveExtras.textContent = 'Saving...';
 
     try {
       await updateSubmission(submissionId, {
-        useIntent: useIntent ? useIntent.value : '',
-        waterAccess: getPillValue('water-access'),
-        infrastructure: infrastructure ? infrastructure.value : '',
-        vegetation: vegetation ? vegetation.value : '',
+        landCondition: getChipValues('landCondition'),
+        landUse: getChipValues('landUse'),
+        zoning: getChipValues('zoning'),
+        waterReliability: getPillValue('water-reliability'),
+        waterSource: getChipValues('waterSource'),
+        challenges: getChipValues('challenges'),
+        landGoals: getChipValues('landGoals'),
+        helpNeeded: getChipValues('helpNeeded'),
         notes: notesInput ? notesInput.value.trim() : '',
       });
     } catch (err) {
       console.error('Failed to save extras:', err);
     }
-
     closeModal();
   });
 }
 
-// Close modal on overlay click
-if (extrasModal) {
-  extrasModal.addEventListener('click', (e) => {
-    if (e.target === extrasModal) closeModal();
-  });
-}
+if (extrasModal) extrasModal.addEventListener('click', (e) => { if (e.target === extrasModal) closeModal(); });

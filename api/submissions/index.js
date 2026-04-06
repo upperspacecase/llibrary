@@ -7,14 +7,19 @@ export default async function handler(req, res) {
     return res.status(200).json(all);
   }
 
-  // PATCH — update an existing submission with optional extras
+  // PATCH — add optional extras to an existing submission
   if (req.method === 'PATCH') {
     try {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
       if (!body.id) return res.status(400).json({ error: 'Submission id is required' });
 
+      const allowed = [
+        'landCondition', 'landUse', 'zoning',
+        'waterReliability', 'waterSource',
+        'challenges', 'landGoals', 'helpNeeded', 'notes',
+      ];
       const updates = {};
-      for (const key of ['useIntent', 'waterAccess', 'infrastructure', 'vegetation', 'notes']) {
+      for (const key of allowed) {
         if (body[key] !== undefined) updates[key] = body[key];
       }
 
@@ -34,12 +39,14 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const email = (body.email || '').trim().toLowerCase();
     const postcode = (body.postcode || '').trim();
 
     if (!postcode) {
       return res.status(400).json({ error: 'Post code is required' });
     }
+
+    const contact = (body.contact || '').trim();
+    const email = body.contactMethod === 'email' ? contact.toLowerCase() : '';
 
     const doc = {
       id: body.id || crypto.randomUUID(),
@@ -48,12 +55,13 @@ export default async function handler(req, res) {
       area: body.area || null,
       perimeter: body.perimeter || null,
       postcode,
-      email,
-      contactPreference: body.contactPreference || '',
-      useIntent: '',
-      waterAccess: '',
-      infrastructure: '',
-      vegetation: '',
+      name: (body.name || '').trim(),
+      contactMethod: body.contactMethod || 'email',
+      contact,
+      // Optional fields — populated via PATCH
+      landCondition: [], landUse: [], zoning: [],
+      waterReliability: '', waterSource: [],
+      challenges: [], landGoals: [], helpNeeded: [],
       notes: '',
       files: body.files || [],
       created: new Date().toISOString(),

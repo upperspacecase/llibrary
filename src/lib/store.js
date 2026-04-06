@@ -175,8 +175,9 @@ export async function saveSubmission(data, files = []) {
     area: data.area || null,
     perimeter: data.perimeter || null,
     postcode: data.postcode || '',
-    email: data.email || '',
-    contactPreference: data.contactPreference || '',
+    name: data.name || '',
+    contactMethod: data.contactMethod || 'email',
+    contact: data.contact || '',
     files: uploadedFiles,
   };
 

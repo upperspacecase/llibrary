@@ -3840,6 +3840,156 @@ a {
   flex: 1;
 }
 
+/* Modal sections */
+.create-modal-section {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--border, #e0dcc8);
+}
+
+.create-modal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.create-modal-section h4 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.create-modal-hint {
+  font-size: 13px;
+  color: #7A7A7A;
+  margin-bottom: 12px;
+}
+
+.create-modal-sublabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+/* Chip grid — multi-select checkboxes */
+.create-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.create-chip-grid label {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.create-chip-grid input[type="checkbox"] {
+  display: none;
+}
+
+.create-chip-grid label span {
+  padding: 7px 14px;
+  border: 1.5px solid var(--card-border, #e0dcc8);
+  border-radius: var(--pill, 999px);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.create-chip-grid label:hover span {
+  border-color: var(--black, #1a1a1a);
+}
+
+.create-chip-grid input:checked + span {
+  background: var(--black, #1a1a1a);
+  color: var(--cream, #faf8f1);
+  border-color: var(--black, #1a1a1a);
+}
+
+.create-chip-other {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1px solid var(--border, #e0dcc8);
+  border-radius: var(--radius, 8px);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--white, #fff);
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.create-chip-other:focus {
+  outline: none;
+  border-color: #999;
+}
+
+/* Contact toggle row */
+.create-contact-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Area override row */
+.create-area-override {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.create-area-override input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e0dcc8);
+  border-radius: var(--radius, 8px);
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--white, #fff);
+  box-sizing: border-box;
+}
+
+.create-area-override input:focus {
+  outline: none;
+  border-color: #999;
+}
+
+/* Character count */
+.create-char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #A39E93;
+  margin-top: 4px;
+}
+
+/* Modal body notes textarea */
+.create-modal-body textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border, #e0dcc8);
+  border-radius: var(--radius, 8px);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--white, #fff);
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.create-modal-body textarea:focus {
+  outline: none;
+  border-color: #999;
+}
+
+/* Wider modal for all the sections */
+.create-modal {
+  max-width: 600px;
+}
+
 .search-suggestions {
   position: absolute;
   top: 100%;

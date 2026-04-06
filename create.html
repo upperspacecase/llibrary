@@ -42,16 +42,16 @@
       <div class="create-map-area">
         <div id="create-map"></div>
         <div class="create-map-prompt" id="map-prompt">Draw your boundary on the map, then submit.</div>
-        <div class="create-map-instructions" id="map-instructions" data-i18n="create.instructions">Click on the map to
-          start drawing your land boundary</div>
+        <div class="create-map-instructions" id="map-instructions">Click on the map to start drawing your land boundary</div>
       </div>
+
       <div class="create-sidebar">
         <div class="create-sidebar-content">
           <h2>Submit Your Land</h2>
           <p class="create-desc">Enter your post code or use your location, then draw your boundary on the map.</p>
 
           <div class="create-field">
-            <label for="postcode-input">Location</label>
+            <label for="postcode-input">Postcode / Location</label>
             <div class="create-search">
               <input type="text" id="postcode-input" placeholder="Enter post code..." autocomplete="postal-code">
               <button class="btn-small" id="btn-search">Find</button>
@@ -68,19 +68,26 @@
               <span class="create-address-label">Land Area</span>
               <span class="create-address-value" id="stat-area">&mdash;</span>
             </div>
+            <div class="create-area-override" id="area-override-row" style="display:none;">
+              <input type="number" id="area-override" step="0.01" min="0" placeholder="Override">
+              <span class="create-area-unit">ha</span>
+            </div>
             <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
           </div>
 
           <div class="create-field">
-            <label for="email-input">Email</label>
-            <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+            <label for="name-input">Name</label>
+            <input type="text" id="name-input" placeholder="Your name" autocomplete="name">
           </div>
 
           <div class="create-field">
-            <label>Contact preference</label>
-            <div class="create-pill-group" id="contact-pref">
-              <button type="button" class="create-pill active" data-value="email">Email</button>
-              <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
+            <label>Contact</label>
+            <div class="create-contact-toggle">
+              <div class="create-pill-group" id="contact-method">
+                <button type="button" class="create-pill active" data-value="email">Email</button>
+                <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
+              </div>
+              <input type="email" id="contact-input" placeholder="you@example.com" autocomplete="email">
             </div>
           </div>
         </div>
@@ -93,72 +100,172 @@
     </div>
   </div>
 
-  <!-- Optional details modal (shown after submit) -->
+  <!-- ===== Optional extras modal ===== -->
   <div class="create-modal-overlay" id="extras-modal" style="display:none;">
     <div class="create-modal">
       <div class="create-modal-header">
-        <h3>Help us understand your land better</h3>
-        <p>These details are optional but help us provide better insights.</p>
+        <h3>Unlock your LandBook preview</h3>
+        <p>2 min to complete — the more you share, the better your report.</p>
       </div>
+
       <div class="create-modal-body">
-        <div class="create-field">
-          <label for="use-intent">Primary use intent</label>
-          <select id="use-intent">
-            <option value="" disabled selected>Select...</option>
-            <option value="conservation">Conservation</option>
-            <option value="regeneration">Regeneration</option>
-            <option value="mixed">Mixed-use</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
 
-        <div class="create-field">
-          <label>Water access</label>
-          <div class="create-pill-group" id="water-access">
-            <button type="button" class="create-pill" data-value="yes">Yes</button>
-            <button type="button" class="create-pill" data-value="seasonal">Seasonal</button>
-            <button type="button" class="create-pill" data-value="no">No</button>
+        <!-- Land Condition -->
+        <div class="create-modal-section">
+          <h4>Land Condition</h4>
+          <p class="create-modal-hint">Tick all that apply — helps us assess natural capital</p>
+          <div class="create-chip-grid" data-group="landCondition">
+            <label><input type="checkbox" value="native-woodland"><span>🌳 Native woodland</span></label>
+            <label><input type="checkbox" value="plantation"><span>🌲 Plantation trees</span></label>
+            <label><input type="checkbox" value="cropland"><span>🌾 Cropland</span></label>
+            <label><input type="checkbox" value="orchard"><span>🫒 Orchard / vineyard</span></label>
+            <label><input type="checkbox" value="scrub"><span>🌿 Scrub / maquis</span></label>
+            <label><input type="checkbox" value="meadow"><span>🌸 Meadows / grassland</span></label>
+            <label><input type="checkbox" value="rock"><span>🪨 Rock outcrops</span></label>
+            <label><input type="checkbox" value="water-body"><span>💧 Water body</span></label>
+            <label><input type="checkbox" value="ruins"><span>🏚️ Ruins / structures</span></label>
+            <label><input type="checkbox" value="dwelling"><span>🏠 Active dwelling</span></label>
+            <label><input type="checkbox" value="degraded"><span>⛏️ Bare / degraded</span></label>
           </div>
+          <input type="text" class="create-chip-other" data-group="landCondition" placeholder="Other...">
         </div>
 
-        <div class="create-field">
-          <label for="infrastructure">Existing infrastructure</label>
-          <select id="infrastructure">
-            <option value="" selected>None</option>
-            <option value="ruins">Ruins</option>
-            <option value="dwelling">Dwelling</option>
-            <option value="agricultural">Agricultural buildings</option>
-          </select>
+        <!-- Land Use -->
+        <div class="create-modal-section">
+          <h4>Land Use</h4>
+          <p class="create-modal-hint">Tick all that apply — tells us your starting point</p>
+          <div class="create-chip-grid" data-group="landUse">
+            <label><input type="checkbox" value="unused"><span>🚫 Unused / abandoned</span></label>
+            <label><input type="checkbox" value="small-farming"><span>🌾 Small-scale farming</span></label>
+            <label><input type="checkbox" value="commercial-ag"><span>💰 Commercial agriculture</span></label>
+            <label><input type="checkbox" value="grazing"><span>🐄 Grazing / livestock</span></label>
+            <label><input type="checkbox" value="hunting"><span>🏹 Hunting lease</span></label>
+            <label><input type="checkbox" value="forestry"><span>🌲 Forestry / timber</span></label>
+            <label><input type="checkbox" value="tourism"><span>🏕️ Tourism / glamping</span></label>
+            <label><input type="checkbox" value="residential"><span>🏡 Residential / weekend</span></label>
+            <label><input type="checkbox" value="solar-wind"><span>🔋 Solar / wind</span></label>
+            <label><input type="checkbox" value="water-extraction"><span>💧 Water extraction</span></label>
+            <label><input type="checkbox" value="private"><span>🔒 Private / no access</span></label>
+            <label><input type="checkbox" value="community"><span>🤝 Community use</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="landUse" placeholder="Other...">
         </div>
 
-        <div class="create-field">
-          <label for="vegetation">Current vegetation</label>
-          <select id="vegetation">
-            <option value="" selected>Unknown</option>
-            <option value="degraded">Degraded</option>
-            <option value="mixed">Mixed</option>
-            <option value="woodland">Established woodland</option>
-            <option value="monoculture">Monoculture</option>
-          </select>
+        <!-- Zoning -->
+        <div class="create-modal-section">
+          <h4>Zoning / Permitting</h4>
+          <p class="create-modal-hint">Tick all that apply — determines what's possible</p>
+          <div class="create-chip-grid" data-group="zoning">
+            <label><input type="checkbox" value="peri-urban"><span>🏗️ Peri-urban / construction</span></label>
+            <label><input type="checkbox" value="agricultural"><span>🌾 Agricultural zone</span></label>
+            <label><input type="checkbox" value="forest"><span>🌲 Forest / woodland</span></label>
+            <label><input type="checkbox" value="protected"><span>🏞️ Protected / conservation</span></label>
+            <label><input type="checkbox" value="coastal"><span>💧 Coastal / water protection</span></label>
+            <label><input type="checkbox" value="unsure"><span>❓ Not sure — need help</span></label>
+            <label><input type="checkbox" value="pending"><span>🧾 Pending / in dispute</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="zoning" placeholder="Other...">
         </div>
 
-        <div class="create-notes-field">
-          <label for="notes-input">Notes</label>
-          <textarea id="notes-input" rows="3" placeholder="Anything else we should know..."></textarea>
+        <!-- Water Access -->
+        <div class="create-modal-section">
+          <h4>Water Access</h4>
+          <p class="create-modal-hint">Critical for land value</p>
+          <label class="create-modal-sublabel">Reliability</label>
+          <div class="create-pill-group create-pill-group--single" id="water-reliability">
+            <button type="button" class="create-pill" data-value="year-round">💧💧💧 Reliable year-round</button>
+            <button type="button" class="create-pill" data-value="seasonal">💧💧 Seasonal only</button>
+            <button type="button" class="create-pill" data-value="rainwater">💧 Rainwater only</button>
+            <button type="button" class="create-pill" data-value="none">🚱 None / dry</button>
+          </div>
+          <label class="create-modal-sublabel" style="margin-top:16px;">Source (all that apply)</label>
+          <div class="create-chip-grid" data-group="waterSource">
+            <label><input type="checkbox" value="bore-well"><span>Bore / well</span></label>
+            <label><input type="checkbox" value="spring"><span>Spring / seep</span></label>
+            <label><input type="checkbox" value="surface"><span>Surface water</span></label>
+            <label><input type="checkbox" value="municipal"><span>Municipal / piped</span></label>
+            <label><input type="checkbox" value="rainwater-tanks"><span>Rainwater tanks</span></label>
+            <label><input type="checkbox" value="delivered"><span>Delivered / trucked</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="waterSource" placeholder="Other...">
         </div>
+
+        <!-- Challenges -->
+        <div class="create-modal-section">
+          <h4>Challenges</h4>
+          <p class="create-modal-hint">What's blocking progress? Tick all that apply</p>
+          <div class="create-chip-grid" data-group="challenges">
+            <label><input type="checkbox" value="ownership"><span>🧾 Ownership disputes</span></label>
+            <label><input type="checkbox" value="subsidy-lock"><span>🔒 Locked in old subsidy</span></label>
+            <label><input type="checkbox" value="invasive"><span>🐗 Invasive species</span></label>
+            <label><input type="checkbox" value="fire"><span>🔥 Fire risk / recent burns</span></label>
+            <label><input type="checkbox" value="drought"><span>🌵 Drought risk</span></label>
+            <label><input type="checkbox" value="erosion"><span>🌊 Erosion risk</span></label>
+            <label><input type="checkbox" value="no-capital"><span>💰 No capital to invest</span></label>
+            <label><input type="checkbox" value="no-labour"><span>👥 No labour / skills</span></label>
+            <label><input type="checkbox" value="poor-access"><span>🛣️ Poor access / no road</span></label>
+            <label><input type="checkbox" value="no-grid"><span>⚡ No grid connection</span></label>
+            <label><input type="checkbox" value="zoning"><span>📋 Zoning restrictions</span></label>
+            <label><input type="checkbox" value="none"><span>✅ None — ready to proceed</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="challenges" placeholder="Other...">
+        </div>
+
+        <!-- Land Goals -->
+        <div class="create-modal-section">
+          <h4>Land Goals</h4>
+          <p class="create-modal-hint">What are you building toward? Tick all that apply</p>
+          <div class="create-chip-grid" data-group="landGoals">
+            <label><input type="checkbox" value="rewild"><span>🌲 Rewild / forest restoration</span></label>
+            <label><input type="checkbox" value="regen-ag"><span>🫒 Regenerative agriculture</span></label>
+            <label><input type="checkbox" value="food"><span>🍯 Food production</span></label>
+            <label><input type="checkbox" value="build"><span>🏡 Build dwelling</span></label>
+            <label><input type="checkbox" value="eco-tourism"><span>🏕️ Eco-tourism / glamping</span></label>
+            <label><input type="checkbox" value="retreat"><span>🔇 Private retreat</span></label>
+            <label><input type="checkbox" value="income"><span>💸 Generate land income</span></label>
+            <label><input type="checkbox" value="legacy"><span>🧬 Intergenerational legacy</span></label>
+            <label><input type="checkbox" value="cooperative"><span>🤝 Join land cooperative</span></label>
+            <label><input type="checkbox" value="education"><span>📚 Education / research</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="landGoals" placeholder="Other...">
+        </div>
+
+        <!-- What would help -->
+        <div class="create-modal-section">
+          <h4>What would help you most?</h4>
+          <p class="create-modal-hint">Check all that apply</p>
+          <div class="create-chip-grid" data-group="helpNeeded">
+            <label><input type="checkbox" value="natural-capital"><span>🗺️ Natural capital assessment</span></label>
+            <label><input type="checkbox" value="valuation"><span>💶 Valuation & comparables</span></label>
+            <label><input type="checkbox" value="land-use-options"><span>🌱 Revenue scenarios</span></label>
+            <label><input type="checkbox" value="zoning-permits"><span>📋 Zoning & permits</span></label>
+            <label><input type="checkbox" value="funding"><span>💰 Subsidies & grants</span></label>
+            <label><input type="checkbox" value="planting"><span>🌿 Species & methods</span></label>
+            <label><input type="checkbox" value="conservation"><span>🛡️ Conservation easements</span></label>
+            <label><input type="checkbox" value="risks"><span>⚠️ Risks & restrictions</span></label>
+            <label><input type="checkbox" value="action-plan"><span>✅ Clear action plan</span></label>
+            <label><input type="checkbox" value="experts"><span>🤝 Experts & support</span></label>
+          </div>
+          <input type="text" class="create-chip-other" data-group="helpNeeded" placeholder="Other...">
+        </div>
+
+        <!-- Notes -->
+        <div class="create-modal-section">
+          <h4>Notes</h4>
+          <p class="create-modal-hint">One thing we should know (optional)</p>
+          <textarea id="notes-input" rows="2" maxlength="140" placeholder='e.g. "Old olive grove, absent owner 20 years"'></textarea>
+          <div class="create-char-count"><span id="notes-count">0</span>/140</div>
+        </div>
+
       </div>
+
       <div class="create-modal-footer">
         <button class="btn-small" id="btn-skip-extras">Skip</button>
-        <button class="btn-create-generate" id="btn-save-extras">Save Details</button>
+        <button class="btn-create-generate" id="btn-save-extras">Save & Get Preview</button>
       </div>
     </div>
   </div>
-    </div>
-  </div>
 
-  <script>
-    function showComingSoon() { var o = document.createElement('div'); o.className = 'coming-soon-overlay'; o.innerHTML = '<div class="coming-soon-card"><h3>Coming Soon</h3><p>Chat with your land is under development. Check back soon!</p><button onclick="this.closest(\'.coming-soon-overlay\').remove()">Got it</button></div>'; o.addEventListener('click', function (e) { if (e.target === o) o.remove() }); document.body.appendChild(o) }
-  </script>
   <script type="module" src="/src/pages/create.js"></script>
 </body>
 
