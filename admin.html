@@ -61,7 +61,21 @@
           </div>
           <button id="test-all-btn" class="admin-btn" style="width:auto; padding:8px 20px; font-size:13px;">Test All</button>
         </div>
-        <div id="pipeline-grid" class="admin-pipeline-grid"></div>
+        <div class="admin-table-wrap">
+          <table class="admin-pipeline-table" id="pipeline-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Source</th>
+                <th>HTTP</th>
+                <th>Response</th>
+                <th>Feeds</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="pipeline-tbody"></tbody>
+          </table>
+        </div>
       </div>
 
     </div>

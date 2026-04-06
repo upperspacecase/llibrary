@@ -278,41 +278,56 @@ function renderTable() {
 
 // ---- Data Pipeline ----
 function renderPipelineEmpty() {
-    document.getElementById('pipeline-grid').innerHTML =
-        '<p class="admin-muted" style="text-align:center; padding:40px 0;">Click <strong>Test All</strong> to check every data source.</p>';
+    document.getElementById('pipeline-tbody').innerHTML =
+        '<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0;">Click <strong>Test All</strong> to check every data source.</td></tr>';
     document.getElementById('pipeline-summary').textContent = '';
 }
 
-function renderPipeline(sources) {
-    const grid = document.getElementById('pipeline-grid');
+function getStatusInfo(s) {
+    if (s.error === 'Retired (domain offline)') return { cls: 'retired', label: 'Retired' };
+    if (s.ok) return { cls: 'ok', label: 'Healthy' };
+    if (s.needsKey && s.error?.includes('No API key')) return { cls: 'nokey', label: 'No Key' };
+    if (s.error === 'Timeout') return { cls: 'timeout', label: 'Timeout' };
+    return { cls: 'fail', label: 'Failing' };
+}
+
+function updatePipelineSummary(sources) {
     const summary = document.getElementById('pipeline-summary');
-
     const ok = sources.filter(s => s.ok).length;
-    const fail = sources.filter(s => !s.ok && !s.needsKey).length;
+    const fail = sources.filter(s => !s.ok && !s.needsKey && s.error !== 'Retired (domain offline)').length;
+    const timeout = sources.filter(s => !s.ok && s.error === 'Timeout').length;
     const noKey = sources.filter(s => !s.ok && s.needsKey).length;
-    summary.innerHTML = `<strong>${ok}</strong> healthy &nbsp;&middot;&nbsp; <strong style="color:var(--coral)">${fail}</strong> failing &nbsp;&middot;&nbsp; <strong style="color:var(--muted)">${noKey}</strong> need key`;
+    const retired = sources.filter(s => s.error === 'Retired (domain offline)').length;
+    let parts = [`<strong>${ok}</strong> healthy`];
+    if (fail) parts.push(`<strong style="color:var(--coral)">${fail}</strong> failing`);
+    if (timeout) parts.push(`<strong style="color:#b8860b">${timeout}</strong> timeout`);
+    if (noKey) parts.push(`<strong style="color:var(--muted)">${noKey}</strong> need key`);
+    if (retired) parts.push(`<strong style="color:var(--muted)">${retired}</strong> retired`);
+    summary.innerHTML = parts.join(' &nbsp;&middot;&nbsp; ');
+}
 
-    grid.innerHTML = sources.map(s => {
-        const statusClass = s.ok ? 'ok' : (s.needsKey && !s.ok && s.error?.includes('No API key')) ? 'nokey' : 'fail';
-        const statusLabel = statusClass === 'ok' ? `${s.status} &middot; ${s.ms}ms`
-            : statusClass === 'nokey' ? 'No key'
-            : s.error || `HTTP ${s.status}`;
-        const statusDot = statusClass === 'ok' ? '#2d6a4f' : statusClass === 'nokey' ? 'var(--muted)' : 'var(--coral)';
+function renderPipeline(sources) {
+    const tbody = document.getElementById('pipeline-tbody');
+    updatePipelineSummary(sources);
+
+    tbody.innerHTML = sources.map(s => {
+        const { cls, label } = getStatusInfo(s);
+        const httpCode = s.status ? s.status : '—';
+        const responseTime = s.ms ? `${s.ms}ms` : '—';
+        const errorMsg = (!s.ok && s.error && s.error !== 'Timeout' && !s.error.includes('No API key') && s.error !== 'Retired (domain offline)') ? `<div class="admin-pipeline-error">${escapeHtml(s.error)}</div>` : '';
 
         return `
-        <div class="admin-pipeline-card ${statusClass}">
-            <div class="admin-pipeline-header">
-                <span class="admin-pipeline-dot" style="background:${statusDot}"></span>
-                <span class="admin-pipeline-name">${escapeHtml(s.name)}</span>
-                <button class="admin-pipeline-test-btn" data-source="${s.id}" title="Test this source">Re-test</button>
-            </div>
-            <div class="admin-pipeline-status">${statusLabel}</div>
-            <div class="admin-pipeline-feeds">${s.feeds.map(f => `<span class="admin-pipeline-feed">${escapeHtml(f)}</span>`).join('')}</div>
-        </div>`;
+        <tr class="admin-pipeline-row ${cls}" data-source-id="${s.id}">
+            <td><span class="admin-pipeline-badge ${cls}">${label}</span></td>
+            <td class="admin-pipeline-name">${escapeHtml(s.name)}${errorMsg}</td>
+            <td class="admin-pipeline-mono">${httpCode}</td>
+            <td class="admin-pipeline-mono">${responseTime}</td>
+            <td class="admin-pipeline-feeds-cell">${s.feeds.map(f => `<span class="admin-pipeline-feed">${escapeHtml(f)}</span>`).join('')}</td>
+            <td><button class="admin-pipeline-test-btn" data-source="${s.id}" title="Test this source">Re-test</button></td>
+        </tr>`;
     }).join('');
 
-    // Bind individual test buttons
-    grid.querySelectorAll('.admin-pipeline-test-btn').forEach(btn => {
+    tbody.querySelectorAll('.admin-pipeline-test-btn').forEach(btn => {
         btn.addEventListener('click', () => testSingleSource(btn.dataset.source));
     });
 }
@@ -323,8 +338,8 @@ async function testAllSources() {
     const btn = document.getElementById('test-all-btn');
     btn.textContent = 'Testing...';
     btn.disabled = true;
-    document.getElementById('pipeline-grid').innerHTML =
-        '<p class="admin-muted" style="text-align:center; padding:40px 0;">Testing all sources... this may take a few seconds.</p>';
+    document.getElementById('pipeline-tbody').innerHTML =
+        '<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0;">Testing all sources... this may take a few seconds.</td></tr>';
 
     try {
         const res = await fetch('/api/admin/pipeline', {
@@ -337,8 +352,8 @@ async function testAllSources() {
         pipelineResults = result.sources;
         renderPipeline(pipelineResults);
     } catch (err) {
-        document.getElementById('pipeline-grid').innerHTML =
-            `<p class="admin-muted" style="text-align:center; padding:40px 0; color:var(--coral)">Error: ${escapeHtml(err.message)}</p>`;
+        document.getElementById('pipeline-tbody').innerHTML =
+            `<tr><td colspan="6" class="admin-muted" style="text-align:center; padding:40px 0; color:var(--coral)">Error: ${escapeHtml(err.message)}</td></tr>`;
     } finally {
         btn.textContent = 'Test All';
         btn.disabled = false;
@@ -347,12 +362,15 @@ async function testAllSources() {
 }
 
 async function testSingleSource(sourceId) {
-    const card = document.querySelector(`[data-source="${sourceId}"]`).closest('.admin-pipeline-card');
-    const btn = card.querySelector('.admin-pipeline-test-btn');
+    const row = document.querySelector(`tr[data-source-id="${sourceId}"]`);
+    const btn = row.querySelector('.admin-pipeline-test-btn');
+    const badge = row.querySelector('.admin-pipeline-badge');
     btn.textContent = '...';
     btn.disabled = true;
-    card.classList.remove('ok', 'fail', 'nokey');
-    card.classList.add('testing');
+    row.classList.remove('ok', 'fail', 'nokey', 'timeout', 'retired');
+    row.classList.add('testing');
+    badge.className = 'admin-pipeline-badge testing';
+    badge.textContent = 'Testing';
 
     try {
         const res = await fetch('/api/admin/pipeline', {
@@ -363,7 +381,6 @@ async function testSingleSource(sourceId) {
         if (!res.ok) throw new Error('Test failed');
         const result = await res.json();
 
-        // Update cached results
         if (pipelineResults) {
             const idx = pipelineResults.findIndex(s => s.id === sourceId);
             if (idx >= 0) pipelineResults[idx] = result;
@@ -373,8 +390,10 @@ async function testSingleSource(sourceId) {
     } catch {
         btn.textContent = 'Re-test';
         btn.disabled = false;
-        card.classList.remove('testing');
-        card.classList.add('fail');
+        row.classList.remove('testing');
+        row.classList.add('fail');
+        badge.className = 'admin-pipeline-badge fail';
+        badge.textContent = 'Error';
     }
 }
 
@@ -590,51 +609,101 @@ style.textContent = `
         color: #c0392b;
     }
 
-    /* Pipeline */
-    .admin-pipeline-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 14px;
+    /* Pipeline table */
+    .admin-pipeline-table {
+        width: 100%;
+        border-collapse: collapse;
     }
-    .admin-pipeline-card {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 16px;
-        transition: border-color 0.2s;
+    .admin-pipeline-table th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
     }
-    .admin-pipeline-card.ok {
-        border-left: 3px solid #2d6a4f;
+    .admin-pipeline-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        vertical-align: middle;
     }
-    .admin-pipeline-card.fail {
-        border-left: 3px solid var(--coral, #e74c3c);
+    .admin-pipeline-row:hover {
+        background: var(--cream, #f5f0eb);
     }
-    .admin-pipeline-card.nokey {
-        border-left: 3px solid var(--muted, #999);
+    .admin-pipeline-row.testing {
+        opacity: 0.6;
     }
-    .admin-pipeline-card.testing {
-        border-left: 3px solid #f0c040;
-        opacity: 0.7;
+
+    /* Status badges */
+    .admin-pipeline-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 10px;
+        white-space: nowrap;
     }
-    .admin-pipeline-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
+    .admin-pipeline-badge.ok {
+        background: #d4edda;
+        color: #1b5e20;
     }
-    .admin-pipeline-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
+    .admin-pipeline-badge.fail {
+        background: #fde8e8;
+        color: #c62828;
     }
+    .admin-pipeline-badge.timeout {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .admin-pipeline-badge.nokey {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    .admin-pipeline-badge.retired {
+        background: #e9ecef;
+        color: #999;
+    }
+    .admin-pipeline-badge.testing {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    /* Row cells */
     .admin-pipeline-name {
         font-weight: 600;
-        font-size: 14px;
-        flex: 1;
+        font-size: 13px;
+    }
+    .admin-pipeline-row.retired .admin-pipeline-name {
+        text-decoration: line-through;
+        opacity: 0.6;
+    }
+    .admin-pipeline-error {
+        font-size: 11px;
+        color: var(--coral, #e74c3c);
+        margin-top: 2px;
+        font-weight: 400;
+    }
+    .admin-pipeline-mono {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 12px;
+        color: var(--muted);
+    }
+    .admin-pipeline-feeds-cell {
+        max-width: 280px;
+    }
+    .admin-pipeline-feed {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 11px;
+        background: var(--cream, #f5f0eb);
+        border-radius: 3px;
+        color: var(--muted);
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        margin: 1px 2px;
     }
     .admin-pipeline-test-btn {
         padding: 3px 10px;
@@ -656,28 +725,6 @@ style.textContent = `
     .admin-pipeline-test-btn:disabled {
         opacity: 0.5;
         cursor: default;
-    }
-    .admin-pipeline-status {
-        font-size: 12px;
-        color: var(--muted);
-        margin-bottom: 10px;
-    }
-    .admin-pipeline-card.fail .admin-pipeline-status {
-        color: var(--coral, #e74c3c);
-    }
-    .admin-pipeline-feeds {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-    }
-    .admin-pipeline-feed {
-        display: inline-block;
-        padding: 2px 8px;
-        font-size: 11px;
-        background: var(--cream, #f5f0eb);
-        border-radius: 3px;
-        color: var(--muted);
-        white-space: nowrap;
     }
 `;
 document.head.appendChild(style);
