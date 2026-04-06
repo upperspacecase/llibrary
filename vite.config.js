@@ -22,6 +22,7 @@ export default defineConfig({
         directory: resolve(__dirname, 'directory.html'),
         'report-preview': resolve(__dirname, 'report-preview.html'),
         'report-view': resolve(__dirname, 'report-view.html'),
+        'full-report-preview': resolve(__dirname, 'full-report-preview.html'),
       },
     },
   },

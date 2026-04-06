@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/jpeg" href="https://llibrary-eight.vercel.app/favicon1.jpg">
+  <title>LandBook Full Report — Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--green:#1B4332;--green-light:#2D6A4F;--green-pale:#D8F3DC;--terra:#BC6C25;--terra-light:#DDA15E;--sky:#90E0EF;--sky-dark:#0077B6;--amber:#F4A261;--red:#E76F51;--bg:#F8F6F2;--white:#FFFFFF;--text:#1a1a1a;--text-muted:#6b7280;--border:#e5e2db;--font:'Inter',-apple-system,sans-serif}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:var(--font);background:#e5e2db;color:var(--text);-webkit-font-smoothing:antialiased}
+    #report-container{max-width:850px;margin:24px auto;padding:0 16px}
+    .report-page{background:var(--white);border-radius:4px;box-shadow:0 1px 8px rgba(0,0,0,0.08);margin-bottom:24px;padding:56px 56px 48px;page-break-after:always}
+    .section-number{font-size:11px;font-weight:700;color:var(--terra);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+    .section-title{font-size:26px;font-weight:800;color:var(--green);margin-bottom:8px;line-height:1.2}
+    .section-subtitle{font-size:14px;color:var(--text-muted);margin-bottom:32px}
+    h3{font-size:15px;font-weight:700;color:var(--green);margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--green-pale)}
+    .data-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:24px}
+    .data-table th{text-align:left;font-weight:600;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;border-bottom:2px solid var(--border)}
+    .data-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+    .data-table tr:last-child td{border-bottom:none}
+    .data-table .label{color:var(--text-muted);font-weight:500}
+    .data-table .value{font-weight:600}
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0}
+    .kpi-card{background:var(--bg);border-radius:10px;padding:20px 16px;text-align:center;border:1px solid var(--border)}
+    .kpi-value{font-size:28px;font-weight:800;color:var(--green);line-height:1}
+    .kpi-label{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:8px}
+    .kpi-sub{font-size:11px;color:var(--text-muted);margin-top:4px}
+    .cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+    .card{background:var(--bg);border-radius:8px;padding:16px;border:1px solid var(--border);text-align:center}
+    .card-icon{font-size:24px;margin-bottom:6px}
+    .card-title{font-size:12px;font-weight:700;color:var(--green)}
+    .risk-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+    .risk-row:last-child{border-bottom:none}
+    .risk-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+    .risk-dot.low{background:#22c55e}.risk-dot.moderate{background:var(--amber)}.risk-dot.high{background:var(--red)}
+    .risk-label{font-size:13px;font-weight:600;flex:1}
+    .risk-value{font-size:13px;color:var(--text-muted)}
+    .chart-container{margin:20px 0;text-align:center}
+    .chart-container svg{max-width:100%}
+    .bar-row{display:flex;align-items:center;gap:12px;margin:6px 0}
+    .bar-label{width:140px;font-size:12px;font-weight:500;text-align:right;flex-shrink:0}
+    .bar-track{flex:1;height:24px;background:var(--bg);border-radius:4px;overflow:hidden}
+    .bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:600;color:white}
+    .bar-fill.green{background:var(--green)}.bar-fill.terra{background:var(--terra)}.bar-fill.sky{background:var(--sky-dark)}.bar-fill.amber{background:var(--amber)}.bar-fill.red{background:var(--red)}
+    .checklist{list-style:none}
+    .checklist li{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;align-items:flex-start;gap:8px}
+    .checklist li:last-child{border-bottom:none}
+    .check-box{width:16px;height:16px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:1px}
+    .cover-page{background:#F8F6F2;color:#1a1a1a;text-align:center;padding:0;min-height:900px;display:flex;flex-direction:column;background-image:url('https://llibrary-eight.vercel.app/landbook-cover-bg.png');background-size:cover;background-position:center}
+    .cover-top{padding:60px 56px 0}
+    .cover-tagline{font-size:14px;color:#999;font-weight:400;letter-spacing:.5px;font-style:italic}
+    .cover-middle{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 56px}
+    .cover-property{font-size:48px;font-weight:400;margin-bottom:12px;line-height:1.1;color:#1a1a1a;letter-spacing:1px}
+    .cover-address{font-size:20px;color:#666;font-weight:400;line-height:1.6;margin-bottom:8px}
+    .cover-coords{font-size:14px;color:#aaa;font-weight:400;letter-spacing:2px;margin-top:4px}
+    .cover-bottom{padding:0 56px 24px;text-align:center}
+    .cover-brand{font-size:20px;font-weight:700;letter-spacing:3px;color:#1a1a1a;margin-bottom:12px}
+    .cover-meta{font-size:12px;color:#aaa;letter-spacing:1px;margin-bottom:20px}
+    .cover-disclaimer{font-size:11px;color:#aaa;line-height:1.5;max-width:500px;margin:0 auto}
+    .cover-disclaimer strong{color:#888}
+    .season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:16px 0}
+    .season-card{background:var(--bg);border-radius:8px;padding:14px;font-size:12px;border:1px solid var(--border)}
+    .season-card .period{font-weight:700;color:var(--green);margin-bottom:4px}
+    .season-card .risk-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin:4px 0}
+    .season-card .risk-tag.moderate{background:#fef3c7;color:#92400e}
+    .season-card .risk-tag.high{background:#fee2e2;color:#991b1b}
+    .season-card .risk-tag.low{background:#dcfce7;color:#166534}
+    .score-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+    .score-label{width:120px;font-size:12px;font-weight:600}
+    .score-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+    .score-fill{height:100%;border-radius:5px;background:var(--green)}
+    .score-value{width:50px;font-size:13px;font-weight:700;color:var(--green);text-align:right}
+    .map-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin:16px 0}
+    .map-grid .map-item{text-align:center}
+    .map-grid .map-item .map-placeholder{height:160px;background:var(--bg);border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13px}
+    .map-grid .map-item img{width:100%;height:auto;border-radius:8px;border:1px solid var(--border)}
+    .map-grid .map-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px}
+    .source-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;background:var(--green-pale);color:var(--green);margin:2px 4px 2px 0}
+    .disclaimer{background:var(--bg);border-radius:8px;padding:20px;font-size:11px;color:var(--text-muted);line-height:1.6;border-left:3px solid var(--amber)}
+
+    /* Synthetic data highlighting */
+    .synthetic-block{background:#fee2e2;border-left:4px solid #dc2626;border-radius:6px;padding:12px 16px;margin:8px 0}
+    .synthetic-badge{font-size:9px;font-weight:800;color:#dc2626;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+    .synthetic-content{}
+    .synthetic-source{font-size:10px;color:#991b1b;margin-top:6px;font-style:italic}
+    td.synthetic{background:#fee2e2;position:relative}
+    td.synthetic::after{content:'SYNTHETIC';position:absolute;top:2px;right:4px;font-size:7px;font-weight:800;color:#dc2626;letter-spacing:0.5px}
+    .kpi-card.synthetic{background:#fee2e2;border-color:#fca5a5}
+    .kpi-card.synthetic .synthetic-source{font-size:9px;color:#991b1b;font-style:italic;margin-top:4px}
+
+    @media(max-width:768px){
+      #report-container{margin:12px auto;padding:0 8px}
+      .report-page{padding:28px 20px 24px;margin-bottom:12px}
+      .section-title{font-size:20px}
+      .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+      .kpi-value{font-size:22px}
+      .cards-grid{grid-template-columns:1fr;gap:8px}
+      .cover-page{min-height:auto;min-height:100dvh}
+      .cover-property{font-size:28px}
+      .bar-row{flex-wrap:wrap}
+      .bar-label{width:100%;text-align:left;margin-bottom:2px}
+      .season-grid{grid-template-columns:repeat(2,1fr);gap:6px}
+      .map-grid{grid-template-columns:1fr}
+      .disclaimer{padding:14px;font-size:10px}
+    }
+    @media print{body{background:white}#report-container{max-width:none;margin:0;padding:0}.report-page{box-shadow:none;border-radius:0;margin-bottom:0}.cover-page{min-height:100vh}}
+  </style>
+</head>
+<body>
+  <div id="report-container">
+
+<!-- SECTION 1: PROPERTY IDENTITY (COVER) -->
+<div class="report-page cover-page">
+  <div class="cover-top">
+    <img src="https://llibrary-eight.vercel.app/landbook-logo.png" alt="LandBook" style="height:96px;margin-bottom:8px;" />
+    <div class="cover-tagline">Notes from the field.</div>
+  </div>
+  <div class="cover-middle">
+    <div class="cover-property">Monte da Ribeira</div>
+    <div class="cover-address">Monte da Ribeira, S&atilde;o Teot&oacute;nio,<br>Odemira, Beja, Portugal</div>
+    <div class="cover-coords">37.5967&deg;N, 8.6394&deg;W &nbsp;|&nbsp; 17 ha</div>
+    <div style="font-size:12px;color:#888;margin-top:12px;">Within Mira River sub-basin watershed (~340 km&sup2;)</div>
+    <div class="synthetic-block">
+      <div class="synthetic-badge">Synthetic Data</div>
+      <div class="synthetic-content"><div style="font-size:12px;text-align:center;">Natural Capital Score: <strong>72/100</strong> &nbsp;|&nbsp; Compliance: <strong>Pending</strong></div></div>
+      <div class="synthetic-source">Where to get real data: Natural capital score needs weighted aggregation formula; compliance requires EUDR/CSRD registry checks (not yet available)</div>
+    </div>
+  </div>
+  <div class="cover-bottom">
+    <img src="https://llibrary-eight.vercel.app/landlibrary-logo.png" alt="LandLibrary" style="height:28px;margin-bottom:12px;" />
+    <div class="cover-meta">Generated: 6 April 2026 &nbsp;|&nbsp; Version: Full Report v0.1</div>
+    <div class="cover-disclaimer"><strong>Disclaimer</strong><br>This assessment represents conditions at time of documentation. Land characteristics evolve; verify critical details before decisions. This report is an invitation to relationship, not a final judgment of value.</div>
+  </div>
+</div>
+
+<!-- SECTION 2: EXECUTIVE SUMMARY -->
+<div class="report-page">
+  <div class="section-number">Section 02</div>
+  <div class="section-title">Executive Summary</div>
+  <div class="section-subtitle">Property overview with natural capital profile</div>
+
+  <div class="chart-container">
+    <svg width="260" height="260" viewBox="0 0 260 260">
+      <!-- Grid rings -->
+      <polygon points="130,110 118.09,123.09 110,142 118.09,160.90 130,174 141.90,160.90 150,142 141.90,123.09" fill="none" stroke="#e5e2db" stroke-width="1" />
+      <polygon points="130,90 106.18,116.18 90,154 106.18,191.82 130,218 153.82,191.82 170,154 153.82,116.18" fill="none" stroke="#e5e2db" stroke-width="1" />
+      <polygon points="130,70 94.27,109.27 70,166 94.27,222.73 130,262 165.73,222.73 190,166 165.73,109.27" fill="none" stroke="#e5e2db" stroke-width="1" />
+      <polygon points="130,50 82.36,102.36 50,178 82.36,253.64 130,306 177.64,253.64 210,178 177.64,102.36" fill="none" stroke="#e5e2db" stroke-width="1" />
+      <polygon points="130,30 70.45,95.45 30,190 70.45,284.55 130,350 189.55,284.55 230,190 189.55,95.45" fill="none" stroke="#e5e2db" stroke-width="1" />
+      <!-- Axes -->
+      <line x1="130" y1="130" x2="130" y2="30" stroke="#e5e2db" />
+      <line x1="130" y1="130" x2="225.11" y2="99.10" stroke="#e5e2db" />
+      <line x1="130" y1="130" x2="188.78" y2="210.90" stroke="#e5e2db" />
+      <line x1="130" y1="130" x2="71.22" y2="210.90" stroke="#e5e2db" />
+      <line x1="130" y1="130" x2="34.89" y2="99.10" stroke="#e5e2db" />
+      <!-- Labels -->
+      <text x="130" y="14" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6b7280">Water</text>
+      <text x="243" y="92" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6b7280">Biodiversity</text>
+      <text x="200" y="228" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6b7280">Soil</text>
+      <text x="60" y="228" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6b7280">Carbon</text>
+      <text x="17" y="92" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#6b7280">Resilience</text>
+      <!-- Regional avg polygon (terra) -->
+      <polygon points="130,75 182.33,111.34 162.25,186.46 97.75,186.46 77.67,111.34" fill="#BC6C25" fill-opacity="0.1" stroke="#BC6C25" stroke-width="2" />
+      <!-- Property score polygon (green) -->
+      <polygon points="130,52 211.14,103.46 166.34,199.82 80.40,178.54 48.78,100.82" fill="#1B4332" fill-opacity="0.2" stroke="#1B4332" stroke-width="2" />
+      <!-- Score dots -->
+      <circle cx="130" cy="52" r="4" fill="#1B4332" />
+      <circle cx="211.14" cy="103.46" r="4" fill="#1B4332" />
+      <circle cx="166.34" cy="199.82" r="4" fill="#1B4332" />
+      <circle cx="80.40" cy="178.54" r="4" fill="#1B4332" />
+      <circle cx="48.78" cy="100.82" r="4" fill="#1B4332" />
+    </svg>
+    <div style="display:flex;gap:20px;justify-content:center;font-size:11px;margin-top:4px;">
+      <span><span style="display:inline-block;width:12px;height:3px;background:#1B4332;margin-right:4px;vertical-align:middle;"></span>This Property</span>
+      <span><span style="display:inline-block;width:12px;height:3px;background:#BC6C25;margin-right:4px;vertical-align:middle;"></span>Regional Average</span>
+    </div>
+  </div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);">
+    <div class="kpi-card">
+      <div class="kpi-value">17 ha</div>
+      <div class="kpi-label">Area</div>
+      <div class="kpi-sub">Calculated from boundary</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">&euro;25,300/ha</div>
+      <div class="kpi-label">Value/ha</div>
+      <div class="kpi-sub">Eurostat PT 2022</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">8.5/10</div>
+      <div class="kpi-label">Bio Score</div>
+      <div class="kpi-sub">iNaturalist + GBIF</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">7.8/10</div>
+      <div class="kpi-label">Water Security</div>
+      <div class="kpi-sub">OSM features + rainfall</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">1,428 tCO&#8322;e</div>
+      <div class="kpi-label">Carbon Stock</div>
+      <div class="kpi-sub">Literature &times; land cover</div>
+    </div>
+  </div>
+
+  <h3>Key Opportunities</h3>
+  <div class="cards-grid">
+    <div class="card"><div class="card-title">Water Security</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">Water score 7.8/10</div></div>
+    <div class="card"><div class="card-title">Carbon Credits</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">Bio score 8.5/10</div></div>
+    <div class="card"><div class="card-title">Fire Management</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">Fire risk Moderate</div></div>
+    <div class="card"><div class="card-title">Conservation</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">2 protected areas</div></div>
+    <div class="card"><div class="card-title">Biodiversity Value</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">287 species</div></div>
+    <div class="card"><div class="card-title">Renewable Energy</div><div style="font-size:9px;color:var(--text-muted);margin-top:4px;">Solar/wind potential</div></div>
+  </div>
+
+  <h3>Risk Summary</h3>
+  <div class="risk-row"><div class="risk-dot moderate"></div><div class="risk-label">Fire Risk</div><div class="risk-value">2/5 (Moderate)</div></div>
+  <div class="risk-row"><div class="risk-dot low"></div><div class="risk-label">Flood Risk</div><div class="risk-value">1/5 (Low)</div></div>
+  <div class="risk-row"><div class="risk-dot moderate"></div><div class="risk-label">Drought Risk</div><div class="risk-value">2/5 (Moderate)</div></div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><div><strong>Compliance Quick Check:</strong> EUDR &mdash; Pending | CSRD &mdash; Not assessed | ICNF APP &mdash; Not submitted</div></div>
+    <div class="synthetic-source">Where to get real data: EUDR Information System (delayed to Dec 2026), CSRD ESRS taxonomy, ICNF APP portal</div>
+  </div>
+</div>
+
+<!-- SECTION 3: VALUE COMPOSITION -->
+<div class="report-page">
+  <div class="section-number">Section 03</div>
+  <div class="section-title">Value Composition</div>
+  <div class="section-subtitle">Ecosystem services breakdown (TEEB methodology)</div>
+
+  <h3>Annual Ecosystem Services Value: &euro;18,462/yr</h3>
+  <div class="bar-row"><div class="bar-label">Water Regulation</div><div class="bar-track"><div class="bar-fill green" style="width:100%">&euro;7,800</div></div></div>
+  <div class="bar-row"><div class="bar-label">Food &amp; Fiber</div><div class="bar-track"><div class="bar-fill green" style="width:54%">&euro;4,200</div></div></div>
+  <div class="bar-row"><div class="bar-label">Recreation &amp; Cultural</div><div class="bar-track"><div class="bar-fill green" style="width:51%">&euro;3,962</div></div></div>
+  <div class="bar-row"><div class="bar-label">Nutrient Cycling</div><div class="bar-track"><div class="bar-fill green" style="width:32%">&euro;2,500</div></div></div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: TEEB database coefficients for Mediterranean ecosystems (LITERATURE)</div>
+
+  <h3>Natural Capital by Land Cover</h3>
+  <table class="data-table">
+    <thead><tr><th>Land Cover</th><th>Area (ha)</th><th>&euro;/ha/yr</th><th>Annual Value</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Agro-forestry (244)</td><td>7.65</td><td>&euro;930</td><td class="value">&euro;7,115</td></tr>
+      <tr><td class="label">Sclerophyllous vegetation (323)</td><td>5.10</td><td>&euro;1,130</td><td class="value">&euro;5,763</td></tr>
+      <tr><td class="label">Broad-leaved forest (311)</td><td>2.55</td><td>&euro;2,200</td><td class="value">&euro;5,610</td></tr>
+      <tr><td class="label">Complex cultivation (242)</td><td>1.70</td><td>&euro;800</td><td class="value">&euro;1,360</td></tr>
+    </tbody>
+  </table>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">30-Year NPV Projection</h3><div>Estimated 30-year NPV at 3% discount rate: <strong>&euro;369,240</strong> (conservative)</div></div>
+    <div class="synthetic-source">Where to get real data: Requires discount rate assumptions and growth projections. Could use INE Portugal land value time series for trend data.</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">Gift Flow Diagram</h3><div style="text-align:center;padding:20px;color:var(--text-muted);">This property contributes water filtration, carbon sequestration, and habitat provision to its bioregion. These flows exist outside market exchange and represent the property's gift to the commons.</div></div>
+    <div class="synthetic-source">Where to get real data: Sacred Economics framework &mdash; requires community survey data and relationship mapping</div>
+  </div>
+</div>
+
+<!-- SECTION 4: NATURAL CAPITAL SCORECARD -->
+<div class="report-page">
+  <div class="section-number">Section 04</div>
+  <div class="section-title">Natural Capital Scorecard</div>
+  <div class="section-subtitle">Five-dimension profile with regional comparison</div>
+
+  <table class="data-table">
+    <thead><tr><th>Dimension</th><th>Score</th><th>Regional Avg</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Water</td><td class="value">7.8/10</td><td>5.5/10</td><td>2 springs, 1 wells, 652mm rain</td></tr>
+      <tr><td class="label">Biodiversity</td><td class="value">8.5/10</td><td>5.5/10</td><td>287 species, 14 threatened</td></tr>
+      <tr><td class="label">Soil</td><td class="value">7/10</td><td>6/10</td><td>pH 5.8, OC 18.4g/kg</td></tr>
+      <tr><td class="label">Carbon</td><td class="value">5.6/10</td><td>5/10</td><td>1,428 tCO2e estimated</td></tr>
+      <tr><td class="label">Resilience</td><td class="value">6/10</td><td>5.5/10</td><td>Derived from risk scores</td></tr>
+    </tbody>
+  </table>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">Connectivity Score</h3><div>Estimated habitat connectivity: <strong>6.2/10</strong><br>Based on 2 protected areas within 25km and land cover fragmentation.</div></div>
+    <div class="synthetic-source">Where to get real data: Circuitscape analysis, or compute from Natura 2000 polygon proximity + CORINE land cover matrix</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">Score Evolution Timeline</h3><div style="text-align:center;padding:16px;color:var(--text-muted);">Historical score tracking requires multi-year data collection. Recommend establishing baseline monitoring protocol.</div></div>
+    <div class="synthetic-source">Where to get real data: Sentinel-2 NDVI time series for vegetation quality trend; repeated iNaturalist surveys for biodiversity trend</div>
+  </div>
+</div>
+
+<!-- SECTION 5: TERRAIN AND LANDSCAPE -->
+<div class="report-page">
+  <div class="section-number">Section 05</div>
+  <div class="section-title">Terrain and Landscape</div>
+  <div class="section-subtitle">Topography, soils, and land cover analysis</div>
+
+  <h3>5.1 Elevation &amp; Slope</h3>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-value">85&ndash;142m</div>
+      <div class="kpi-label">Elevation Range</div>
+      <div class="kpi-sub">57m difference</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">8.3%</div>
+      <div class="kpi-label">Avg Slope</div>
+      <div class="kpi-sub">Moderate (5-10%)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">South-facing</div>
+      <div class="kpi-label">Aspect</div>
+      <div class="kpi-sub">Primary orientation</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">112m</div>
+      <div class="kpi-label">Mean Elevation</div>
+      <div class="kpi-sub">Open-Meteo DEM</div>
+    </div>
+  </div>
+
+  <h3>5.2 Soil Composition</h3>
+  <table class="data-table">
+    <thead><tr><th>Property</th><th>Value</th><th>Depth</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Classification</td><td class="value">Cambisols</td><td>&mdash;</td></tr>
+      <tr><td class="label">Clay / Sand / Silt</td><td class="value">22.1% / 48.3% / 29.6%</td><td>0&ndash;5cm</td></tr>
+      <tr><td class="label">pH</td><td class="value">5.8</td><td>0&ndash;5cm</td></tr>
+      <tr><td class="label">Organic Carbon</td><td class="value">18.4 g/kg</td><td>0&ndash;5cm</td></tr>
+      <tr><td class="label">Nitrogen</td><td class="value">0.14 g/kg</td><td>0&ndash;5cm</td></tr>
+      <tr><td class="label">CEC</td><td class="value">12.3 cmol/kg</td><td>0&ndash;5cm</td></tr>
+      <tr><td class="label">Bulk Density</td><td class="value">1.32 g/cm&sup3;</td><td>0&ndash;5cm</td></tr>
+    </tbody>
+  </table>
+  <div style="font-size:11px;color:var(--text-muted);">Source: SoilGrids 2.0 (ISRIC) &mdash; 250m resolution</div>
+
+  <h3>5.3 Land Cover</h3>
+  <div class="bar-row"><div class="bar-label">Agro-forestry (244)</div><div class="bar-track"><div class="bar-fill sky" style="width:45%">45%</div></div></div>
+  <div class="bar-row"><div class="bar-label">Sclerophyllous (323)</div><div class="bar-track"><div class="bar-fill sky" style="width:30%">30%</div></div></div>
+  <div class="bar-row"><div class="bar-label">Broad-leaved forest (311)</div><div class="bar-track"><div class="bar-fill sky" style="width:15%">15%</div></div></div>
+  <div class="bar-row"><div class="bar-label">Complex cultivation (242)</div><div class="bar-track"><div class="bar-fill sky" style="width:10%">10%</div></div></div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: CORINE 2018</div>
+
+  <h3>5.4 Land Cover Change Detection</h3>
+  <table class="data-table">
+    <thead><tr><th>Year</th><th>Land Cover Class</th><th>CORINE Code</th></tr></thead>
+    <tbody>
+      <tr><td class="label">2000</td><td class="value">Agro-forestry</td><td>244</td></tr>
+      <tr><td class="label">2006</td><td class="value">Agro-forestry</td><td>244</td></tr>
+      <tr><td class="label">2012</td><td class="value">Agro-forestry</td><td>244</td></tr>
+      <tr><td class="label">2018</td><td class="value">Agro-forestry</td><td>244</td></tr>
+    </tbody>
+  </table>
+  <div style="font-size:12px;color:var(--text-muted);">No land cover transitions detected (stable land use).</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: CORINE Land Cover (EEA WMS)</div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">5.5 Wound Index &amp; Erosion</h3><div>Wound Index: <strong>Not assessed</strong> &mdash; requires field survey or Sentinel-2 NDVI anomaly analysis.<br>Erosion risk: Estimated from slope (8.3%) &times; rainfall (652mm) &times; soil erodibility.</div></div>
+    <div class="synthetic-source">Where to get real data: ESDAC RUSLE2015 pre-computed erosion layers (100m, EU), or compute from RUSLE factors using existing slope/soil/climate data</div>
+  </div>
+</div>
+
+<!-- SECTION 6: WATER RESOURCES -->
+<div class="report-page">
+  <div class="section-number">Section 06</div>
+  <div class="section-title">Water Resources</div>
+  <div class="section-subtitle">Water inventory, security, and seasonal patterns</div>
+
+  <h3>6.1 Water Sources Inventory</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi-card"><div class="kpi-value">2</div><div class="kpi-label">Springs</div><div class="kpi-sub">OSM/Overpass</div></div>
+    <div class="kpi-card"><div class="kpi-value">1</div><div class="kpi-label">Wells</div><div class="kpi-sub">OSM/Overpass</div></div>
+    <div class="kpi-card"><div class="kpi-value">3</div><div class="kpi-label">Waterways</div><div class="kpi-sub">OSM/Overpass</div></div>
+    <div class="kpi-card"><div class="kpi-value">1</div><div class="kpi-label">Water Bodies</div><div class="kpi-sub">OSM/Overpass</div></div>
+  </div>
+
+  <h3>6.2 Water Security Index</h3>
+  <div style="display:flex;align-items:center;gap:12px;margin:16px 0;">
+    <div class="score-label" style="font-size:14px;font-weight:700;">Water Security</div>
+    <div class="score-track" style="flex:1;height:14px;"><div class="score-fill" style="width:78%;background:var(--sky-dark);"></div></div>
+    <div class="score-value" style="color:var(--sky-dark);">7.8/10</div>
+  </div>
+
+  <h3>6.3 Annual Water Provisioning</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
+    <div class="kpi-card"><div class="kpi-value">652mm</div><div class="kpi-label">Annual Rainfall</div><div class="kpi-sub">Open-Meteo Archive (30yr)</div></div>
+    <div class="kpi-card"><div class="kpi-value">&euro;1,260/yr</div><div class="kpi-label">Water Provisioning Value</div><div class="kpi-sub">TEEB (30% of provisioning)</div></div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">6.4 Seasonal Flow Pattern</h3><div>Derived from monthly rainfall: Jan: 82mm, Feb: 70mm, Mar: 55mm, Apr: 42mm, May: 28mm, Jun: 10mm, Jul: 3mm, Aug: 4mm, Sep: 22mm, Oct: 68mm, Nov: 88mm, Dec: 95mm</div></div>
+    <div class="synthetic-source">Where to get real data: SNIRH gauging stations (Portugal) for actual stream flow data. REST services at sniambgeoogc.apambiente.pt</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">6.5 Downstream Obligations &amp; Legal Status</h3><div>Water body status under Water Framework Directive: <strong>Not assessed</strong></div></div>
+    <div class="synthetic-source">Where to get real data: SNIRH/APA water body status registry, water user association records</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">6.6 Future Water Stress</h3><div>Projected precipitation change by 2050: <strong>-11%</strong></div></div>
+    <div class="synthetic-source">Where to get real data: Open-Meteo Climate API provides projections; SNIRH for historical water availability trends</div>
+  </div>
+</div>
+
+<!-- SECTION 7: CLIMATE PROFILE -->
+<div class="report-page">
+  <div class="section-number">Section 07</div>
+  <div class="section-title">Climate Profile</div>
+  <div class="section-subtitle">30-year climate normals with future projections</div>
+
+  <h3>7.1 Climate Summary</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="kpi-card"><div class="kpi-value">15.8&deg;C</div><div class="kpi-label">Annual Mean</div><div class="kpi-sub">Open-Meteo Archive</div></div>
+    <div class="kpi-card"><div class="kpi-value">652mm</div><div class="kpi-label">Annual Rainfall</div><div class="kpi-sub">Open-Meteo Archive</div></div>
+    <div class="kpi-card"><div class="kpi-value">~270 days</div><div class="kpi-label">Growing Season</div><div class="kpi-sub">Derived from climate</div></div>
+  </div>
+  <table class="data-table">
+    <thead><tr><th>Month</th><th>Avg High</th><th>Avg Low</th><th>Rainfall</th><th>Wind (avg)</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Jan</td><td class="value">14.8&deg;C</td><td>6.2&deg;C</td><td>82mm</td><td>3.6 km/h</td></tr>
+      <tr><td class="label">Feb</td><td class="value">15.6&deg;C</td><td>6.8&deg;C</td><td>70mm</td><td>3.8 km/h</td></tr>
+      <tr><td class="label">Mar</td><td class="value">17.4&deg;C</td><td>8.1&deg;C</td><td>55mm</td><td>4.0 km/h</td></tr>
+      <tr><td class="label">Apr</td><td class="value">18.9&deg;C</td><td>9.5&deg;C</td><td>42mm</td><td>3.9 km/h</td></tr>
+      <tr><td class="label">May</td><td class="value">21.8&deg;C</td><td>11.6&deg;C</td><td>28mm</td><td>3.7 km/h</td></tr>
+      <tr><td class="label">Jun</td><td class="value">25.4&deg;C</td><td>14.8&deg;C</td><td>10mm</td><td>4.1 km/h</td></tr>
+      <tr><td class="label">Jul</td><td class="value">29.2&deg;C</td><td>17.1&deg;C</td><td>3mm</td><td>4.3 km/h</td></tr>
+      <tr><td class="label">Aug</td><td class="value">29.5&deg;C</td><td>17.4&deg;C</td><td>4mm</td><td>3.9 km/h</td></tr>
+      <tr><td class="label">Sep</td><td class="value">26.1&deg;C</td><td>15.6&deg;C</td><td>22mm</td><td>3.5 km/h</td></tr>
+      <tr><td class="label">Oct</td><td class="value">21.3&deg;C</td><td>12.4&deg;C</td><td>68mm</td><td>3.4 km/h</td></tr>
+      <tr><td class="label">Nov</td><td class="value">17.2&deg;C</td><td>8.9&deg;C</td><td>88mm</td><td>3.6 km/h</td></tr>
+      <tr><td class="label">Dec</td><td class="value">14.9&deg;C</td><td>6.6&deg;C</td><td>95mm</td><td>3.8 km/h</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Seasonal Calendar</h3>
+  <div class="season-grid">
+    <div class="season-card"><div class="period">Jan-Mar</div><span class="risk-tag low">Cool &amp; mild</span><div style="margin-top:6px;color:var(--text-muted);">Good planting window</div></div>
+    <div class="season-card"><div class="period">Apr-May</div><span class="risk-tag low">Growing season</span><div style="margin-top:6px;color:var(--text-muted);">Optimal growth period</div></div>
+    <div class="season-card"><div class="period">Jun-Aug</div><span class="risk-tag high">PEAK FIRE RISK</span><div style="margin-top:6px;color:var(--text-muted);">No outdoor burning, monitor continuously</div></div>
+    <div class="season-card"><div class="period">Sep-Dec</div><span class="risk-tag low">First rains</span><div style="margin-top:6px;color:var(--text-muted);">Revegetation window</div></div>
+  </div>
+
+  <h3>7.3 Future Climate Scenarios (CMIP6)</h3>
+  <table class="data-table">
+    <thead><tr><th>Period</th><th>Temp Change</th><th>Precip Change</th><th>Model</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Baseline (30yr avg)</td><td class="value">15.8&deg;C</td><td>652mm</td><td>Open-Meteo Archive</td></tr>
+      <tr><td class="label">2025-2034</td><td class="value">+0.8&deg;C</td><td>-3%</td><td>EC_Earth3P_HR</td></tr>
+      <tr><td class="label">2035-2044</td><td class="value">+1.4&deg;C</td><td>-7%</td><td>EC_Earth3P_HR</td></tr>
+      <tr><td class="label">2045-2050</td><td class="value">+1.9&deg;C</td><td>-11%</td><td>EC_Earth3P_HR</td></tr>
+    </tbody>
+  </table>
+  <div style="font-size:11px;color:var(--text-muted);">Source: Open-Meteo Climate API (CMIP6)</div>
+</div>
+
+<!-- SECTION 8: BIODIVERSITY INVENTORY -->
+<div class="report-page">
+  <div class="section-number">Section 08</div>
+  <div class="section-title">Biodiversity Inventory</div>
+  <div class="section-subtitle">287 species observed within 15km</div>
+
+  <h3>8.1 Species by Group</h3>
+  <div class="bar-row"><div class="bar-label">Flora</div><div class="bar-track"><div class="bar-fill green" style="width:100%">142</div></div></div>
+  <div class="bar-row"><div class="bar-label">Birds</div><div class="bar-track"><div class="bar-fill green" style="width:48%">68</div></div></div>
+  <div class="bar-row"><div class="bar-label">Insects</div><div class="bar-track"><div class="bar-fill green" style="width:22%">31</div></div></div>
+  <div class="bar-row"><div class="bar-label">Mammals</div><div class="bar-track"><div class="bar-fill green" style="width:8%">12</div></div></div>
+  <div class="bar-row"><div class="bar-label">Reptiles</div><div class="bar-track"><div class="bar-fill green" style="width:8%">11</div></div></div>
+  <div class="bar-row"><div class="bar-label">Fungi</div><div class="bar-track"><div class="bar-fill green" style="width:6%">9</div></div></div>
+  <div class="bar-row"><div class="bar-label">Amphibians</div><div class="bar-track"><div class="bar-fill green" style="width:6%">8</div></div></div>
+  <div class="bar-row"><div class="bar-label">Fish</div><div class="bar-track"><div class="bar-fill green" style="width:4%">6</div></div></div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: iNaturalist (15km radius)</div>
+
+  <h3>8.2 Notable Species</h3>
+  <table class="data-table">
+    <thead><tr><th>Species</th><th>Group</th><th>Observations</th><th>Threatened</th></tr></thead>
+    <tbody>
+      <tr><td class="value">European Bee-eater</td><td>Birds</td><td>42</td><td>&mdash;</td></tr>
+      <tr><td class="value">European Stonechat</td><td>Birds</td><td>38</td><td>&mdash;</td></tr>
+      <tr><td class="value">White Stork</td><td>Birds</td><td>35</td><td>&mdash;</td></tr>
+      <tr><td class="value">Sardinian Warbler</td><td>Birds</td><td>29</td><td>&mdash;</td></tr>
+      <tr><td class="value">Iberian Wall Lizard</td><td>Reptiles</td><td>24</td><td>&mdash;</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.3 Threatened Species (14)</h3>
+  <table class="data-table">
+    <thead><tr><th>Species</th><th>Group</th><th>Observations</th></tr></thead>
+    <tbody>
+      <tr><td class="value">Iberian Lynx</td><td>Mammals</td><td>3</td></tr>
+      <tr><td class="value">Bonelli's Eagle</td><td>Birds</td><td>7</td></tr>
+      <tr><td class="value">Iberian Midwife Toad</td><td>Amphibians</td><td>5</td></tr>
+      <tr><td class="value">Western Spadefoot</td><td>Amphibians</td><td>4</td></tr>
+      <tr><td class="value">Mediterranean Pond Turtle</td><td>Reptiles</td><td>6</td></tr>
+      <tr><td class="value">Otter</td><td>Mammals</td><td>8</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.4 Biodiversity Trends</h3>
+  <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin:12px 0;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;font-weight:600;color:var(--green);">198</div><div style="width:100%;height:69%;background:var(--green);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">2021</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;font-weight:600;color:var(--green);">221</div><div style="width:100%;height:77%;background:var(--green);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">2022</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;font-weight:600;color:var(--green);">247</div><div style="width:100%;height:86%;background:var(--green);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">2023</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;font-weight:600;color:var(--green);">268</div><div style="width:100%;height:93%;background:var(--green);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">2024</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;"><div style="font-size:9px;font-weight:600;color:var(--green);">287</div><div style="width:100%;height:100%;background:var(--green);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">2025</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: iNaturalist (yearly species counts, 15km radius)</div>
+
+  <h3>8.5 GBIF Occurrence Trends</h3>
+  <table class="data-table">
+    <thead><tr><th>Year</th><th>Occurrences</th></tr></thead>
+    <tbody>
+      <tr><td class="label">2020</td><td class="value">3,400</td></tr>
+      <tr><td class="label">2021</td><td class="value">4,100</td></tr>
+      <tr><td class="label">2022</td><td class="value">4,800</td></tr>
+      <tr><td class="label">2023</td><td class="value">5,200</td></tr>
+      <tr><td class="label">2024</td><td class="value">5,900</td></tr>
+    </tbody>
+  </table>
+  <div style="font-size:11px;color:var(--text-muted);">Source: GBIF (occurrence records, faceted by year)</div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">8.6 Future Biodiversity Scenarios</h3><div>Species distribution modeling under climate change requires CMIP6 projections + species habitat range data. Not yet implemented.</div></div>
+    <div class="synthetic-source">Where to get real data: IPBES projections, species distribution models (MaxEnt), or GBIF + climate envelope modeling</div>
+  </div>
+</div>
+
+<!-- SECTION 9: AGRICULTURAL POTENTIAL -->
+<div class="report-page">
+  <div class="section-number">Section 09</div>
+  <div class="section-title">Agricultural Potential</div>
+  <div class="section-subtitle">Revenue models by land cover type</div>
+
+  <h3>9.1 Revenue by Land Use</h3>
+  <table class="data-table">
+    <thead><tr><th>Model</th><th>Land Cover</th><th>Area (ha)</th><th>Annual Revenue</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Cork harvest (9yr cycle)</td><td>Agro-forestry (244)</td><td>7.65</td><td class="value">&euro;1,148</td><td>180 kg/ha &times; &euro;8.5</td></tr>
+      <tr><td class="label">Apiculture potential</td><td>Sclerophyllous (323)</td><td>5.10</td><td class="value">&euro;4,080</td><td>100 kg honey/ha &times; &euro;8</td></tr>
+      <tr><td class="label">Timber/biomass</td><td>Broad-leaved forest (311)</td><td>2.55</td><td class="value">&euro;459</td><td>4 m&sup3;/ha &times; &euro;45</td></tr>
+      <tr><td class="label">Mixed crops</td><td>Complex cultivation (242)</td><td>1.70</td><td class="value">&euro;1,488</td><td>2500 kg/ha &times; &euro;0.35</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.2 Revenue Scenarios</h3>
+  <div class="bar-row"><div class="bar-label">Conservative</div><div class="bar-track"><div class="bar-fill terra" style="width:38%">&euro;7,175/yr</div></div></div>
+  <div class="bar-row"><div class="bar-label">Moderate</div><div class="bar-track"><div class="bar-fill terra" style="width:62%">&euro;11,043/yr</div></div></div>
+  <div class="bar-row"><div class="bar-label">Optimized</div><div class="bar-track"><div class="bar-fill terra" style="width:100%">&euro;14,913/yr</div></div></div>
+
+  <h3>9.3 Carbon Stock &amp; Sequestration</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="kpi-card"><div class="kpi-value">1,428 tCO&#8322;e</div><div class="kpi-label">Carbon Stock</div><div class="kpi-sub">Literature values by land cover type &times; area</div></div>
+    <div class="kpi-card"><div class="kpi-value">28.6 tCO&#8322;e/yr</div><div class="kpi-label">Sequestration</div><div class="kpi-sub">~2% of stock</div></div>
+    <div class="kpi-card"><div class="kpi-value">&euro;1,859&ndash;2,288</div><div class="kpi-label">Credit Value</div><div class="kpi-sub">@ &euro;65-80/t</div></div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">9.4 Stewardship Ledger</h3><div>The Stewardship Ledger tracks non-monetary contributions: seed saving, knowledge sharing, habitat creation, fire prevention labor. This is a qualitative framework that requires community input.</div></div>
+    <div class="synthetic-source">Where to get real data: Sacred Economics framework &mdash; community survey and participatory mapping</div>
+  </div>
+</div>
+
+<!-- SECTION 10: REVENUE OPPORTUNITIES -->
+<div class="report-page">
+  <div class="section-number">Section 10</div>
+  <div class="section-title">Revenue Opportunities</div>
+
+  <h3>10.1 Valuation Scenarios</h3>
+  <table class="data-table">
+    <thead><tr><th>Scenario</th><th>Total</th><th>&euro;/ha</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Conservative</td><td class="value">&euro;365,585</td><td>&euro;21,505</td><td>Eurostat (PT, 2022)</td></tr>
+      <tr><td class="label">Market</td><td class="value">&euro;430,100</td><td>&euro;25,300</td><td>Eurostat (PT, 2022)</td></tr>
+      <tr><td class="label">Optimistic</td><td class="value">&euro;494,615</td><td>&euro;29,095</td><td>+ natural capital premium</td></tr>
+    </tbody>
+  </table>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">10.2 Gift Economy &amp; Commons</h3><div>Access-based revenue models, land trust transition pathways, and gift economy potential require policy analysis and community engagement frameworks.</div></div>
+    <div class="synthetic-source">Where to get real data: Policy research, legal framework analysis, community cooperative models</div>
+  </div>
+</div>
+
+<!-- SECTION 11: RISK ASSESSMENT -->
+<div class="report-page">
+  <div class="section-number">Section 11</div>
+  <div class="section-title">Risk Assessment</div>
+
+  <h3>11.1 Risk Scores</h3>
+  <table class="data-table">
+    <thead><tr><th>Risk</th><th>Score</th><th>Level</th><th>Basis</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Fire</td><td class="value">45/100</td><td><span class="risk-tag moderate" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">MODERATE</span></td><td>Temp, precip, wind, season</td></tr>
+      <tr><td class="label">Drought</td><td class="value">30/100</td><td><span class="risk-tag moderate" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">MODERATE</span></td><td>Precip vs 30yr seasonal avg</td></tr>
+      <tr><td class="label">Flood</td><td class="value">10/100</td><td><span class="risk-tag low" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">LOW</span></td><td>Recent precipitation</td></tr>
+    </tbody>
+  </table>
+
+  <h3>11.2 Fire History (10yr)</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi-card"><div class="kpi-value">2,847</div><div class="kpi-label">Total Detections</div><div class="kpi-sub">10yr, 25km</div></div>
+    <div class="kpi-card"><div class="kpi-value">7/10</div><div class="kpi-label">Years with Fire</div><div class="kpi-sub"></div></div>
+    <div class="kpi-card"><div class="kpi-value">2016</div><div class="kpi-label">Worst Year</div><div class="kpi-sub">847 detections</div></div>
+    <div class="kpi-card"><div class="kpi-value">2023</div><div class="kpi-label">Most Recent</div><div class="kpi-sub"></div></div>
+  </div>
+  <div style="margin-top:12px;display:flex;align-items:flex-end;gap:2px;height:60px;">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2016: 847"><div style="width:100%;height:100%;background:var(--red);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">16</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2017: 623"><div style="width:100%;height:74%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">17</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2018: 198"><div style="width:100%;height:23%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">18</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2019: 156"><div style="width:100%;height:18%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">19</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2020: 0"><div style="width:100%;height:2%;background:var(--border);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">20</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2021: 245"><div style="width:100%;height:29%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">21</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2022: 278"><div style="width:100%;height:33%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">22</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2023: 312"><div style="width:100%;height:37%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">23</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2024: 188"><div style="width:100%;height:22%;background:var(--amber);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">24</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="2025: 0"><div style="width:100%;height:2%;background:var(--border);border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">25</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: NASA FIRMS MODIS Archive</div>
+
+  <h3>11.3 Seasonal Risk Calendar</h3>
+  <div class="season-grid">
+    <div class="season-card"><div class="period">Jan-Mar</div><span class="risk-tag low">Cool &amp; mild</span><div style="margin-top:6px;color:var(--text-muted);">Good planting window</div></div>
+    <div class="season-card"><div class="period">Apr-May</div><span class="risk-tag low">Growing season</span><div style="margin-top:6px;color:var(--text-muted);">Optimal growth period</div></div>
+    <div class="season-card"><div class="period">Jun-Aug</div><span class="risk-tag high">PEAK FIRE RISK</span><div style="margin-top:6px;color:var(--text-muted);">No outdoor burning, monitor continuously</div></div>
+    <div class="season-card"><div class="period">Sep-Dec</div><span class="risk-tag low">First rains</span><div style="margin-top:6px;color:var(--text-muted);">Revegetation window</div></div>
+  </div>
+
+  <h3>11.4 Mitigation Recommendations</h3>
+  <ul class="checklist">
+    <li><span class="check-box"></span>Create defensible space around structures (10m minimum clearance)</li>
+    <li><span class="check-box"></span>Fuel load reduction through controlled grazing or mechanical clearing</li>
+    <li><span class="check-box"></span>Install rainwater harvesting systems</li>
+    <li><span class="check-box"></span>Establish water-efficient drip irrigation for productive areas</li>
+    <li><span class="check-box"></span>Annual property assessment for environmental changes</li>
+  </ul>
+</div>
+
+<!-- SECTION 12: RESILIENCY ASSESSMENT -->
+<div class="report-page">
+  <div class="section-number">Section 12</div>
+  <div class="section-title">Resiliency Assessment</div>
+  <div class="section-subtitle">Water resilience and energy potential</div>
+
+  <h3>12.1 Water Resilience</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="kpi-card"><div class="kpi-value">7.8/10</div><div class="kpi-label">Water Security</div><div class="kpi-sub">Computed</div></div>
+    <div class="kpi-card"><div class="kpi-value">652mm</div><div class="kpi-label">Annual Rainfall</div><div class="kpi-sub">Open-Meteo</div></div>
+    <div class="kpi-card"><div class="kpi-value">7</div><div class="kpi-label">Water Sources</div><div class="kpi-sub">OSM/Overpass</div></div>
+  </div>
+
+  <h3>12.2 Solar Capacity</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi-card"><div class="kpi-value">1,580 kWh</div><div class="kpi-label">Annual/kWp</div><div class="kpi-sub">PVGIS v5.3 (EU JRC)</div></div>
+    <div class="kpi-card"><div class="kpi-value">34&deg;</div><div class="kpi-label">Optimal Tilt</div><div class="kpi-sub">PVGIS v5.3 (EU JRC)</div></div>
+    <div class="kpi-card"><div class="kpi-value">680 kWp</div><div class="kpi-label">Potential Capacity</div><div class="kpi-sub">20% land use</div></div>
+    <div class="kpi-card"><div class="kpi-value">1,074 MWh/yr</div><div class="kpi-label">Potential Output</div><div class="kpi-sub">Estimated</div></div>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: PVGIS v5.3 (EU JRC)</div>
+
+  <h3>12.3 Wind Potential</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi-card"><div class="kpi-value">3.8 km/h</div><div class="kpi-label">Avg Wind (10m)</div><div class="kpi-sub">Open-Meteo Archive</div></div>
+    <div class="kpi-card"><div class="kpi-value">5.4 km/h</div><div class="kpi-label">Est. at 50m</div><div class="kpi-sub">Power law extrapolation</div></div>
+    <div class="kpi-card"><div class="kpi-value">Poor</div><div class="kpi-label">Power Class</div><div class="kpi-sub">IEC classification</div></div>
+    <div class="kpi-card"><div class="kpi-value">0 kWh</div><div class="kpi-label">10kW Turbine Est.</div><div class="kpi-sub">Annual output</div></div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">12.4 Micro-Hydro Potential</h3><div>Requires stream flow analysis and head measurement. 3 waterways detected nearby. Elevation drop across property: 57m.</div></div>
+    <div class="synthetic-source">Where to get real data: SNIRH stream gauging data + DEM-derived head calculation</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">12.5 Geothermal Potential</h3><div>Shallow ground temperature at this latitude (~38&deg;N): estimated 14-16&deg;C stable. Ground-source heat pump COP: ~4.0 estimated.</div></div>
+    <div class="synthetic-source">Where to get real data: IHFC Global Heat Flow Database (91k measurements, open access at heatflow.world)</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">12.6 Biomass Energy</h3><div>Based on land cover (Agro-forestry (244)), estimated biomass productivity: 2-5 tonnes/ha/year. Energy content: ~18 GJ/tonne.</div></div>
+    <div class="synthetic-source">Where to get real data: Land cover &times; published biomass productivity coefficients (ICNF forest inventory data)</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">12.7 Energy Independence Score</h3><div style="text-align:center;"><strong>Score: 45/100</strong> (estimated)<br>Composite of solar (available), wind (Poor), biomass, hydro potential.</div></div>
+    <div class="synthetic-source">Where to get real data: Weighted composite of all energy assessments above. Needs load profile estimation for accuracy.</div>
+  </div>
+</div>
+
+<!-- SECTION 13: MULTI-SCALE CONTEXT -->
+<div class="report-page">
+  <div class="section-number">Section 13</div>
+  <div class="section-title">Multi-Scale Context</div>
+  <div class="section-subtitle">Bioregion, watershed, and 15-minute neighbourhood</div>
+
+  <h3>13.1 Watershed</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
+    <div class="kpi-card"><div class="kpi-value">Mira River sub-basin</div><div class="kpi-label">Watershed</div><div class="kpi-sub">mghydro.com (HydroSHEDS-derived)</div></div>
+    <div class="kpi-card"><div class="kpi-value">340 km&sup2;</div><div class="kpi-label">Watershed Area</div><div class="kpi-sub">mghydro.com (HydroSHEDS-derived)</div></div>
+  </div>
+
+  <h3>13.2 15-Minute Radius</h3>
+  <div style="background:var(--green-pale);padding:16px;border-radius:8px;border-left:3px solid var(--green);">15-minute driving isochrone calculated successfully. Area accessible within 15 minutes by car from property center.</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: Mapbox Isochrone API</div>
+
+  <h3>13.3 Community Infrastructure (within ~5km)</h3>
+  <table class="data-table">
+    <thead><tr><th>Type</th><th>Count</th></tr></thead>
+    <tbody>
+      <tr><td class="label">restaurant</td><td class="value">4</td></tr>
+      <tr><td class="label">school</td><td class="value">3</td></tr>
+      <tr><td class="label">pharmacy</td><td class="value">2</td></tr>
+      <tr><td class="label">shop</td><td class="value">2</td></tr>
+      <tr><td class="label">hospital</td><td class="value">1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>13.4 Population Context</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
+    <div class="kpi-card"><div class="kpi-value">18.3</div><div class="kpi-label">People/km&sup2;</div><div class="kpi-sub">WorldPop (100m resolution)</div></div>
+    <div class="kpi-card"><div class="kpi-value">Rural</div><div class="kpi-label">Classification</div><div class="kpi-sub">Density-based</div></div>
+  </div>
+
+  <h3>13.5 Land Price Context</h3>
+  <div class="kpi-grid" style="grid-template-columns:repeat(2,1fr);">
+    <div class="kpi-card"><div class="kpi-value">&euro;8,200/ha</div><div class="kpi-label">Eurostat Avg</div><div class="kpi-sub">PT (2022)</div></div>
+    <div class="kpi-card"><div class="kpi-value">&euro;25,300/ha</div><div class="kpi-label">This Property (est.)</div><div class="kpi-sub">Eurostat (PT, 2022)</div></div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">13.6 Bioregional Context</h3><div><strong>Bioregion:</strong> Odemira / Alentejo Litoral (estimated)<br><strong>Key characteristics:</strong> Mediterranean climate, montado landscape, cork oak economy, coastal influence<br><strong>Challenges:</strong> Fire regimes, drought cycles, rural depopulation, tourism pressure</div></div>
+    <div class="synthetic-source">Where to get real data: DMEER (Digital Map of European Ecological Regions) for bioregion boundaries; ICNF regional plans for challenges/opportunities</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">13.7 Neighbourhood Cooperation</h3><div>Potential for: machinery sharing, joint marketing, fire prevention mutual aid, skill exchange. Based on 12 amenities and 18.3 people/km&sup2; density.</div></div>
+    <div class="synthetic-source">Where to get real data: Community survey data, OSM analysis of neighbouring properties</div>
+  </div>
+</div>
+
+<!-- SECTION 14: TEMPORAL DYNAMICS -->
+<div class="report-page">
+  <div class="section-number">Section 14</div>
+  <div class="section-title">Temporal Dynamics</div>
+  <div class="section-subtitle">Change analysis and future scenarios</div>
+
+  <h3>14.1 Land Cover Change (CORINE)</h3>
+  <table class="data-table">
+    <thead><tr><th>Year</th><th>Land Cover</th></tr></thead>
+    <tbody>
+      <tr><td class="label">2000</td><td class="value">Agro-forestry</td></tr>
+      <tr><td class="label">2006</td><td class="value">Agro-forestry</td></tr>
+      <tr><td class="label">2012</td><td class="value">Agro-forestry</td></tr>
+      <tr><td class="label">2018</td><td class="value">Agro-forestry</td></tr>
+    </tbody>
+  </table>
+
+  <h3>14.2 Deforestation / Tree Cover Loss</h3>
+  <div style="background:var(--bg);padding:16px;border-radius:8px;">
+    <pre style="font-size:11px;white-space:pre-wrap;">{
+  "2001": 0.12,
+  "2005": 0.08,
+  "2010": 0.15,
+  "2015": 0.21,
+  "2017": 0.45,
+  "2020": 0.09,
+  "2022": 0.06,
+  "total_loss_km2": 1.16,
+  "basin_area_km2": 342.5
+}</pre>
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);">Source: OpenEPI (Global Forest Watch)</div>
+
+  <h3>14.3 Climate Change Projections</h3>
+  <table class="data-table">
+    <thead><tr><th>Period</th><th>Avg Temp</th><th>Annual Precip</th><th>Change</th></tr></thead>
+    <tbody>
+      <tr><td class="label">2025-2034</td><td class="value">+0.8&deg;C</td><td>-20mm</td><td>-3% precip</td></tr>
+      <tr><td class="label">2035-2044</td><td class="value">+1.4&deg;C</td><td>-46mm</td><td>-7% precip</td></tr>
+      <tr><td class="label">2045-2050</td><td class="value">+1.9&deg;C</td><td>-72mm</td><td>-11% precip</td></tr>
+    </tbody>
+  </table>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">14.4 Socio-Economic Trends</h3><div>Population trend, agricultural employment shifts, and ownership patterns require national statistics time series data.</div></div>
+    <div class="synthetic-source">Where to get real data: INE Portugal (municipal population time series), Eurostat NUTS3 (employment by sector)</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">14.5 Future Scenarios</h3><div>Scenario matrix: Business as Usual, Climate Resilience, Conservation Restoration, Intensification, Abandonment. Each requires integrating climate projections with land management choices.</div></div>
+    <div class="synthetic-source">Where to get real data: Custom modeling using CMIP6 projections + land use scenarios</div>
+  </div>
+</div>
+
+<!-- SECTION 15: MAP PORTFOLIO -->
+<div class="report-page">
+  <div class="section-number">Section 15</div>
+  <div class="section-title">Map Portfolio</div>
+  <div class="section-subtitle">Geospatial layers for this property</div>
+
+  <div class="map-grid">
+    <div class="map-item"><div class="map-placeholder">Satellite &amp; Boundary<br>(Mapbox token required)</div><div class="map-label">Satellite &amp; Boundary</div></div>
+    <div class="map-item"><div class="map-placeholder">Topography &amp; Hydrology<br>(Mapbox token required)</div><div class="map-label">Topography &amp; Hydrology</div></div>
+    <div class="map-item"><div class="map-placeholder">Soil &mdash; Clay Content<br>(SoilGrids WMS)</div><div class="map-label">Soil &mdash; Clay Content</div></div>
+    <div class="map-item"><div class="map-placeholder">Soil &mdash; pH<br>(SoilGrids WMS)</div><div class="map-label">Soil &mdash; pH</div></div>
+    <div class="map-item"><div class="map-placeholder">Land Cover &mdash; CORINE 2018<br>(EEA WMS)</div><div class="map-label">Land Cover &mdash; CORINE 2018</div></div>
+    <div class="map-item"><div class="map-placeholder">Land Cover &mdash; ESA WorldCover<br>(Terrascope WMS)</div><div class="map-label">Land Cover &mdash; ESA WorldCover</div></div>
+    <div class="map-item"><div class="map-placeholder">Fire Danger (EFFIS)<br>(Copernicus WMS)</div><div class="map-label">Fire Danger (EFFIS)</div></div>
+    <div class="map-item"><div class="map-placeholder">Water Resources<br>(Mapbox token required)</div><div class="map-label">Water Resources</div></div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><div class="map-grid"><div class="map-item"><div class="map-placeholder">Multi-scale context map<br>(property + watershed + bioregion + 15-min radius)</div><div class="map-label">Multi-Scale Context</div></div><div class="map-item"><div class="map-placeholder">15-minute isochrone accessibility map</div><div class="map-label">15-Min Accessibility</div></div></div></div>
+    <div class="synthetic-source">Where to get real data: Mapbox Static API with custom GeoJSON overlays from watershed + isochrone data; Global Solar Atlas WMS for solar potential map</div>
+  </div>
+</div>
+
+<!-- SECTION 16: COMPLIANCE & REGULATORY -->
+<div class="report-page">
+  <div class="section-number">Section 16</div>
+  <div class="section-title">Compliance &amp; Regulatory</div>
+  <div class="section-subtitle">EU and national regulatory framework</div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content">
+      <h3 style="border:none;margin:0 0 8px;padding:0;">16.1 EUDR Due Diligence</h3>
+      <div>EU Deforestation Regulation status: <strong>Not assessed</strong><br>Application deadline: 30 December 2026 (delayed from June 2025)<br>Deforestation risk: Data available from OpenEPI/GFW</div>
+
+      <h3 style="border:none;margin:20px 0 8px;padding:0;">16.2 CSRD / ESRS Data Export</h3>
+      <div>Corporate Sustainability Reporting Directive: <strong>Framework only</strong><br>ESRS XBRL Taxonomy contains 1,200+ data points. This report captures approximately 120 environmental data points potentially relevant to ESRS E1-E5.</div>
+
+      <h3 style="border:none;margin:20px 0 8px;padding:0;">16.3 ICNF APP Support</h3>
+      <div>Plano de Gest&atilde;o Florestal status: <strong>Not submitted</strong><br>Fire risk zone: Moderate<br>Required documentation: Property boundary (available), land cover classification (CORINE 2018), fire history (10yr MODIS data available).</div>
+
+      <h3 style="border:none;margin:20px 0 8px;padding:0;">16.4 Regulatory Timeline</h3>
+      <table class="data-table">
+        <thead><tr><th>Deadline</th><th>Requirement</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="label">Dec 2026</td><td>EUDR compliance (if commodity operator)</td><td>Pending</td></tr>
+          <tr><td class="label">2025 FY</td><td>CSRD reporting (if applicable)</td><td>Framework only</td></tr>
+          <tr><td class="label">Annual</td><td>ICNF fire management plan (if forest &gt;2ha)</td><td>Not submitted</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="synthetic-source">Where to get real data: EUDR Information System (TRACES NT, not yet queryable), CSRD ESRS taxonomy (EFRAG), ICNF APP portal. All registries require manual interaction &mdash; no APIs available yet.</div>
+  </div>
+</div>
+
+<!-- SECTION 17: NEXT STEPS -->
+<div class="report-page">
+  <div class="section-number">Section 17</div>
+  <div class="section-title">Next Steps &amp; Recommendations</div>
+
+  <h3>Immediate (0-6 months)</h3>
+  <ul class="checklist">
+    <li><span class="check-box"></span>Verify property boundaries with licensed surveyor</li>
+    <li><span class="check-box"></span>Implement fire fuel reduction program</li>
+    <li><span class="check-box"></span>Assess and meter existing water sources</li>
+  </ul>
+
+  <h3>Short-term (6-18 months)</h3>
+  <ul class="checklist">
+    <li><span class="check-box"></span>Biodiversity monitoring protocol</li>
+    <li><span class="check-box"></span>Drought resilience plan</li>
+    <li><span class="check-box"></span>Soil testing and amendment plan</li>
+    <li><span class="check-box"></span>Review conservation obligations</li>
+  </ul>
+
+  <h3>Long-term (2-5 years)</h3>
+  <ul class="checklist">
+    <li><span class="check-box"></span>Conservation easement evaluation</li>
+    <li><span class="check-box"></span>Carbon credit certification feasibility</li>
+    <li><span class="check-box"></span>Regenerative land management certification</li>
+  </ul>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">Cost Estimates</h3>
+    <table class="data-table">
+      <thead><tr><th>Action</th><th>Est. Cost</th></tr></thead>
+      <tbody>
+        <tr><td class="label">Licensed property survey</td><td class="value">&euro;1,500-3,000</td></tr>
+        <tr><td class="label">Hydrogeological study</td><td class="value">&euro;2,000-5,000</td></tr>
+        <tr><td class="label">Biodiversity baseline survey</td><td class="value">&euro;3,000-8,000</td></tr>
+        <tr><td class="label">Solar PV installation (5kW)</td><td class="value">&euro;6,000-10,000</td></tr>
+        <tr><td class="label">Carbon certification (Verra/Gold Standard)</td><td class="value">&euro;5,000-15,000</td></tr>
+      </tbody>
+    </table></div>
+    <div class="synthetic-source">Where to get real data: Local market research for professional services. Costs vary significantly by region and provider.</div>
+  </div>
+
+  <div class="synthetic-block">
+    <div class="synthetic-badge">Synthetic Data</div>
+    <div class="synthetic-content"><h3 style="border:none;margin:0 0 8px;padding:0;">Professional Contacts</h3><div>Recommended organization types: ICNF (forest authority), APA (environment agency), Municipality of Odemira, Local agricultural cooperative, Certified environmental consultants.</div></div>
+    <div class="synthetic-source">Where to get real data: Local business directories, ICNF regional office contacts, APA district contacts</div>
+  </div>
+</div>
+
+<!-- SECTION 18: METHODOLOGY, SOURCES & DISCLAIMER -->
+<div class="report-page">
+  <div class="section-number">Section 18</div>
+  <div class="section-title">Methodology, Sources &amp; Disclaimer</div>
+
+  <h3>Data Sources</h3>
+  <table class="data-table">
+    <thead><tr><th>Category</th><th>Source</th><th>Resolution</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td class="label">Elevation</td><td>Open-Meteo DEM (SRTM)</td><td>90m</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Climate (30yr)</td><td>Open-Meteo Archive</td><td>10km</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Climate Projections</td><td>Open-Meteo Climate (CMIP6)</td><td>10km</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Soil</td><td>SoilGrids 2.0 (ISRIC)</td><td>250m</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Geology</td><td>Macrostrat</td><td>Variable</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Species</td><td>iNaturalist</td><td>15km</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">GBIF</td><td>GBIF Occurrence</td><td>~15km bbox</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Active Fires</td><td>NASA FIRMS VIIRS</td><td>375m, 48h</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Fire History</td><td>NASA FIRMS MODIS Archive</td><td>1km, 10yr</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Flood</td><td>GloFAS (Open-Meteo)</td><td>10km</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Water Features</td><td>OpenStreetMap (Overpass)</td><td>Contributor-dependent</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Solar</td><td>PVGIS v5.3 / NASA POWER</td><td>Point</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Wind</td><td>Open-Meteo Archive</td><td>10km</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Watershed</td><td>mghydro.com</td><td>HydroSHEDS-derived</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Isochrone</td><td>Mapbox Isochrone</td><td>Road network</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Land Price</td><td>Eurostat (apri_lprc)</td><td>NUTS2</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Population</td><td>WorldPop</td><td>100m</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Deforestation</td><td>OpenEPI (GFW)</td><td>Basin</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Land Cover Epochs</td><td>CORINE WMS (2000-2018)</td><td>100m</td><td style="color:green;font-weight:600;">OK</td></tr>
+      <tr><td class="label">Bio Trends</td><td>iNaturalist (yearly)</td><td>15km, 5yr</td><td style="color:green;font-weight:600;">OK</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Methodology</h3>
+  <div style="font-size:12px;line-height:1.6;color:var(--text-muted);">
+    <p>This report follows the UN SEEA EA (System of Environmental-Economic Accounting &mdash; Ecosystem Accounting) framework where applicable. Natural capital valuation uses TEEB (The Economics of Ecosystems and Biodiversity) benefit transfer coefficients for Mediterranean ecosystems. Carbon estimation uses IPCC Tier 1 methodology with literature-based stock values by land cover type.</p>
+    <p>All data is fetched for the specific coordinates of the submitted property boundary. Climate normals are 30-year averages (WMO standard). Regional comparisons use the same APIs queried at wider radius or offset coordinates.</p>
+    <p><strong>Conservative estimation:</strong> Where uncertainty exists, lower-bound estimates are preferred.</p>
+  </div>
+
+  <h3>Disclaimer</h3>
+  <div class="disclaimer">
+    <p>This report is generated using publicly available data sources and computational models. It is intended for informational purposes only. Property boundaries, valuations, and environmental assessments should be verified by licensed professionals before any decision.</p>
+    <p><strong>Data marked as SYNTHETIC</strong> (red background) represents estimated or placeholder values. These are clearly annotated with the data source that could provide real data. Synthetic values should not be relied upon for decision-making.</p>
+    <p>This report is an invitation to relationship, not a final judgment of value.</p>
+    <p style="margin-top:12px;"><strong>Scale and boundary disclaimer:</strong> Scale boundaries (bioregion, watershed, 15-minute radius) are approximations for analytical purposes. Actual ecological, hydrological, and social relationships may extend beyond or not fully correspond to these boundaries.</p>
+  </div>
+
+  <div style="margin-top:32px;text-align:center;font-size:12px;color:var(--text-muted);">
+    <strong>LandBook by LandLibrary</strong><br>
+    info@landlibrary.com<br>
+    Generated: 6 April 2026 &nbsp;|&nbsp; APIs called: 24 &nbsp;|&nbsp; Succeeded: 24
+  </div>
+</div>
+
+  </div>
+</body>
+</html>
