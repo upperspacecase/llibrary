@@ -241,6 +241,7 @@ if (postcodeInput) {
 // ---------------------------------------------------------------------------
 function addPoint(latlng) {
   boundaryPoints.push(latlng);
+  if (boundaryPoints.length === 1 && btnReset) btnReset.style.display = '';
   if (instructions) {
     instructions.textContent = boundaryPoints.length < 3
       ? 'Keep clicking to add more points'
@@ -273,7 +274,6 @@ function closePolygon() {
   map.setLayoutProperty(POLY_LINE, 'visibility', 'visible');
   fitToCoords(map, boundaryPoints, { padding: 80 });
   if (instructions) instructions.textContent = 'Boundary set. Fill in your details and submit.';
-  if (btnReset) btnReset.style.display = '';
   if (areaOverrideRow) areaOverrideRow.style.display = 'flex';
   updateStats();
   updateSubmitState();
