@@ -13,9 +13,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const [waitlist, properties, landbooks, contributions, resources, submissions] = await Promise.all([
+        const [waitlist, landbooks, contributions, resources, submissions] = await Promise.all([
             getCollection('waitlist').then(c => c.find({}).sort({ createdAt: -1 }).toArray()),
-            getCollection('properties').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('landbooks').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_contributions').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_resources').then(c => c.find({}).sort({ created: -1 }).toArray()),
@@ -24,7 +23,6 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             waitlist,
-            properties,
             landbooks,
             contributions,
             resources,

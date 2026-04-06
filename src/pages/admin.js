@@ -2,40 +2,21 @@ import '../styles/main.css';
 
 // ---- State ----
 let data = {};
-let activeTab = 'waitlist';
+let activeTab = 'submissions';
 let password = '';
 
 // ---- Column configs per collection ----
 const columns = {
-    waitlist: [
-        { key: 'email', label: 'Email' },
-        { key: 'address', label: 'Address' },
-        { key: 'files', label: 'Attachments', format: formatFiles },
-        { key: 'createdAt', label: 'Signed up', format: formatDate },
-    ],
-    properties: [
-        { key: 'id', label: 'ID' },
-        { key: 'created', label: 'Created', format: formatDate },
-    ],
-    landbooks: [
-        { key: 'email', label: 'Email' },
-        { key: 'address', label: 'Address' },
-        { key: 'area', label: 'Area', format: v => v ? `${Number(v).toLocaleString()} m2` : '-' },
-        { key: 'created', label: 'Created', format: formatDate },
-    ],
     submissions: [
-        { key: 'name', label: 'Name' },
-        { key: 'contact', label: 'Contact' },
-        { key: 'contactMethod', label: 'Via' },
-        { key: 'postcode', label: 'Postcode' },
+        { key: '_type', label: 'Type' },
+        { key: '_who', label: 'Who', format: (_, row) => row.name || row.email || row.contact || '-' },
+        { key: 'contact', label: 'Contact', format: (v, row) => row.email || v || '-' },
+        { key: '_location', label: 'Location', format: (_, row) => row.address || row.postcode || '-' },
         { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
-        { key: 'landCondition', label: 'Condition', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
         { key: 'landGoals', label: 'Goals', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
-        { key: 'waterReliability', label: 'Water' },
-        { key: 'challenges', label: 'Challenges', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
-        { key: 'notes', label: 'Notes' },
+        { key: 'notes', label: 'Notes', format: (v, row) => v || (row.userReported?.notes) || '-' },
         { key: 'files', label: 'Files', format: formatFiles },
-        { key: 'created', label: 'Date', format: formatDate },
+        { key: '_date', label: 'Date', format: formatDate },
     ],
     contributions: [
         { key: 'section', label: 'Section' },
@@ -134,23 +115,21 @@ async function loadData() {
 
     if (!res.ok) return;
 
-    data = await res.json();
+    const raw = await res.json();
 
-    // Merge submission attachments into waitlist rows by email
-    if (data.submissions?.length && data.waitlist?.length) {
-        const filesByEmail = {};
-        for (const sub of data.submissions) {
-            if (sub.email && sub.files?.length) {
-                if (!filesByEmail[sub.email]) filesByEmail[sub.email] = [];
-                filesByEmail[sub.email].push(...sub.files);
-            }
-        }
-        for (const entry of data.waitlist) {
-            if (entry.email && filesByEmail[entry.email]) {
-                entry.files = filesByEmail[entry.email];
-            }
-        }
-    }
+    // Merge waitlist, landbooks, submissions into one unified list
+    const merged = [
+        ...(raw.waitlist || []).map(r => ({ ...r, _type: 'waitlist', _date: r.createdAt || r.created })),
+        ...(raw.landbooks || []).map(r => ({ ...r, _type: 'landbook', _date: r.created })),
+        ...(raw.submissions || []).map(r => ({ ...r, _type: 'submission', _date: r.created })),
+    ];
+    merged.sort((a, b) => new Date(b._date) - new Date(a._date));
+
+    data = {
+        submissions: merged,
+        contributions: raw.contributions || [],
+        resources: raw.resources || [],
+    };
 
     // Aggregate region requests from waitlist
     const regionMap = new Map();
@@ -175,10 +154,7 @@ async function loadData() {
 // ---- Stats ----
 function renderStats() {
     const stats = [
-        { label: 'Waitlist', count: data.waitlist?.length || 0 },
         { label: 'Submissions', count: data.submissions?.length || 0 },
-        { label: 'Properties', count: data.properties?.length || 0 },
-        { label: 'Landbooks', count: data.landbooks?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
         { label: 'Regions', count: data.regions?.length || 0 },
@@ -222,7 +198,7 @@ function renderTable() {
     body.innerHTML = rows.map(row => {
         const cells = cols.map(c => {
             const raw = row[c.key];
-            const val = c.format ? c.format(raw) : (raw ?? '-');
+            const val = c.format ? c.format(raw, row) : (raw ?? '-');
             const str = String(val);
             if (str.startsWith('__FILES__')) {
                 try {
