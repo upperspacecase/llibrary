@@ -6,14 +6,42 @@
 
 const BASE = 'https://overpass-api.de/api/interpreter';
 
+// Serial queue — Overpass rate-limits per-IP, so parallel calls trigger 429s.
+// Each request waits for the previous one + delay before firing.
+const OVERPASS_DELAY_MS = 1500;
+let _queue = Promise.resolve();
+
+function enqueue(fn) {
+  const task = _queue
+    .catch(() => {})
+    .then(() => fn());
+  // Next queued request waits for this one + delay
+  _queue = task
+    .catch(() => {})
+    .then(() => new Promise(r => setTimeout(r, OVERPASS_DELAY_MS)));
+  return task; // caller gets result immediately on completion
+}
+
 export async function query(overpassQL) {
-  const res = await fetch(BASE, {
-    method: 'POST',
-    body: `data=${encodeURIComponent(overpassQL)}`,
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  return enqueue(async () => {
+    const res = await fetch(BASE, {
+      method: 'POST',
+      body: `data=${encodeURIComponent(overpassQL)}`,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    if (res.status === 429) {
+      await new Promise(r => setTimeout(r, 5000));
+      const retry = await fetch(BASE, {
+        method: 'POST',
+        body: `data=${encodeURIComponent(overpassQL)}`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      });
+      if (!retry.ok) throw new Error(`Overpass error: ${retry.status}`);
+      return retry.json();
+    }
+    if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
+    return res.json();
   });
-  if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
-  return res.json();
 }
 
 function bboxStr(bbox) {

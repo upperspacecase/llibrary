@@ -6,6 +6,8 @@
  * Dynamic queries via Overpass API for protected areas near any coordinate.
  */
 
+import { query as overpassQuery } from './overpass.js';
+
 // EEA Natura 2000 WMS
 export const NATURA2000_WMS = 'https://bio.discomap.eea.europa.eu/arcgis/services/ProtectedSites/Natura2000_Dyna_WM/MapServer/WMSServer';
 
@@ -29,7 +31,7 @@ export function getNatura2000WmsParams() {
  */
 export async function getProtectedAreas(lat, lng, radiusKm = 25) {
   const radiusM = radiusKm * 1000;
-  const query = `
+  const overpassQL = `
     [out:json][timeout:20];
     (
       way["boundary"="protected_area"](around:${radiusM},${lat},${lng});
@@ -43,13 +45,7 @@ export async function getProtectedAreas(lat, lng, radiusKm = 25) {
   `;
 
   try {
-    const res = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      body: `data=${encodeURIComponent(query)}`,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-    if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
-    const data = await res.json();
+    const data = await overpassQuery(overpassQL);
 
     const seen = new Set();
     return (data.elements || [])
