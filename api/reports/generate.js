@@ -157,6 +157,28 @@ async function fetchJSON(url) {
   return res.json();
 }
 
+// ── Linear trend utility (least-squares regression) ──────
+function linearTrend(xValues, yValues) {
+  const n = xValues.length;
+  if (n < 2) return { slope: 0, perDecade: 0, rSquared: 0 };
+  const pairs = xValues.map((x, i) => [x, yValues[i]]).filter(([, y]) => y != null && !isNaN(y));
+  const m = pairs.length;
+  if (m < 2) return { slope: 0, perDecade: 0, rSquared: 0 };
+  const sumX = pairs.reduce((s, [x]) => s + x, 0);
+  const sumY = pairs.reduce((s, [, y]) => s + y, 0);
+  const sumXY = pairs.reduce((s, [x, y]) => s + x * y, 0);
+  const sumX2 = pairs.reduce((s, [x]) => s + x * x, 0);
+  const denom = m * sumX2 - sumX * sumX;
+  if (denom === 0) return { slope: 0, perDecade: 0, rSquared: 0 };
+  const slope = (m * sumXY - sumX * sumY) / denom;
+  const intercept = (sumY - slope * sumX) / m;
+  const meanY = sumY / m;
+  const ssTot = pairs.reduce((s, [, y]) => s + (y - meanY) ** 2, 0);
+  const ssRes = pairs.reduce((s, [x, y]) => s + (y - (slope * x + intercept)) ** 2, 0);
+  const rSquared = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+  return { slope, perDecade: slope * 10, rSquared, intercept };
+}
+
 // ── Static Map Helpers ───────────────────────────────────
 
 function getBbox(boundary, padding = 0.005) {
@@ -308,7 +330,82 @@ async function getGBIF(lat, lng) {
 }
 
 async function getFloodData(lat, lng) {
-  return fetchJSON(`https://flood-api.open-meteo.com/v1/flood?latitude=${lat}&longitude=${lng}&daily=river_discharge&forecast_days=30`);
+  return fetchJSON(`https://flood-api.open-meteo.com/v1/flood?latitude=${lat}&longitude=${lng}&daily=river_discharge&past_days=210&forecast_days=30`);
+}
+
+// ── 50-year climate trend analysis ──────────────────────
+async function getClimateTrends(lat, lng) {
+  const endYear = new Date().getFullYear() - 1;
+  const startYear = endYear - 49;
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startYear}-01-01&end_date=${endYear}-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
+  const data = await fetchJSON(url);
+  if (!data?.daily) return null;
+
+  const yearlyStats = {};
+  data.daily.time.forEach((dateStr, i) => {
+    const year = dateStr.substring(0, 4);
+    if (!yearlyStats[year]) yearlyStats[year] = { temps: [], precip: 0, hotDays: 0, fireProneDays: 0 };
+    const tMax = data.daily.temperature_2m_max[i];
+    const tMin = data.daily.temperature_2m_min[i];
+    const precip = data.daily.precipitation_sum[i];
+    if (tMax != null && tMin != null) yearlyStats[year].temps.push((tMax + tMin) / 2);
+    if (precip != null) yearlyStats[year].precip += precip;
+    if (tMax > 35) yearlyStats[year].hotDays++;
+    if (precip != null && precip < 1 && tMax > 30) yearlyStats[year].fireProneDays++;
+  });
+
+  const years = Object.keys(yearlyStats).sort();
+  const annualTemps = years.map(y => yearlyStats[y].temps.length ? +(yearlyStats[y].temps.reduce((a, b) => a + b, 0) / yearlyStats[y].temps.length).toFixed(2) : null);
+  const annualPrecip = years.map(y => Math.round(yearlyStats[y].precip));
+  const hotDaysPerYear = years.map(y => yearlyStats[y].hotDays);
+  const fireProneDays = years.map(y => yearlyStats[y].fireProneDays);
+
+  const tempTrend = linearTrend(years.map(Number), annualTemps);
+  const precipTrend = linearTrend(years.map(Number), annualPrecip);
+
+  // Decadal summaries for fire-prone days
+  const decades = {};
+  years.forEach((y, i) => {
+    const dec = y.substring(0, 3) + '0s';
+    if (!decades[dec]) decades[dec] = [];
+    decades[dec].push(fireProneDays[i]);
+  });
+  const decadalFireDays = Object.fromEntries(
+    Object.entries(decades).map(([dec, vals]) => [dec, +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)])
+  );
+
+  return { years, annualTemps, annualPrecip, hotDaysPerYear, fireProneDays, tempTrend, precipTrend, decadalFireDays };
+}
+
+// ── iNaturalist temporal trends ─────────────────────────
+async function getSpeciesTrend(lat, lng) {
+  const currentYear = new Date().getFullYear();
+  const windows = [
+    { label: `${currentYear - 15}–${currentYear - 10}`, d1: `${currentYear - 15}-01-01`, d2: `${currentYear - 10}-12-31` },
+    { label: `${currentYear - 10}–${currentYear - 5}`, d1: `${currentYear - 10}-01-01`, d2: `${currentYear - 5}-12-31` },
+    { label: `${currentYear - 5}–${currentYear}`, d1: `${currentYear - 5}-01-01`, d2: `${currentYear}-12-31` },
+  ];
+  const results = await Promise.all(windows.map(w =>
+    fetchJSON(`https://api.inaturalist.org/v1/observations?lat=${lat}&lng=${lng}&radius=15&d1=${w.d1}&d2=${w.d2}&per_page=0&locale=en`)
+      .then(r => ({ ...w, count: r?.total_results || 0 }))
+      .catch(() => ({ ...w, count: null }))
+  ));
+  return results;
+}
+
+// ── GBIF yearly occurrence trend ────────────────────────
+async function getGBIFYearlyTrend(lat, lng) {
+  const currentYear = new Date().getFullYear();
+  const ranges = [];
+  for (let y = currentYear - 20; y <= currentYear; y += 5) {
+    const endY = Math.min(y + 4, currentYear);
+    ranges.push({ label: `${y}–${endY}`, yearStart: y, yearEnd: endY });
+  }
+  return Promise.all(ranges.map(r =>
+    fetchJSON(`https://api.gbif.org/v1/occurrence/search?decimalLatitude=${(lat - 0.15).toFixed(4)},${(lat + 0.15).toFixed(4)}&decimalLongitude=${(lng - 0.15).toFixed(4)},${(lng + 0.15).toFixed(4)}&year=${r.yearStart},${r.yearEnd}&limit=0`)
+      .then(d => ({ ...r, count: d?.count || 0 }))
+      .catch(() => ({ ...r, count: null }))
+  ));
 }
 
 async function getRiskScores(lat, lng, climateNormals) {
@@ -1035,7 +1132,7 @@ function deriveOpportunities(data) {
   return ops.slice(0, 6);
 }
 
-function deriveMitigations(data) {
+function deriveMitigations(data, climateTrendSummary) {
   const mits = [];
   if (data.risks.fire.score >= 30) {
     mits.push('Create and maintain defensible space around structures (minimum 10m clearance)');
@@ -1053,6 +1150,18 @@ function deriveMitigations(data) {
   }
   if (data.waterFeatures.total === 0) {
     mits.push('Investigate borehole or well drilling for water independence');
+  }
+  // Trend-aware mitigations from 50-year climate analysis
+  if (climateTrendSummary) {
+    if (climateTrendSummary.latestDecFireDays > climateTrendSummary.earliestDecFireDays * 1.3) {
+      mits.push(`Fire-prone days are increasing (${climateTrendSummary.earliestDec}: ${climateTrendSummary.earliestDecFireDays}/yr → ${climateTrendSummary.latestDec}: ${climateTrendSummary.latestDecFireDays}/yr) — invest in permanent firebreak infrastructure`);
+    }
+    if (climateTrendSummary.precipPerDecade < -15) {
+      mits.push(`Precipitation declining at ${Math.abs(climateTrendSummary.precipPerDecade)}mm/decade — plan for increased water storage and drought-tolerant species`);
+    }
+    if (climateTrendSummary.tempPerDecade > 0.3) {
+      mits.push(`Rapid warming trend (+${climateTrendSummary.tempPerDecade}\u00B0C/decade) — select heat-tolerant crop varieties and shade infrastructure`);
+    }
   }
   if (mits.length < 3) mits.push('Conduct annual property assessment to track environmental changes');
   if (mits.length < 4) mits.push('Establish baseline monitoring for biodiversity and water quality');
@@ -1340,6 +1449,9 @@ export default async function handler(req, res) {
       regional,
       activeFires,
       historicalFires,
+      climateTrends,
+      speciesTrend,
+      gbifTrend,
     ] = await Promise.all([
       tracked('elevation', getElevation(lat, lng), null),
       tracked('forecast', getForecast(lat, lng), null),
@@ -1361,6 +1473,9 @@ export default async function handler(req, res) {
       tracked('regional', getRegionalComparisons(lat, lng), {}),
       tracked('activeFires', getActiveFires(lat, lng), { fires: [], status: 'FAILED' }),
       tracked('historicalFires', getHistoricalFires(lat, lng), { yearlyData: [], totalDetections: 0, status: 'FAILED' }),
+      tracked('climateTrends', getClimateTrends(lat, lng), null),
+      tracked('speciesTrend', getSpeciesTrend(lat, lng), null),
+      tracked('gbifTrend', getGBIFYearlyTrend(lat, lng), null),
     ]);
 
     // Risk scores (needs climate normals for drought baseline)
@@ -1380,21 +1495,85 @@ export default async function handler(req, res) {
     const species = summarizeSpecies(speciesCounts);
     const threatenedSummary = summarizeSpecies(threatened);
 
-    // Flood analysis
+    // Flood analysis (now with 210-day history)
     let floodAnalysis = { level: 'Unknown', current: null, max: null };
     if (floodData?.daily?.river_discharge) {
+      const times = floodData.daily.time || [];
       const discharge = floodData.daily.river_discharge.filter(v => v != null);
       if (discharge.length > 0) {
         const avg = discharge.reduce((a, b) => a + b, 0) / discharge.length;
         const max = Math.max(...discharge);
+        const min = Math.min(...discharge);
         const current = discharge[discharge.length - 1];
+        const pctOfAvg = avg > 0 ? Math.round(current / avg * 100) : null;
+
+        // Monthly buckets for sparkline
+        const monthlyDischarge = {};
+        times.forEach((t, i) => {
+          const v = floodData.daily.river_discharge[i];
+          if (v == null) return;
+          const mo = t.substring(0, 7); // YYYY-MM
+          if (!monthlyDischarge[mo]) monthlyDischarge[mo] = [];
+          monthlyDischarge[mo].push(v);
+        });
+        const monthlyAvgs = Object.entries(monthlyDischarge).map(([mo, vals]) => ({
+          month: mo,
+          avg: +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2),
+        }));
+
         floodAnalysis = {
           level: max > avg * 3 ? 'High' : max > avg * 1.5 ? 'Moderate' : 'Low',
           current: current?.toFixed(1),
           average: avg.toFixed(1),
           max: max.toFixed(1),
+          min: min.toFixed(1),
+          pctOfAvg,
+          monthlyAvgs,
+          totalDays: discharge.length,
         };
       }
+    }
+
+    // Climate trend summary
+    let climateTrendSummary = null;
+    if (climateTrends) {
+      const { tempTrend, precipTrend, decadalFireDays, fireProneDays, years } = climateTrends;
+      const decKeys = Object.keys(decadalFireDays).sort();
+      const earliestDec = decKeys[0];
+      const latestDec = decKeys[decKeys.length - 1];
+      const avgFireProne = fireProneDays.length > 0 ? +(fireProneDays.reduce((a, b) => a + b, 0) / fireProneDays.length).toFixed(1) : 0;
+      let warmingLabel = 'Stable';
+      if (tempTrend.perDecade > 0.3) warmingLabel = 'Warming rapidly';
+      else if (tempTrend.perDecade > 0.1) warmingLabel = 'Warming';
+      else if (tempTrend.perDecade < -0.1) warmingLabel = 'Cooling';
+
+      climateTrendSummary = {
+        tempPerDecade: +tempTrend.perDecade.toFixed(2),
+        precipPerDecade: Math.round(precipTrend.perDecade),
+        warmingLabel,
+        avgFireProneDays: avgFireProne,
+        earliestDecFireDays: decadalFireDays[earliestDec] || 0,
+        latestDecFireDays: decadalFireDays[latestDec] || 0,
+        earliestDec,
+        latestDec,
+        yearRange: `${years[0]}–${years[years.length - 1]}`,
+      };
+    }
+
+    // Biodiversity trend summary
+    let bioTrendSummary = null;
+    if (speciesTrend && speciesTrend.every(w => w.count != null)) {
+      const first = speciesTrend[0].count;
+      const last = speciesTrend[speciesTrend.length - 1].count;
+      const pctChange = first > 0 ? Math.round((last - first) / first * 100) : null;
+      let label = 'Stable';
+      if (pctChange != null && pctChange > 20) label = 'Increasing';
+      else if (pctChange != null && pctChange < -20) label = 'Declining';
+      bioTrendSummary = { windows: speciesTrend, pctChange, label };
+    }
+    let gbifTrendSummary = null;
+    if (gbifTrend && gbifTrend.some(w => w.count != null && w.count > 0)) {
+      gbifTrendSummary = { windows: gbifTrend };
     }
 
     // Active fires summary
@@ -1496,7 +1675,7 @@ export default async function handler(req, res) {
       protectedAreas: protectedAreaNames, species, waterFeatures: { springs, wells, waterways, waterBodies, total: waterTotal }, soil,
     };
     const opportunities = deriveOpportunities(ddForDerive);
-    const mitigations = deriveMitigations(ddForDerive);
+    const mitigations = deriveMitigations(ddForDerive, climateTrendSummary);
     const nextSteps = deriveNextSteps(ddForDerive);
     const seasonalCalendar = deriveSeasonalCalendar(climate, risks);
     const carbon = estimateCarbon(landCover, areaHa);
@@ -1585,6 +1764,11 @@ export default async function handler(req, res) {
         radarDims,
         fireSummary,
         fireHistory,
+        climateTrendSummary,
+        bioTrendSummary,
+        gbifTrendSummary,
+        climateTrends: climateTrends ? { years: climateTrends.years, annualTemps: climateTrends.annualTemps, annualPrecip: climateTrends.annualPrecip } : null,
+        earthTimelapseUrl: `https://earthengine.google.com/timelapse/#v=${lat},${lng},10,latLng&t=0.03&ps=50&bt=19840101&et=20221231`,
       },
       maps,
       apiStatus,
@@ -1606,7 +1790,7 @@ export default async function handler(req, res) {
     const speciesGroups = Object.entries(dd.species.groups || {}).sort((a, b) => b[1] - a[1]).slice(0, 8);
     const maxSpecies = speciesGroups.length > 0 ? Math.max(...speciesGroups.map(s => s[1])) : 1;
 
-    const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality: municipalityDisplay, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng });
+    const html = buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality: municipalityDisplay, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng, climateTrends, climateTrendSummary });
 
     // ── Save to DB ───────────────────────────────────────
     const count = await reports.countDocuments();
@@ -1642,7 +1826,7 @@ export default async function handler(req, res) {
     return res.status(201).json({
       id: doc.id, version: doc.version, slug: doc.slug, name: doc.name, created: doc.created,
       blob_url: doc.blob_url,
-      apis_called: 19, dynamic_data_points: Object.keys(dd).length,
+      apis_called: 22, dynamic_data_points: Object.keys(dd).length,
     });
   } catch (err) {
     console.error('Report generation error:', err);
@@ -1651,7 +1835,7 @@ export default async function handler(req, res) {
 }
 
 // ── HTML Template Builder ────────────────────────────────
-function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng }) {
+function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, summerMean, winterMean, frostDays, growingSeason, gbifTotal, gbifKingdoms, protectedAreaNames, elevation, climate, now, municipality, locationLine, climateZone, speciesGroups, maxSpecies, lat, lng, climateTrends, climateTrendSummary }) {
   return `
 <!-- SECTION 0: COVER -->
 <div class="report-page cover-page">
@@ -1871,7 +2055,47 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   ` : '<div style="background:var(--bg);padding:16px;border-radius:8px;color:var(--text-muted);">Climate archive data unavailable.</div>'}
 
   <h3>5.2 Monthly Temperature & Rainfall</h3>
-  ${climate ? `<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Source: Open-Meteo historical archive</div>` : '<div style="color:var(--text-muted);">No climate data to chart.</div>'}
+  ${climate ? (() => {
+    const maxP = Math.max(...climate.map(m => m.totalPrecip), 1);
+    const temps = climate.flatMap(m => [m.avgHigh, m.avgLow]);
+    const minT = Math.min(...temps);
+    const maxT = Math.max(...temps);
+    const tRange = maxT - minT || 1;
+    const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+    const W = 680, H = 260, pad = 50, plotW = W - pad - 20, plotH = H - 50;
+    const barW = plotW / 12 * 0.55;
+    return `<div class="chart-container" style="margin-bottom:16px;">
+    <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;font-family:var(--font);">
+      <!-- Precip bars -->
+      ${climate.map((m, i) => {
+        const x = pad + (i + 0.5) * (plotW / 12) - barW / 2;
+        const bH = (m.totalPrecip / maxP) * plotH;
+        return `<rect x="${x}" y="${H - 30 - bH}" width="${barW}" height="${bH}" fill="var(--sky)" opacity="0.65" rx="2" />
+        <text x="${x + barW/2}" y="${H - 30 - bH - 4}" text-anchor="middle" font-size="9" fill="var(--text-muted)">${m.totalPrecip}</text>`;
+      }).join('')}
+      <!-- Temp lines -->
+      <polyline points="${climate.map((m, i) => `${pad + (i + 0.5) * (plotW / 12)},${H - 30 - ((m.avgHigh - minT) / tRange) * plotH}`).join(' ')}" fill="none" stroke="var(--red)" stroke-width="2" />
+      <polyline points="${climate.map((m, i) => `${pad + (i + 0.5) * (plotW / 12)},${H - 30 - ((m.avgLow - minT) / tRange) * plotH}`).join(' ')}" fill="none" stroke="var(--sky-dark)" stroke-width="2" />
+      <!-- Temp dots -->
+      ${climate.map((m, i) => {
+        const cx = pad + (i + 0.5) * (plotW / 12);
+        return `<circle cx="${cx}" cy="${H - 30 - ((m.avgHigh - minT) / tRange) * plotH}" r="3" fill="var(--red)" />
+        <circle cx="${cx}" cy="${H - 30 - ((m.avgLow - minT) / tRange) * plotH}" r="3" fill="var(--sky-dark)" />`;
+      }).join('')}
+      <!-- Month labels -->
+      ${months.map((m, i) => `<text x="${pad + (i + 0.5) * (plotW / 12)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${m}</text>`).join('')}
+      <!-- Y axis labels -->
+      <text x="12" y="18" font-size="10" fill="var(--red)">Temp (\u00B0C)</text>
+      <text x="${W - 10}" y="18" font-size="10" fill="var(--sky-dark)" text-anchor="end">Precip (mm)</text>
+      <!-- Legend -->
+      <line x1="${pad}" y1="${H - 30}" x2="${pad + plotW}" y2="${H - 30}" stroke="var(--border)" stroke-width="0.5" />
+      <circle cx="${pad + 10}" cy="${H - 2}" r="4" fill="var(--red)" /><text x="${pad + 18}" y="${H + 2}" font-size="9" fill="var(--text-muted)">Avg High</text>
+      <circle cx="${pad + 80}" cy="${H - 2}" r="4" fill="var(--sky-dark)" /><text x="${pad + 88}" y="${H + 2}" font-size="9" fill="var(--text-muted)">Avg Low</text>
+      <rect x="${pad + 150}" y="${H - 6}" width="10" height="8" fill="var(--sky)" opacity="0.65" rx="1" /><text x="${pad + 164}" y="${H + 2}" font-size="9" fill="var(--text-muted)">Monthly Precip</text>
+    </svg>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);">Source: Open-Meteo historical archive (30-year averages)</div>`;
+  })() : '<div style="color:var(--text-muted);">No climate data to chart.</div>'}
 
   <h3>5.3 IPMA Forecast</h3>
   ${dd.ipmaForecast ? `
@@ -1891,6 +2115,45 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
   </div>
   <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from monthly climate data</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No climate data for seasonal calendar.</div>'}
+
+  <h3>5.5 Climate Trends (50-Year Analysis)</h3>
+  ${dd.climateTrendSummary ? (() => {
+    const cts = dd.climateTrendSummary;
+    const ct = climateTrends;
+    // Sparkline for annual temp over 50 years
+    let sparkline = '';
+    if (ct && ct.annualTemps.length > 0) {
+      const valid = ct.annualTemps.map((t, i) => [i, t]).filter(([, t]) => t != null);
+      const minT = Math.min(...valid.map(([, t]) => t));
+      const maxT = Math.max(...valid.map(([, t]) => t));
+      const tR = maxT - minT || 1;
+      const sW = 600, sH = 80;
+      const points = valid.map(([i, t]) => `${(i / (ct.years.length - 1)) * sW},${sH - ((t - minT) / tR) * (sH - 10)}`).join(' ');
+      // Trend line endpoints
+      const trend = linearTrend(ct.years.map(Number), ct.annualTemps);
+      const trendY1 = sH - ((trend.slope * Number(ct.years[0]) + trend.intercept - minT) / tR) * (sH - 10);
+      const trendY2 = sH - ((trend.slope * Number(ct.years[ct.years.length - 1]) + trend.intercept - minT) / tR) * (sH - 10);
+      sparkline = `<svg viewBox="0 0 ${sW} ${sH + 20}" style="width:100%;max-width:620px;margin:8px 0;" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="${points}" fill="none" stroke="var(--terra)" stroke-width="1.5" opacity="0.6" />
+        <line x1="0" y1="${trendY1}" x2="${sW}" y2="${trendY2}" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.7" />
+        <text x="0" y="${sH + 14}" font-size="10" fill="var(--text-muted)">${ct.years[0]}</text>
+        <text x="${sW}" y="${sH + 14}" text-anchor="end" font-size="10" fill="var(--text-muted)">${ct.years[ct.years.length - 1]}</text>
+        <text x="${sW / 2}" y="${sH + 14}" text-anchor="middle" font-size="10" fill="var(--text-muted)">Annual Mean Temperature</text>
+      </svg>`;
+    }
+    return `
+    <table class="data-table">
+      <tbody>
+        <tr><td class="label">Analysis Period</td><td class="value">${cts.yearRange}</td></tr>
+        <tr><td class="label">Temperature Trend</td><td class="value">${cts.tempPerDecade > 0 ? '+' : ''}${cts.tempPerDecade}\u00B0C/decade <span style="color:${cts.tempPerDecade > 0.2 ? 'var(--red)' : 'var(--text-muted)'};">(${cts.warmingLabel})</span></td></tr>
+        <tr><td class="label">Precipitation Trend</td><td class="value">${cts.precipPerDecade > 0 ? '+' : ''}${cts.precipPerDecade} mm/decade ${cts.precipPerDecade < -10 ? '<span style="color:var(--amber);">(Drying)</span>' : cts.precipPerDecade > 10 ? '<span style="color:var(--sky-dark);">(Wetting)</span>' : '<span style="color:var(--text-muted);">(Stable)</span>'}</td></tr>
+        <tr><td class="label">Fire-Prone Days/Year</td><td class="value">${cts.avgFireProneDays} avg <span style="color:var(--text-muted);">(days &gt;30\u00B0C with &lt;1mm rain)</span></td></tr>
+        <tr><td class="label">Fire-Prone Trend</td><td class="value">${cts.earliestDec}: ${cts.earliestDecFireDays}/yr → ${cts.latestDec}: ${cts.latestDecFireDays}/yr ${cts.latestDecFireDays > cts.earliestDecFireDays ? '<span style="color:var(--red);">↑ Increasing</span>' : '<span style="color:var(--green);">↓ Decreasing</span>'}</td></tr>
+      </tbody>
+    </table>
+    ${sparkline}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: Open-Meteo Archive — 50-year daily temperature and precipitation analysis</div>`;
+  })() : '<div style="background:var(--bg);padding:12px;border-radius:8px;color:var(--text-muted);font-size:13px;">Historic climate trend data unavailable.</div>'}
 </div>
 
 <!-- SECTION 6: BIODIVERSITY INVENTORY -->
@@ -1932,7 +2195,27 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <div class="kpi-card"><div class="kpi-value">${Object.keys(gbifKingdoms).length}</div><div class="kpi-label">Kingdoms</div><div class="kpi-sub">${Object.entries(gbifKingdoms).map(([k, v]) => k + ': ' + v).join(', ') || 'N/A'}</div></div>
   </div>
 
-  <h3>6.5 Protected Areas Nearby</h3>
+  <h3>6.5 Observation Trends Over Time</h3>
+  ${dd.bioTrendSummary ? (() => {
+    const bts = dd.bioTrendSummary;
+    const maxCount = Math.max(...bts.windows.map(w => w.count), 1);
+    return `
+    <div style="margin-bottom:12px;font-size:13px;">iNaturalist observations within 15km across three 5-year windows:</div>
+    ${bts.windows.map(w => `<div class="bar-row"><div class="bar-label">${w.label}</div><div class="bar-track"><div class="bar-fill green" style="width:${(w.count / maxCount * 100).toFixed(0)}%">${w.count.toLocaleString()}</div></div></div>`).join('')}
+    <div style="margin:8px 0;font-size:13px;">Trend: <strong>${bts.label}</strong>${bts.pctChange != null ? ` (${bts.pctChange > 0 ? '+' : ''}${bts.pctChange}% change)` : ''}</div>
+    <div style="font-size:11px;color:var(--text-muted);">Note: Observation trends may reflect survey effort changes, not actual population shifts. Source: iNaturalist</div>`;
+  })() : '<div style="color:var(--text-muted);font-size:13px;">Observation trend data unavailable.</div>'}
+
+  ${dd.gbifTrendSummary ? (() => {
+    const gts = dd.gbifTrendSummary;
+    const maxCount = Math.max(...gts.windows.map(w => w.count || 0), 1);
+    return `
+    <div style="margin-top:16px;margin-bottom:8px;font-size:13px;">GBIF occurrence records by 5-year period:</div>
+    ${gts.windows.map(w => `<div class="bar-row"><div class="bar-label">${w.label}</div><div class="bar-track"><div class="bar-fill terra" style="width:${(w.count / maxCount * 100).toFixed(0)}%">${(w.count || 0).toLocaleString()}</div></div></div>`).join('')}
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: GBIF</div>`;
+  })() : ''}
+
+  <h3>6.6 Protected Areas Nearby</h3>
   ${protectedAreaNames.length > 0 ? `
   <table class="data-table">
     <thead><tr><th>Name</th><th>Type</th></tr></thead>
@@ -1965,27 +2248,46 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
 <div class="report-page">
   <div class="section-number">Section 08</div>
   <div class="section-title">Risk Assessment</div>
-  <div class="section-subtitle">Current risk levels based on weather and environmental data</div>
+  <div class="section-subtitle">Current risk levels with historical context</div>
 
   <h3>8.1 Risk Scores</h3>
   <table class="data-table">
-    <thead><tr><th>Risk</th><th>Score</th><th>Level</th><th>Basis</th></tr></thead>
+    <thead><tr><th>Risk</th><th>Score</th><th>Level</th><th>Current Basis</th><th>Historic Context</th></tr></thead>
     <tbody>
-      <tr><td class="label">Fire</td><td class="value">${dd.risks.fire.score}/100</td><td><span class="risk-tag ${dd.risks.fire.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.fire.level.toUpperCase()}</span></td><td>Temp, precip, wind, season</td></tr>
-      <tr><td class="label">Drought</td><td class="value">${dd.risks.drought.score}/100</td><td><span class="risk-tag ${dd.risks.drought.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.drought.level.toUpperCase()}</span></td><td>Precip vs seasonal avg</td></tr>
-      <tr><td class="label">Flood</td><td class="value">${dd.risks.flood.score}/100</td><td><span class="risk-tag ${dd.risks.flood.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.flood.level.toUpperCase()}</span></td><td>Recent precipitation</td></tr>
+      <tr><td class="label">Fire</td><td class="value">${dd.risks.fire.score}/100</td><td><span class="risk-tag ${dd.risks.fire.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.fire.level.toUpperCase()}</span></td><td>Temp, precip, wind, season</td><td>${dd.climateTrendSummary ? `Avg ${dd.climateTrendSummary.avgFireProneDays} fire-prone days/yr; ${dd.climateTrendSummary.latestDecFireDays > dd.climateTrendSummary.earliestDecFireDays ? '↑ trending up' : '↓ trending down'}` : '—'}</td></tr>
+      <tr><td class="label">Drought</td><td class="value">${dd.risks.drought.score}/100</td><td><span class="risk-tag ${dd.risks.drought.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.drought.level.toUpperCase()}</span></td><td>Precip vs seasonal avg</td><td>${dd.climateTrendSummary ? `Precip trend: ${dd.climateTrendSummary.precipPerDecade > 0 ? '+' : ''}${dd.climateTrendSummary.precipPerDecade} mm/decade` : '—'}</td></tr>
+      <tr><td class="label">Flood</td><td class="value">${dd.risks.flood.score}/100</td><td><span class="risk-tag ${dd.risks.flood.cls}" style="display:inline-block;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700;">${dd.risks.flood.level.toUpperCase()}</span></td><td>Recent precipitation</td><td>${dd.flood.pctOfAvg ? `Current discharge: ${dd.flood.pctOfAvg}% of 7-month avg` : '—'}</td></tr>
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);">Scores computed from Open-Meteo 7-day forecast data</div>
+  <div style="font-size:11px;color:var(--text-muted);">Current scores from Open-Meteo 7-day forecast; historic context from 50-year archive and 210-day GloFAS data</div>
 
   <h3>8.2 Flood Discharge Data</h3>
   ${dd.flood.current ? `
-  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+  <div class="kpi-grid">
     <div class="kpi-card"><div class="kpi-value">${dd.flood.current}</div><div class="kpi-label">Current m&sup3;/s</div></div>
-    <div class="kpi-card"><div class="kpi-value">${dd.flood.average}</div><div class="kpi-label">Average m&sup3;/s</div></div>
-    <div class="kpi-card"><div class="kpi-value">${dd.flood.max}</div><div class="kpi-label">Max m&sup3;/s</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.flood.average}</div><div class="kpi-label">7-Month Avg m&sup3;/s</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.flood.max}</div><div class="kpi-label">Peak m&sup3;/s</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.flood.min}</div><div class="kpi-label">Season Low m&sup3;/s</div></div>
   </div>
-  <div style="font-size:11px;color:var(--text-muted);">Source: GloFAS via Open-Meteo Flood API</div>
+  ${dd.flood.pctOfAvg ? `<div style="margin:8px 0;font-size:13px;">Current discharge is <strong>${dd.flood.pctOfAvg}%</strong> of the 7-month average — ${dd.flood.pctOfAvg > 150 ? '<span style="color:var(--red);">significantly above normal</span>' : dd.flood.pctOfAvg > 110 ? '<span style="color:var(--amber);">above normal</span>' : dd.flood.pctOfAvg < 50 ? '<span style="color:var(--amber);">well below normal</span>' : dd.flood.pctOfAvg < 90 ? '<span style="color:var(--text-muted);">slightly below normal</span>' : '<span style="color:var(--green);">within normal range</span>'}.</div>` : ''}
+  ${dd.flood.monthlyAvgs && dd.flood.monthlyAvgs.length > 1 ? (() => {
+    const ma = dd.flood.monthlyAvgs;
+    const maxD = Math.max(...ma.map(m => m.avg), 0.01);
+    const sW = 620, sH = 70;
+    const avgLine = parseFloat(dd.flood.average);
+    const avgY = sH - (avgLine / maxD) * (sH - 10);
+    return `<svg viewBox="0 0 ${sW} ${sH + 20}" style="width:100%;max-width:640px;margin:8px 0;" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="${avgY}" x2="${sW}" y2="${avgY}" stroke="var(--text-muted)" stroke-width="0.5" stroke-dasharray="4,3" />
+      <text x="${sW}" y="${avgY - 3}" text-anchor="end" font-size="9" fill="var(--text-muted)">avg</text>
+      <polyline points="${ma.map((m, i) => `${(i / (ma.length - 1)) * sW},${sH - (m.avg / maxD) * (sH - 10)}`).join(' ')}" fill="none" stroke="var(--sky-dark)" stroke-width="2" />
+      ${ma.map((m, i) => `<circle cx="${(i / (ma.length - 1)) * sW}" cy="${sH - (m.avg / maxD) * (sH - 10)}" r="3" fill="var(--sky-dark)" />`).join('')}
+      ${ma.filter((_, i) => i === 0 || i === ma.length - 1 || i === Math.floor(ma.length / 2)).map((m, _, arr) => {
+        const idx = ma.indexOf(m);
+        return `<text x="${(idx / (ma.length - 1)) * sW}" y="${sH + 14}" text-anchor="${idx === 0 ? 'start' : idx === ma.length - 1 ? 'end' : 'middle'}" font-size="9" fill="var(--text-muted)">${m.month}</text>`;
+      }).join('')}
+    </svg>`;
+  })() : ''}
+  <div style="font-size:11px;color:var(--text-muted);">Source: GloFAS via Open-Meteo Flood API — ${dd.flood.totalDays || 240} days of discharge data</div>
   ` : '<div style="color:var(--text-muted);font-size:13px;">No river discharge data available for this grid cell.</div>'}
 
   <h3>8.3 Active Fire Detections (48h)</h3>
@@ -2025,11 +2327,28 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     : `<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--red);font-size:13px;color:var(--text-muted);"><strong>API ERROR</strong> — Historical fire query failed (${dd.fireHistory.status}).</div>`
   }
 
+  <h3>8.4b Climate-Derived Fire Context</h3>
+  ${dd.climateTrendSummary ? `
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="kpi-card"><div class="kpi-value">${dd.climateTrendSummary.avgFireProneDays}</div><div class="kpi-label">Avg Fire-Prone Days/Year</div><div class="kpi-sub">Days &gt;30\u00B0C with &lt;1mm rain</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.climateTrendSummary.earliestDecFireDays}/yr</div><div class="kpi-label">${dd.climateTrendSummary.earliestDec}</div><div class="kpi-sub">Historic baseline</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:${dd.climateTrendSummary.latestDecFireDays > dd.climateTrendSummary.earliestDecFireDays ? 'var(--red)' : 'var(--green)'};">${dd.climateTrendSummary.latestDecFireDays}/yr</div><div class="kpi-label">${dd.climateTrendSummary.latestDec}</div><div class="kpi-sub">${dd.climateTrendSummary.latestDecFireDays > dd.climateTrendSummary.earliestDecFireDays ? 'Increasing' : 'Decreasing'} trend</div></div>
+  </div>
+  ` : ''}
+  ${maps.burnedAreas ? `
+  <div style="margin-top:12px;">
+    <img src="${maps.burnedAreas}" alt="Historical Burned Areas" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>EFFIS burned areas layer unavailable</div>'" />
+    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Historical burned areas — EFFIS (European Forest Fire Information System)</div>
+  </div>
+  ` : ''}
+  ${!dd.climateTrendSummary && !maps.burnedAreas ? '<div style="color:var(--text-muted);font-size:13px;">Historical fire context unavailable.</div>' : ''}
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: 50-year Open-Meteo climate analysis + EFFIS WMS</div>
+
   <h3>8.5 Mitigation Recommendations</h3>
   <ul class="checklist">
     ${dd.mitigations.map(m => `<li><span class="check-box"></span>${m}</li>`).join('')}
   </ul>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from risk scores, water, and soil data</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Derived from risk scores, water, soil data, and climate trends</div>
 </div>
 
 <!-- SECTION 9: NEARBY INFRASTRUCTURE -->
@@ -2092,6 +2411,16 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <img src="${maps.fireDanger}" alt="Fire Danger" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>EFFIS layer unavailable</div>'" />
       <div class="map-label">Fire Danger Forecast</div>
     </div>
+    <div class="map-item">
+      <img src="${maps.burnedAreas}" alt="Historical Burned Areas" style="width:100%;border-radius:8px;background:var(--bg);" loading="lazy" onerror="this.parentElement.innerHTML='<div class=map-placeholder>EFFIS burned areas layer unavailable</div>'" />
+      <div class="map-label">Historical Burned Areas (EFFIS)</div>
+    </div>
+    <div class="map-item" style="background:var(--bg);border-radius:8px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:120px;">
+      <div style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px;">1984–2022 Land Change Timelapse</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Satellite imagery showing 38 years of land use change</div>
+      <a href="${dd.earthTimelapseUrl}" target="_blank" rel="noopener" style="background:var(--green);color:white;padding:8px 20px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">View on Google Earth Engine</a>
+      <div class="map-label" style="margin-top:8px;">Google Earth Engine Timelapse</div>
+    </div>
   </div>
 </div>
 
@@ -2141,9 +2470,11 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Species (15km)</td><td class="value">${dd.species.total}</td><td>${dd.regional.speciesTotal || 'N/A'} (50km)</td><td>${dd.species.total && dd.regional.speciesTotal ? `${(dd.species.total / dd.regional.speciesTotal * 100).toFixed(0)}% of regional pool` : '—'}</td></tr>
       <tr><td class="label">Soil pH</td><td class="value">${soil?.ph || 'N/A'}</td><td>${dd.regional.soilPh || 'N/A'}</td><td>${soil?.ph && dd.regional.soilPh ? (parseFloat(soil.ph) > parseFloat(dd.regional.soilPh) ? '↑ More alkaline' : '↓ More acidic') : '—'}</td></tr>
       <tr><td class="label">Soil Organic Carbon</td><td class="value">${soil?.organicCarbon || 'N/A'} g/kg</td><td>${dd.regional.soilOC || 'N/A'} g/kg</td><td>${soil?.organicCarbon && dd.regional.soilOC ? (parseFloat(soil.organicCarbon) > parseFloat(dd.regional.soilOC) ? '↑ Higher' : '↓ Lower') : '—'}</td></tr>
+      ${dd.climateTrendSummary ? `<tr><td class="label">Warming Rate</td><td class="value">${dd.climateTrendSummary.tempPerDecade > 0 ? '+' : ''}${dd.climateTrendSummary.tempPerDecade}\u00B0C/decade</td><td>—</td><td>${dd.climateTrendSummary.warmingLabel}</td></tr>
+      <tr><td class="label">Precip Trend</td><td class="value">${dd.climateTrendSummary.precipPerDecade > 0 ? '+' : ''}${dd.climateTrendSummary.precipPerDecade} mm/decade</td><td>—</td><td>${dd.climateTrendSummary.precipPerDecade < -10 ? 'Drying' : dd.climateTrendSummary.precipPerDecade > 10 ? 'Wetting' : 'Stable'}</td></tr>` : ''}
     </tbody>
   </table>
-  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Regional values sampled ~20km from property center</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Regional values sampled ~20km from property center; climate trends from 50-year analysis</div>
 
   <h3 style="margin-top:32px;">Valuation Scenarios</h3>
   <table class="data-table">
@@ -2191,7 +2522,8 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     <tbody>
       <tr><td class="label">Elevation</td><td>Open-Meteo DEM</td><td>Point</td><td style="color:green;font-weight:600;">${elevation != null ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Weather Forecast</td><td>Open-Meteo</td><td>7-day</td><td style="color:green;font-weight:600;">${dd.forecast ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
-      <tr><td class="label">Climate History</td><td>Open-Meteo Archive</td><td>5-year average</td><td style="color:green;font-weight:600;">${climate ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Climate History</td><td>Open-Meteo Archive</td><td>30-year average</td><td style="color:green;font-weight:600;">${climate ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Climate Trends (50yr)</td><td>Open-Meteo Archive</td><td>50-year daily</td><td style="color:green;font-weight:600;">${dd.climateTrendSummary ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Soil Properties</td><td>SoilGrids 2.0 (ISRIC)</td><td>250m</td><td style="color:green;font-weight:600;">${soil ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Geology</td><td>Macrostrat</td><td>Variable</td><td style="color:green;font-weight:600;">${geo ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Species</td><td>iNaturalist</td><td>15km radius</td><td style="color:green;font-weight:600;">${dd.species.total > 0 ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
@@ -2206,6 +2538,10 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Active Fires</td><td>NASA FIRMS VIIRS</td><td>50km radius</td><td style="color:green;font-weight:600;">${dd.fireSummary.status === 'OK' ? 'DYNAMIC ✓' : dd.fireSummary.status === 'NO_KEY' ? 'NO KEY ✗' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Fire History</td><td>NASA FIRMS MODIS Archive</td><td>25km, ${dd.fireHistory.yearsAnalyzed}yr</td><td style="color:green;font-weight:600;">${dd.fireHistory.status === 'OK' ? 'DYNAMIC ✓' : dd.fireHistory.status === 'NO_KEY' ? 'NO KEY ✗' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">IPMA Forecast</td><td>IPMA</td><td>Nearest station</td><td style="color:green;font-weight:600;">${dd.ipmaForecast ? 'DYNAMIC ✓' : 'NO DATA'}</td></tr>
+      <tr><td class="label">Species Trends</td><td>iNaturalist</td><td>3× 5-year windows</td><td style="color:green;font-weight:600;">${dd.bioTrendSummary ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">GBIF Trends</td><td>GBIF</td><td>4× 5-year windows</td><td style="color:green;font-weight:600;">${dd.gbifTrendSummary ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Burned Areas Map</td><td>EFFIS WMS</td><td>All years</td><td style="color:green;font-weight:600;">DYNAMIC ✓</td></tr>
+      <tr><td class="label">Earth Timelapse</td><td>Google Earth Engine</td><td>1984–2022</td><td style="color:green;font-weight:600;">DYNAMIC ✓</td></tr>
     </tbody>
   </table>
 
@@ -2233,7 +2569,10 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td>Email</td><td>Submission</td><td>${prop.email}</td></tr>
       <tr><td>Elevation</td><td>Open-Meteo DEM</td><td>${elevation != null ? elevation + 'm' : 'FAILED'}</td></tr>
       <tr><td>7-day forecast</td><td>Open-Meteo Forecast</td><td>${dd.forecast ? dd.forecast.time?.length + ' days' : 'FAILED'}</td></tr>
-      <tr><td>Climate averages</td><td>Open-Meteo Archive</td><td>${climate ? '12 months' : 'FAILED'}</td></tr>
+      <tr><td>Climate averages</td><td>Open-Meteo Archive</td><td>${climate ? '12 months (30yr)' : 'FAILED'}</td></tr>
+      <tr><td>50-year climate trends</td><td>Open-Meteo Archive</td><td>${dd.climateTrendSummary ? dd.climateTrendSummary.yearRange : 'FAILED'}</td></tr>
+      <tr><td>Species observation trends</td><td>iNaturalist</td><td>${dd.bioTrendSummary ? '3 time windows' : 'FAILED'}</td></tr>
+      <tr><td>GBIF occurrence trends</td><td>GBIF</td><td>${dd.gbifTrendSummary ? dd.gbifTrendSummary.windows.length + ' time windows' : 'FAILED'}</td></tr>
       <tr><td>Annual mean temp</td><td>Derived from climate</td><td>${annualMeanTemp || 'N/A'}&deg;C</td></tr>
       <tr><td>Annual rainfall</td><td>Derived from climate</td><td>${annualRainfall || 'N/A'}mm</td></tr>
       <tr><td>Summer/winter means</td><td>Derived from climate</td><td>${summerMean || 'N/A'} / ${winterMean || 'N/A'}&deg;C</td></tr>
@@ -2250,7 +2589,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td>Fire risk score</td><td>Computed (Open-Meteo)</td><td>${dd.risks.fire.score}/100</td></tr>
       <tr><td>Drought risk score</td><td>Computed (Open-Meteo)</td><td>${dd.risks.drought.score}/100</td></tr>
       <tr><td>Flood risk score</td><td>Computed (Open-Meteo)</td><td>${dd.risks.flood.score}/100</td></tr>
-      <tr><td>River discharge</td><td>GloFAS (Open-Meteo)</td><td>${dd.flood.current ? dd.flood.current + ' m³/s' : 'NO DATA'}</td></tr>
+      <tr><td>River discharge (210-day)</td><td>GloFAS (Open-Meteo)</td><td>${dd.flood.current ? dd.flood.current + ' m³/s (current), ' + (dd.flood.totalDays || '?') + ' days history' : 'NO DATA'}</td></tr>
       <tr><td>Protected areas</td><td>Overpass / Natura 2000</td><td>${protectedAreaNames.length} found</td></tr>
       <tr><td>Water features</td><td>Overpass (OSM)</td><td>${dd.waterFeatures.total} features</td></tr>
       <tr><td>Water security score</td><td>Computed</td><td>${dd.waterScore}/10</td></tr>

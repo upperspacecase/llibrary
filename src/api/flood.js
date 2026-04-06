@@ -27,14 +27,14 @@ export async function getFloodForecast(lat, lng, forecastDays = 30) {
 }
 
 /**
- * Get historical river discharge (past 30 days + forecast).
+ * Get historical river discharge (past 210 days + 30-day forecast).
  */
 export async function getFloodForecastWithHistory(lat, lng) {
     const params = new URLSearchParams({
         latitude: String(lat),
         longitude: String(lng),
         daily: 'river_discharge',
-        past_days: '30',
+        past_days: '210',
         forecast_days: '30',
     });
 
