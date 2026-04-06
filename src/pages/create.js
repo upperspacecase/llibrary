@@ -41,6 +41,9 @@ const toolbar = document.getElementById('map-toolbar');
 const btnUndo = document.getElementById('btn-undo');
 const btnClear = document.getElementById('btn-clear');
 const btnClose = document.getElementById('btn-close');
+const btnResetBoundary = document.getElementById('btn-reset-boundary');
+const btnGeolocate = document.getElementById('btn-geolocate');
+const mapArea = document.querySelector('.create-map-area');
 
 // ---------------------------------------------------------------------------
 // Map sources
@@ -151,6 +154,32 @@ map.on('load', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Geolocation — zoom to user's position
+// ---------------------------------------------------------------------------
+
+if (btnGeolocate) {
+  btnGeolocate.addEventListener('click', () => {
+    if (!navigator.geolocation) return;
+
+    btnGeolocate.classList.add('locating');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        btnGeolocate.classList.remove('locating');
+        const { latitude, longitude } = pos.coords;
+        map.flyTo({ center: [longitude, latitude], zoom: 16 });
+        if (instructions && boundaryPoints.length === 0) {
+          instructions.textContent = t('create.instructions') || 'Click on the map to start drawing your land boundary';
+        }
+      },
+      () => {
+        btnGeolocate.classList.remove('locating');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Drawing
 // ---------------------------------------------------------------------------
 
@@ -211,6 +240,7 @@ function closePolygon() {
   fitToCoords(map, boundaryPoints, { padding: 80 });
 
   if (instructions) instructions.textContent = 'Boundary set. Fill in your details and submit.';
+  if (btnResetBoundary) btnResetBoundary.style.display = '';
   updateStats();
   updateCreateButton();
 }
@@ -241,6 +271,7 @@ function clearAll() {
   if (statArea) statArea.textContent = '\u2014';
   if (mapPrompt) mapPrompt.style.display = '';
   if (btnCreate) btnCreate.disabled = true;
+  if (btnResetBoundary) btnResetBoundary.style.display = 'none';
 }
 
 function updateStats() {
@@ -269,6 +300,49 @@ if (emailInput) emailInput.addEventListener('input', updateCreateButton);
 if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
 if (btnClear) btnClear.addEventListener('click', clearAll);
 if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.length >= 3 && !isClosed) closePolygon(); });
+
+// ---------------------------------------------------------------------------
+// Confirm toast
+// ---------------------------------------------------------------------------
+let activeToast = null;
+
+function showConfirmToast(message, onConfirm) {
+  if (activeToast) activeToast.remove();
+
+  const toast = document.createElement('div');
+  toast.className = 'confirm-toast';
+  toast.innerHTML = `
+    <span class="confirm-toast-msg">${esc(message)}</span>
+    <div class="confirm-toast-actions">
+      <button class="confirm-toast-btn confirm-toast-btn--cancel">${t('create.cancel') || 'Cancel'}</button>
+      <button class="confirm-toast-btn confirm-toast-btn--confirm">${t('create.resetAction') || 'Reset'}</button>
+    </div>`;
+
+  const dismiss = () => {
+    toast.classList.add('toast-exit');
+    toast.addEventListener('animationend', () => toast.remove());
+    if (activeToast === toast) activeToast = null;
+    clearTimeout(autoTimer);
+  };
+
+  toast.querySelector('.confirm-toast-btn--cancel').addEventListener('click', dismiss);
+  toast.querySelector('.confirm-toast-btn--confirm').addEventListener('click', () => {
+    dismiss();
+    onConfirm();
+  });
+
+  const autoTimer = setTimeout(dismiss, 6000);
+
+  (mapArea || document.body).appendChild(toast);
+  activeToast = toast;
+}
+
+// Reset Boundary button
+if (btnResetBoundary) {
+  btnResetBoundary.addEventListener('click', () => {
+    showConfirmToast(t('create.resetConfirm') || "Reset boundary? You'll need to redraw.", clearAll);
+  });
+}
 
 // ---------------------------------------------------------------------------
 // File upload — drag & drop + file input
