@@ -64,6 +64,7 @@
               <input type="text" id="postcode-input" placeholder="Enter post code..." autocomplete="postal-code">
               <button class="btn-small" id="btn-search">Find</button>
             </div>
+            <p class="create-field-error" id="err-postcode">Enter a post code to locate your land</p>
           </div>
 
           <button class="btn-geolocate-sidebar" id="btn-geolocate" type="button">
@@ -77,14 +78,19 @@
               <span class="create-address-value" id="stat-area">&mdash;</span>
             </div>
             <div class="create-area-override" id="area-override-row" style="display:none;">
-              <input type="number" id="area-override" step="0.01" min="0" placeholder="Override">
-              <span class="create-area-unit">ha</span>
+              <label class="create-area-override-label">Override (ha)</label>
+              <div class="create-area-override-input">
+                <input type="number" id="area-override" step="0.01" min="0" placeholder="0.00">
+                <span class="create-area-unit">ha</span>
+              </div>
             </div>
+            <p class="create-field-error" id="err-boundary">Draw your boundary on the map first</p>
           </div>
 
           <div class="create-field">
             <label for="name-input">Name</label>
             <input type="text" id="name-input" placeholder="Your name" autocomplete="name">
+            <p class="create-field-error" id="err-name">Enter your name</p>
           </div>
 
           <div class="create-field">
@@ -95,6 +101,7 @@
                 <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
               </div>
               <input type="email" id="contact-input" placeholder="you@example.com" autocomplete="email">
+              <p class="create-field-error" id="err-contact">Enter your email or WhatsApp number</p>
             </div>
           </div>
         </div>
@@ -111,8 +118,8 @@
   <div class="create-modal-overlay" id="extras-modal" style="display:none;">
     <div class="create-modal">
       <div class="create-modal-header">
-        <h3>Unlock your LandBook preview</h3>
-        <p>2 min to complete — the more you share, the better your report.</p>
+        <h3>Tell us more about your land</h3>
+        <p>2 min to complete — helps us build a better report for you.</p>
       </div>
 
       <div class="create-modal-body">
@@ -268,7 +275,7 @@
 
       <div class="create-modal-footer">
         <button class="btn-small" id="btn-skip-extras">Skip</button>
-        <button class="btn-create-generate" id="btn-save-extras">Save & Get Preview</button>
+        <button class="btn-create-generate" id="btn-save-extras">Save Details</button>
       </div>
     </div>
   </div>

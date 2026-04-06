@@ -309,18 +309,36 @@ function getPillValue(groupId) {
 }
 
 // ---------------------------------------------------------------------------
-// Submit validation
+// Submit validation with inline errors
 // ---------------------------------------------------------------------------
+const errPostcode = document.getElementById('err-postcode');
+const errBoundary = document.getElementById('err-boundary');
+const errName = document.getElementById('err-name');
+const errContact = document.getElementById('err-contact');
+
+function showError(el, inputEl, show) {
+  if (el) el.classList.toggle('visible', show);
+  if (inputEl) inputEl.classList.toggle('has-error', show);
+}
+
+function clearErrors() {
+  showError(errPostcode, postcodeInput, false);
+  showError(errBoundary, null, false);
+  showError(errName, nameInput, false);
+  showError(errContact, contactInput, false);
+}
+
 function updateSubmitState() {
+  // Just enable/disable — errors shown on submit attempt
   const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
   const hasName = nameInput && nameInput.value.trim().length > 0;
   const hasContact = contactInput && contactInput.value.trim().length > 3;
-  if (btnSubmit) btnSubmit.disabled = !(isClosed && hasPostcode && hasName && hasContact);
+  if (btnSubmit) btnSubmit.disabled = false; // always enabled, validate on click
 }
 
-if (postcodeInput) postcodeInput.addEventListener('input', updateSubmitState);
-if (nameInput) nameInput.addEventListener('input', updateSubmitState);
-if (contactInput) contactInput.addEventListener('input', updateSubmitState);
+if (postcodeInput) postcodeInput.addEventListener('input', () => { showError(errPostcode, postcodeInput, false); });
+if (nameInput) nameInput.addEventListener('input', () => { showError(errName, nameInput, false); });
+if (contactInput) contactInput.addEventListener('input', () => { showError(errContact, contactInput, false); });
 
 // ---------------------------------------------------------------------------
 // Notes character count
@@ -330,11 +348,24 @@ if (notesInput && notesCount) {
 }
 
 // ---------------------------------------------------------------------------
-// Submit — core data, then show extras modal
+// Submit — validate, show errors, then save + show extras modal
 // ---------------------------------------------------------------------------
 if (btnSubmit) {
   btnSubmit.addEventListener('click', async () => {
-    if (!isClosed || boundaryPoints.length < 3) return;
+    clearErrors();
+
+    const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
+    const hasBoundary = isClosed && boundaryPoints.length >= 3;
+    const hasName = nameInput && nameInput.value.trim().length > 0;
+    const hasContact = contactInput && contactInput.value.trim().length > 3;
+
+    let valid = true;
+    if (!hasPostcode) { showError(errPostcode, postcodeInput, true); valid = false; }
+    if (!hasBoundary) { showError(errBoundary, null, true); valid = false; }
+    if (!hasName) { showError(errName, nameInput, true); valid = false; }
+    if (!hasContact) { showError(errContact, contactInput, true); valid = false; }
+    if (!valid) return;
+
     btnSubmit.disabled = true;
     btnSubmit.textContent = 'Submitting...';
 

@@ -23,6 +23,20 @@ const columns = {
         { key: 'area', label: 'Area', format: v => v ? `${Number(v).toLocaleString()} m2` : '-' },
         { key: 'created', label: 'Created', format: formatDate },
     ],
+    submissions: [
+        { key: 'name', label: 'Name' },
+        { key: 'contact', label: 'Contact' },
+        { key: 'contactMethod', label: 'Via' },
+        { key: 'postcode', label: 'Postcode' },
+        { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
+        { key: 'landCondition', label: 'Condition', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
+        { key: 'landGoals', label: 'Goals', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
+        { key: 'waterReliability', label: 'Water' },
+        { key: 'challenges', label: 'Challenges', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
+        { key: 'notes', label: 'Notes' },
+        { key: 'files', label: 'Files', format: formatFiles },
+        { key: 'created', label: 'Date', format: formatDate },
+    ],
     contributions: [
         { key: 'section', label: 'Section' },
         { key: 'type', label: 'Type' },
@@ -142,6 +156,7 @@ async function loadData() {
 function renderStats() {
     const stats = [
         { label: 'Waitlist', count: data.waitlist?.length || 0 },
+        { label: 'Submissions', count: data.submissions?.length || 0 },
         { label: 'Properties', count: data.properties?.length || 0 },
         { label: 'Landbooks', count: data.landbooks?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },

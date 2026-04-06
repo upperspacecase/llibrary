@@ -3109,7 +3109,7 @@ a {
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 10px 16px;
+  padding: 9px 16px;
   border: 1px solid var(--border, #e0dcc8);
   border-radius: var(--radius, 8px);
   background: none;
@@ -3119,7 +3119,7 @@ a {
   font-weight: 500;
   color: inherit;
   transition: border-color 0.15s, background 0.15s;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .btn-geolocate-sidebar:hover {
@@ -3322,24 +3322,23 @@ a {
 }
 
 .create-sidebar-content {
-  padding: 40px;
+  padding: 28px 32px;
   flex: 1;
   overflow-y: auto;
 }
 
 .create-sidebar h2 {
-  font-size: 32px;
+  font-size: 28px;
   font-family: 'DM Serif Display', serif;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   line-height: 1.2;
 }
 
 .create-sidebar .create-desc {
-  font-size: 14px;
+  font-size: 13px;
   color: #7A7A7A;
-  margin-bottom: 40px;
-  line-height: 1.6;
-  padding-right: 16px;
+  margin-bottom: 20px;
+  line-height: 1.5;
 }
 
 .create-search {
@@ -3431,7 +3430,7 @@ a {
 }
 
 .create-sidebar-footer {
-  padding: 24px 40px 40px;
+  padding: 16px 32px 24px;
   border-top: 1px solid var(--border);
   background: var(--white);
 }
@@ -3623,7 +3622,7 @@ a {
 
 /* Form field (reusable) */
 .create-field {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .create-field label {
@@ -3664,6 +3663,27 @@ a {
   font-size: 12px;
   color: #A39E93;
   margin-top: 4px;
+}
+
+/* Inline validation errors */
+.create-field-error {
+  font-size: 12px;
+  color: #c0392b;
+  margin-top: 4px;
+  display: none;
+}
+
+.create-field-error.visible {
+  display: block;
+}
+
+.create-field input.has-error,
+.create-field select.has-error {
+  border-color: #c0392b;
+}
+
+.create-field input.has-error:focus {
+  box-shadow: 0 0 0 1px #c0392b;
 }
 
 /* Area override row */
@@ -3942,10 +3962,20 @@ a {
 
 /* Area override row */
 .create-area-override {
+  margin-top: 10px;
+}
+
+.create-area-override-label {
+  display: block;
+  font-size: 12px;
+  color: #A39E93;
+  margin-bottom: 4px;
+}
+
+.create-area-override-input {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
 }
 
 .create-area-override input {
