@@ -3211,15 +3211,15 @@ a {
 }
 
 .map-style-btn {
-  padding: 8px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
+  padding: 8px 10px;
   border: none;
   background: transparent;
   cursor: pointer;
   color: #555;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .map-style-btn:first-child {
@@ -3899,6 +3899,18 @@ a {
   transition: all 0.15s;
   user-select: none;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.create-chip-grid label span svg {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.create-chip-grid input:checked + span svg {
+  opacity: 1;
 }
 
 .create-chip-grid label:hover span {

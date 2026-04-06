@@ -115,6 +115,25 @@ map.on('load', () => {
 map.on('style.load', () => { initMapLayers(); });
 
 // ---------------------------------------------------------------------------
+// Map style toggle (Satellite / Terrain)
+// ---------------------------------------------------------------------------
+const MAP_STYLES = {
+  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+  terrain: 'mapbox://styles/mapbox/outdoors-v12',
+};
+
+const styleToggle = document.getElementById('map-style-toggle');
+if (styleToggle) {
+  styleToggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.map-style-btn');
+    if (!btn || btn.classList.contains('active')) return;
+    styleToggle.querySelectorAll('.map-style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    map.setStyle(MAP_STYLES[btn.dataset.style]);
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Geolocation
 // ---------------------------------------------------------------------------
 if (btnGeolocate) {
