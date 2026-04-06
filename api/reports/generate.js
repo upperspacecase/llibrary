@@ -228,9 +228,9 @@ function buildMapUrls(boundary, center) {
     landCoverCorine: wmsGetMapUrl('https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer', '12', bbox),
     landCoverWorldcover: wmsGetMapUrl('https://services.terrascope.be/wms/v2', 'WORLDCOVER_2021_MAP', bbox),
     landCoverCOS: wmsGetMapUrl('https://geo2.dgterritorio.gov.pt/geoserver/COS2018/wms', 'COS2018_v2', bbox),
-    fireDanger: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/wms', 'ecmwf.fwi', bbox),
-    burnedAreas: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/wms', 'firms.hs', bbox),
-    natura2000: wmsGetMapUrl('https://bio.discomap.eea.europa.eu/arcgis/services/Natura2000/Natura2000End2021/MapServer/WMSServer', '2,4', bbox),
+    fireDanger: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/effisgis/wms', 'ecmwf.fwi', bbox),
+    burnedAreas: wmsGetMapUrl('https://maps.effis.emergency.copernicus.eu/effisgis/wms', 'firms.hs', bbox),
+    natura2000: wmsGetMapUrl('https://bio.discomap.eea.europa.eu/arcgis/services/ProtectedSites/Natura2000_Dyna_WM/MapServer/WMSServer', '2,4', bbox),
     waterResources: mapboxStaticUrl(boundary, center, 'outdoors-v12'),
     biodiversity: mapboxStaticUrl(boundary, center, 'light-v11'),
   };
@@ -250,7 +250,7 @@ async function getForecast(lat, lng) {
 
 async function getClimateAverages(lat, lng) {
   const endYear = new Date().getFullYear() - 1;
-  const startYear = endYear - 4; // 5-year window for stable averages
+  const startYear = endYear - 29; // 30-year climate normals (WMO standard)
   const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startYear}-01-01&end_date=${endYear}-12-31&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`;
   const data = await fetchJSON(url);
   if (!data?.daily) return null;
@@ -311,7 +311,7 @@ async function getFloodData(lat, lng) {
   return fetchJSON(`https://flood-api.open-meteo.com/v1/flood?latitude=${lat}&longitude=${lng}&daily=river_discharge&forecast_days=30`);
 }
 
-async function getRiskScores(lat, lng) {
+async function getRiskScores(lat, lng, climateNormals) {
   // Simplified risk calculation using current weather
   const forecast = await getForecast(lat, lng);
   if (!forecast?.daily) return { fire: 30, drought: 30, flood: 20 };
@@ -328,7 +328,10 @@ async function getRiskScores(lat, lng) {
   fire = Math.min(fire, 100);
 
   let drought = 0;
-  const expectedMonthly = [80,70,55,40,25,8,2,3,20,60,80,90];
+  // Use property's own climate normals if available, otherwise fall back to generic baseline
+  const expectedMonthly = (climateNormals && climateNormals.length === 12)
+    ? climateNormals.map(m => m.totalPrecip)
+    : [80,70,55,40,25,8,2,3,20,60,80,90];
   const weeklyExpected = expectedMonthly[month] / 4;
   if (totalPrecip < weeklyExpected * 0.2) drought = 70;
   else if (totalPrecip < weeklyExpected * 0.5) drought = 50;
@@ -1263,7 +1266,7 @@ export default async function handler(req, res) {
       threatened,
       gbif,
       floodData,
-      risks,
+      ,
       protectedAreas,
       waterFeatures,
       infrastructure,
@@ -1283,7 +1286,7 @@ export default async function handler(req, res) {
       tracked('threatened', getThreatenedSpecies(lat, lng), null),
       tracked('gbif', getGBIF(lat, lng), null),
       tracked('flood', getFloodData(lat, lng), null),
-      tracked('riskScores', getRiskScores(lat, lng), { fire: 0, drought: 0, flood: 0 }),
+      null, // riskScores placeholder — computed after climate resolves
       tracked('protectedAreas', getProtectedAreas(lat, lng), []),
       tracked('waterFeatures', getWaterFeatures(lat, lng), []),
       tracked('infrastructure', getInfrastructure(lat, lng), []),
@@ -1294,6 +1297,9 @@ export default async function handler(req, res) {
       tracked('regional', getRegionalComparisons(lat, lng), {}),
       tracked('activeFires', getActiveFires(lat, lng), { fires: [], status: 'FAILED' }),
     ]);
+
+    // Risk scores (needs climate normals for drought baseline)
+    const risks = await tracked('riskScores', getRiskScores(lat, lng, climate), { fire: 0, drought: 0, flood: 0 });
 
     // IPMA forecast (needs location ID from previous call)
     let ipmaForecast = null;

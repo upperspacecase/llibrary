@@ -64,6 +64,10 @@
   td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
   tr:last-child td { border-bottom: none; }
   .issue-row { background: #fffbeb; }
+  .fixed-row { background: #f0fdf4; }
+  .fixed-row td { text-decoration: line-through; color: #64748b; }
+  .fixed-row td:first-child { text-decoration: none; }
+  .sev-fixed { background: #16a34a; color: white; }
 
   .file-ref { font-family: 'SF Mono', Consolas, monospace; font-size: 11px; color: var(--muted); }
   .alt { font-size: 11px; color: var(--text); line-height: 1.5; }
@@ -97,7 +101,7 @@
 <div class="file-note">
   <strong>Baseline (locked):</strong> <code>landbook-audit-baseline.html</code> — original snapshot, do not edit.<br>
   <strong>This file (working):</strong> <code>landbook-audit-working.html</code> — edit freely, add notes, track decisions.<br>
-  <strong>Source:</strong> <code>api/reports/generate.js</code> (~2,039 lines) &nbsp;|&nbsp; <strong>Last updated:</strong> 6 Apr 2026
+  <strong>Source:</strong> <code>api/reports/generate.js</code> (~2,039 lines) &nbsp;|&nbsp; <strong>Last updated:</strong> 6 Apr 2026 (Phase 1 fixes applied)
 </div>
 
 <!-- LEGENDS -->
@@ -129,7 +133,7 @@
   <div class="summary-card"><div class="num" style="color:var(--literature)">10</div><div class="label">Literature</div></div>
   <div class="summary-card"><div class="num" style="color:var(--synthetic)">8</div><div class="label">Synthetic</div></div>
   <div class="summary-card"><div class="num" style="color:var(--hardcoded)">5</div><div class="label">Hardcoded</div></div>
-  <div class="summary-card"><div class="num" style="color:var(--broken)">7</div><div class="label">Broken</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--broken)">4</div><div class="label">Broken</div></div>
 </div>
 
 <!-- ============================================================ -->
@@ -140,16 +144,16 @@
 <table>
 <thead><tr><th style="width:55px">Sev</th><th>Issue</th><th>Location</th><th>Regions Affected</th></tr></thead>
 <tbody>
-<tr class="issue-row">
-  <td><span class="sev sev-critical">Critical</span></td>
-  <td><strong>Climate data is 1 year, not 30-year average</strong><br><span style="font-size:11px;color:#92400e;">Function <code>getClimateAverages</code> fetches only 1 calendar year. The 30-year date loop is dead code. All climate metrics derive from a single year.</span></td>
-  <td><span class="file-ref">:251-276</span></td>
+<tr class="fixed-row">
+  <td><span class="sev sev-fixed">Fixed</span></td>
+  <td><strong>Climate data is 1 year, not 30-year average</strong><br><span style="font-size:11px;color:#16a34a;">Now fetches 30-year window (WMO standard). Precipitation averaged across years. Fixed in commits 5dc53fa + Phase 1.</span></td>
+  <td><span class="file-ref">:251-270</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
-<tr class="issue-row">
-  <td><span class="sev sev-critical">Critical</span></td>
-  <td><strong>Drought baseline hardcoded to Portuguese rainfall</strong><br><span style="font-size:11px;color:#92400e;"><code>[80,70,55,40,25,8,2,3,20,60,80,90]</code> applied to every location. Meaningless outside southern Portugal.</span></td>
-  <td><span class="file-ref">:322</span></td>
+<tr class="fixed-row">
+  <td><span class="sev sev-fixed">Fixed</span></td>
+  <td><strong>Drought baseline hardcoded to Portuguese rainfall</strong><br><span style="font-size:11px;color:#16a34a;">Now uses property's own 30-year climate normals as drought baseline. Hardcoded array kept as fallback only when climate API fails.</span></td>
+  <td><span class="file-ref">:299-321</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
 <tr class="issue-row">
@@ -176,10 +180,10 @@
   <td><span class="file-ref">:314-319</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
-<tr class="issue-row">
-  <td><span class="sev sev-high">High</span></td>
-  <td><strong>Silent API failures show as "no data" not "error"</strong><br><span style="font-size:11px;color:#92400e;">All calls wrapped in <code>.catch(() => null)</code>. "0 springs" and "API failed" are indistinguishable.</span></td>
-  <td><span class="file-ref">:1159-1177</span></td>
+<tr class="fixed-row">
+  <td><span class="sev sev-fixed">Fixed</span></td>
+  <td><strong>Silent API failures show as "no data" not "error"</strong><br><span style="font-size:11px;color:#16a34a;"><code>tracked()</code> wrapper now logs OK/FAILED/SKIPPED per API. <code>apiStatus</code> object included in report output. Fixed in 5dc53fa.</span></td>
+  <td><span class="file-ref">:1157-1161</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
 <tr class="issue-row">
@@ -188,16 +192,16 @@
   <td><span class="file-ref">:360-389</span></td>
   <td><span class="region region-nz">NZ</span> <span class="region region-au">AU</span></td>
 </tr>
-<tr class="issue-row">
-  <td><span class="sev sev-high">High</span></td>
-  <td><strong>No idempotency — same input = different output</strong><br><span style="font-size:11px;color:#92400e;">New UUID + timestamps every run. Weather changes daily. No API success/fail tracking.</span></td>
+<tr class="fixed-row">
+  <td><span class="sev sev-fixed">Fixed</span></td>
+  <td><strong>No idempotency — same input = different output</strong><br><span style="font-size:11px;color:#16a34a;">API success/fail tracking added via <code>apiStatus</code> object. UUID + weather variability inherent. Fixed in 5dc53fa + c5c51d0.</span></td>
   <td><span class="file-ref">:1409</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
-<tr class="issue-row">
-  <td><span class="sev sev-high">High</span></td>
-  <td><strong>Wildfire history missing</strong><br><span style="font-size:11px;color:#92400e;">Section 8.3 says "MISSING." EFFIS layers exist but aren't queried per-property.</span></td>
-  <td><span class="file-ref">:1772-1775</span></td>
+<tr class="issue-row" style="background:#fefce8;">
+  <td><span class="sev sev-medium">Partial</span></td>
+  <td><strong>Wildfire history missing</strong><br><span style="font-size:11px;color:#92400e;">Active fires now integrated via NASA FIRMS (5dc53fa). Historical burn scars still missing — need EFFIS burned area or MODIS MCD64A1.</span></td>
+  <td><span class="file-ref">:354-374</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
 <tr class="issue-row">
@@ -471,17 +475,17 @@
   </td>
   <td>Arbitrary thresholds, no vegetation, no terrain</td>
 </tr>
-<tr class="issue-row">
+<tr class="fixed-row">
   <td>Drought Risk (0-100)</td>
-  <td>7-day precip vs <code>[80,70,55,40,25,8,2,3,20,60,80,90]</code></td>
-  <td><span class="badge badge-hardcoded">Hardcoded</span></td>
-  <td><span class="region region-pt">Portugal</span></td>
+  <td>7-day precip vs property's own 30yr climate normals</td>
+  <td><span class="badge badge-computed">Computed</span></td>
+  <td><span class="region region-global">Global</span></td>
   <td class="alt">
-    <div class="alt-item"><span class="region region-global">Global</span> Use the property's own climate archive to build the baseline (actual monthly normals from Open-Meteo 30yr archive)</div>
+    <div class="alt-item"><span style="color:#16a34a;font-weight:700;">FIXED:</span> Now uses property's own monthly normals from 30yr Open-Meteo archive. Hardcoded array retained as fallback only.</div>
     <div class="alt-item"><span class="region region-nz">NZ</span> NIWA drought monitor / SPI index</div>
     <div class="alt-item"><span class="region region-au">AU</span> BOM drought monitor / rainfall deciles</div>
   </td>
-  <td><strong>Hardcoded Odemira baseline applied globally</strong></td>
+  <td style="text-decoration:none;color:#16a34a;">Fixed — location-specific baseline</td>
 </tr>
 <tr class="issue-row">
   <td>Flood Risk (0-100)</td>
@@ -715,18 +719,17 @@
 <table>
 <thead><tr><th>Data Point</th><th>Current Source</th><th>Type</th><th>Coverage</th><th>Alternatives</th><th>Issue?</th></tr></thead>
 <tbody>
-<tr class="issue-row">
+<tr class="fixed-row">
   <td>Annual Mean Temp, Rainfall, Summer/Winter Means</td>
-  <td>Open-Meteo Archive — <strong>1 year only</strong></td>
-  <td><span class="badge badge-broken">Broken</span></td>
+  <td>Open-Meteo Archive — <strong>30-year window</strong></td>
+  <td><span class="badge badge-real">Real API</span></td>
   <td><span class="region region-global">Global</span></td>
   <td class="alt">
-    <div class="alt-item"><span class="region region-global">Global</span> <strong>Fix:</strong> Open-Meteo Archive supports 1940-present. Fetch 30 years and average. Same API, just use the date range the code already builds but doesn't use.</div>
+    <div class="alt-item"><span style="color:#16a34a;font-weight:700;">FIXED:</span> Now fetches 30 years and averages properly. Same API, correct date range.</div>
     <div class="alt-item"><span class="region region-nz">NZ</span> NIWA CliFlo — NZ climate database (station-based, high quality)</div>
     <div class="alt-item"><span class="region region-au">AU</span> BOM Climate Data Online — station averages and normals</div>
-    <div class="alt-item"><span class="region region-global">Global</span> WorldClim 2.1 bioclimatic variables (raster tiles, 30yr normals at 1km)</div>
   </td>
-  <td><strong>Named "30yr averages" but fetches 1 calendar year.</strong> Dead code on lines 254-260.</td>
+  <td style="text-decoration:none;color:#16a34a;">Fixed — 30yr normals now used</td>
 </tr>
 <tr class="issue-row">
   <td>Growing Season</td>
@@ -871,13 +874,13 @@
   <td class="alt">See S1 Risk Summary for alternatives</td>
   <td>Arbitrary thresholds</td>
 </tr>
-<tr class="issue-row">
+<tr class="fixed-row">
   <td>Drought Risk</td>
-  <td>Hardcoded Portuguese baseline</td>
-  <td><span class="badge badge-hardcoded">Hardcoded</span></td>
-  <td><span class="region region-pt">Portugal</span></td>
-  <td class="alt">See S1 Risk Summary for alternatives</td>
-  <td><strong>Wrong for NZ/AU</strong></td>
+  <td>Property's own 30yr climate normals</td>
+  <td><span class="badge badge-computed">Computed</span></td>
+  <td><span class="region region-global">Global</span></td>
+  <td class="alt">See S1 Risk Summary</td>
+  <td style="text-decoration:none;color:#16a34a;">Fixed</td>
 </tr>
 <tr class="issue-row">
   <td>Flood Risk</td>
@@ -895,19 +898,18 @@
   <td>—</td>
   <td>No data for many locations</td>
 </tr>
-<tr class="issue-row">
+<tr class="issue-row" style="background:#fefce8;">
   <td>Wildfire History</td>
-  <td><strong>MISSING</strong></td>
-  <td><span class="badge badge-broken">Broken</span></td>
-  <td><span class="region region-none">None</span></td>
+  <td><strong>Partial</strong> — Active fires via NASA FIRMS</td>
+  <td><span class="badge badge-real">Real API</span></td>
+  <td><span class="region region-global">Global</span></td>
   <td class="alt">
+    <div class="alt-item"><span style="color:#16a34a;font-weight:700;">PARTIAL:</span> Active fires (2-day) via NASA FIRMS VIIRS added (5dc53fa). Historical burn scars still needed.</div>
     <div class="alt-item"><span class="region region-eu">Europe</span> EFFIS burned area WMS (have URL, not queried per-property)</div>
-    <div class="alt-item"><span class="region region-nz">NZ</span> Fire and Emergency NZ historical fire data</div>
-    <div class="alt-item"><span class="region region-au">AU</span> GA/NAFI Northern AU Fire Info + state fire agencies</div>
     <div class="alt-item"><span class="region region-global">Global</span> NASA FIRMS historical archive (MODIS back to 2000, VIIRS to 2012)</div>
     <div class="alt-item"><span class="region region-global">Global</span> Google Earth Engine burned area (MCD64A1 MODIS product)</div>
   </td>
-  <td>Section 8.3 just shows "MISSING" box</td>
+  <td>Active fires done. Historical burn scars still missing.</td>
 </tr>
 <tr>
   <td>Mitigations</td>
@@ -1196,7 +1198,7 @@
   <td>Open-Meteo ✓ (+ IPMA)</td>
   <td>Open-Meteo ✓ (NIWA CliFlo better)</td>
   <td>Open-Meteo ✓ (BOM better)</td>
-  <td>Fix 1yr→30yr first. Then add national supplements.</td>
+  <td><span style="color:#16a34a;font-weight:700;">30yr fixed.</span> National supplements optional.</td>
 </tr>
 <tr>
   <td><strong>Soil</strong></td>
@@ -1254,12 +1256,12 @@
   <td>Computed (weak, BOM FDR better)</td>
   <td>Current computation is arbitrary everywhere.</td>
 </tr>
-<tr class="issue-row">
-  <td><strong>Drought Risk</strong></td>
-  <td>Hardcoded ✓ (for Odemira)</td>
-  <td>✗ Hardcoded baseline wrong</td>
-  <td>✗ Hardcoded baseline wrong</td>
-  <td><strong>Must fix.</strong> Use property's own climate normals.</td>
+<tr class="fixed-row">
+  <td style="text-decoration:none;"><strong>Drought Risk</strong></td>
+  <td style="text-decoration:none;color:#16a34a;">30yr normals ✓</td>
+  <td style="text-decoration:none;color:#16a34a;">30yr normals ✓</td>
+  <td style="text-decoration:none;color:#16a34a;">30yr normals ✓</td>
+  <td style="text-decoration:none;color:#16a34a;"><strong>Fixed.</strong> Uses property's own climate normals.</td>
 </tr>
 <tr class="issue-row">
   <td><strong>Valuation</strong></td>
