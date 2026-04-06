@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landbook Data Audit</title>
+<style>
+  :root {
+    --real: #16a34a; --real-bg: #dcfce7;
+    --computed: #2563eb; --computed-bg: #dbeafe;
+    --literature: #9333ea; --literature-bg: #f3e8ff;
+    --synthetic: #ea580c; --synthetic-bg: #fff7ed;
+    --broken: #dc2626; --broken-bg: #fee2e2;
+    --hardcoded: #b45309; --hardcoded-bg: #fef3c7;
+    --bg: #f8fafc; --white: #fff; --border: #e2e8f0; --text: #0f172a; --muted: #64748b;
+    --font: 'Inter', -apple-system, system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.5; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 40px; }
+  .summary-card { background: var(--white); border-radius: 10px; padding: 20px 16px; text-align: center; border: 1px solid var(--border); }
+  .summary-card .num { font-size: 32px; font-weight: 800; line-height: 1; }
+  .summary-card .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 6px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .badge-real { background: var(--real-bg); color: var(--real); }
+  .badge-computed { background: var(--computed-bg); color: var(--computed); }
+  .badge-literature { background: var(--literature-bg); color: var(--literature); }
+  .badge-synthetic { background: var(--synthetic-bg); color: var(--synthetic); }
+  .badge-broken { background: var(--broken-bg); color: var(--broken); }
+  .badge-hardcoded { background: var(--hardcoded-bg); color: var(--hardcoded); }
+  .sev { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .sev-critical { background: #dc2626; color: white; }
+  .sev-high { background: #ea580c; color: white; }
+  .sev-medium { background: #ca8a04; color: white; }
+  .sev-low { background: #64748b; color: white; }
+  section { margin-bottom: 40px; }
+  h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 15px; font-weight: 700; color: var(--muted); margin: 28px 0 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--white); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 16px; }
+  th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); padding: 10px 12px; background: var(--bg); border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .issue-row { background: #fffbeb; }
+  .file-ref { font-family: 'SF Mono', Consolas, monospace; font-size: 11px; color: var(--muted); }
+  .issue-detail { font-size: 12px; color: #92400e; margin-top: 4px; line-height: 1.4; }
+  .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border); }
+  .section-header h2 { margin: 0; padding: 0; border: 0; }
+  .section-num { font-size: 11px; font-weight: 800; color: var(--muted); background: var(--bg); border: 1px solid var(--border); padding: 2px 8px; border-radius: 6px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; padding: 16px; background: var(--white); border-radius: 8px; border: 1px solid var(--border); }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+  .callout { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 6px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
+  .callout strong { color: #92400e; }
+  @media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .legend { flex-direction: column; gap: 8px; }
+    table { font-size: 12px; display: block; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>Landbook Report — Data Audit</h1>
+<p class="subtitle">Every data point in <code>api/reports/generate.js</code>, where it comes from, and what needs fixing. Updated 6 Apr 2026.</p>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><span class="badge badge-real">Real API</span> Fetched live from external API</div>
+  <div class="legend-item"><span class="badge badge-computed">Computed</span> Derived from real data using formulas</div>
+  <div class="legend-item"><span class="badge badge-literature">Literature</span> Published constants (TEEB, FAO, etc.)</div>
+  <div class="legend-item"><span class="badge badge-synthetic">Synthetic</span> Fabricated — no real source data</div>
+  <div class="legend-item"><span class="badge badge-hardcoded">Hardcoded</span> Hardcoded value applied globally</div>
+  <div class="legend-item"><span class="badge badge-broken">Broken</span> Incorrect, missing, or misleading</div>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-grid">
+  <div class="summary-card"><div class="num" style="color:var(--real)">35</div><div class="label">Real API</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--computed)">15</div><div class="label">Computed</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--literature)">10</div><div class="label">Literature</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--synthetic)">8</div><div class="label">Synthetic</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--hardcoded)">5</div><div class="label">Hardcoded</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--broken)">7</div><div class="label">Broken</div></div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ISSUES TABLE -->
+<!-- ============================================================ -->
+<section>
+<h2>Issues Requiring Attention</h2>
+
+<table>
+<thead><tr><th style="width:60px">Severity</th><th>Issue</th><th>Location</th><th>Impact</th></tr></thead>
+<tbody>
+
+<tr class="issue-row">
+  <td><span class="sev sev-critical">Critical</span></td>
+  <td><strong>Climate data is 1 year, not 30-year average</strong>
+    <div class="issue-detail">Function named <code>getClimateAverages</code> but line 262 fetches only <em>one calendar year</em>. The 30-year loop (lines 254-260) builds date ranges that are never used. Annual rainfall, mean temp, growing season, frost days — all derived from a single year.</div>
+  </td>
+  <td><span class="file-ref">generate.js:251-276</span></td>
+  <td>All climate metrics in Sections 1, 2, 5, 8, 11 are unreliable</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-critical">Critical</span></td>
+  <td><strong>Drought baseline hardcoded to Portuguese rainfall</strong>
+    <div class="issue-detail"><code>expectedMonthly = [80,70,55,40,25,8,2,3,20,60,80,90]</code> — applied to every location worldwide. Drought score is meaningless outside southern Portugal.</div>
+  </td>
+  <td><span class="file-ref">generate.js:322</span></td>
+  <td>Drought risk wrong for all non-Portuguese properties</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-critical">Critical</span></td>
+  <td><strong>Regional comparables are circular</strong>
+    <div class="issue-detail"><code>syntheticComparables()</code> takes the property's own synthetic valuation and multiplies by 0.88, 0.75, 1.25, 1.60. No real transaction data. "Local avg" and "District avg" are derived from the property itself.</div>
+  </td>
+  <td><span class="file-ref">generate.js:799-808</span></td>
+  <td>Section 11 benchmarks are meaningless — looks like real market data to the reader</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-critical">Critical</span></td>
+  <td><strong>Market valuation base rate hardcoded</strong>
+    <div class="issue-detail"><code>BASE_RATE = 22000</code> €/ha for "Portuguese rural land." No source cited. Applied globally with land cover modifiers. No actual comparable sales data.</div>
+  </td>
+  <td><span class="file-ref">generate.js:616</span></td>
+  <td>All valuation figures in Sections 1 and 11 are untethered from reality</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>Land cover only works for Portugal</strong>
+    <div class="issue-detail"><code>getLandCoverGrid()</code> calls DGT COS 2018 WMS which only covers Portugal. For all other countries, land cover returns empty → cascading failures in carbon, ecosystem services, agriculture, and natural capital calculations.</div>
+  </td>
+  <td><span class="file-ref">generate.js:465-509</span></td>
+  <td>Sections 3, 4, 11 all degrade to hardcoded defaults outside Portugal</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>Fire risk scoring uses arbitrary thresholds</strong>
+    <div class="issue-detail">Additive points: temp>35 → +30, precip<5 → +25, wind>40 → +20, summer → +15. No vegetation dryness, no terrain, no historical fire data. Thresholds not cited from any standard.</div>
+  </td>
+  <td><span class="file-ref">generate.js:314-319</span></td>
+  <td>Fire risk score is a rough guess, not a defensible assessment</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>Silent API failures show as "no data" not "error"</strong>
+    <div class="issue-detail">Every API call is wrapped in <code>.catch(() => null)</code> or <code>.catch(() => [])</code>. When an API fails, the report shows "0 springs" or "no protected areas" — indistinguishable from "we checked and found none."</div>
+  </td>
+  <td><span class="file-ref">generate.js:1159-1177</span></td>
+  <td>User can't tell which data is real zeros vs API failures</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>Municipality and IPMA are Portugal-only</strong>
+    <div class="issue-detail">DGT API and IPMA API only cover Portugal. Both silently return null elsewhere — municipality shows "N/A", IPMA forecast shows "not available."</div>
+  </td>
+  <td><span class="file-ref">generate.js:360-389</span></td>
+  <td>Report looks broken for non-Portuguese properties</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>No idempotency — same input = different output</strong>
+    <div class="issue-detail">Every generation creates new UUID, new timestamps, new version number. Weather data changes daily. No way to regenerate and compare. No record of which APIs succeeded/failed.</div>
+  </td>
+  <td><span class="file-ref">generate.js:1409</span></td>
+  <td>Can't verify or reproduce any generated report</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-high">High</span></td>
+  <td><strong>Wildfire history explicitly missing</strong>
+    <div class="issue-detail">Section 8.3 just shows a yellow box saying "MISSING — Historical fire scar data not queried." EFFIS WMS layers exist but aren't used for per-property data.</div>
+  </td>
+  <td><span class="file-ref">generate.js:1772-1775</span></td>
+  <td>Major gap in risk assessment</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>"Water Resources" map is just a base map</strong>
+    <div class="issue-detail"><code>waterResources: mapboxStaticUrl(boundary, center, 'outdoors-v12')</code> — identical to the topography map. No water feature overlay.</div>
+  </td>
+  <td><span class="file-ref">generate.js:234</span></td>
+  <td>Map is misleading — implies water features are plotted</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>Ecosystem service percentage split is hardcoded</strong>
+    <div class="issue-detail">The "regulating" TEEB total is split 35% water, 25% climate, 20% erosion, 20% pollination. These percentages are hardcoded constants, not derived from the property.</div>
+  </td>
+  <td><span class="file-ref">generate.js:714-718</span></td>
+  <td>Service breakdown looks precise but is always the same ratio</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>Carbon sequestration rate is a flat 2%</strong>
+    <div class="issue-detail"><code>annual: (totalStock * 0.02)</code> — same rate for all land types. Real sequestration varies enormously (young forest vs mature, grassland vs wetland).</div>
+  </td>
+  <td><span class="file-ref">generate.js:595</span></td>
+  <td>Carbon credit value estimates may be off by 5-10×</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>Radar chart regional averages mostly hardcoded</strong>
+    <div class="issue-detail">Carbon avg = 5, Resilience avg = 5.5 always. Soil avg falls back to 6. Only Water and Biodiversity use real regional data — and even those have hardcoded fallbacks of 5.5.</div>
+  </td>
+  <td><span class="file-ref">generate.js:811-839</span></td>
+  <td>Radar chart comparison looks data-driven but is mostly static</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>Flood risk ignores terrain and drainage</strong>
+    <div class="issue-detail">Flood score is based purely on 7-day precipitation total: >100mm → 70, >50 → 40. No slope, no proximity to rivers, no soil saturation.</div>
+  </td>
+  <td><span class="file-ref">generate.js:329-333</span></td>
+  <td>Hilltop properties score same as valley floors</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-medium">Medium</span></td>
+  <td><strong>Agricultural revenue "Optimized" scenario = Conservative × 1.8</strong>
+    <div class="issue-detail">No model behind the multiplier. "Moderate" is × 1.4 + 50% carbon. The numbers look precise but are arbitrary scaling factors.</div>
+  </td>
+  <td><span class="file-ref">generate.js:785-795</span></td>
+  <td>Revenue scenarios imply analysis that doesn't exist</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-low">Low</span></td>
+  <td><strong>OSM water/infrastructure data depends on contributor coverage</strong>
+    <div class="issue-detail">Rural Portugal may have sparse OSM coverage. A property could genuinely have springs that aren't mapped. The report doesn't caveat this beyond a small source note.</div>
+  </td>
+  <td><span class="file-ref">generate.js:344-358</span></td>
+  <td>Water score could be artificially low in unmapped areas</td>
+</tr>
+
+<tr class="issue-row">
+  <td><span class="sev sev-low">Low</span></td>
+  <td><strong>Version number is global report count, not per-property</strong>
+    <div class="issue-detail"><code>version = `v${count + 1}`</code> where count = total docs in report_versions. 10th report for any property = "v10" even if it's the first for that property.</div>
+  </td>
+  <td><span class="file-ref">generate.js:1393-1395</span></td>
+  <td>Confusing versioning</td>
+</tr>
+
+</tbody>
+</table>
+</section>
+
+<!-- ============================================================ -->
+<!-- SECTION-BY-SECTION BREAKDOWN -->
+<!-- ============================================================ -->
+
+<!-- SECTION 0 -->
+<section>
+<div class="section-header"><span class="section-num">S0</span><h2>Cover Page</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Property name</td><td>First segment of address before comma, stripped of road prefixes</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Address</td><td>Submission field, or Mapbox reverse geocode from center coords</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Coordinates</td><td><code>sub.center</code> from submission</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Date</td><td><code>new Date()</code> at generation time</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr class="issue-row"><td>Version label</td><td><code>"MVP0.1"</code> hardcoded on line 1450</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Always says MVP0.1</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 1 -->
+<section>
+<div class="section-header"><span class="section-num">S1</span><h2>Executive Summary</h2></div>
+
+<h3>1.1 Property Snapshot</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Coordinates</td><td><code>sub.center</code></td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Elevation</td><td>Open-Meteo DEM — single point query</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Area</td><td>Calculated from boundary polygon (Shoelace formula)</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Perimeter</td><td>Calculated from boundary polygon (Haversine sum)</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Address</td><td>Submission or Mapbox reverse geocode</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Municipality</td><td>DGT Portugal CAOP API</td><td><span class="badge badge-real">Real API</span></td><td><span class="badge badge-broken">Portugal only</span></td></tr>
+  <tr class="issue-row"><td>Climate Zone</td><td>3-bucket formula: meanTemp > 14 && rainfall < 800 → Csa, > 14 → Csb, else Cfb</td><td><span class="badge badge-computed">Computed</span></td><td>Oversimplified; based on broken 1-year climate data</td></tr>
+  <tr><td>Zoning / Land Cover</td><td>DGT COS 2018 WMS GetFeatureInfo</td><td><span class="badge badge-real">Real API</span></td><td><span class="badge badge-broken">Portugal only</span></td></tr>
+  <tr><td>Aspect</td><td>Multi-point DEM, atan2 of N/S/E/W elevation diffs</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Slope</td><td>(elevation range / horizontal extent) × 100</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>1.2 Value Composition</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Market Value (€)</td><td><code>syntheticValuation()</code> — base €22,000/ha × land cover/water/bio modifiers</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>No transaction data. Base rate hardcoded.</td></tr>
+  <tr class="issue-row"><td>Natural Capital (€)</td><td>TEEB coefficients × area × 5 (capital multiplier)</td><td><span class="badge badge-literature">Literature</span></td><td>5× multiplier is arbitrary</td></tr>
+  <tr><td>Ecosystem Services (€/yr)</td><td>TEEB coefficients by land cover</td><td><span class="badge badge-literature">Literature</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>1.3 Key Opportunities</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Water Security / Development</td><td>Triggered by waterScore >= 7 or < 5</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Carbon Credits</td><td>Triggered by bioScore >= 6</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Fire Management</td><td>Triggered by fire score >= 40</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Conservation</td><td>Triggered by protectedAreas.length > 0</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr class="issue-row"><td>Fallback cards (Agriculture, Eco-Tourism, Renewable Energy)</td><td>Always added to fill up to 6 cards</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Generic filler presented as "opportunities"</td></tr>
+</tbody>
+</table>
+
+<h3>1.4 Risk Summary</h3>
+<table>
+<thead><tr><th>Risk</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Fire Risk (0-100)</td><td>Open-Meteo 7-day: additive scoring (temp, precip, wind, season)</td><td><span class="badge badge-computed">Computed</span></td><td>Arbitrary thresholds, no vegetation/terrain factor</td></tr>
+  <tr class="issue-row"><td>Drought Risk (0-100)</td><td>7-day precip vs <code>[80,70,55,40,25,8,2,3,20,60,80,90]</code></td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td><strong>Hardcoded Portuguese baseline applied globally</strong></td></tr>
+  <tr class="issue-row"><td>Flood Risk (0-100)</td><td>7-day precip total only: >100mm → 70, >50 → 40</td><td><span class="badge badge-computed">Computed</span></td><td>No terrain/drainage factor</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 2 -->
+<section>
+<div class="section-header"><span class="section-num">S2</span><h2>Natural Capital Scorecard</h2></div>
+<table>
+<thead><tr><th>Dimension</th><th>Property Score Source</th><th>Regional Average Source</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Water</td><td>Base 5 + springs×1.5 + wells×1 + waterway + body + rainfall bonus</td><td>min(10, regional rainfall / 100) — Open-Meteo 20km offset</td><td>Falls back to <span class="badge badge-hardcoded">5.5</span></td></tr>
+  <tr><td>Biodiversity</td><td>Base 5 + species bonus + threatened + protected area bonus</td><td>min(10, log10(species 50km) × 2.5) — iNaturalist wider radius</td><td>Falls back to <span class="badge badge-hardcoded">5.5</span></td></tr>
+  <tr class="issue-row"><td>Soil</td><td>pH 5-8 → 7, else → 5</td><td>Regional pH check, else <strong>6 hardcoded</strong></td><td>Binary score (7 or 5) — no gradient</td></tr>
+  <tr class="issue-row"><td>Carbon</td><td>stock / areaHa / 15, capped at 10</td><td><strong>Always 5</strong></td><td>Regional avg is hardcoded — no comparison possible</td></tr>
+  <tr class="issue-row"><td>Resilience</td><td>10 − max(fire, drought) / 12</td><td><strong>Always 5.5</strong></td><td>Regional avg is hardcoded — no comparison possible</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 3 -->
+<section>
+<div class="section-header"><span class="section-num">S3</span><h2>Ecosystem Services Valuation</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Annual value per service</td><td>TEEB_BY_LANDCOVER lookup × area per land cover class</td><td><span class="badge badge-literature">Literature</span></td><td>—</td></tr>
+  <tr class="issue-row"><td>Service breakdown (Water 35%, Climate 25%, Erosion 20%, Pollination 20%)</td><td>Fixed split of "regulating" total</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Same ratio for every property</td></tr>
+  <tr><td>Natural Capital by land cover</td><td>TEEB coefficients (provisioning, regulating, cultural, supporting)</td><td><span class="badge badge-literature">Literature</span></td><td>—</td></tr>
+  <tr><td>Land cover area breakdown</td><td>DGT COS 2018 grid sampling (9 points)</td><td><span class="badge badge-real">Real API</span></td><td><span class="badge badge-broken">Portugal only</span></td></tr>
+</tbody>
+</table>
+<div class="callout"><strong>Note:</strong> If land cover fails (non-Portugal), all ecosystem service values fall back to TEEB "default" constants (€930/ha/yr). The report doesn't indicate this is a fallback.</div>
+</section>
+
+<!-- SECTION 4 -->
+<section>
+<div class="section-header"><span class="section-num">S4</span><h2>Terrain & Landscape</h2></div>
+
+<h3>4.1 Elevation & Slope</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Elevation min/max/avg/range</td><td>Multi-point DEM (boundary corners + center + N/S/E/W)</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Slope %</td><td>(max − min) / horizontal extent × 100</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Aspect</td><td>atan2 of cardinal elevation differences</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+  <tr><td>Slope category</td><td>>15% Very steep, >10% Steep, >5% Moderate, else Gentle</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Thresholds are standard</td></tr>
+</tbody>
+</table>
+
+<h3>4.2 Soil Composition</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Clay, Sand, Silt (%)</td><td>SoilGrids 2.0 (ISRIC) — 250m resolution, 0-5cm</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>pH</td><td>SoilGrids 2.0 — value ÷ 10</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Organic Carbon, Nitrogen</td><td>SoilGrids 2.0</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>CEC, Bulk Density</td><td>SoilGrids 2.0</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Classification (WRB)</td><td>SoilGrids 2.0 classification endpoint</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>4.3 Land Cover</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Land cover breakdown</td><td>DGT COS 2018 WMS GetFeatureInfo — 5×5 grid, capped at 9 points</td><td><span class="badge badge-real">Real API</span></td><td><span class="badge badge-broken">Portugal only</span> — returns empty elsewhere</td></tr>
+</tbody>
+</table>
+
+<h3>4.4 Water Resources</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Springs, Wells, Waterways, Water Bodies</td><td>Overpass API (OSM) — ±0.02° bbox (~2km)</td><td><span class="badge badge-real">Real API</span></td><td>Depends on OSM coverage</td></tr>
+  <tr><td>Water Security Index (0-10)</td><td>Base 5 + feature counts + rainfall bonus</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 5 -->
+<section>
+<div class="section-header"><span class="section-num">S5</span><h2>Climate Profile</h2></div>
+
+<h3>5.1 Annual Climate Summary</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Annual Mean Temp</td><td>Open-Meteo Archive — <strong>1 year only</strong> (despite function name)</td><td><span class="badge badge-broken">Broken</span></td><td>Named "30yr average", fetches 1 year</td></tr>
+  <tr class="issue-row"><td>Summer / Winter Mean</td><td>Derived from same 1-year data</td><td><span class="badge badge-broken">Broken</span></td><td>Same issue</td></tr>
+  <tr class="issue-row"><td>Annual Rainfall</td><td>Sum of 12 monthly totals from 1 year</td><td><span class="badge badge-broken">Broken</span></td><td>Same issue — could be a drought or flood year</td></tr>
+  <tr class="issue-row"><td>Growing Season</td><td>Months where mean >= 10°C × 30 days</td><td><span class="badge badge-computed">Computed</span></td><td>Crude — based on broken 1-year data</td></tr>
+  <tr class="issue-row"><td>Frost Days</td><td>Months where avgLow < 2°C × (3 to 8)</td><td><span class="badge badge-computed">Computed</span></td><td>Very rough range based on broken 1-year data</td></tr>
+</tbody>
+</table>
+
+<h3>5.3 IPMA Forecast</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Min/Max temp, precipitation probability</td><td>IPMA API — nearest station by Euclidean distance</td><td><span class="badge badge-real">Real API</span></td><td><span class="badge badge-broken">Portugal only</span></td></tr>
+</tbody>
+</table>
+
+<h3>5.4 Seasonal Risk Calendar</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Jan-Mar risk</td><td>Winter precip > 150mm → "Saturated soils"</td><td><span class="badge badge-computed">Computed</span></td><td>Threshold hardcoded</td></tr>
+  <tr><td>Apr-May risk</td><td>Spring avgHigh > 25°C → "Fire season begins"</td><td><span class="badge badge-computed">Computed</span></td><td>Threshold hardcoded</td></tr>
+  <tr><td>Jun-Aug risk</td><td>Summer avgHigh > 30°C → "PEAK FIRE RISK"</td><td><span class="badge badge-computed">Computed</span></td><td>Threshold hardcoded</td></tr>
+  <tr><td>Sep-Dec risk</td><td>Autumn precip > 200mm → "Heavy rains"</td><td><span class="badge badge-computed">Computed</span></td><td>Threshold hardcoded</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 6 -->
+<section>
+<div class="section-header"><span class="section-num">S6</span><h2>Biodiversity Inventory</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Species by group (top 8)</td><td>iNaturalist — 15km radius, 200 results max</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Top 10 species (name, group, count, photo)</td><td>iNaturalist</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Threatened species count & list</td><td>iNaturalist <code>threatened=true</code> — 25km radius</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>GBIF occurrences & kingdoms</td><td>GBIF — bounding box ±0.15°, faceted by kingdom</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Protected areas nearby</td><td>Overpass API — boundary=protected_area within 25km</td><td><span class="badge badge-real">Real API</span></td><td>OSM coverage varies</td></tr>
+  <tr><td>Biodiversity score (0-10)</td><td>Base 5 + species + threatened + protected areas</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 7 -->
+<section>
+<div class="section-header"><span class="section-num">S7</span><h2>Geology</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Unit name, lithology, environment, period, age</td><td>Macrostrat API</td><td><span class="badge badge-real">Real API</span></td><td>Coverage gaps outside N. America / Europe</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 8 -->
+<section>
+<div class="section-header"><span class="section-num">S8</span><h2>Risk Assessment</h2></div>
+
+<h3>8.1 Risk Scores</h3>
+<table>
+<thead><tr><th>Risk</th><th>Inputs</th><th>Computation</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row">
+    <td>Fire</td>
+    <td>7-day tempMax, precipSum, windMax, month</td>
+    <td>Additive: temp>35→+30, precip<5→+25, wind>40→+20, summer→+15</td>
+    <td><span class="badge badge-computed">Computed</span></td>
+    <td>No vegetation, no terrain, no history</td>
+  </tr>
+  <tr class="issue-row">
+    <td>Drought</td>
+    <td>7-day precipSum vs expectedMonthly[month]</td>
+    <td>Ratio of actual to hardcoded Portuguese baseline</td>
+    <td><span class="badge badge-hardcoded">Hardcoded</span></td>
+    <td><strong>Baseline is Odemira. Applied globally.</strong></td>
+  </tr>
+  <tr class="issue-row">
+    <td>Flood</td>
+    <td>7-day precipSum only</td>
+    <td>>100mm→70, >50→40, >25→20, else 10</td>
+    <td><span class="badge badge-computed">Computed</span></td>
+    <td>No terrain or drainage factor</td>
+  </tr>
+</tbody>
+</table>
+
+<h3>8.2 Flood Discharge</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Current / Average / Max discharge (m³/s)</td><td>GloFAS via Open-Meteo Flood API — 30-day at ~10km grid</td><td><span class="badge badge-real">Real API</span></td><td>No data for many locations</td></tr>
+  <tr><td>Flood level</td><td>max > 3×avg → High, > 1.5×avg → Moderate</td><td><span class="badge badge-computed">Computed</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>8.3 Wildfire History</h3>
+<div class="callout"><strong>MISSING.</strong> Report explicitly shows a yellow box: "Historical fire scar data not queried." EFFIS WMS layers exist but are not used for property-level data.</div>
+
+<h3>8.4 Mitigations</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Recommendations (fire clearance, rainwater, drainage, liming, borehole)</td><td>Rule engine: if/else on risk scores, soil pH, water features</td><td><span class="badge badge-computed">Computed</span></td><td>Template text, not property-specific detail</td></tr>
+  <tr class="issue-row"><td>Generic fallbacks ("conduct annual assessment", "establish monitoring")</td><td>Always added if < 3 recommendations</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Filler</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 9 -->
+<section>
+<div class="section-header"><span class="section-num">S9</span><h2>Nearby Infrastructure</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Amenity types & counts (schools, hospitals, shops, tourism)</td><td>Overpass API — ±0.05° bbox (~5km)</td><td><span class="badge badge-real">Real API</span></td><td>OSM coverage varies</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 10 -->
+<section>
+<div class="section-header"><span class="section-num">S10</span><h2>Map Portfolio</h2></div>
+<table>
+<thead><tr><th>Map</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Satellite + Boundary</td><td>Mapbox Static API <code>satellite-v9</code> + GeoJSON overlay</td><td><span class="badge badge-real">Real API</span></td><td>Requires VITE_MAPBOX_TOKEN</td></tr>
+  <tr><td>Topography</td><td>Mapbox Static API <code>outdoors-v12</code></td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr class="issue-row"><td>Water Resources</td><td>Mapbox <code>outdoors-v12</code> — same as topography</td><td><span class="badge badge-broken">Broken</span></td><td>No water feature overlay. Misleading label.</td></tr>
+  <tr><td>Soil — Clay</td><td>ISRIC WMS <code>clay_0-5cm_mean</code></td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Soil — pH</td><td>ISRIC WMS <code>phh2o_0-5cm_mean</code></td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>CORINE 2018</td><td>EEA WMS <code>CLC2018_WM</code></td><td><span class="badge badge-real">Real API</span></td><td>Europe only</td></tr>
+  <tr><td>ESA WorldCover</td><td>Terrascope WMS <code>WORLDCOVER_2021_MAP</code></td><td><span class="badge badge-real">Real API</span></td><td>Global</td></tr>
+  <tr><td>Fire Danger</td><td>EFFIS WMS <code>ecmwf.fwi</code></td><td><span class="badge badge-real">Real API</span></td><td>Europe/Mediterranean</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 11 -->
+<section>
+<div class="section-header"><span class="section-num">S11</span><h2>Market Context & Revenue</h2></div>
+
+<h3>Agricultural Revenue</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Revenue by land cover type</td><td>AG_MODELS lookup: yield × price by type (cork, olive, vineyard, etc.)</td><td><span class="badge badge-literature">Literature</span></td><td>Cited as ICNF/FAO but constants are hardcoded</td></tr>
+  <tr class="issue-row"><td>"Moderate" scenario</td><td>Conservative × 1.4 + 50% carbon</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Arbitrary multiplier</td></tr>
+  <tr class="issue-row"><td>"Optimized" scenario</td><td>Conservative × 1.8 + carbon revenue</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Arbitrary multiplier</td></tr>
+  <tr class="issue-row"><td>No land cover fallback</td><td>€200 / €500 / €1,200 per ha for 3 scenarios</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Applied when DGT COS fails (i.e. outside Portugal)</td></tr>
+</tbody>
+</table>
+
+<h3>Carbon Estimation</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Carbon stock (tCO₂e)</td><td>CARBON_PER_HA lookup × land cover area (forest=120, cork=80, etc.)</td><td><span class="badge badge-literature">Literature</span></td><td>—</td></tr>
+  <tr class="issue-row"><td>Annual sequestration</td><td>stock × 0.02 (flat 2%)</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Same rate for all land types</td></tr>
+  <tr class="issue-row"><td>Credit value</td><td>annual × €65-80/tonne</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>Price range will date quickly</td></tr>
+  <tr class="issue-row"><td>No land cover fallback</td><td>25 tCO₂e/ha × area — "conservative default"</td><td><span class="badge badge-hardcoded">Hardcoded</span></td><td>—</td></tr>
+</tbody>
+</table>
+
+<h3>Valuation Scenarios</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Base rate</td><td>€22,000/ha hardcoded as "Portuguese rural land average"</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>No source. Applied globally.</td></tr>
+  <tr class="issue-row"><td>Land cover modifiers</td><td>vineyard +40%, olive +30%, forest +15%, urban +60%, agriculture +20%</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Arbitrary percentages</td></tr>
+  <tr class="issue-row"><td>Conservative / Optimistic</td><td>market × 0.85 / × 1.15</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Fixed ±15% spread</td></tr>
+</tbody>
+</table>
+
+<h3>Regional Benchmarks</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr class="issue-row"><td>Local avg</td><td>Property valuation × 0.88</td><td><span class="badge badge-synthetic">Synthetic</span></td><td><strong>Circular — derived from the property's own fake value</strong></td></tr>
+  <tr class="issue-row"><td>District avg</td><td>Property valuation × 0.75</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Same problem</td></tr>
+  <tr class="issue-row"><td>Premium (water access)</td><td>Property valuation × 1.25</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Same problem</td></tr>
+  <tr class="issue-row"><td>Premium (building permit)</td><td>Property valuation × 1.60</td><td><span class="badge badge-synthetic">Synthetic</span></td><td>Same problem</td></tr>
+</tbody>
+</table>
+
+<h3>Regional Comparison</h3>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Regional rainfall / temp</td><td>Open-Meteo Archive at lat+0.2, lng+0.2 (~20km offset)</td><td><span class="badge badge-real">Real API</span></td><td>Single point, same 1-year issue</td></tr>
+  <tr><td>Regional species count</td><td>iNaturalist 50km radius</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+  <tr><td>Regional soil pH & OC</td><td>SoilGrids at lat+0.1, lng+0.1</td><td><span class="badge badge-real">Real API</span></td><td>Single offset point</td></tr>
+  <tr><td>Regional water feature count</td><td>Overpass API ±0.1° bbox</td><td><span class="badge badge-real">Real API</span></td><td>—</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTION 12 -->
+<section>
+<div class="section-header"><span class="section-num">S12</span><h2>Next Steps & Recommendations</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>Immediate / Short-term / Long-term actions</td><td>Rule engine: if/else on scores (fire, water, bio, drought, soil, protected areas)</td><td><span class="badge badge-computed">Computed</span></td><td>Template strings selected by rules — not property-specific prose</td></tr>
+</tbody>
+</table>
+</section>
+
+<!-- SECTIONS 13-14 -->
+<section>
+<div class="section-header"><span class="section-num">S13-14</span><h2>Methodology, Sources & Data Audit</h2></div>
+<table>
+<thead><tr><th>Data Point</th><th>Source</th><th>Type</th><th>Issue?</th></tr></thead>
+<tbody>
+  <tr><td>API status table (DYNAMIC ✓ / FAILED ✗)</td><td>Self-audit of which APIs returned data</td><td><span class="badge badge-computed">Computed</span></td><td>Accurate and useful</td></tr>
+  <tr><td>Dynamic vs Hardcoded accounting</td><td>Self-audit listing all data points</td><td><span class="badge badge-computed">Computed</span></td><td>Honest — labels synthetics correctly</td></tr>
+</tbody>
+</table>
+<div class="callout"><strong>These sections are the most honest part of the report.</strong> The Data Audit (S14) already labels synthetic values correctly. The issue is that a user reading S1-S11 may not reach S14 to see the caveats.</div>
+</section>
+
+</div>
+</body>
+</html>
