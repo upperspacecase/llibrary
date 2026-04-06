@@ -269,10 +269,25 @@ async function getClimateAverages(lat, lng) {
   return result;
 }
 
+async function fetchWithRetry(url, retries = 2, delayMs = 2000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url);
+    if (res.ok) return res.json();
+    if (res.status === 503 && attempt < retries) {
+      await new Promise(r => setTimeout(r, delayMs * (attempt + 1)));
+      continue;
+    }
+    throw new Error(`HTTP ${res.status} after ${attempt + 1} attempt(s)`);
+  }
+}
+
 async function getSoilData(lat, lng) {
   const propsUrl = `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lng}&lat=${lat}&property=clay&property=sand&property=silt&property=phh2o&property=ocd&property=nitrogen&property=cec&property=bdod&depth=0-5cm&depth=5-15cm&depth=15-30cm&depth=30-60cm&value=mean`;
   const classUrl = `https://rest.isric.org/soilgrids/v2.0/classification/query?lon=${lng}&lat=${lat}&number_classes=3`;
-  const [props, classification] = await Promise.all([fetchJSON(propsUrl), fetchJSON(classUrl)]);
+  const [props, classification] = await Promise.all([
+    fetchWithRetry(propsUrl).catch(() => null),
+    fetchWithRetry(classUrl).catch(() => null),
+  ]);
   return { properties: props, classification };
 }
 
@@ -374,16 +389,42 @@ async function getActiveFires(lat, lng, radiusKm = 50) {
 }
 
 async function getAdminUnit(lat, lng) {
+  // Try DGT (Portugal) first
   try {
     const d = 0.001;
     const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
     const url = `https://ogcapi.dgterritorio.gov.pt/collections/Freguesias/items?bbox=${bbox}&limit=1&f=json`;
-    const data = await fetchJSON(url);
-    if (data?.features?.[0]) {
-      const p = data.features[0].properties;
-      return { parish: p.Freguesia || null, municipality: p.Municipio || null, district: p.Distrito || null };
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.features?.[0]) {
+        const p = data.features[0].properties;
+        return { parish: p.Freguesia || null, municipality: p.Municipio || null, district: p.Distrito || null, source: 'DGT' };
+      }
     }
   } catch {}
+
+  // Fallback: Nominatim reverse geocode (global, free, no key)
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=14`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'landlibrary/1.0' } });
+    if (res.ok) {
+      const data = await res.json();
+      const a = data.address || {};
+      return {
+        parish: a.city_district || a.suburb || a.village || null,
+        municipality: a.town || a.city || a.municipality || null,
+        district: a.county || a.state || null,
+        country: a.country || null,
+        source: 'Nominatim',
+      };
+    }
+  } catch {}
+
+  // Last resort: parse from Mapbox address context (already reverse-geocoded for the submission)
   return null;
 }
 
@@ -478,14 +519,29 @@ async function getLandCoverAtPoint(lat, lng) {
   return null;
 }
 
+// CORINE land cover class labels (Level 3 → human-readable)
+const CORINE_LABELS = {
+  111: 'Continuous urban fabric', 112: 'Discontinuous urban fabric', 121: 'Industrial or commercial',
+  131: 'Mineral extraction', 141: 'Green urban areas', 142: 'Sport & leisure',
+  211: 'Non-irrigated arable', 212: 'Permanently irrigated', 213: 'Rice fields',
+  221: 'Vineyards', 222: 'Fruit & berry', 223: 'Olive groves',
+  231: 'Pastures', 241: 'Annual crops + permanent', 242: 'Complex cultivation',
+  243: 'Agriculture + natural vegetation', 244: 'Agro-forestry',
+  311: 'Broad-leaved forest', 312: 'Coniferous forest', 313: 'Mixed forest',
+  321: 'Natural grassland', 322: 'Moors & heathland', 323: 'Sclerophyllous vegetation',
+  324: 'Transitional woodland-shrub', 331: 'Beaches, dunes, sands', 332: 'Bare rocks',
+  333: 'Sparsely vegetated', 334: 'Burnt areas', 411: 'Inland marshes',
+  421: 'Salt marshes', 511: 'Water courses', 512: 'Water bodies',
+  521: 'Coastal lagoons', 522: 'Estuaries', 523: 'Sea & ocean',
+};
+
 async function getLandCoverGrid(boundary, center) {
-  // Sample a grid of points inside the boundary to get land cover distribution
   const lats = boundary.map(p => p[0]);
   const lngs = boundary.map(p => p[1]);
   const minLat = Math.min(...lats), maxLat = Math.max(...lats);
   const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
 
-  const gridSize = 5; // 5x5 grid
+  const gridSize = 5;
   const points = [];
   for (let i = 0; i < gridSize; i++) {
     for (let j = 0; j < gridSize; j++) {
@@ -495,24 +551,61 @@ async function getLandCoverGrid(boundary, center) {
     }
   }
 
-  // Also try DGT COS for Portugal
-  const results = [];
-  for (const [lat, lng] of points.slice(0, 9)) { // limit to 9 to avoid rate limits
-    try {
-      const d = 0.0002;
-      const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
-      const url = `https://geo2.dgterritorio.gov.pt/geoserver/COS2018/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=COS2018_v2&QUERY_LAYERS=COS2018_v2&BBOX=${bbox}&WIDTH=2&HEIGHT=2&X=1&Y=1&SRS=EPSG:4326&INFO_FORMAT=application/json`;
-      const data = await fetchJSON(url);
-      if (data?.features?.[0]?.properties) {
-        results.push(data.features[0].properties);
+  // Try DGT COS first (Portugal, highest detail) with a 5s timeout
+  let results = [];
+  let source = null;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const d = 0.0002;
+    const [lat0, lng0] = points[0];
+    const testUrl = `https://geo2.dgterritorio.gov.pt/geoserver/COS2018/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=COS2018_v2&QUERY_LAYERS=COS2018_v2&BBOX=${lng0-d},${lat0-d},${lng0+d},${lat0+d}&WIDTH=2&HEIGHT=2&X=1&Y=1&SRS=EPSG:4326&INFO_FORMAT=application/json`;
+    const testRes = await fetch(testUrl, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (testRes.ok) {
+      // DGT is reachable — query all points
+      source = 'DGT COS 2018';
+      const testData = await testRes.json();
+      if (testData?.features?.[0]?.properties) results.push(testData.features[0].properties);
+      for (const [lat, lng] of points.slice(1, 9)) {
+        try {
+          const bbox = `${lng-d},${lat-d},${lng+d},${lat+d}`;
+          const url = `https://geo2.dgterritorio.gov.pt/geoserver/COS2018/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=COS2018_v2&QUERY_LAYERS=COS2018_v2&BBOX=${bbox}&WIDTH=2&HEIGHT=2&X=1&Y=1&SRS=EPSG:4326&INFO_FORMAT=application/json`;
+          const data = await fetchJSON(url);
+          if (data?.features?.[0]?.properties) results.push(data.features[0].properties);
+        } catch {}
       }
+    }
+  } catch {}
+
+  // Fallback: CORINE 2018 (Europe-wide) — returns XML
+  if (results.length === 0) {
+    try {
+      for (const [lat, lng] of points.slice(0, 9)) {
+        const d = 0.0005;
+        const bbox = `${lng-d},${lat-d},${lng+d},${lat+d}`;
+        const url = `https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=12&QUERY_LAYERS=12&BBOX=${bbox}&WIDTH=2&HEIGHT=2&X=1&Y=1&SRS=EPSG:4326&INFO_FORMAT=application/json`;
+        // EEA returns XML despite asking for JSON — parse the XML
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const text = await res.text();
+        // Extract CODE_18 and LABEL3 from XML response
+        const codeMatch = text.match(/CODE_18="(\d+)"/);
+        const labelMatch = text.match(/LABEL3="([^"]+)"/);
+        if (codeMatch) {
+          const code = parseInt(codeMatch[1]);
+          const label = labelMatch?.[1] || CORINE_LABELS[code] || `CORINE ${code}`;
+          results.push({ CORINE_CODE: code, CORINE_LABEL: label });
+        }
+      }
+      if (results.length > 0) source = 'CORINE 2018';
     } catch {}
   }
 
   // Aggregate land cover classes
   const classCounts = {};
   for (const r of results) {
-    const cls = r.COS2018_n1 || r.COS2018_n2 || r.Descricao || r.LEGENDA || JSON.stringify(r);
+    const cls = r.CORINE_LABEL || r.COS2018_n1 || r.COS2018_n2 || r.Descricao || r.LEGENDA || JSON.stringify(r);
     classCounts[cls] = (classCounts[cls] || 0) + 1;
   }
 
@@ -521,7 +614,7 @@ async function getLandCoverGrid(boundary, center) {
     .map(([cls, count]) => ({ label: cls, pct: Math.round(count / total * 100), count }))
     .sort((a, b) => b.pct - a.pct);
 
-  return { source: results.length > 0 ? 'DGT COS 2018' : 'UNAVAILABLE', breakdown, sampleCount: results.length };
+  return { source: source || 'UNAVAILABLE', breakdown, sampleCount: results.length };
 }
 
 // ── Regional comparison data ─────────────────────────────
