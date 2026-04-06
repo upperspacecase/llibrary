@@ -19,7 +19,25 @@ import { EFFIS_WMS, getFireDangerWmsParams } from '../api/effis.js';
 import { NATURA2000_WMS, getNatura2000WmsParams, getProtectedAreas } from '../api/natura2000.js';
 import { getActiveFiresNearby, summarizeFireDetections } from '../api/nasa-firms.js';
 import { getFloodForecastWithHistory, analyzeFloodRisk } from '../api/flood.js';
-import { calculateDistances } from '../api/openrouteservice.js';
+// ---------------------------------------------------------------------------
+// Haversine distance helpers
+// ---------------------------------------------------------------------------
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function calculateDistances(center, amenities) {
+    return amenities.map(a => ({
+        ...a,
+        distanceKm: haversine(center[0], center[1], a.lat, a.lng),
+    })).sort((a, b) => a.distanceKm - b.distanceKm);
+}
 import { getGeology, parseGeology, getGeologyDescription } from '../api/macrostrat.js';
 import { fetchRiskScores } from '../api/risk-scores.js';
 

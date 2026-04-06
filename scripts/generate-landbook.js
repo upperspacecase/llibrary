@@ -14,7 +14,7 @@ for (const line of envLines) {
   if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
 }
 
-// Shim import.meta.env for browser-side API modules (nasa-firms, openrouteservice)
+// Shim import.meta.env for browser-side API modules (nasa-firms)
 import.meta.env = Object.fromEntries(
   Object.entries(process.env).filter(([k]) => k.startsWith('VITE_'))
 );

@@ -253,19 +253,6 @@ const SOURCES = [
             return probe(`https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/VIIRS_SNPP_NRT/-9,37,-8,38/1`);
         },
     },
-    {
-        id: 'openrouteservice',
-        name: 'OpenRouteService',
-        feeds: ['Distance calculations', 'Isochrones'],
-        scope: 'global',
-        auth: 'api-key',
-        needsKey: 'VITE_ORS_KEY',
-        test: () => {
-            const key = process.env.VITE_ORS_KEY;
-            if (!key) return Promise.resolve({ ok: false, status: 0, ms: 0, error: 'No API key (VITE_ORS_KEY)' });
-            return probe(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=${key}&start=-8.6394,37.5967&end=-8.64,37.60`);
-        },
-    },
 ];
 
 async function probe(url, headers = {}, timeout = 10000) {

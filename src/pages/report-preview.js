@@ -527,7 +527,6 @@ const SAMPLE = {
     { category: 'Protected Areas', source: 'Natura 2000 / EEA', resolution: '1:100,000' },
     { category: 'Admin Boundaries', source: 'DGT Portugal', resolution: '1:25,000' },
     { category: 'Flood Risk', source: 'GloFAS (Open-Meteo)', resolution: '10km' },
-    { category: 'Routing', source: 'OpenRouteService', resolution: 'Road network' },
   ],
 };
 
