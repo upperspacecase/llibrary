@@ -391,6 +391,68 @@ async function getActiveFires(lat, lng, radiusKm = 50) {
   return { fires, status: 'OK' };
 }
 
+async function getHistoricalFires(lat, lng, radiusKm = 25, years = 10) {
+  const key = process.env.VITE_FIRMS_KEY;
+  if (!key) return { yearlyData: [], totalDetections: 0, status: 'NO_KEY' };
+  const degOffset = radiusKm / 111;
+  const lngOffset = radiusKm / (111 * Math.cos(lat * Math.PI / 180));
+  const bbox = `${lng - lngOffset},${lat - degOffset},${lng + lngOffset},${lat + degOffset}`;
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - years;
+
+  // FIRMS archive allows 10-day windows per request; fetch one 10-day sample per year
+  // during peak fire season (Aug 1-10 in N hemisphere, Feb 1-10 in S hemisphere)
+  const isNorthern = lat >= 0;
+  const yearlyData = [];
+  let totalDetections = 0;
+
+  // Batch requests in groups of 3 to avoid rate limits
+  for (let i = startYear; i < currentYear; i += 3) {
+    const batch = [];
+    for (let y = i; y < Math.min(i + 3, currentYear); y++) {
+      // Full year query: FIRMS supports up to 365 days for archive sources
+      const dateStr = `${y}-01-01`;
+      const daysInYear = (y % 4 === 0 && (y % 100 !== 0 || y % 400 === 0)) ? 366 : 365;
+      const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/MODIS_SP/${bbox}/${daysInYear}/${dateStr}`;
+      batch.push(
+        fetch(url).then(async res => {
+          if (!res.ok) return { year: y, count: 0, error: res.status };
+          const text = await res.text();
+          const lines = text.trim().split('\n');
+          const count = Math.max(0, lines.length - 1); // subtract header
+          return { year: y, count };
+        }).catch(() => ({ year: y, count: 0, error: 'FETCH_FAILED' }))
+      );
+    }
+    const results = await Promise.all(batch);
+    for (const r of results) {
+      yearlyData.push(r);
+      totalDetections += r.count;
+    }
+  }
+
+  // Sort by year
+  yearlyData.sort((a, b) => a.year - b.year);
+
+  // Find most recent fire year
+  const yearsWithFires = yearlyData.filter(y => y.count > 0);
+  const mostRecentFireYear = yearsWithFires.length > 0 ? yearsWithFires[yearsWithFires.length - 1].year : null;
+  const peakFireYear = yearsWithFires.length > 0 ? yearsWithFires.reduce((a, b) => a.count > b.count ? a : b).year : null;
+  const peakFireCount = yearsWithFires.length > 0 ? Math.max(...yearsWithFires.map(y => y.count)) : 0;
+
+  return {
+    yearlyData,
+    totalDetections,
+    yearsWithFires: yearsWithFires.length,
+    mostRecentFireYear,
+    peakFireYear,
+    peakFireCount,
+    radiusKm,
+    yearsAnalyzed: years,
+    status: 'OK',
+  };
+}
+
 async function getAdminUnit(lat, lng) {
   // Try DGT (Portugal) first
   try {
@@ -1198,6 +1260,7 @@ export default async function handler(req, res) {
       const climate = dd.climate;
       // Ensure fireSummary exists for old snapshots
       if (!dd.fireSummary) dd.fireSummary = { count: 0, highConfidence: 0, maxFrp: null, dates: [], status: 'NOT_FETCHED' };
+      if (!dd.fireHistory) dd.fireHistory = { yearlyData: [], totalDetections: 0, yearsWithFires: 0, mostRecentFireYear: null, peakFireYear: null, peakFireCount: 0, yearsAnalyzed: 0, radiusKm: 25, status: 'NOT_FETCHED' };
       const now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
       const municipality = dd.adminUnit?.municipality || prop.address.split(',').slice(-3, -2)[0]?.trim() || '';
@@ -1276,6 +1339,7 @@ export default async function handler(req, res) {
       landCover,
       regional,
       activeFires,
+      historicalFires,
     ] = await Promise.all([
       tracked('elevation', getElevation(lat, lng), null),
       tracked('forecast', getForecast(lat, lng), null),
@@ -1296,6 +1360,7 @@ export default async function handler(req, res) {
       tracked('landCover', getLandCoverGrid(sub.boundary, [lat, lng]), { source: 'FAILED', breakdown: [], sampleCount: 0 }),
       tracked('regional', getRegionalComparisons(lat, lng), {}),
       tracked('activeFires', getActiveFires(lat, lng), { fires: [], status: 'FAILED' }),
+      tracked('historicalFires', getHistoricalFires(lat, lng), { yearlyData: [], totalDetections: 0, status: 'FAILED' }),
     ]);
 
     // Risk scores (needs climate normals for drought baseline)
@@ -1340,6 +1405,19 @@ export default async function handler(req, res) {
       maxFrp: fireDetections.length > 0 ? Math.max(...fireDetections.map(f => f.frp || 0)).toFixed(1) : null,
       dates: [...new Set(fireDetections.map(f => f.date))].sort(),
       status: activeFires?.status || apiStatus.activeFires || 'UNKNOWN',
+    };
+
+    // Historical fire summary
+    const fireHistory = {
+      yearlyData: historicalFires?.yearlyData || [],
+      totalDetections: historicalFires?.totalDetections || 0,
+      yearsWithFires: historicalFires?.yearsWithFires || 0,
+      mostRecentFireYear: historicalFires?.mostRecentFireYear || null,
+      peakFireYear: historicalFires?.peakFireYear || null,
+      peakFireCount: historicalFires?.peakFireCount || 0,
+      yearsAnalyzed: historicalFires?.yearsAnalyzed || 0,
+      radiusKm: historicalFires?.radiusKm || 25,
+      status: historicalFires?.status || apiStatus.historicalFires || 'UNKNOWN',
     };
 
     // Climate summary
@@ -1506,6 +1584,7 @@ export default async function handler(req, res) {
         comparables,
         radarDims,
         fireSummary,
+        fireHistory,
       },
       maps,
       apiStatus,
@@ -1923,7 +2002,30 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
     : `<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--red);font-size:13px;color:var(--text-muted);"><strong>API ERROR</strong> — NASA FIRMS query failed (${dd.fireSummary.status}). Fire detection data could not be retrieved.</div>`
   }
 
-  <h3>8.4 Mitigation Recommendations</h3>
+  <h3>8.4 Fire History (${dd.fireHistory.yearsAnalyzed}yr)</h3>
+  ${dd.fireHistory.status === 'OK' ? (dd.fireHistory.totalDetections > 0 ? `
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--red);">${dd.fireHistory.totalDetections.toLocaleString()}</div><div class="kpi-label">Total Detections</div><div class="kpi-sub">${dd.fireHistory.yearsAnalyzed} years, ${dd.fireHistory.radiusKm}km radius</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.fireHistory.yearsWithFires}/${dd.fireHistory.yearsAnalyzed}</div><div class="kpi-label">Years with Fire</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.fireHistory.peakFireYear || '—'}</div><div class="kpi-label">Worst Year</div><div class="kpi-sub">${dd.fireHistory.peakFireCount.toLocaleString()} detections</div></div>
+    <div class="kpi-card"><div class="kpi-value">${dd.fireHistory.mostRecentFireYear || '—'}</div><div class="kpi-label">Most Recent</div></div>
+  </div>
+  <div style="margin-top:12px;display:flex;align-items:flex-end;gap:2px;height:60px;">
+    ${dd.fireHistory.yearlyData.map(y => {
+      const maxCount = dd.fireHistory.peakFireCount || 1;
+      const pct = Math.max(2, (y.count / maxCount) * 100);
+      const color = y.count === 0 ? 'var(--border)' : y.count === dd.fireHistory.peakFireCount ? 'var(--red)' : 'var(--amber)';
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;" title="${y.year}: ${y.count} detections"><div style="width:100%;height:${pct}%;background:${color};border-radius:2px 2px 0 0;min-height:2px;"></div><div style="font-size:8px;color:var(--text-muted);">${String(y.year).slice(2)}</div></div>`;
+    }).join('')}
+  </div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">Source: NASA FIRMS MODIS Archive — ${dd.fireHistory.yearsAnalyzed}-year record within ${dd.fireHistory.radiusKm}km</div>
+  ` : `<div style="background:var(--green-pale);padding:16px;border-radius:8px;font-size:13px;border-left:3px solid var(--green);">No fire detections recorded within ${dd.fireHistory.radiusKm}km over the past ${dd.fireHistory.yearsAnalyzed} years.<div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Source: NASA FIRMS MODIS Archive</div></div>`)
+  : dd.fireHistory.status === 'NO_KEY'
+    ? '<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--amber);font-size:13px;color:var(--text-muted);"><strong>UNAVAILABLE</strong> — NASA FIRMS API key not configured.</div>'
+    : `<div style="background:var(--bg);padding:16px;border-radius:8px;border-left:3px solid var(--red);font-size:13px;color:var(--text-muted);"><strong>API ERROR</strong> — Historical fire query failed (${dd.fireHistory.status}).</div>`
+  }
+
+  <h3>8.5 Mitigation Recommendations</h3>
   <ul class="checklist">
     ${dd.mitigations.map(m => `<li><span class="check-box"></span>${m}</li>`).join('')}
   </ul>
@@ -2102,6 +2204,7 @@ function buildHTML({ dd, prop, maps, soil, geo, annualRainfall, annualMeanTemp, 
       <tr><td class="label">Infrastructure</td><td>Overpass (OSM)</td><td>5km bbox</td><td style="color:green;font-weight:600;">DYNAMIC ✓</td></tr>
       <tr><td class="label">Admin Boundaries</td><td>DGT Portugal</td><td>1:25,000</td><td style="color:green;font-weight:600;">${dd.adminUnit ? 'DYNAMIC ✓' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">Active Fires</td><td>NASA FIRMS VIIRS</td><td>50km radius</td><td style="color:green;font-weight:600;">${dd.fireSummary.status === 'OK' ? 'DYNAMIC ✓' : dd.fireSummary.status === 'NO_KEY' ? 'NO KEY ✗' : 'FAILED ✗'}</td></tr>
+      <tr><td class="label">Fire History</td><td>NASA FIRMS MODIS Archive</td><td>25km, ${dd.fireHistory.yearsAnalyzed}yr</td><td style="color:green;font-weight:600;">${dd.fireHistory.status === 'OK' ? 'DYNAMIC ✓' : dd.fireHistory.status === 'NO_KEY' ? 'NO KEY ✗' : 'FAILED ✗'}</td></tr>
       <tr><td class="label">IPMA Forecast</td><td>IPMA</td><td>Nearest station</td><td style="color:green;font-weight:600;">${dd.ipmaForecast ? 'DYNAMIC ✓' : 'NO DATA'}</td></tr>
     </tbody>
   </table>

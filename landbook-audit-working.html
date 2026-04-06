@@ -133,7 +133,7 @@
   <div class="summary-card"><div class="num" style="color:var(--literature)">10</div><div class="label">Literature</div></div>
   <div class="summary-card"><div class="num" style="color:var(--synthetic)">8</div><div class="label">Synthetic</div></div>
   <div class="summary-card"><div class="num" style="color:var(--hardcoded)">5</div><div class="label">Hardcoded</div></div>
-  <div class="summary-card"><div class="num" style="color:var(--broken)">4</div><div class="label">Broken</div></div>
+  <div class="summary-card"><div class="num" style="color:var(--broken)">3</div><div class="label">Broken</div></div>
 </div>
 
 <!-- ============================================================ -->
@@ -198,10 +198,10 @@
   <td><span class="file-ref">:1409</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
-<tr class="issue-row" style="background:#fefce8;">
-  <td><span class="sev sev-medium">Partial</span></td>
-  <td><strong>Wildfire history missing</strong><br><span style="font-size:11px;color:#92400e;">Active fires now integrated via NASA FIRMS (5dc53fa). Historical burn scars still missing — need EFFIS burned area or MODIS MCD64A1.</span></td>
-  <td><span class="file-ref">:354-374</span></td>
+<tr class="fixed-row">
+  <td><span class="sev sev-fixed">Fixed</span></td>
+  <td><strong>Wildfire history missing</strong><br><span style="font-size:11px;color:#16a34a;">Active fires via VIIRS (48h) + 10yr MODIS archive history with yearly bar chart. Section 8.4.</span></td>
+  <td><span class="file-ref">:372-448</span></td>
   <td><span class="region region-global">Global</span></td>
 </tr>
 <tr class="issue-row">
@@ -898,18 +898,15 @@
   <td>—</td>
   <td>No data for many locations</td>
 </tr>
-<tr class="issue-row" style="background:#fefce8;">
+<tr class="fixed-row">
   <td>Wildfire History</td>
-  <td><strong>Partial</strong> — Active fires via NASA FIRMS</td>
+  <td>NASA FIRMS VIIRS (48h) + MODIS Archive (10yr)</td>
   <td><span class="badge badge-real">Real API</span></td>
   <td><span class="region region-global">Global</span></td>
   <td class="alt">
-    <div class="alt-item"><span style="color:#16a34a;font-weight:700;">PARTIAL:</span> Active fires (2-day) via NASA FIRMS VIIRS added (5dc53fa). Historical burn scars still needed.</div>
-    <div class="alt-item"><span class="region region-eu">Europe</span> EFFIS burned area WMS (have URL, not queried per-property)</div>
-    <div class="alt-item"><span class="region region-global">Global</span> NASA FIRMS historical archive (MODIS back to 2000, VIIRS to 2012)</div>
-    <div class="alt-item"><span class="region region-global">Global</span> Google Earth Engine burned area (MCD64A1 MODIS product)</div>
+    <div class="alt-item"><span style="color:#16a34a;font-weight:700;">FIXED:</span> Active fires (VIIRS 48h, 50km) + historical detections (MODIS archive, 10yr, 25km). Yearly bar chart in S8.4.</div>
   </td>
-  <td>Active fires done. Historical burn scars still missing.</td>
+  <td style="text-decoration:none;color:#16a34a;">Fixed — active + 10yr history</td>
 </tr>
 <tr>
   <td>Mitigations</td>
