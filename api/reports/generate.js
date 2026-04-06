@@ -277,7 +277,7 @@ async function getSoilData(lat, lng) {
 }
 
 async function getGeology(lat, lng) {
-  return fetchJSON(`https://macrostrat.org/api/v2/geologic_units/what?lat=${lat}&lng=${lng}&response=long`);
+  return fetchJSON(`https://macrostrat.org/api/v2/geologic_units/map?lat=${lat}&lng=${lng}&response=long`);
 }
 
 async function getSpeciesCounts(lat, lng) {
