@@ -322,6 +322,39 @@ export function toLngLat(latLng) {
 }
 
 /**
+ * Generate a Mapbox Static Image URL.
+ * @param {[number, number]} center - [lat, lng]
+ * @param {number} zoom
+ * @param {number} width - image width in px
+ * @param {number} height - image height in px
+ * @param {object} opts
+ * @param {boolean} opts.satellite - use satellite style
+ * @param {Array<[number, number]>} opts.boundary - polygon coords as [lat, lng] pairs
+ * @returns {string} URL
+ */
+export function getStaticMapUrl(center, zoom, width, height, opts = {}) {
+  const [lat, lng] = center;
+  const style = opts.satellite ? 'satellite-v9' : 'outdoors-v12';
+  const token = mapboxgl.accessToken;
+
+  let overlay = '';
+  if (opts.boundary && opts.boundary.length > 1) {
+    const ring = opts.boundary.map(([la, ln]) => [ln, la]);
+    if (ring.length > 0 && (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) {
+      ring.push([...ring[0]]);
+    }
+    const geojson = {
+      type: 'Feature',
+      properties: { stroke: '#1B4332', 'stroke-width': 2, 'stroke-opacity': 1, fill: '#52b788', 'fill-opacity': 0.2 },
+      geometry: { type: 'Polygon', coordinates: [ring] },
+    };
+    overlay = `geojson(${encodeURIComponent(JSON.stringify(geojson))})/`;
+  }
+
+  return `https://api.mapbox.com/styles/v1/mapbox/${style}/static/${overlay}${lng},${lat},${zoom},0/${width}x${height}@2x?access_token=${token}`;
+}
+
+/**
  * Convert MapBox [lng, lat] or LngLat to [lat, lng].
  */
 export function toLatLng(lngLat) {
