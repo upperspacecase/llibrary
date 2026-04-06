@@ -51,6 +51,12 @@ const columns = {
         { key: 'fileType', label: 'Type' },
         { key: 'created', label: 'Created', format: formatDate },
     ],
+    regions: [
+        { key: 'name', label: 'Region' },
+        { key: 'votes', label: 'Votes' },
+        { key: 'status', label: 'Status', format: v => v || 'unknown' },
+        { key: '_actions', label: 'Actions', format: () => '__REGION_ACTIONS__' },
+    ],
 };
 
 function formatDate(v) {
@@ -146,6 +152,20 @@ async function loadData() {
         }
     }
 
+    // Aggregate region requests from waitlist
+    const regionMap = new Map();
+    for (const entry of (data.waitlist || [])) {
+        if (entry.type !== 'region-request' || !entry.address) continue;
+        const key = entry.address.toLowerCase();
+        if (!regionMap.has(key)) {
+            regionMap.set(key, { name: entry.address, votes: 0, status: entry.status || 'unknown' });
+        }
+        regionMap.get(key).votes++;
+        // Use the most recent status for display
+        if (entry.status) regionMap.get(key).status = entry.status;
+    }
+    data.regions = Array.from(regionMap.values()).sort((a, b) => b.votes - a.votes);
+
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('dashboard-view').style.display = 'block';
     renderStats();
@@ -161,6 +181,7 @@ function renderStats() {
         { label: 'Landbooks', count: data.landbooks?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
+        { label: 'Regions', count: data.regions?.length || 0 },
     ];
 
     document.getElementById('stats-row').innerHTML = stats.map(s => `
@@ -212,6 +233,20 @@ function renderTable() {
                     return `<td class="admin-files-cell">${links}</td>`;
                 } catch { return `<td>-</td>`; }
             }
+            if (str === '__REGION_ACTIONS__') {
+                const name = escapeHtml(row.name);
+                const status = row.status;
+                if (status === 'approved') {
+                    return `<td><span class="admin-status-badge approved">Approved</span></td>`;
+                }
+                if (status === 'rejected') {
+                    return `<td><span class="admin-status-badge rejected">Rejected</span></td>`;
+                }
+                return `<td class="admin-region-actions">
+                    <button class="admin-region-btn approve" data-region="${name}" data-action="approved">Approve</button>
+                    <button class="admin-region-btn reject" data-region="${name}" data-action="rejected">Reject</button>
+                </td>`;
+            }
             return `<td>${escapeHtml(str)}</td>`;
         }).join('');
         return `<tr>${cells}</tr>`;
@@ -221,6 +256,32 @@ function renderTable() {
     body.querySelectorAll('.admin-file-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             downloadFile(btn.dataset.url, btn.dataset.name);
+        });
+    });
+
+    // Bind region approve/reject handlers
+    body.querySelectorAll('.admin-region-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const region = btn.dataset.region;
+            const status = btn.dataset.action;
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+                const res = await fetch('/api/regions', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password, region, status }),
+                });
+                if (!res.ok) throw new Error('Failed');
+                // Update local data and re-render
+                const entry = data.regions.find(r => r.name === region);
+                if (entry) entry.status = status;
+                renderTable();
+            } catch {
+                btn.disabled = false;
+                btn.textContent = status === 'approved' ? 'Approve' : 'Reject';
+                alert('Failed to update region status.');
+            }
         });
     });
 }
@@ -389,6 +450,50 @@ style.textContent = `
     }
     .admin-file-btn:hover {
         background: var(--border);
+    }
+    .admin-region-actions {
+        display: flex;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .admin-region-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        transition: opacity 0.15s;
+    }
+    .admin-region-btn:hover { opacity: 0.8; }
+    .admin-region-btn:disabled { opacity: 0.5; cursor: default; }
+    .admin-region-btn.approve {
+        background: #2d6a4f;
+        color: #fff;
+        border-color: #2d6a4f;
+    }
+    .admin-region-btn.reject {
+        background: var(--white, #fff);
+        color: var(--coral, #e74c3c);
+        border-color: var(--coral, #e74c3c);
+    }
+    .admin-status-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .admin-status-badge.approved {
+        background: #d4edda;
+        color: #2d6a4f;
+    }
+    .admin-status-badge.rejected {
+        background: #fde8e8;
+        color: #c0392b;
     }
 `;
 document.head.appendChild(style);

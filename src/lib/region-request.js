@@ -101,13 +101,13 @@ function renderModal() {
         <div class="add-region-success" id="region-request-success" style="display:none;">
           <div class="add-region-success-icon">${CHECK_SVG}</div>
           <h3>${t('landing.region.modal.success.title')}</h3>
-          <p>${t('landing.region.modal.success.desc')}</p>
+          <p id="region-request-success-desc">${t('landing.region.modal.success.desc')}</p>
         </div>
         <div class="add-region-form-state" id="region-request-form">
-          <h3>${t('landing.region.modal.title')}</h3>
-          <p class="add-region-modal-sub">${t('landing.region.modal.desc')}</p>
+          <h3 id="region-request-modal-title">${t('landing.region.modal.title')}</h3>
+          <p class="add-region-modal-sub" id="region-request-modal-desc">${t('landing.region.modal.desc')}</p>
           <div class="add-region-fields">
-            <div class="add-region-field">
+            <div class="add-region-field" id="region-request-location-field">
               <label for="region-request-location">${t('landing.region.modal.location')}</label>
               <input type="text" id="region-request-location" placeholder="e.g. Provence, France" />
             </div>
@@ -129,25 +129,48 @@ function bindEvents(container, modalEl, regions) {
   const closeBtn = overlay.querySelector('#region-request-close');
   const formState = overlay.querySelector('#region-request-form');
   const successState = overlay.querySelector('#region-request-success');
+  const successDesc = overlay.querySelector('#region-request-success-desc');
+  const modalTitle = overlay.querySelector('#region-request-modal-title');
+  const modalDesc = overlay.querySelector('#region-request-modal-desc');
   const submitBtn = overlay.querySelector('#region-request-submit');
+  const locationField = overlay.querySelector('#region-request-location-field');
   const locationInput = overlay.querySelector('#region-request-location');
   const emailInput = overlay.querySelector('#region-request-email');
   const feedback = overlay.querySelector('#region-request-feedback');
   const openBtn = container.querySelector('#open-add-region');
 
+  let modalMode = 'suggest'; // 'vote' or 'suggest'
+
   function openModal(prefill) {
+    modalMode = prefill ? 'vote' : 'suggest';
+
     formState.style.display = '';
     successState.style.display = 'none';
     feedback.textContent = '';
     submitBtn.disabled = false;
     submitBtn.textContent = t('landing.region.modal.submit');
-    locationInput.value = prefill || '';
     emailInput.value = '';
     emailInput.style.borderColor = '';
+    locationInput.style.borderColor = '';
+
+    if (modalMode === 'vote') {
+      // Voting on an existing region — hide location input
+      modalTitle.textContent = t('landing.region.modal.vote.title');
+      modalDesc.textContent = t('landing.region.modal.vote.desc');
+      locationField.style.display = 'none';
+      locationInput.value = prefill;
+    } else {
+      // Suggesting a new region — show location input
+      modalTitle.textContent = t('landing.region.modal.suggest.title');
+      modalDesc.textContent = t('landing.region.modal.suggest.desc');
+      locationField.style.display = '';
+      locationInput.value = '';
+    }
+
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     setTimeout(() => {
-      if (prefill) emailInput.focus();
+      if (modalMode === 'vote') emailInput.focus();
       else locationInput.focus();
     }, 100);
   }
@@ -157,12 +180,12 @@ function bindEvents(container, modalEl, regions) {
     document.body.style.overflow = '';
   }
 
-  // Pill clicks open modal with region pre-filled
+  // Pill clicks open modal in vote mode with region pre-filled
   container.querySelectorAll('.add-region-pill').forEach(pill => {
     pill.addEventListener('click', () => openModal(pill.dataset.region || ''));
   });
 
-  // CTA button
+  // CTA button opens modal in suggest mode
   if (openBtn) openBtn.addEventListener('click', () => openModal(''));
 
   // Close
@@ -179,7 +202,7 @@ function bindEvents(container, modalEl, regions) {
       feedback.textContent = 'Please enter a valid email address.';
       return;
     }
-    if (!region) {
+    if (modalMode === 'suggest' && !region) {
       locationInput.style.borderColor = 'var(--coral, #e74c3c)';
       feedback.textContent = 'Please enter a region.';
       return;
@@ -200,18 +223,28 @@ function bindEvents(container, modalEl, regions) {
         throw new Error(err.error || 'Failed to submit');
       }
 
-      // Update the pill count in the UI if it exists
-      const pill = container.querySelector(`.add-region-pill[data-region="${CSS.escape(region)}"]`);
-      if (pill) {
-        let countEl = pill.querySelector('.region-pill-count');
-        if (countEl) {
-          countEl.textContent = parseInt(countEl.textContent, 10) + 1;
-        } else {
-          countEl = document.createElement('span');
-          countEl.className = 'region-pill-count';
-          countEl.textContent = '1';
-          pill.appendChild(countEl);
+      const result = await res.json();
+
+      if (modalMode === 'vote') {
+        // Update the pill count in the UI
+        const pill = container.querySelector(`.add-region-pill[data-region="${CSS.escape(region)}"]`);
+        if (pill) {
+          let countEl = pill.querySelector('.region-pill-count');
+          if (countEl) {
+            countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+          } else {
+            countEl = document.createElement('span');
+            countEl.className = 'region-pill-count';
+            countEl.textContent = '1';
+            pill.appendChild(countEl);
+          }
         }
+        successDesc.textContent = t('landing.region.modal.success.desc');
+      } else {
+        // Suggestion — show pending message
+        successDesc.textContent = result.pending
+          ? t('landing.region.modal.success.pending.desc')
+          : t('landing.region.modal.success.desc');
       }
 
       formState.style.display = 'none';
