@@ -58,56 +58,158 @@
         </div>
       </div>
       <div class="create-sidebar">
-        <div class="create-sidebar-content">
-          <h2>Submit Your Land</h2>
-          <p class="create-desc">Search for your location, draw your boundary, and upload any supporting files.</p>
+        <!-- ===== STEP 1: Boundary + Post Code ===== -->
+        <div class="create-step" id="step-1">
+          <div class="create-sidebar-content">
+            <h2>Submit Your Land</h2>
+            <p class="create-desc">Find your area on the map, draw your boundary, and enter your post code.</p>
 
-          <div class="create-search" style="position:relative;">
-            <input type="text" id="search-input" placeholder="Search by address..." autocomplete="off">
-            <button class="btn-small" id="btn-search">Find</button>
-            <ul class="search-suggestions" id="search-suggestions"></ul>
+            <div class="create-search" style="position:relative;">
+              <input type="text" id="search-input" placeholder="Search by location..." autocomplete="off">
+              <button class="btn-small" id="btn-search">Find</button>
+              <ul class="search-suggestions" id="search-suggestions"></ul>
+            </div>
+
+            <div id="boundary-result">
+              <div class="create-address-row">
+                <span class="create-address-label">Total Area</span>
+                <span class="create-address-value" id="stat-area">&mdash;</span>
+              </div>
+              <button class="btn-reset-boundary" id="btn-reset-boundary" style="display:none;" data-i18n="create.resetBoundary">Reset Boundary</button>
+            </div>
           </div>
 
-          <div id="boundary-result">
-            <div class="create-address-row">
-              <span class="create-address-label">Address</span>
-              <span class="create-address-value" id="stat-address">&mdash;</span>
+          <div class="create-sidebar-footer">
+            <div class="create-field">
+              <label for="postcode-input">Post code</label>
+              <input type="text" id="postcode-input" placeholder="e.g. 7630-174" autocomplete="postal-code">
             </div>
-            <div class="create-address-row">
-              <span class="create-address-label">Total Area</span>
-              <span class="create-address-value" id="stat-area">&mdash;</span>
-            </div>
-            <button class="btn-reset-boundary" id="btn-reset-boundary" style="display:none;" data-i18n="create.resetBoundary">Reset Boundary</button>
+            <button class="btn-create-generate" id="btn-continue" disabled>Continue</button>
+            <p class="create-footer-privacy">Your data stays private.</p>
           </div>
         </div>
 
-        <div class="create-sidebar-footer" id="boundary-footer">
-          <div class="create-email-field">
-            <label for="email-input">Email</label>
-            <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
-          </div>
-          <div class="create-notes-field">
-            <label for="notes-input">Notes (optional)</label>
-            <textarea id="notes-input" rows="3" placeholder="Anything we should know about this land..."></textarea>
-          </div>
-          <div class="create-upload-field">
-            <label>Upload files (optional)</label>
-            <div class="create-dropzone" id="dropzone">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <p class="dropzone-text">Drag and drop files here or <span class="dropzone-link">Choose here</span></p>
-              <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip" class="dropzone-input">
+        <!-- ===== STEP 2: Details Form ===== -->
+        <div class="create-step" id="step-2" style="display:none;">
+          <div class="create-sidebar-content">
+            <h2>Tell us about your land</h2>
+            <p class="create-desc">Help us understand your land so we can provide better insights.</p>
+
+            <div class="create-form-section">
+              <h3 class="create-form-heading">Essential</h3>
+
+              <div class="create-field">
+                <label for="email-input">Email</label>
+                <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+              </div>
+
+              <div class="create-field">
+                <label for="phone-input">Phone (optional)</label>
+                <input type="tel" id="phone-input" placeholder="+351..." autocomplete="tel">
+              </div>
+
+              <div class="create-field">
+                <label>Preferred contact method</label>
+                <div class="create-pill-group" id="contact-pref">
+                  <button type="button" class="create-pill" data-value="email">Email</button>
+                  <button type="button" class="create-pill" data-value="phone">Phone</button>
+                  <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
+                </div>
+              </div>
+
+              <div class="create-field">
+                <label for="area-override">Land area</label>
+                <div class="create-area-row">
+                  <input type="number" id="area-override" step="0.01" min="0" placeholder="0.00">
+                  <span class="create-area-unit">ha</span>
+                </div>
+                <p class="create-field-hint" id="area-hint">Auto-calculated from your boundary</p>
+              </div>
+
+              <div class="create-field">
+                <label for="use-intent">Primary use intent</label>
+                <select id="use-intent">
+                  <option value="" disabled selected>Select...</option>
+                  <option value="conservation">Conservation</option>
+                  <option value="regeneration">Regeneration</option>
+                  <option value="mixed">Mixed-use</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="create-field">
+                <label>Water access</label>
+                <div class="create-pill-group" id="water-access">
+                  <button type="button" class="create-pill" data-value="yes">Yes</button>
+                  <button type="button" class="create-pill" data-value="seasonal">Seasonal</button>
+                  <button type="button" class="create-pill" data-value="no">No</button>
+                </div>
+              </div>
             </div>
-            <div class="create-upload-meta">
-              <span>Supported formats: PDF, JPG, PNG, ZIP</span>
-              <span>Maximum size: 500 MB</span>
+
+            <div class="create-form-section">
+              <h3 class="create-form-heading">Optional</h3>
+
+              <div class="create-field">
+                <label for="infrastructure">Existing infrastructure</label>
+                <select id="infrastructure">
+                  <option value="" selected>Skip</option>
+                  <option value="none">None</option>
+                  <option value="ruins">Ruins</option>
+                  <option value="dwelling">Dwelling</option>
+                  <option value="agricultural">Agricultural buildings</option>
+                </select>
+              </div>
+
+              <div class="create-field">
+                <label for="vegetation">Current vegetation</label>
+                <select id="vegetation">
+                  <option value="" selected>Skip</option>
+                  <option value="degraded">Degraded</option>
+                  <option value="mixed">Mixed</option>
+                  <option value="woodland">Established woodland</option>
+                  <option value="monoculture">Monoculture</option>
+                </select>
+              </div>
+
+              <div class="create-notes-field">
+                <label for="notes-input">Notes (optional)</label>
+                <textarea id="notes-input" rows="3" placeholder="Anything else we should know..."></textarea>
+              </div>
+
+              <div class="create-upload-field">
+                <label>Upload files (optional)</label>
+                <div class="create-dropzone" id="dropzone">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  <p class="dropzone-text">Drag and drop files here or <span class="dropzone-link">Choose here</span></p>
+                  <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip" class="dropzone-input">
+                </div>
+                <div class="create-upload-meta">
+                  <span>Supported formats: PDF, JPG, PNG, ZIP</span>
+                  <span>Maximum size: 500 MB</span>
+                </div>
+                <ul class="create-file-list" id="file-list"></ul>
+              </div>
             </div>
-            <ul class="create-file-list" id="file-list"></ul>
           </div>
-          <button class="btn-create-generate" id="btn-create" disabled>Submit</button>
-          <p class="create-footer-privacy">Your data stays private.</p>
-          <div class="create-success" id="submit-success" style="display:none;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            <p>Submission received. We'll be in touch.</p>
+
+          <div class="create-sidebar-footer">
+            <div class="create-step2-actions">
+              <button class="btn-small" id="btn-back">Back</button>
+              <button class="btn-create-generate" id="btn-create" disabled>Submit</button>
+            </div>
+            <p class="create-footer-privacy">Your data stays private.</p>
+          </div>
+        </div>
+
+        <!-- ===== STEP 3: Success ===== -->
+        <div class="create-step" id="step-3" style="display:none;">
+          <div class="create-sidebar-content create-success-state">
+            <div class="create-success-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <h2>Submission received</h2>
+            <p class="create-desc">Thank you for sharing your land with us. We'll be in touch soon.</p>
           </div>
         </div>
       </div>

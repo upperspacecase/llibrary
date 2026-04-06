@@ -3590,22 +3590,160 @@ a {
   flex-shrink: 0;
 }
 
-.create-success {
+/* Step container */
+.create-step {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  background: #f0faf4;
-  border: 1px solid #b7e4c7;
-  border-radius: var(--radius);
-  margin-top: 16px;
+  flex-direction: column;
+  height: 100%;
 }
 
-.create-success p {
+/* Form field (reusable) */
+.create-field {
+  margin-bottom: 16px;
+}
+
+.create-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.create-field input,
+.create-field select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--white);
+  box-sizing: border-box;
+  appearance: none;
+}
+
+.create-field select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23555' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+.create-field input:focus,
+.create-field select:focus {
+  outline: none;
+  border-color: #999;
+  box-shadow: 0 0 0 1px #999;
+}
+
+.create-field-hint {
+  font-size: 12px;
+  color: #A39E93;
+  margin-top: 4px;
+}
+
+/* Area override row */
+.create-area-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.create-area-row input {
+  flex: 1;
+}
+
+.create-area-unit {
   font-size: 14px;
   font-weight: 500;
+  color: #555;
+  white-space: nowrap;
+}
+
+/* Pill group (contact pref, water access) */
+.create-pill-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.create-pill {
+  padding: 8px 18px;
+  border: 1.5px solid var(--card-border, #e0dcc8);
+  border-radius: var(--pill, 999px);
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  transition: all 0.15s;
+  color: inherit;
+}
+
+.create-pill:hover {
+  border-color: var(--black, #1a1a1a);
+}
+
+.create-pill.active {
+  background: var(--black, #1a1a1a);
+  color: var(--cream, #faf8f1);
+  border-color: var(--black, #1a1a1a);
+}
+
+/* Form section headings */
+.create-form-section {
+  margin-bottom: 24px;
+}
+
+.create-form-heading {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border, #e0dcc8);
+}
+
+/* Step 2 actions (back + submit) */
+.create-step2-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.create-step2-actions .btn-small {
+  flex-shrink: 0;
+}
+
+.create-step2-actions .btn-create-generate {
+  flex: 1;
+}
+
+/* Success state (step 3) */
+.create-success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 40px;
+}
+
+.create-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f0faf4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.create-success-state h2 {
   color: #2d6a4f;
-  margin: 0;
 }
 
 .search-suggestions {

@@ -15,10 +15,10 @@ export default async function handler(req, res) {
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const email = (body.email || '').trim().toLowerCase();
-    const address = (body.address || '').trim();
+    const postcode = (body.postcode || '').trim();
 
-    if (!address) {
-      return res.status(400).json({ error: 'Address is required' });
+    if (!postcode) {
+      return res.status(400).json({ error: 'Post code is required' });
     }
 
     const doc = {
@@ -27,8 +27,14 @@ export default async function handler(req, res) {
       center: body.center || null,
       area: body.area || null,
       perimeter: body.perimeter || null,
-      address: body.address || '',
+      postcode,
       email,
+      phone: (body.phone || '').trim(),
+      contactPreference: body.contactPreference || '',
+      useIntent: body.useIntent || '',
+      waterAccess: body.waterAccess || '',
+      infrastructure: body.infrastructure || '',
+      vegetation: body.vegetation || '',
       notes: body.notes || '',
       files: body.files || [],
       created: new Date().toISOString(),
@@ -42,7 +48,7 @@ export default async function handler(req, res) {
       const waitlist = await getCollection('waitlist');
       await waitlist.updateOne(
         { email },
-        { $setOnInsert: { email, address: doc.address, location: null, createdAt: new Date() } },
+        { $setOnInsert: { email, postcode: doc.postcode, location: null, createdAt: new Date() } },
         { upsert: true },
       );
     }
