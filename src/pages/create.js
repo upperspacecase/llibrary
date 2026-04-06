@@ -173,24 +173,68 @@ if (btnGeolocate) {
   });
 }
 
+const countryPicker = document.getElementById('country-picker');
+
+function flyToFeature(feature) {
+  const [lng, lat] = feature.center;
+  map.flyTo({ center: [lng, lat], zoom: 16 });
+  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
+  if (countryPicker) countryPicker.style.display = 'none';
+}
+
+function showCountryPicker(features) {
+  if (!countryPicker) return;
+  // Extract country name from each feature's context
+  const items = features.map(f => {
+    const ctx = f.context || [];
+    const country = ctx.find(c => c.id?.startsWith('country'));
+    return { label: country?.text || f.place_name?.split(', ').pop() || 'Unknown', feature: f };
+  });
+  // Dedupe by country label
+  const seen = new Set();
+  const unique = items.filter(i => { if (seen.has(i.label)) return false; seen.add(i.label); return true; });
+
+  if (unique.length <= 1) { flyToFeature(features[0]); return; }
+
+  countryPicker.innerHTML = unique.map((item, i) =>
+    `<button type="button" class="create-pill" data-idx="${i}">${item.label}</button>`
+  ).join('');
+  countryPicker.style.display = 'flex';
+  countryPicker._features = unique;
+
+  countryPicker.addEventListener('click', (e) => {
+    const pill = e.target.closest('.create-pill');
+    if (!pill) return;
+    countryPicker.querySelectorAll('.create-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    flyToFeature(countryPicker._features[parseInt(pill.dataset.idx)].feature);
+  }, { once: false });
+}
+
 async function findPostcode() {
   const query = postcodeInput ? postcodeInput.value.trim() : '';
   if (query.length < 3) return;
+  if (countryPicker) countryPicker.style.display = 'none';
   try {
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=1&types=postcode,place,locality`;
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${MAPBOX_TOKEN}&limit=5&types=postcode,place,locality`;
     const res = await fetch(url);
     if (!res.ok) return;
     const data = await res.json();
-    if (data.features && data.features.length > 0) {
-      const [lng, lat] = data.features[0].center;
-      map.flyTo({ center: [lng, lat], zoom: 16 });
-      if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
+    if (!data.features || data.features.length === 0) return;
+
+    if (data.features.length === 1) {
+      flyToFeature(data.features[0]);
+    } else {
+      showCountryPicker(data.features);
     }
   } catch (err) { console.error('Geocoding error:', err); }
 }
 
 if (btnSearch) btnSearch.addEventListener('click', findPostcode);
-if (postcodeInput) postcodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); findPostcode(); } });
+if (postcodeInput) {
+  postcodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); findPostcode(); } });
+  postcodeInput.addEventListener('input', () => { if (countryPicker) countryPicker.style.display = 'none'; });
+}
 
 // ---------------------------------------------------------------------------
 // Drawing
