@@ -3220,8 +3220,8 @@ a {
 }
 
 .map-style-btn.active {
-  background: #2d6a4f;
-  color: #fff;
+  background: var(--black, #1a1a1a);
+  color: var(--cream, #faf8f1);
 }
 
 .map-style-btn:not(.active):hover {

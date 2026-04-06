@@ -61,14 +61,14 @@ const map = createMap('create-map', {
 
 function initMapLayers() {
   map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: POINTS_LAYER, type: 'circle', source: POINTS_SRC, paint: { 'circle-radius': 6, 'circle-color': '#52b788', 'circle-stroke-color': '#2d6a4f', 'circle-stroke-width': 2 } });
+  map.addLayer({ id: POINTS_LAYER, type: 'circle', source: POINTS_SRC, paint: { 'circle-radius': 6, 'circle-color': '#FFDA03', 'circle-stroke-color': '#C8A800', 'circle-stroke-width': 2 } });
   map.addSource(FIRST_POINT_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-  map.addLayer({ id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC, paint: { 'circle-radius': 8, 'circle-color': '#40916c', 'circle-stroke-color': '#1b4332', 'circle-stroke-width': 2 } });
+  map.addLayer({ id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC, paint: { 'circle-radius': 8, 'circle-color': '#FFDA03', 'circle-stroke-color': '#A08600', 'circle-stroke-width': 2 } });
   map.addSource(LINE_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
-  map.addLayer({ id: LINE_LAYER, type: 'line', source: LINE_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2, 'line-dasharray': [6, 4] } });
+  map.addLayer({ id: LINE_LAYER, type: 'line', source: LINE_SRC, paint: { 'line-color': '#FFDA03', 'line-width': 2, 'line-dasharray': [6, 4] } });
   map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
-  map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
-  map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 }, layout: { visibility: 'none' } });
+  map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#FFDA03', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
+  map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#FFDA03', 'line-width': 2.5 }, layout: { visibility: 'none' } });
 
   if (boundaryPoints.length > 0) {
     updateDrawing();
