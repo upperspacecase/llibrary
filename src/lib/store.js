@@ -176,13 +176,7 @@ export async function saveSubmission(data, files = []) {
     perimeter: data.perimeter || null,
     postcode: data.postcode || '',
     email: data.email || '',
-    phone: data.phone || '',
     contactPreference: data.contactPreference || '',
-    useIntent: data.useIntent || '',
-    waterAccess: data.waterAccess || '',
-    infrastructure: data.infrastructure || '',
-    vegetation: data.vegetation || '',
-    notes: data.notes || '',
     files: uploadedFiles,
   };
 
@@ -193,6 +187,16 @@ export async function saveSubmission(data, files = []) {
   });
 
   if (!res.ok) throw new Error(`Failed to save submission: ${res.status}`);
+  return res.json();
+}
+
+export async function updateSubmission(id, data) {
+  const res = await fetch(`${API_BASE}/submissions`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, ...data }),
+  });
+  if (!res.ok) throw new Error(`Failed to update submission: ${res.status}`);
   return res.json();
 }
 

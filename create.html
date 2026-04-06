@@ -46,161 +46,113 @@
           start drawing your land boundary</div>
       </div>
       <div class="create-sidebar">
-        <!-- ===== STEP 1: Boundary + Post Code ===== -->
-        <div class="create-step" id="step-1">
-          <div class="create-sidebar-content">
-            <h2>Submit Your Land</h2>
-            <p class="create-desc">Enter your post code or use your location to find your land, then draw your boundary.</p>
+        <div class="create-sidebar-content">
+          <h2>Submit Your Land</h2>
+          <p class="create-desc">Enter your post code or use your location, then draw your boundary on the map.</p>
 
-            <div class="create-search" style="position:relative;">
+          <div class="create-field">
+            <label for="postcode-input">Location</label>
+            <div class="create-search">
               <input type="text" id="postcode-input" placeholder="Enter post code..." autocomplete="postal-code">
               <button class="btn-small" id="btn-search">Find</button>
             </div>
-
-            <button class="btn-geolocate-sidebar" id="btn-geolocate" type="button">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-              <span>Use my location</span>
-            </button>
-
-            <div id="boundary-result">
-              <div class="create-address-row">
-                <span class="create-address-label">Total Area</span>
-                <span class="create-address-value" id="stat-area">&mdash;</span>
-              </div>
-              <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
-            </div>
           </div>
 
-          <div class="create-sidebar-footer">
-            <button class="btn-create-generate" id="btn-continue" disabled>Continue</button>
-            <p class="create-footer-privacy">Your data stays private.</p>
+          <button class="btn-geolocate-sidebar" id="btn-geolocate" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+            <span>Use my location</span>
+          </button>
+
+          <div id="boundary-result">
+            <div class="create-address-row">
+              <span class="create-address-label">Land Area</span>
+              <span class="create-address-value" id="stat-area">&mdash;</span>
+            </div>
+            <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
+          </div>
+
+          <div class="create-field">
+            <label for="email-input">Email</label>
+            <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
+          </div>
+
+          <div class="create-field">
+            <label>Contact preference</label>
+            <div class="create-pill-group" id="contact-pref">
+              <button type="button" class="create-pill active" data-value="email">Email</button>
+              <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
+            </div>
           </div>
         </div>
 
-        <!-- ===== STEP 2: Details Form ===== -->
-        <div class="create-step" id="step-2" style="display:none;">
-          <div class="create-sidebar-content">
-            <h2>Tell us about your land</h2>
-            <p class="create-desc">Help us understand your land so we can provide better insights.</p>
-
-            <div class="create-form-section">
-              <h3 class="create-form-heading">Essential</h3>
-
-              <div class="create-field">
-                <label for="email-input">Email</label>
-                <input type="email" id="email-input" placeholder="you@example.com" autocomplete="email">
-              </div>
-
-              <div class="create-field">
-                <label for="phone-input">Phone (optional)</label>
-                <input type="tel" id="phone-input" placeholder="+351..." autocomplete="tel">
-              </div>
-
-              <div class="create-field">
-                <label>Preferred contact method</label>
-                <div class="create-pill-group" id="contact-pref">
-                  <button type="button" class="create-pill" data-value="email">Email</button>
-                  <button type="button" class="create-pill" data-value="phone">Phone</button>
-                  <button type="button" class="create-pill" data-value="whatsapp">WhatsApp</button>
-                </div>
-              </div>
-
-              <div class="create-field">
-                <label for="area-override">Land area</label>
-                <div class="create-area-row">
-                  <input type="number" id="area-override" step="0.01" min="0" placeholder="0.00">
-                  <span class="create-area-unit">ha</span>
-                </div>
-                <p class="create-field-hint" id="area-hint">Auto-calculated from your boundary</p>
-              </div>
-
-              <div class="create-field">
-                <label for="use-intent">Primary use intent</label>
-                <select id="use-intent">
-                  <option value="" disabled selected>Select...</option>
-                  <option value="conservation">Conservation</option>
-                  <option value="regeneration">Regeneration</option>
-                  <option value="mixed">Mixed-use</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <div class="create-field">
-                <label>Water access</label>
-                <div class="create-pill-group" id="water-access">
-                  <button type="button" class="create-pill" data-value="yes">Yes</button>
-                  <button type="button" class="create-pill" data-value="seasonal">Seasonal</button>
-                  <button type="button" class="create-pill" data-value="no">No</button>
-                </div>
-              </div>
-            </div>
-
-            <div class="create-form-section">
-              <h3 class="create-form-heading">Optional</h3>
-
-              <div class="create-field">
-                <label for="infrastructure">Existing infrastructure</label>
-                <select id="infrastructure">
-                  <option value="" selected>Skip</option>
-                  <option value="none">None</option>
-                  <option value="ruins">Ruins</option>
-                  <option value="dwelling">Dwelling</option>
-                  <option value="agricultural">Agricultural buildings</option>
-                </select>
-              </div>
-
-              <div class="create-field">
-                <label for="vegetation">Current vegetation</label>
-                <select id="vegetation">
-                  <option value="" selected>Skip</option>
-                  <option value="degraded">Degraded</option>
-                  <option value="mixed">Mixed</option>
-                  <option value="woodland">Established woodland</option>
-                  <option value="monoculture">Monoculture</option>
-                </select>
-              </div>
-
-              <div class="create-notes-field">
-                <label for="notes-input">Notes (optional)</label>
-                <textarea id="notes-input" rows="3" placeholder="Anything else we should know..."></textarea>
-              </div>
-
-              <div class="create-upload-field">
-                <label>Upload files (optional)</label>
-                <div class="create-dropzone" id="dropzone">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <p class="dropzone-text">Drag and drop files here or <span class="dropzone-link">Choose here</span></p>
-                  <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.zip" class="dropzone-input">
-                </div>
-                <div class="create-upload-meta">
-                  <span>Supported formats: PDF, JPG, PNG, ZIP</span>
-                  <span>Maximum size: 500 MB</span>
-                </div>
-                <ul class="create-file-list" id="file-list"></ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="create-sidebar-footer">
-            <div class="create-step2-actions">
-              <button class="btn-small" id="btn-back">Back</button>
-              <button class="btn-create-generate" id="btn-create" disabled>Submit</button>
-            </div>
-            <p class="create-footer-privacy">Your data stays private.</p>
-          </div>
-        </div>
-
-        <!-- ===== STEP 3: Success ===== -->
-        <div class="create-step" id="step-3" style="display:none;">
-          <div class="create-sidebar-content create-success-state">
-            <div class="create-success-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            </div>
-            <h2>Submission received</h2>
-            <p class="create-desc">Thank you for sharing your land with us. We'll be in touch soon.</p>
-          </div>
+        <div class="create-sidebar-footer">
+          <button class="btn-create-generate" id="btn-submit" disabled>Submit</button>
+          <p class="create-footer-privacy">Your data stays private.</p>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Optional details modal (shown after submit) -->
+  <div class="create-modal-overlay" id="extras-modal" style="display:none;">
+    <div class="create-modal">
+      <div class="create-modal-header">
+        <h3>Help us understand your land better</h3>
+        <p>These details are optional but help us provide better insights.</p>
+      </div>
+      <div class="create-modal-body">
+        <div class="create-field">
+          <label for="use-intent">Primary use intent</label>
+          <select id="use-intent">
+            <option value="" disabled selected>Select...</option>
+            <option value="conservation">Conservation</option>
+            <option value="regeneration">Regeneration</option>
+            <option value="mixed">Mixed-use</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="create-field">
+          <label>Water access</label>
+          <div class="create-pill-group" id="water-access">
+            <button type="button" class="create-pill" data-value="yes">Yes</button>
+            <button type="button" class="create-pill" data-value="seasonal">Seasonal</button>
+            <button type="button" class="create-pill" data-value="no">No</button>
+          </div>
+        </div>
+
+        <div class="create-field">
+          <label for="infrastructure">Existing infrastructure</label>
+          <select id="infrastructure">
+            <option value="" selected>None</option>
+            <option value="ruins">Ruins</option>
+            <option value="dwelling">Dwelling</option>
+            <option value="agricultural">Agricultural buildings</option>
+          </select>
+        </div>
+
+        <div class="create-field">
+          <label for="vegetation">Current vegetation</label>
+          <select id="vegetation">
+            <option value="" selected>Unknown</option>
+            <option value="degraded">Degraded</option>
+            <option value="mixed">Mixed</option>
+            <option value="woodland">Established woodland</option>
+            <option value="monoculture">Monoculture</option>
+          </select>
+        </div>
+
+        <div class="create-notes-field">
+          <label for="notes-input">Notes</label>
+          <textarea id="notes-input" rows="3" placeholder="Anything else we should know..."></textarea>
+        </div>
+      </div>
+      <div class="create-modal-footer">
+        <button class="btn-small" id="btn-skip-extras">Skip</button>
+        <button class="btn-create-generate" id="btn-save-extras">Save Details</button>
+      </div>
+    </div>
+  </div>
     </div>
   </div>
 

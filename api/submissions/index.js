@@ -7,8 +7,28 @@ export default async function handler(req, res) {
     return res.status(200).json(all);
   }
 
+  // PATCH — update an existing submission with optional extras
+  if (req.method === 'PATCH') {
+    try {
+      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+      if (!body.id) return res.status(400).json({ error: 'Submission id is required' });
+
+      const updates = {};
+      for (const key of ['useIntent', 'waterAccess', 'infrastructure', 'vegetation', 'notes']) {
+        if (body[key] !== undefined) updates[key] = body[key];
+      }
+
+      const submissions = await getCollection('submissions');
+      await submissions.updateOne({ id: body.id }, { $set: updates });
+      return res.status(200).json({ ok: true });
+    } catch (err) {
+      console.error('Submission update error:', err);
+      return res.status(500).json({ error: 'Update failed', detail: err.message });
+    }
+  }
+
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'GET, POST');
+    res.setHeader('Allow', 'GET, POST, PATCH');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -29,13 +49,12 @@ export default async function handler(req, res) {
       perimeter: body.perimeter || null,
       postcode,
       email,
-      phone: (body.phone || '').trim(),
       contactPreference: body.contactPreference || '',
-      useIntent: body.useIntent || '',
-      waterAccess: body.waterAccess || '',
-      infrastructure: body.infrastructure || '',
-      vegetation: body.vegetation || '',
-      notes: body.notes || '',
+      useIntent: '',
+      waterAccess: '',
+      infrastructure: '',
+      vegetation: '',
+      notes: '',
       files: body.files || [],
       created: new Date().toISOString(),
     };

@@ -1,13 +1,11 @@
 /**
- * Submit Land — Two-step info capture
- * Step 1: Draw boundary + post code
- * Step 2: Contact, land details, optional extras
+ * Submit Land — single form + optional extras modal
  */
 
 import '../styles/main.css';
 import { createMap, mapboxgl, fitToCoords, setGeoJSONSource } from '../lib/mapbox.js';
 import { initI18n, t } from '../lib/i18n.js';
-import { saveSubmission } from '../lib/store.js';
+import { saveSubmission, updateSubmission } from '../lib/store.js';
 import { polygonArea, polygonPerimeter, polygonCentroid, formatArea, sqmToHectares } from '../lib/geo.js';
 
 initI18n();
@@ -17,41 +15,33 @@ initI18n();
 // ---------------------------------------------------------------------------
 let boundaryPoints = [];
 let isClosed = false;
+let submissionId = null; // set after initial submit
 
 // ---------------------------------------------------------------------------
-// DOM refs — Steps
+// DOM refs
 // ---------------------------------------------------------------------------
-const step1 = document.getElementById('step-1');
-const step2 = document.getElementById('step-2');
-const step3 = document.getElementById('step-3');
-
-// Step 1 refs
 const postcodeInput = document.getElementById('postcode-input');
 const btnSearch = document.getElementById('btn-search');
 const statArea = document.getElementById('stat-area');
 const mapPrompt = document.getElementById('map-prompt');
-const btnContinue = document.getElementById('btn-continue');
 const instructions = document.getElementById('map-instructions');
 const btnReset = document.getElementById('btn-reset');
 const btnGeolocate = document.getElementById('btn-geolocate');
 const mapArea = document.querySelector('.create-map-area');
-
-// Step 2 refs
 const emailInput = document.getElementById('email-input');
-const phoneInput = document.getElementById('phone-input');
-const areaOverride = document.getElementById('area-override');
-const areaHint = document.getElementById('area-hint');
+const btnSubmit = document.getElementById('btn-submit');
+
+// Modal refs
+const extrasModal = document.getElementById('extras-modal');
 const useIntent = document.getElementById('use-intent');
 const infrastructure = document.getElementById('infrastructure');
 const vegetation = document.getElementById('vegetation');
 const notesInput = document.getElementById('notes-input');
-const fileInput = document.getElementById('file-input');
-const fileList = document.getElementById('file-list');
-const btnCreate = document.getElementById('btn-create');
-const btnBack = document.getElementById('btn-back');
+const btnSkipExtras = document.getElementById('btn-skip-extras');
+const btnSaveExtras = document.getElementById('btn-save-extras');
 
 // ---------------------------------------------------------------------------
-// Map sources
+// Map
 // ---------------------------------------------------------------------------
 const POINTS_SRC = 'draw-points';
 const POINTS_LAYER = 'draw-points-layer';
@@ -69,33 +59,26 @@ const map = createMap('create-map', {
   satellite: true,
 });
 
-// ---------------------------------------------------------------------------
-// Map layer init (reusable after style switch)
-// ---------------------------------------------------------------------------
 function initMapLayers() {
   map.addSource(POINTS_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
     id: POINTS_LAYER, type: 'circle', source: POINTS_SRC,
     paint: { 'circle-radius': 6, 'circle-color': '#52b788', 'circle-stroke-color': '#2d6a4f', 'circle-stroke-width': 2 },
   });
-
   map.addSource(FIRST_POINT_SRC, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
   map.addLayer({
     id: FIRST_POINT_LAYER, type: 'circle', source: FIRST_POINT_SRC,
     paint: { 'circle-radius': 8, 'circle-color': '#40916c', 'circle-stroke-color': '#1b4332', 'circle-stroke-width': 2 },
   });
-
   map.addSource(LINE_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
   map.addLayer({
     id: LINE_LAYER, type: 'line', source: LINE_SRC,
     paint: { 'line-color': '#2d6a4f', 'line-width': 2, 'line-dasharray': [6, 4] },
   });
-
   map.addSource(POLY_SRC, { type: 'geojson', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [[]] }, properties: {} } });
   map.addLayer({ id: POLY_FILL, type: 'fill', source: POLY_SRC, paint: { 'fill-color': '#52b788', 'fill-opacity': 0.25 }, layout: { visibility: 'none' } });
   map.addLayer({ id: POLY_LINE, type: 'line', source: POLY_SRC, paint: { 'line-color': '#2d6a4f', 'line-width': 2.5 }, layout: { visibility: 'none' } });
 
-  // Restore state after style switch
   if (boundaryPoints.length > 0) {
     updateDrawing();
     if (isClosed) {
@@ -112,7 +95,7 @@ function initMapLayers() {
 }
 
 map.on('load', () => {
-  if (instructions) instructions.textContent = 'Search for your land to get started';
+  if (instructions) instructions.textContent = 'Enter your post code and click Find, or use your location';
 
   map.on('click', (e) => {
     if (isClosed) return;
@@ -139,10 +122,11 @@ map.on('load', () => {
   });
 });
 
+map.on('style.load', () => { initMapLayers(); });
+
 // ---------------------------------------------------------------------------
 // Geolocation
 // ---------------------------------------------------------------------------
-
 if (btnGeolocate) {
   btnGeolocate.addEventListener('click', () => {
     if (!navigator.geolocation) return;
@@ -150,10 +134,9 @@ if (btnGeolocate) {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         btnGeolocate.classList.remove('locating');
-        const { latitude, longitude } = pos.coords;
-        map.flyTo({ center: [longitude, latitude], zoom: 16 });
+        map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16 });
         if (instructions && boundaryPoints.length === 0) {
-          instructions.textContent = t('create.instructions') || 'Click on the map to start drawing your land boundary';
+          instructions.textContent = 'Click on the map to start drawing your boundary';
         }
       },
       () => { btnGeolocate.classList.remove('locating'); },
@@ -163,215 +146,7 @@ if (btnGeolocate) {
 }
 
 // ---------------------------------------------------------------------------
-// Drawing
-// ---------------------------------------------------------------------------
-
-function addPoint(latlng) {
-  boundaryPoints.push(latlng);
-  if (boundaryPoints.length === 1) {
-    if (mapPrompt) mapPrompt.style.display = 'none';
-  }
-  if (instructions) {
-    instructions.textContent = boundaryPoints.length < 3
-      ? 'Keep clicking to add more points'
-      : 'Click near the first point to close the boundary';
-  }
-  updateDrawing();
-}
-
-function updateDrawing() {
-  const lineCoords = boundaryPoints.map(([lat, lng]) => [lng, lat]);
-  setGeoJSONSource(map, LINE_SRC, {
-    type: 'Feature', geometry: { type: 'LineString', coordinates: lineCoords }, properties: {},
-  });
-  const pointFeatures = boundaryPoints.slice(1).map(([lat, lng], idx) => ({
-    type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { idx: idx + 1 },
-  }));
-  setGeoJSONSource(map, POINTS_SRC, { type: 'FeatureCollection', features: pointFeatures });
-  if (boundaryPoints.length > 0) {
-    const [lat, lng] = boundaryPoints[0];
-    setGeoJSONSource(map, FIRST_POINT_SRC, {
-      type: 'FeatureCollection',
-      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }],
-    });
-  } else {
-    setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [] });
-  }
-}
-
-function closePolygon() {
-  if (boundaryPoints.length < 3) return;
-  isClosed = true;
-
-  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'none');
-  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'none');
-  map.setLayoutProperty(LINE_LAYER, 'visibility', 'none');
-
-  const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
-  ring.push([...ring[0]]);
-  setGeoJSONSource(map, POLY_SRC, { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} });
-  map.setLayoutProperty(POLY_FILL, 'visibility', 'visible');
-  map.setLayoutProperty(POLY_LINE, 'visibility', 'visible');
-
-  fitToCoords(map, boundaryPoints, { padding: 80 });
-
-  if (instructions) instructions.textContent = 'Boundary set. Enter your post code and continue.';
-  if (btnReset) btnReset.style.display = '';
-  updateStats();
-  updateContinueButton();
-}
-
-function clearAll() {
-  map.setLayoutProperty(POLY_FILL, 'visibility', 'none');
-  map.setLayoutProperty(POLY_LINE, 'visibility', 'none');
-  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'visible');
-  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'visible');
-  map.setLayoutProperty(LINE_LAYER, 'visibility', 'visible');
-
-  boundaryPoints = [];
-  isClosed = false;
-  updateDrawing();
-  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
-  if (statArea) statArea.textContent = '\u2014';
-  if (mapPrompt) mapPrompt.style.display = '';
-  if (btnContinue) btnContinue.disabled = true;
-  if (btnReset) btnReset.style.display = 'none';
-}
-
-function updateStats() {
-  if (boundaryPoints.length < 3) return;
-  const area = polygonArea(boundaryPoints);
-  const ha = sqmToHectares(area);
-  if (statArea) {
-    if (ha >= 1) {
-      statArea.innerHTML = `${ha.toFixed(2)}<span class="unit">ha</span>`;
-    } else {
-      statArea.innerHTML = formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Step 1 validation — boundary closed + post code
-// ---------------------------------------------------------------------------
-
-function updateContinueButton() {
-  const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
-  if (btnContinue) btnContinue.disabled = !(isClosed && hasPostcode);
-}
-
-if (postcodeInput) postcodeInput.addEventListener('input', updateContinueButton);
-
-
-// Reset button — direct, no confirmation
-if (btnReset) {
-  btnReset.addEventListener('click', clearAll);
-}
-
-// ---------------------------------------------------------------------------
-// Pill-group toggle (contact pref, water access)
-// ---------------------------------------------------------------------------
-
-document.querySelectorAll('.create-pill-group').forEach(group => {
-  group.addEventListener('click', (e) => {
-    const pill = e.target.closest('.create-pill');
-    if (!pill) return;
-    group.querySelectorAll('.create-pill').forEach(p => p.classList.remove('active'));
-    pill.classList.add('active');
-    updateSubmitButton();
-  });
-});
-
-function getPillValue(groupId) {
-  const active = document.querySelector(`#${groupId} .create-pill.active`);
-  return active ? active.dataset.value : '';
-}
-
-// ---------------------------------------------------------------------------
-// Step 2 validation — email + use intent + water access
-// ---------------------------------------------------------------------------
-
-function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
-
-function updateSubmitButton() {
-  const hasEmail = isValidEmail(emailInput?.value.trim());
-  const hasIntent = useIntent && useIntent.value;
-  const hasWater = !!getPillValue('water-access');
-  if (btnCreate) btnCreate.disabled = !(hasEmail && hasIntent && hasWater);
-}
-
-if (emailInput) emailInput.addEventListener('input', updateSubmitButton);
-if (useIntent) useIntent.addEventListener('change', updateSubmitButton);
-
-// ---------------------------------------------------------------------------
-// Step navigation
-// ---------------------------------------------------------------------------
-
-function showStep(num) {
-  if (step1) step1.style.display = num === 1 ? '' : 'none';
-  if (step2) step2.style.display = num === 2 ? '' : 'none';
-  if (step3) step3.style.display = num === 3 ? '' : 'none';
-}
-
-if (btnContinue) {
-  btnContinue.addEventListener('click', () => {
-    if (!isClosed || !postcodeInput?.value.trim()) return;
-
-    // Pre-fill area from boundary calculation
-    const area = polygonArea(boundaryPoints);
-    const ha = sqmToHectares(area);
-    if (areaOverride) areaOverride.value = ha.toFixed(2);
-    if (areaHint) areaHint.textContent = `Auto-calculated from your boundary (${ha.toFixed(2)} ha)`;
-
-    showStep(2);
-    updateSubmitButton();
-  });
-}
-
-if (btnBack) {
-  btnBack.addEventListener('click', () => showStep(1));
-}
-
-// ---------------------------------------------------------------------------
-// File upload — drag & drop + file input
-// ---------------------------------------------------------------------------
-const dropzone = document.getElementById('dropzone');
-let selectedFiles = [];
-
-function addFiles(newFiles) {
-  for (const file of newFiles) selectedFiles.push(file);
-  renderFileList();
-}
-
-function renderFileList() {
-  if (!fileList) return;
-  fileList.innerHTML = '';
-  selectedFiles.forEach((file, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>${i + 1}. ${file.name} (${(file.size / 1024).toFixed(0)} KB)</span>`;
-    fileList.appendChild(li);
-  });
-}
-
-if (fileInput) {
-  fileInput.addEventListener('change', () => {
-    addFiles(Array.from(fileInput.files));
-    fileInput.value = '';
-  });
-}
-
-if (dropzone) {
-  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
-  dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('drag-over'); });
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove('drag-over');
-    if (e.dataTransfer.files.length) addFiles(Array.from(e.dataTransfer.files));
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Postcode geocoding — Find button flies map to the postcode
+// Postcode geocoding
 // ---------------------------------------------------------------------------
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
@@ -391,7 +166,6 @@ async function findPostcode() {
   } catch (err) {
     console.error('Geocoding error:', err);
   }
-  updateContinueButton();
 }
 
 if (btnSearch) btnSearch.addEventListener('click', findPostcode);
@@ -401,51 +175,204 @@ if (postcodeInput) {
   });
 }
 
-map.on('style.load', () => {
-  initMapLayers();
+// ---------------------------------------------------------------------------
+// Drawing
+// ---------------------------------------------------------------------------
+function addPoint(latlng) {
+  boundaryPoints.push(latlng);
+  if (boundaryPoints.length === 1 && mapPrompt) mapPrompt.style.display = 'none';
+  if (instructions) {
+    instructions.textContent = boundaryPoints.length < 3
+      ? 'Keep clicking to add more points'
+      : 'Click near the first point to close the boundary';
+  }
+  updateDrawing();
+}
+
+function updateDrawing() {
+  setGeoJSONSource(map, LINE_SRC, {
+    type: 'Feature', geometry: { type: 'LineString', coordinates: boundaryPoints.map(([lat, lng]) => [lng, lat]) }, properties: {},
+  });
+  setGeoJSONSource(map, POINTS_SRC, {
+    type: 'FeatureCollection',
+    features: boundaryPoints.slice(1).map(([lat, lng], idx) => ({
+      type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: { idx: idx + 1 },
+    })),
+  });
+  if (boundaryPoints.length > 0) {
+    const [lat, lng] = boundaryPoints[0];
+    setGeoJSONSource(map, FIRST_POINT_SRC, {
+      type: 'FeatureCollection',
+      features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] }, properties: {} }],
+    });
+  } else {
+    setGeoJSONSource(map, FIRST_POINT_SRC, { type: 'FeatureCollection', features: [] });
+  }
+}
+
+function closePolygon() {
+  if (boundaryPoints.length < 3) return;
+  isClosed = true;
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'none');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'none');
+  const ring = boundaryPoints.map(([lat, lng]) => [lng, lat]);
+  ring.push([...ring[0]]);
+  setGeoJSONSource(map, POLY_SRC, { type: 'Feature', geometry: { type: 'Polygon', coordinates: [ring] }, properties: {} });
+  map.setLayoutProperty(POLY_FILL, 'visibility', 'visible');
+  map.setLayoutProperty(POLY_LINE, 'visibility', 'visible');
+  fitToCoords(map, boundaryPoints, { padding: 80 });
+  if (instructions) instructions.textContent = 'Boundary set. Fill in your details and submit.';
+  if (btnReset) btnReset.style.display = '';
+  updateStats();
+  updateSubmitState();
+}
+
+function clearAll() {
+  map.setLayoutProperty(POLY_FILL, 'visibility', 'none');
+  map.setLayoutProperty(POLY_LINE, 'visibility', 'none');
+  map.setLayoutProperty(POINTS_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(FIRST_POINT_LAYER, 'visibility', 'visible');
+  map.setLayoutProperty(LINE_LAYER, 'visibility', 'visible');
+  boundaryPoints = [];
+  isClosed = false;
+  updateDrawing();
+  if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
+  if (statArea) statArea.textContent = '\u2014';
+  if (mapPrompt) mapPrompt.style.display = '';
+  if (btnReset) btnReset.style.display = 'none';
+  updateSubmitState();
+}
+
+function updateStats() {
+  if (boundaryPoints.length < 3) return;
+  const area = polygonArea(boundaryPoints);
+  const ha = sqmToHectares(area);
+  if (statArea) {
+    statArea.innerHTML = ha >= 1
+      ? `${ha.toFixed(2)}<span class="unit">ha</span>`
+      : formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
+  }
+}
+
+if (btnReset) btnReset.addEventListener('click', clearAll);
+
+// ---------------------------------------------------------------------------
+// Pill-group toggle
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.create-pill-group').forEach(group => {
+  group.addEventListener('click', (e) => {
+    const pill = e.target.closest('.create-pill');
+    if (!pill) return;
+    group.querySelectorAll('.create-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+  });
 });
 
-// ---------------------------------------------------------------------------
-// Submit
-// ---------------------------------------------------------------------------
+function getPillValue(groupId) {
+  const active = document.querySelector(`#${groupId} .create-pill.active`);
+  return active ? active.dataset.value : '';
+}
 
-if (btnCreate) {
-  btnCreate.addEventListener('click', async () => {
+// ---------------------------------------------------------------------------
+// Submit validation — boundary + postcode + email
+// ---------------------------------------------------------------------------
+function isValidEmail(v) { return v && v.includes('@') && v.includes('.'); }
+
+function updateSubmitState() {
+  const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
+  const hasEmail = isValidEmail(emailInput?.value.trim());
+  if (btnSubmit) btnSubmit.disabled = !(isClosed && hasPostcode && hasEmail);
+}
+
+if (postcodeInput) postcodeInput.addEventListener('input', updateSubmitState);
+if (emailInput) emailInput.addEventListener('input', updateSubmitState);
+
+// ---------------------------------------------------------------------------
+// Submit — creates submission, then shows extras modal
+// ---------------------------------------------------------------------------
+if (btnSubmit) {
+  btnSubmit.addEventListener('click', async () => {
     if (!isClosed || boundaryPoints.length < 3) return;
 
-    btnCreate.disabled = true;
-    btnCreate.textContent = 'Submitting...';
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = 'Submitting...';
 
-    const calculatedArea = polygonArea(boundaryPoints);
-    const overrideHa = areaOverride ? parseFloat(areaOverride.value) : 0;
-    const finalArea = overrideHa > 0 ? overrideHa * 10000 : calculatedArea; // convert ha back to sqm
-
+    const area = polygonArea(boundaryPoints);
     const perimeter = polygonPerimeter(boundaryPoints);
     const centroid = polygonCentroid(boundaryPoints);
 
     try {
-      await saveSubmission({
+      const result = await saveSubmission({
         boundary: boundaryPoints,
         center: centroid,
-        area: finalArea,
-        perimeter: perimeter,
+        area,
+        perimeter,
         postcode: postcodeInput ? postcodeInput.value.trim() : '',
         email: emailInput ? emailInput.value.trim() : '',
-        phone: phoneInput ? phoneInput.value.trim() : '',
         contactPreference: getPillValue('contact-pref'),
+      });
+
+      submissionId = result.id;
+
+      // Show extras modal
+      if (extrasModal) extrasModal.style.display = 'flex';
+    } catch (err) {
+      console.error('Failed to save submission:', err);
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = 'Submit';
+      alert(`Failed to submit: ${err.message}`);
+    }
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Extras modal — optional details added to the same submission
+// ---------------------------------------------------------------------------
+function closeModal() {
+  if (extrasModal) extrasModal.style.display = 'none';
+  // Show success in the sidebar
+  const sidebar = document.querySelector('.create-sidebar');
+  if (sidebar) {
+    sidebar.innerHTML = `
+      <div class="create-sidebar-content create-success-state">
+        <div class="create-success-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#40916c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h2>Submission received</h2>
+        <p class="create-desc">Thank you for sharing your land with us. We'll be in touch soon.</p>
+      </div>`;
+  }
+}
+
+if (btnSkipExtras) btnSkipExtras.addEventListener('click', closeModal);
+
+if (btnSaveExtras) {
+  btnSaveExtras.addEventListener('click', async () => {
+    if (!submissionId) { closeModal(); return; }
+
+    btnSaveExtras.disabled = true;
+    btnSaveExtras.textContent = 'Saving...';
+
+    try {
+      await updateSubmission(submissionId, {
         useIntent: useIntent ? useIntent.value : '',
         waterAccess: getPillValue('water-access'),
         infrastructure: infrastructure ? infrastructure.value : '',
         vegetation: vegetation ? vegetation.value : '',
         notes: notesInput ? notesInput.value.trim() : '',
-      }, selectedFiles);
-
-      showStep(3);
+      });
     } catch (err) {
-      console.error('Failed to save submission:', err);
-      btnCreate.disabled = false;
-      btnCreate.textContent = 'Submit';
-      alert(`Failed to submit: ${err.message}`);
+      console.error('Failed to save extras:', err);
     }
+
+    closeModal();
+  });
+}
+
+// Close modal on overlay click
+if (extrasModal) {
+  extrasModal.addEventListener('click', (e) => {
+    if (e.target === extrasModal) closeModal();
   });
 }
