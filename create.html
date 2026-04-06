@@ -41,8 +41,8 @@
     <div class="create-layout">
       <div class="create-map-area">
         <div id="create-map"></div>
-        <div class="create-map-prompt" id="map-prompt">Draw your boundary on the map, then submit.</div>
         <div class="create-map-instructions" id="map-instructions">Click on the map to start drawing your land boundary</div>
+        <button class="btn-map-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
         <div class="create-map-style-toggle" id="map-style-toggle">
           <button class="map-style-btn active" data-style="satellite" title="Satellite">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
@@ -80,7 +80,6 @@
               <input type="number" id="area-override" step="0.01" min="0" placeholder="Override">
               <span class="create-area-unit">ha</span>
             </div>
-            <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset Boundary</button>
           </div>
 
           <div class="create-field">

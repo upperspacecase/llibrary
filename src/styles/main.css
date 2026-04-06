@@ -3138,36 +3138,29 @@ a {
 }
 
 /* Reset button (sidebar, after boundary closed) */
-.btn-reset {
-  margin-top: 12px;
+/* Reset Boundary button (map overlay) */
+.btn-map-reset {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
   padding: 8px 20px;
   font-size: 13px;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   border-radius: var(--pill, 999px);
-  border: 1.5px solid var(--card-border, #e0dcc8);
-  background: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
-}
-
-.btn-reset:hover {
-  border-color: var(--black, #1a1a1a);
-}
-
-.create-map-prompt {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  border: none;
   background: rgba(255, 255, 255, 0.92);
-  padding: 20px 36px;
-  border-radius: var(--radius);
-  font-size: 15px;
-  font-weight: 500;
   color: #555;
-  text-align: center;
-  pointer-events: none;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-map-reset:hover {
+  background: var(--black, #1a1a1a);
+  color: var(--cream, #faf8f1);
   z-index: 5;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }

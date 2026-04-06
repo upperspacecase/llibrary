@@ -25,7 +25,6 @@ const btnSearch = document.getElementById('btn-search');
 const statArea = document.getElementById('stat-area');
 const areaOverrideRow = document.getElementById('area-override-row');
 const areaOverride = document.getElementById('area-override');
-const mapPrompt = document.getElementById('map-prompt');
 const instructions = document.getElementById('map-instructions');
 const btnReset = document.getElementById('btn-reset');
 const btnGeolocate = document.getElementById('btn-geolocate');
@@ -136,26 +135,43 @@ if (styleToggle) {
 // ---------------------------------------------------------------------------
 // Geolocation
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Postcode geocoding
+// ---------------------------------------------------------------------------
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+
+// ---------------------------------------------------------------------------
+// Geolocation — fly to position + reverse-geocode to fill postcode
+// ---------------------------------------------------------------------------
 if (btnGeolocate) {
   btnGeolocate.addEventListener('click', () => {
     if (!navigator.geolocation) return;
     btnGeolocate.classList.add('locating');
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
+        const { longitude, latitude } = pos.coords;
         btnGeolocate.classList.remove('locating');
-        map.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 16 });
+        map.flyTo({ center: [longitude, latitude], zoom: 16 });
         if (instructions && boundaryPoints.length === 0) instructions.textContent = 'Click on the map to start drawing your boundary';
+
+        // Reverse-geocode to get postcode
+        try {
+          const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${MAPBOX_TOKEN}&types=postcode&limit=1`;
+          const res = await fetch(url);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.features && data.features.length > 0 && postcodeInput) {
+              postcodeInput.value = data.features[0].text;
+              updateSubmitState();
+            }
+          }
+        } catch (err) { console.error('Reverse geocode error:', err); }
       },
       () => { btnGeolocate.classList.remove('locating'); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   });
 }
-
-// ---------------------------------------------------------------------------
-// Postcode geocoding
-// ---------------------------------------------------------------------------
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 async function findPostcode() {
   const query = postcodeInput ? postcodeInput.value.trim() : '';
@@ -181,7 +197,6 @@ if (postcodeInput) postcodeInput.addEventListener('keydown', (e) => { if (e.key 
 // ---------------------------------------------------------------------------
 function addPoint(latlng) {
   boundaryPoints.push(latlng);
-  if (boundaryPoints.length === 1 && mapPrompt) mapPrompt.style.display = 'none';
   if (instructions) {
     instructions.textContent = boundaryPoints.length < 3
       ? 'Keep clicking to add more points'
@@ -231,7 +246,6 @@ function clearAll() {
   updateDrawing();
   if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
   if (statArea) statArea.textContent = '\u2014';
-  if (mapPrompt) mapPrompt.style.display = '';
   if (btnReset) btnReset.style.display = 'none';
   if (areaOverrideRow) areaOverrideRow.style.display = 'none';
   if (areaOverride) areaOverride.value = '';
