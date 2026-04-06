@@ -166,6 +166,38 @@ export async function getHistoricFeatures(bbox) {
   return query(q);
 }
 
+export async function getRoadAccess(bbox) {
+  const b = bboxStr(bbox);
+  const q = `
+    [out:json][timeout:30];
+    (
+      way["highway"~"motorway|trunk|primary|secondary|tertiary|residential|unclassified|track"](${b});
+    );
+    out body;
+    >;
+    out skel qt;
+  `;
+  return query(q);
+}
+
+export async function getPowerGrid(bbox) {
+  const b = bboxStr(bbox);
+  const q = `
+    [out:json][timeout:30];
+    (
+      way["power"="line"](${b});
+      node["power"~"pole|tower"](${b});
+      node["power"="substation"](${b});
+      way["power"="substation"](${b});
+      node["power"="generator"](${b});
+    );
+    out body;
+    >;
+    out skel qt;
+  `;
+  return query(q);
+}
+
 export function extractNodes(overpassData) {
   if (!overpassData || !overpassData.elements) return [];
   return overpassData.elements.filter(e => e.type === 'node' && e.lat && e.lon);

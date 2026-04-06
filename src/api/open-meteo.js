@@ -1,5 +1,5 @@
 /**
- * Open-Meteo — Weather, Climate, Elevation
+ * Open-Meteo — Weather, Climate, Elevation, Climate Projections
  * Free, no API key needed. Very generous rate limits.
  * https://open-meteo.com/en/docs
  */
@@ -7,6 +7,7 @@
 const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
 const ARCHIVE_BASE = 'https://archive-api.open-meteo.com/v1/archive';
 const ELEVATION_BASE = 'https://api.open-meteo.com/v1/elevation';
+const CLIMATE_BASE = 'https://climate-api.open-meteo.com/v1/climate';
 
 export async function getForecast(lat, lng, days = 7) {
   const params = new URLSearchParams({
@@ -17,10 +18,15 @@ export async function getForecast(lat, lng, days = 7) {
       'precipitation_sum', 'wind_speed_10m_max',
       'weathercode', 'sunrise', 'sunset',
       'uv_index_max', 'et0_fao_evapotranspiration',
+      'sunshine_duration',
     ].join(','),
     current: [
       'temperature_2m', 'relative_humidity_2m',
       'wind_speed_10m', 'weathercode',
+    ].join(','),
+    hourly: [
+      'soil_moisture_0_to_7cm', 'soil_moisture_7_to_28cm',
+      'soil_moisture_28_to_100cm', 'soil_moisture_100_to_255cm',
     ].join(','),
     timezone: 'auto',
     forecast_days: String(days),
@@ -55,7 +61,10 @@ export async function getClimateAverages(lat, lng) {
     longitude: String(lng),
     start_date: `${startYear}-01-01`,
     end_date: `${endYear}-12-31`,
-    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    daily: [
+      'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum',
+      'sunshine_duration', 'et0_fao_evapotranspiration', 'wind_speed_10m_max',
+    ].join(','),
     timezone: 'auto',
   });
   const res = await fetch(`${ARCHIVE_BASE}?${params}`);
@@ -65,13 +74,16 @@ export async function getClimateAverages(lat, lng) {
   // Compute monthly averages from 30 years of data
   if (!data.daily) throw new Error('Open-Meteo climate: response missing daily data');
   const months = Array.from({ length: 12 }, () => ({
-    maxTemps: [], minTemps: [], precip: [],
+    maxTemps: [], minTemps: [], precip: [], sunshine: [], et0: [], wind: [],
   }));
   data.daily.time.forEach((dateStr, i) => {
     const m = new Date(dateStr).getMonth();
     if (data.daily.temperature_2m_max[i] != null) months[m].maxTemps.push(data.daily.temperature_2m_max[i]);
     if (data.daily.temperature_2m_min[i] != null) months[m].minTemps.push(data.daily.temperature_2m_min[i]);
     if (data.daily.precipitation_sum[i] != null) months[m].precip.push(data.daily.precipitation_sum[i]);
+    if (data.daily.sunshine_duration?.[i] != null) months[m].sunshine.push(data.daily.sunshine_duration[i]);
+    if (data.daily.et0_fao_evapotranspiration?.[i] != null) months[m].et0.push(data.daily.et0_fao_evapotranspiration[i]);
+    if (data.daily.wind_speed_10m_max?.[i] != null) months[m].wind.push(data.daily.wind_speed_10m_max[i]);
   });
 
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
@@ -83,7 +95,145 @@ export async function getClimateAverages(lat, lng) {
     avgHigh: avg(m.maxTemps),
     avgLow: avg(m.minTemps),
     totalPrecip: sum(m.precip) / 30,
+    avgSunshine: avg(m.sunshine) != null ? avg(m.sunshine) / 3600 : null, // seconds → hours
+    avgET0: avg(m.et0),
+    totalET0: sum(m.et0) != null ? sum(m.et0) / 30 : null,
+    avgWind: avg(m.wind),
   }));
+}
+
+export async function getRegionalClimateAverages(lat, lng, radiusKm = 25) {
+  const offset = radiusKm / 111; // approx degrees per km
+  const points = [
+    [lat + offset, lng],
+    [lat - offset, lng],
+    [lat, lng + offset],
+    [lat, lng - offset],
+  ];
+  const results = await Promise.allSettled(
+    points.map(([la, lo]) => getClimateAverages(la, lo))
+  );
+
+  const valid = results.filter(r => r.status === 'fulfilled' && r.value).map(r => r.value);
+  if (valid.length === 0) return null;
+
+  // Average across all valid points
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return monthNames.map((name, i) => {
+    const vals = valid.map(v => v[i]).filter(Boolean);
+    const avgField = (field) => {
+      const nums = vals.map(v => v[field]).filter(v => v != null);
+      return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+    };
+    return {
+      month: name,
+      avgHigh: avgField('avgHigh'),
+      avgLow: avgField('avgLow'),
+      totalPrecip: avgField('totalPrecip'),
+      avgSunshine: avgField('avgSunshine'),
+      avgET0: avgField('avgET0'),
+      totalET0: avgField('totalET0'),
+      avgWind: avgField('avgWind'),
+    };
+  });
+}
+
+export async function getClimateProjections(lat, lng) {
+  const models = ['CMCC_CM2_SR5', 'MRI_ESM2_0', 'EC_Earth3P_HR'];
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lng),
+    start_date: '2040-01-01',
+    end_date: '2060-12-31',
+    models: models.join(','),
+    daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
+    timezone: 'auto',
+  });
+  const res = await fetch(`${CLIMATE_BASE}?${params}`);
+  if (!res.ok) throw new Error(`Open-Meteo climate projection error: ${res.status}`);
+  const data = await res.json();
+
+  // The API may return data per-model or aggregated — handle both cases
+  // Each model's data is under data.daily (single model) or we iterate models
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const allMonthly = [];
+
+  // Try per-model keys first, fall back to flat daily
+  const modelSources = [];
+  for (const model of models) {
+    const key = model.toLowerCase();
+    if (data[key]?.daily) {
+      modelSources.push(data[key].daily);
+    }
+  }
+  if (modelSources.length === 0 && data.daily) {
+    modelSources.push(data.daily);
+  }
+
+  for (const daily of modelSources) {
+    if (!daily.time) continue;
+    const months = Array.from({ length: 12 }, () => ({
+      maxTemps: [], minTemps: [], precip: [],
+    }));
+    daily.time.forEach((dateStr, i) => {
+      const m = new Date(dateStr).getMonth();
+      if (daily.temperature_2m_max?.[i] != null) months[m].maxTemps.push(daily.temperature_2m_max[i]);
+      if (daily.temperature_2m_min?.[i] != null) months[m].minTemps.push(daily.temperature_2m_min[i]);
+      if (daily.precipitation_sum?.[i] != null) months[m].precip.push(daily.precipitation_sum[i]);
+    });
+    allMonthly.push(months);
+  }
+
+  if (allMonthly.length === 0) return null;
+
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const sum = arr => arr.length ? arr.reduce((a, b) => a + b, 0) : null;
+
+  return monthNames.map((name, i) => {
+    const highs = allMonthly.map(m => avg(m[i].maxTemps)).filter(v => v != null);
+    const lows = allMonthly.map(m => avg(m[i].minTemps)).filter(v => v != null);
+    const precips = allMonthly.map(m => sum(m[i].precip) / 20).filter(v => v != null); // 20 years
+    return {
+      month: name,
+      projHigh: highs.length ? highs.reduce((a, b) => a + b, 0) / highs.length : null,
+      projLow: lows.length ? lows.reduce((a, b) => a + b, 0) / lows.length : null,
+      projPrecip: precips.length ? precips.reduce((a, b) => a + b, 0) / precips.length : null,
+    };
+  });
+}
+
+export function processSoilMoisture(forecastData) {
+  if (!forecastData || !forecastData.hourly) return null;
+  const h = forecastData.hourly;
+  const depths = ['soil_moisture_0_to_7cm', 'soil_moisture_7_to_28cm', 'soil_moisture_28_to_100cm', 'soil_moisture_100_to_255cm'];
+  const depthKeys = ['depth0_7', 'depth7_28', 'depth28_100', 'depth100_255'];
+
+  // Get latest non-null value for each depth
+  const current = {};
+  depthKeys.forEach((key, di) => {
+    const arr = h[depths[di]] || [];
+    let latest = null;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] != null) { latest = arr[i]; break; }
+    }
+    current[key] = latest;
+  });
+
+  // Daily averages for trend
+  const times = h.time || [];
+  const dailyMap = {};
+  times.forEach((t, i) => {
+    const day = t.slice(0, 10);
+    if (!dailyMap[day]) dailyMap[day] = [];
+    const val = h[depths[0]]?.[i]; // use surface layer for trend
+    if (val != null) dailyMap[day].push(val);
+  });
+  const daily = Object.entries(dailyMap).map(([date, vals]) => ({
+    date,
+    avg: vals.reduce((a, b) => a + b, 0) / vals.length,
+  }));
+
+  return { current, daily };
 }
 
 export async function getElevation(lat, lng) {

@@ -9,9 +9,9 @@ import { createMap, mapboxgl, addPolygon, addWmsLayer, fitToCoords } from '../li
 import { getLandbook, updateLandbook, createAutoData, createUserReported } from '../lib/store.js';
 import { formatArea, formatDistance, polygonBounds, expandBounds, sqmToHectares } from '../lib/geo.js';
 
-import { getForecast, getClimateAverages, getElevation, getWeatherDescription, estimateFrostDates } from '../api/open-meteo.js';
+import { getForecast, getClimateAverages, getRegionalClimateAverages, getClimateProjections, getElevation, getWeatherDescription, estimateFrostDates, processSoilMoisture } from '../api/open-meteo.js';
 import { getSoilProperties, getSoilClassification, parseSoilProperties, parseSoilClassification, getSoilDescription } from '../api/soilgrids.js';
-import { getWaterFeatures, getInfrastructure, extractNodes, extractWays } from '../api/overpass.js';
+import { getWaterFeatures, getInfrastructure, getRoadAccess, getPowerGrid, extractNodes, extractWays } from '../api/overpass.js';
 import { getSpeciesCounts, summarizeSpeciesCounts, getThreatenedSpecies } from '../api/inaturalist.js';
 import { getSpeciesOccurrences, summarizeOccurrences } from '../api/gbif.js';
 import { CORINE_WMS, getCorineWmsParams, WORLDCOVER_WMS, getWorldCoverWmsParams } from '../api/copernicus.js';
@@ -414,6 +414,7 @@ function reapplyCachedData() {
     updateOverviewRisk(key);
     updateOverviewInfrastructure(key);
     updateOverviewWater(key);
+    updateOverviewAccess(key);
   }
 }
 
@@ -507,6 +508,25 @@ function renderOverviewTab(el) {
       <h2 class="text-xl font-serif text-earth-900 mb-6">Water Features</h2>
       <div id="overview-water" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <p class="text-earth-400 text-sm col-span-full text-center py-4">Loading...</p>
+      </div>
+    </div>
+
+    <!-- Access & Connectivity -->
+    <div class="mt-10 pt-8 border-t border-earth-200">
+      <h2 class="text-xl font-serif text-earth-900 mb-6">Access & Connectivity</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-sm font-semibold text-earth-500 uppercase tracking-wider mb-4">Road Access</h3>
+          <div id="overview-roads" class="grid grid-cols-2 gap-4">
+            <p class="text-earth-400 text-sm col-span-full text-center py-4">Loading...</p>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-earth-500 uppercase tracking-wider mb-4">Power Grid</h3>
+          <div id="overview-power" class="grid grid-cols-2 gap-4">
+            <p class="text-earth-400 text-sm col-span-full text-center py-4">Loading...</p>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -804,6 +824,8 @@ function renderClimateData() {
 
   const rf = apiResults.forecast;
   const rc = apiResults.climate;
+  const rRegional = apiResults.regionalClimate;
+  const rProj = apiResults.climateProjections;
 
   if (!rf && !rc) return;
 
@@ -826,20 +848,39 @@ function renderClimateData() {
       </div>
     </div>`;
 
-    // Wind & atmospheric summary
+    // Soil moisture
+    const moisture = processSoilMoisture(rf.data);
+    if (moisture && moisture.current) {
+      const mc = moisture.current;
+      html += `<div>
+        <h3 class="text-lg font-serif text-earth-900 mb-4">Soil Moisture</h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          ${mc.depth0_7 != null ? soilCard('0\u20137 cm', `${(mc.depth0_7 * 100).toFixed(1)}%`, 'Surface') : ''}
+          ${mc.depth7_28 != null ? soilCard('7\u201328 cm', `${(mc.depth7_28 * 100).toFixed(1)}%`, 'Root zone') : ''}
+          ${mc.depth28_100 != null ? soilCard('28\u2013100 cm', `${(mc.depth28_100 * 100).toFixed(1)}%`, 'Subsoil') : ''}
+          ${mc.depth100_255 != null ? soilCard('1\u20132.5 m', `${(mc.depth100_255 * 100).toFixed(1)}%`, 'Deep') : ''}
+        </div>
+      </div>`;
+    }
+
+    // Wind, atmospheric & ET0
     const winds = daily.wind_speed_10m_max ? daily.wind_speed_10m_max.filter(v => v != null) : [];
     const uvMax = daily.uv_index_max ? daily.uv_index_max.filter(v => v != null) : [];
-    if (winds.length > 0 || uvMax.length > 0) {
+    const et0Arr = daily.et0_fao_evapotranspiration ? daily.et0_fao_evapotranspiration.filter(v => v != null) : [];
+    if (winds.length > 0 || uvMax.length > 0 || et0Arr.length > 0) {
       const avgWind = winds.length ? (winds.reduce((s, v) => s + v, 0) / winds.length).toFixed(1) : null;
       const peakWind = winds.length ? Math.max(...winds).toFixed(1) : null;
       const maxUv = uvMax.length ? Math.max(...uvMax).toFixed(1) : null;
       const uvLabel = maxUv ? (parseFloat(maxUv) >= 8 ? 'Very High' : parseFloat(maxUv) >= 6 ? 'High' : parseFloat(maxUv) >= 3 ? 'Moderate' : 'Low') : '';
+      const avgET0 = et0Arr.length ? (et0Arr.reduce((s, v) => s + v, 0) / et0Arr.length).toFixed(1) : null;
+      const totalET0 = et0Arr.length ? et0Arr.reduce((s, v) => s + v, 0).toFixed(1) : null;
       html += `<div>
         <h3 class="text-lg font-serif text-earth-900 mb-4">Wind and Atmospheric</h3>
-        <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
           ${avgWind ? soilCard('Avg Wind Speed', `${avgWind} km/h`, '7-day average') : ''}
           ${peakWind ? soilCard('Peak Gusts', `${peakWind} km/h`, '7-day maximum') : ''}
           ${maxUv ? soilCard('UV Index', maxUv, uvLabel) : ''}
+          ${avgET0 ? soilCard('Evapotranspiration', `${avgET0} mm/day`, `${totalET0} mm total this week`) : ''}
         </div>
       </div>`;
     }
@@ -856,7 +897,8 @@ function renderClimateData() {
               <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">High</th>
               <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Low</th>
               <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Rain</th>
-              <th class="text-left py-2 font-semibold text-earth-500 text-xs uppercase tracking-wider">Wind</th>
+              <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Wind</th>
+              <th class="text-left py-2 font-semibold text-earth-500 text-xs uppercase tracking-wider">Sunshine</th>
             </tr></thead>
             <tbody>
               ${times.map((date, i) => {
@@ -867,7 +909,8 @@ function renderClimateData() {
                   <td class="py-2 pr-4">${daily.temperature_2m_max?.[i] != null ? `${daily.temperature_2m_max[i]}\u00B0C` : '\u2014'}</td>
                   <td class="py-2 pr-4">${daily.temperature_2m_min?.[i] != null ? `${daily.temperature_2m_min[i]}\u00B0C` : '\u2014'}</td>
                   <td class="py-2 pr-4">${daily.precipitation_sum?.[i] != null ? `${daily.precipitation_sum[i]} mm` : '\u2014'}</td>
-                  <td class="py-2">${daily.wind_speed_10m_max?.[i] != null ? `${daily.wind_speed_10m_max[i]} km/h` : '\u2014'}</td>
+                  <td class="py-2 pr-4">${daily.wind_speed_10m_max?.[i] != null ? `${daily.wind_speed_10m_max[i]} km/h` : '\u2014'}</td>
+                  <td class="py-2">${daily.sunshine_duration?.[i] != null ? `${(daily.sunshine_duration[i] / 3600).toFixed(1)} hrs` : '\u2014'}</td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -900,20 +943,29 @@ function renderClimateData() {
             <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Month</th>
             <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">High</th>
             <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Low</th>
-            <th class="text-left py-2 font-semibold text-earth-500 text-xs uppercase tracking-wider">Rain</th>
+            <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Rain</th>
+            <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">Sunshine</th>
+            <th class="text-left py-2 pr-4 font-semibold text-earth-500 text-xs uppercase tracking-wider">ET0</th>
+            <th class="text-left py-2 font-semibold text-earth-500 text-xs uppercase tracking-wider">Wind</th>
           </tr></thead>
           <tbody>
             ${months.map(m => `<tr class="border-b border-earth-100">
               <td class="py-2 pr-4 font-medium">${m.month}</td>
               <td class="py-2 pr-4">${m.avgHigh != null ? `${Math.round(m.avgHigh)}\u00B0C` : '\u2014'}</td>
               <td class="py-2 pr-4">${m.avgLow != null ? `${Math.round(m.avgLow)}\u00B0C` : '\u2014'}</td>
-              <td class="py-2">${m.totalPrecip != null ? `${Math.round(m.totalPrecip)} mm` : '\u2014'}</td>
+              <td class="py-2 pr-4">${m.totalPrecip != null ? `${Math.round(m.totalPrecip)} mm` : '\u2014'}</td>
+              <td class="py-2 pr-4">${m.avgSunshine != null ? `${m.avgSunshine.toFixed(1)} hrs` : '\u2014'}</td>
+              <td class="py-2 pr-4">${m.avgET0 != null ? `${m.avgET0.toFixed(1)} mm` : '\u2014'}</td>
+              <td class="py-2">${m.avgWind != null ? `${Math.round(m.avgWind)} km/h` : '\u2014'}</td>
             </tr>`).join('')}
             <tr class="border-t-2 border-earth-900 font-semibold">
               <td class="py-2 pr-4">Annual</td>
               <td class="py-2 pr-4">${Math.round(months.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12)}\u00B0C</td>
               <td class="py-2 pr-4">${Math.round(months.reduce((s, m) => s + (m.avgLow || 0), 0) / 12)}\u00B0C</td>
-              <td class="py-2">${Math.round(months.reduce((s, m) => s + (m.totalPrecip || 0), 0))} mm</td>
+              <td class="py-2 pr-4">${Math.round(months.reduce((s, m) => s + (m.totalPrecip || 0), 0))} mm</td>
+              <td class="py-2 pr-4">${months[0].avgSunshine != null ? `${(months.reduce((s, m) => s + (m.avgSunshine || 0), 0) / 12).toFixed(1)} hrs` : '\u2014'}</td>
+              <td class="py-2 pr-4">${months[0].avgET0 != null ? `${(months.reduce((s, m) => s + (m.avgET0 || 0), 0) / 12).toFixed(1)} mm` : '\u2014'}</td>
+              <td class="py-2">${months[0].avgWind != null ? `${Math.round(months.reduce((s, m) => s + (m.avgWind || 0), 0) / 12)} km/h` : '\u2014'}</td>
             </tr>
           </tbody>
         </table>
@@ -998,6 +1050,71 @@ function renderClimateData() {
         </table>
       </div>
       <p class="text-xs text-earth-400 mt-2">Derived from 30-year climate data and location factors</p>
+    </div>`;
+  }
+
+  // Your Land vs Region comparison
+  if (rc && rc.ok && rc.data && rRegional && rRegional.ok && rRegional.data) {
+    const local = rc.data;
+    const regional = rRegional.data;
+
+    const localAnnualPrecip = local.reduce((s, m) => s + (m.totalPrecip || 0), 0);
+    const regionAnnualPrecip = regional.reduce((s, m) => s + (m.totalPrecip || 0), 0);
+    const localAvgSunshine = local[0].avgSunshine != null ? local.reduce((s, m) => s + (m.avgSunshine || 0), 0) / 12 : null;
+    const regionAvgSunshine = regional[0].avgSunshine != null ? regional.reduce((s, m) => s + (m.avgSunshine || 0), 0) / 12 : null;
+    const localAvgET0 = local[0].avgET0 != null ? local.reduce((s, m) => s + (m.avgET0 || 0), 0) / 12 : null;
+    const regionAvgET0 = regional[0].avgET0 != null ? regional.reduce((s, m) => s + (m.avgET0 || 0), 0) / 12 : null;
+    const localAvgHigh = local.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12;
+    const regionAvgHigh = regional.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12;
+    const localAvgWind = local[0].avgWind != null ? local.reduce((s, m) => s + (m.avgWind || 0), 0) / 12 : null;
+    const regionAvgWind = regional[0].avgWind != null ? regional.reduce((s, m) => s + (m.avgWind || 0), 0) / 12 : null;
+
+    const pctDiff = (a, b) => b ? `${a > b ? '+' : ''}${(((a - b) / b) * 100).toFixed(0)}%` : '';
+    const diffColor = (a, b) => Math.abs(((a - b) / (b || 1)) * 100) > 10 ? 'text-amber-600' : 'text-green-700';
+
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Your Land vs Region</h3>
+      <p class="text-sm text-earth-500 mb-4">30-year averages compared to 25 km regional baseline</p>
+      <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        ${soilCard('Temperature', `${localAvgHigh.toFixed(1)}\u00B0C`, `Region: ${regionAvgHigh.toFixed(1)}\u00B0C (${pctDiff(localAvgHigh, regionAvgHigh)})`)}
+        ${soilCard('Annual Rainfall', `${Math.round(localAnnualPrecip)} mm`, `Region: ${Math.round(regionAnnualPrecip)} mm (${pctDiff(localAnnualPrecip, regionAnnualPrecip)})`)}
+        ${localAvgSunshine != null && regionAvgSunshine != null ? soilCard('Sunshine', `${localAvgSunshine.toFixed(1)} hrs/day`, `Region: ${regionAvgSunshine.toFixed(1)} hrs/day (${pctDiff(localAvgSunshine, regionAvgSunshine)})`) : ''}
+        ${localAvgET0 != null && regionAvgET0 != null ? soilCard('Evapotranspiration', `${localAvgET0.toFixed(1)} mm/day`, `Region: ${regionAvgET0.toFixed(1)} mm/day (${pctDiff(localAvgET0, regionAvgET0)})`) : ''}
+        ${localAvgWind != null && regionAvgWind != null ? soilCard('Wind Speed', `${Math.round(localAvgWind)} km/h`, `Region: ${Math.round(regionAvgWind)} km/h (${pctDiff(localAvgWind, regionAvgWind)})`) : ''}
+      </div>
+    </div>`;
+  }
+
+  // Climate Projections (2050)
+  if (rProj && rProj.ok && rProj.data && rc && rc.ok && rc.data) {
+    const proj = rProj.data;
+    const baseline = rc.data;
+
+    const projAvgHigh = proj.reduce((s, m) => s + (m.projHigh || 0), 0) / 12;
+    const baseAvgHigh = baseline.reduce((s, m) => s + (m.avgHigh || 0), 0) / 12;
+    const projAvgLow = proj.reduce((s, m) => s + (m.projLow || 0), 0) / 12;
+    const baseAvgLow = baseline.reduce((s, m) => s + (m.avgLow || 0), 0) / 12;
+    const projAnnualPrecip = proj.reduce((s, m) => s + (m.projPrecip || 0), 0);
+    const baseAnnualPrecip = baseline.reduce((s, m) => s + (m.totalPrecip || 0), 0);
+
+    const tempDelta = projAvgHigh - baseAvgHigh;
+    const precipDelta = projAnnualPrecip - baseAnnualPrecip;
+
+    // Summer (Jun-Aug) and winter (Dec-Feb) shifts
+    const summerProj = [5, 6, 7].reduce((s, i) => s + (proj[i].projHigh || 0), 0) / 3;
+    const summerBase = [5, 6, 7].reduce((s, i) => s + (baseline[i].avgHigh || 0), 0) / 3;
+    const winterProj = [11, 0, 1].reduce((s, i) => s + (proj[i].projPrecip || 0), 0);
+    const winterBase = [11, 0, 1].reduce((s, i) => s + (baseline[i].totalPrecip || 0), 0);
+
+    html += `<div>
+      <h3 class="text-lg font-serif text-earth-900 mb-4">Climate Projections (2050)</h3>
+      <p class="text-sm text-earth-500 mb-4">CMIP6 multi-model average vs 30-year baseline</p>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        ${soilCard('Avg High Shift', `${tempDelta >= 0 ? '+' : ''}${tempDelta.toFixed(1)}\u00B0C`, 'Annual average high')}
+        ${soilCard('Avg Low Shift', `${(projAvgLow - baseAvgLow) >= 0 ? '+' : ''}${(projAvgLow - baseAvgLow).toFixed(1)}\u00B0C`, 'Annual average low')}
+        ${soilCard('Rainfall Change', `${precipDelta >= 0 ? '+' : ''}${Math.round(precipDelta)} mm`, 'Annual total')}
+        ${soilCard('Summer Highs', `${(summerProj - summerBase) >= 0 ? '+' : ''}${(summerProj - summerBase).toFixed(1)}\u00B0C`, 'Jun\u2013Aug shift')}
+      </div>
     </div>`;
   }
 
@@ -1854,6 +1971,10 @@ function fetchAllData(lb, lat, lng, boundary, bounds) {
     { key: 'geology', fn: () => getGeology(lat, lng) },
     { key: 'protectedAreas', fn: () => getProtectedAreas(lat, lng, 25) },
     { key: 'riskScores', fn: () => fetchRiskScores(lat, lng) },
+    { key: 'regionalClimate', fn: () => getRegionalClimateAverages(lat, lng, 25) },
+    { key: 'climateProjections', fn: () => getClimateProjections(lat, lng) },
+    { key: 'roads', fn: () => bounds ? getRoadAccess(bounds) : Promise.resolve(null) },
+    { key: 'power', fn: () => bounds ? getPowerGrid(bounds) : Promise.resolve(null) },
   ];
 
   let completed = 0;
@@ -1883,12 +2004,13 @@ function onDataUpdate(key) {
   updateOverviewRisk(key);
   updateOverviewInfrastructure(key);
   updateOverviewWater(key);
+  updateOverviewAccess(key);
 
   // Re-render active tab if its data arrived
   const tabDataMap = {
     'Ecosystem': ['species', 'threatened', 'gbif', 'protectedAreas'],
     'Terrain': ['elevation', 'soilProps', 'soilClass', 'geology'],
-    'Climate': ['forecast', 'climate'],
+    'Climate': ['forecast', 'climate', 'regionalClimate', 'climateProjections'],
   };
 
   for (const [tab, keys] of Object.entries(tabDataMap)) {
@@ -2047,6 +2169,93 @@ function updateOverviewWater(key) {
     ${soilCard('Wells', String(wells.length))}
     ${soilCard('Springs', String(springs.length))}
   `;
+}
+
+function findNearestWayDistance(lat, lng, ways) {
+  let minDist = Infinity;
+  ways.forEach(w => {
+    (w.coords || []).forEach(([nLat, nLng]) => {
+      const d = haversine(lat, lng, nLat, nLng);
+      if (d < minDist) minDist = d;
+    });
+  });
+  return minDist === Infinity ? null : minDist;
+}
+
+function updateOverviewAccess(key) {
+  if (key !== 'roads' && key !== 'power') return;
+  const [lat, lng] = landbook.center;
+
+  if (key === 'roads') {
+    const el = document.getElementById('overview-roads');
+    if (!el) return;
+    const r = apiResults.roads;
+    if (!r || !r.ok || !r.data) {
+      el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No road data available.</p>';
+      return;
+    }
+    const ways = extractWays(r.data);
+    if (ways.length === 0) {
+      el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No roads found nearby.</p>';
+      return;
+    }
+
+    const mainRoads = ways.filter(w => ['motorway', 'trunk', 'primary', 'secondary'].includes(w.tags?.highway));
+    const tracks = ways.filter(w => w.tags?.highway === 'track');
+    const paved = ways.filter(w => w.tags?.surface && ['asphalt', 'paved', 'concrete', 'paving_stones'].includes(w.tags.surface));
+
+    const nearestMain = findNearestWayDistance(lat, lng, mainRoads);
+    const nearestAny = findNearestWayDistance(lat, lng, ways.filter(w => w.tags?.highway !== 'track'));
+
+    const typeCounts = {};
+    ways.forEach(w => { const t = w.tags?.highway || 'other'; typeCounts[t] = (typeCounts[t] || 0) + 1; });
+    const typeStr = Object.entries(typeCounts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([t, c]) => `${t}: ${c}`).join(', ');
+
+    el.innerHTML = `
+      ${soilCard('Nearest Main Road', nearestMain != null ? `${nearestMain.toFixed(1)} km` : 'None in area', 'Primary / Secondary')}
+      ${soilCard('Nearest Paved Road', nearestAny != null ? `${nearestAny.toFixed(1)} km` : 'Unknown', paved.length ? `${paved.length} paved segments` : '')}
+      ${soilCard('Road Types', `${Object.keys(typeCounts).length} types`, typeStr)}
+      ${soilCard('Tracks / Unpaved', String(tracks.length), 'In search area')}
+    `;
+  }
+
+  if (key === 'power') {
+    const el = document.getElementById('overview-power');
+    if (!el) return;
+    const r = apiResults.power;
+    if (!r || !r.ok || !r.data) {
+      el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No power grid data available.</p>';
+      return;
+    }
+    const nodes = extractNodes(r.data);
+    const ways = extractWays(r.data);
+    const total = nodes.length + ways.length;
+    if (total === 0) {
+      el.innerHTML = '<p class="text-earth-400 text-sm col-span-full text-center py-4">No power infrastructure found nearby.</p>';
+      return;
+    }
+
+    const powerLines = ways.filter(w => w.tags?.power === 'line');
+    const substations = [...nodes.filter(n => n.tags?.power === 'substation'), ...ways.filter(w => w.tags?.power === 'substation')];
+    const generators = nodes.filter(n => n.tags?.power === 'generator');
+
+    const nearestLine = findNearestWayDistance(lat, lng, powerLines);
+    const substationDists = substations.map(s => {
+      if (s.lat && s.lon) return haversine(lat, lng, s.lat, s.lon);
+      if (s.coords && s.coords.length) return haversine(lat, lng, s.coords[0][0], s.coords[0][1]);
+      return Infinity;
+    });
+    const nearestSub = substationDists.length ? Math.min(...substationDists) : null;
+    const voltages = [...new Set(powerLines.map(w => w.tags?.voltage).filter(Boolean))];
+    const voltageStr = voltages.length ? voltages.sort((a, b) => Number(a) - Number(b)).join(', ') + ' V' : 'Unknown';
+
+    el.innerHTML = `
+      ${soilCard('Nearest Power Line', nearestLine != null ? `${nearestLine.toFixed(1)} km` : 'None in area')}
+      ${soilCard('Nearest Substation', nearestSub != null && nearestSub !== Infinity ? `${nearestSub.toFixed(1)} km` : 'None in area')}
+      ${soilCard('Voltage Levels', voltageStr)}
+      ${soilCard('Power Infrastructure', `${powerLines.length + substations.length + generators.length} features`, generators.length ? `${generators.length} generators` : '')}
+    `;
+  }
 }
 
 function updateKPIs() {
