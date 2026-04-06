@@ -5,7 +5,7 @@
  */
 
 // EFFIS WMS base URL
-export const EFFIS_WMS = 'https://maps.effis.emergency.copernicus.eu/wms';
+export const EFFIS_WMS = 'https://maps.effis.emergency.copernicus.eu/effisgis/wms';
 
 // Available WMS layers
 export const LAYERS = {

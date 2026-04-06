@@ -10,9 +10,9 @@
 export const CORINE_WMS = 'https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer';
 export const CORINE_LAYER = '12'; // CLC 2018
 
-// Copernicus Global Land Service — Land Cover
-export const GLOBAL_LAND_COVER_WMS = 'https://viewer.globallandcover.vito.be/geoserver/wms';
-export const GLOBAL_LAND_COVER_LAYER = 'cgls:lcv_landcover_euroasia_2019';
+// Copernicus Global Land Service — Land Cover (deprecated: VITO domain offline, use WorldCover instead)
+export const GLOBAL_LAND_COVER_WMS = '';
+export const GLOBAL_LAND_COVER_LAYER = '';
 
 // Sentinel-2 cloudless mosaic (EOX)
 export const SENTINEL2_TILES = 'https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2021_3857/default/GoogleMapsCompatible/{z}/{y}/{x}.jpg';

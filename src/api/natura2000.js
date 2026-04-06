@@ -7,7 +7,7 @@
  */
 
 // EEA Natura 2000 WMS
-export const NATURA2000_WMS = 'https://bio.discomap.eea.europa.eu/arcgis/services/Natura2000/Natura2000End2021/MapServer/WMSServer';
+export const NATURA2000_WMS = 'https://bio.discomap.eea.europa.eu/arcgis/services/ProtectedSites/Natura2000_Dyna_WM/MapServer/WMSServer';
 
 export function getNatura2000WmsParams() {
   return {

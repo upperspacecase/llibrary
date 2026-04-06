@@ -109,7 +109,7 @@ const SOURCES = [
         id: 'effis',
         name: 'EFFIS Fire Danger WMS',
         feeds: ['Fire danger map layer', 'Report'],
-        test: () => probe(`https://maps.effis.emergency.copernicus.eu/wms?SERVICE=WMS&REQUEST=GetCapabilities`),
+        test: () => probe(`https://maps.effis.emergency.copernicus.eu/effisgis/wms?SERVICE=WMS&REQUEST=GetCapabilities`),
     },
     {
         id: 'corine',
@@ -121,7 +121,7 @@ const SOURCES = [
         id: 'natura2000',
         name: 'Natura 2000 WMS',
         feeds: ['Protected areas map layer'],
-        test: () => probe(`https://bio.discomap.eea.europa.eu/arcgis/services/Natura2000/Natura2000End2021/MapServer/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities`),
+        test: () => probe(`https://bio.discomap.eea.europa.eu/arcgis/services/ProtectedSites/Natura2000_Dyna_WM/MapServer/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities`),
     },
     {
         id: 'worldcover',
@@ -132,8 +132,8 @@ const SOURCES = [
     {
         id: 'global-land-cover',
         name: 'Global Land Cover WMS (VITO)',
-        feeds: ['Global land cover map'],
-        test: () => probe(`https://viewer.globallandcover.vito.be/geoserver/wms?SERVICE=WMS&REQUEST=GetCapabilities`),
+        feeds: ['Deprecated — use WorldCover'],
+        test: () => Promise.resolve({ ok: false, status: 0, ms: 0, error: 'Retired (domain offline)' }),
     },
     {
         id: 'sentinel2',
