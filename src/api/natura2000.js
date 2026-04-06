@@ -73,7 +73,7 @@ export async function getProtectedAreas(lat, lng, radiusKm = 25) {
       .slice(0, 10);
   } catch (err) {
     console.warn('Protected areas query failed:', err.message);
-    return [];
+    throw err;
   }
 }
 

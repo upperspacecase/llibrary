@@ -19,8 +19,7 @@ const BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
 export async function getActiveFires(bbox, days = 2) {
     const key = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIRMS_KEY) || '';
     if (!key) {
-        console.warn('NASA FIRMS: No MAP_KEY set (VITE_FIRMS_KEY). Skipping fire detections.');
-        return [];
+        throw new Error('NASA FIRMS: No API key (VITE_FIRMS_KEY)');
     }
 
     const [south, west, north, east] = bbox;
@@ -28,8 +27,7 @@ export async function getActiveFires(bbox, days = 2) {
 
     const res = await fetch(url);
     if (!res.ok) {
-        console.warn(`NASA FIRMS returned ${res.status}.`);
-        return [];
+        throw new Error(`NASA FIRMS HTTP ${res.status}`);
     }
 
     const text = await res.text();

@@ -211,6 +211,7 @@ const results = await Promise.allSettled(
 );
 
 const autoData = { lastFetched: new Date().toISOString() };
+const apiStatus = {};
 let okCount = 0;
 let failCount = 0;
 
@@ -219,14 +220,17 @@ tasks.forEach((t, i) => {
   const pad = t.key.padEnd(16);
   if (r.status === 'fulfilled') {
     autoData[t.key] = r.value;
+    apiStatus[t.key] = 'OK';
     okCount++;
     console.log(`  ✓ ${pad} OK    ${snippet(r.value)}`);
   } else {
+    apiStatus[t.key] = `FAILED: ${r.reason?.message || r.reason}`;
     failCount++;
     console.log(`  ✗ ${pad} FAIL  ${r.reason?.message || r.reason}`);
   }
 });
 
+autoData.apiStatus = apiStatus;
 console.log(`\n  Results: ${okCount} OK, ${failCount} failed\n`);
 
 // --- Step 6: Save autoData back ---

@@ -49,7 +49,7 @@ export async function getAdminUnit(lat, lng) {
         const res = await fetch(
             `${OGC_BASE}/collections/municipios/items?bbox=${bbox2}&limit=1&f=json`
         );
-        if (!res.ok) return null;
+        if (!res.ok) throw new Error(`DGT municipality HTTP ${res.status}`);
         const data = await res.json();
 
         if (data.features && data.features.length > 0) {
@@ -68,6 +68,7 @@ export async function getAdminUnit(lat, lng) {
         console.warn('DGT municipality query failed:', err.message);
     }
 
+    // Both CAOP and municipality lookups returned no results — likely outside Portugal
     return null;
 }
 

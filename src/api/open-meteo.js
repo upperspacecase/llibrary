@@ -63,7 +63,7 @@ export async function getClimateAverages(lat, lng) {
   const data = await res.json();
 
   // Compute monthly averages from 30 years of data
-  if (!data.daily) return null;
+  if (!data.daily) throw new Error('Open-Meteo climate: response missing daily data');
   const months = Array.from({ length: 12 }, () => ({
     maxTemps: [], minTemps: [], precip: [],
   }));

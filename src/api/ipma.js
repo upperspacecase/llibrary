@@ -57,7 +57,7 @@ export async function getForecastLocations() {
  */
 export async function getNearestForecastLocation(lat, lng) {
     const data = await getForecastLocations();
-    if (!data || !data.data) return null;
+    if (!data || !data.data) throw new Error('IPMA: response missing location data');
 
     let nearest = null;
     let minDist = Infinity;
