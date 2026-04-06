@@ -3090,38 +3090,69 @@ a {
   height: 100%;
 }
 
-/* Geolocate / zoom-to-me button */
-.btn-geolocate {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 50;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: none;
-  background: var(--white, #fff);
-  color: var(--black, #1a1a1a);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
+/* Shrink Mapbox branding on create page */
+.create-map-area .mapboxgl-ctrl-logo {
+  transform: scale(0.4);
+  transform-origin: bottom left;
+}
+
+.create-map-area .mapboxgl-ctrl-attrib {
+  transform: scale(0.55);
+  transform-origin: bottom right;
+  font-size: 8px;
+  opacity: 0.6;
+}
+
+/* Geolocate button (sidebar) */
+.btn-geolocate-sidebar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--border, #e0dcc8);
+  border-radius: var(--radius, 8px);
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+  margin-bottom: 24px;
 }
 
-.btn-geolocate:hover {
-  background: var(--black, #1a1a1a);
-  color: var(--cream, #faf8f1);
+.btn-geolocate-sidebar:hover {
+  border-color: var(--black, #1a1a1a);
+  background: rgba(0, 0, 0, 0.02);
 }
 
-.btn-geolocate.locating {
+.btn-geolocate-sidebar.locating {
+  border-color: #52b788;
   animation: pulse-locate 1s ease-in-out infinite;
 }
 
 @keyframes pulse-locate {
-  0%, 100% { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); }
-  50% { box-shadow: 0 2px 12px rgba(82, 183, 136, 0.5); }
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.2); }
+}
+
+/* Reset button (sidebar, after boundary closed) */
+.btn-reset {
+  margin-top: 12px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  border-radius: var(--pill, 999px);
+  border: 1.5px solid var(--card-border, #e0dcc8);
+  background: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.btn-reset:hover {
+  border-color: var(--black, #1a1a1a);
 }
 
 .create-map-prompt {

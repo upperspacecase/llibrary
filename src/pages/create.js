@@ -34,11 +34,7 @@ const mapPrompt = document.getElementById('map-prompt');
 const postcodeInput = document.getElementById('postcode-input');
 const btnContinue = document.getElementById('btn-continue');
 const instructions = document.getElementById('map-instructions');
-const toolbar = document.getElementById('map-toolbar');
-const btnUndo = document.getElementById('btn-undo');
-const btnClear = document.getElementById('btn-clear');
-const btnClose = document.getElementById('btn-close');
-const btnResetBoundary = document.getElementById('btn-reset-boundary');
+const btnReset = document.getElementById('btn-reset');
 const btnGeolocate = document.getElementById('btn-geolocate');
 const mapArea = document.querySelector('.create-map-area');
 
@@ -68,12 +64,6 @@ const LINE_LAYER = 'draw-line-layer';
 const POLY_SRC = 'draw-polygon';
 const POLY_FILL = 'draw-polygon-fill';
 const POLY_LINE = 'draw-polygon-line';
-
-const MAP_STYLES = {
-  satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
-  map: 'mapbox://styles/mapbox/outdoors-v12',
-};
-let currentStyle = 'satellite';
 
 const map = createMap('create-map', {
   center: [-8.6400, 37.5967],
@@ -125,7 +115,6 @@ function initMapLayers() {
 
 map.on('load', () => {
   if (instructions) instructions.textContent = 'Search for your land to get started';
-  if (toolbar) toolbar.style.display = 'none';
 
   map.on('click', (e) => {
     if (isClosed) return;
@@ -182,13 +171,12 @@ if (btnGeolocate) {
 function addPoint(latlng) {
   boundaryPoints.push(latlng);
   if (boundaryPoints.length === 1) {
-    if (toolbar) toolbar.style.display = 'flex';
     if (mapPrompt) mapPrompt.style.display = 'none';
   }
   if (instructions) {
     instructions.textContent = boundaryPoints.length < 3
       ? 'Keep clicking to add more points'
-      : 'Click near the first point to close, or press "Close Boundary"';
+      : 'Click near the first point to close the boundary';
   }
   updateDrawing();
 }
@@ -230,19 +218,9 @@ function closePolygon() {
   fitToCoords(map, boundaryPoints, { padding: 80 });
 
   if (instructions) instructions.textContent = 'Boundary set. Enter your post code and continue.';
-  if (btnResetBoundary) btnResetBoundary.style.display = '';
+  if (btnReset) btnReset.style.display = '';
   updateStats();
   updateContinueButton();
-}
-
-function undoLastPoint() {
-  if (isClosed || boundaryPoints.length === 0) return;
-  boundaryPoints.pop();
-  updateDrawing();
-  if (boundaryPoints.length === 0 && toolbar) {
-    toolbar.style.display = 'none';
-    if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
-  }
 }
 
 function clearAll() {
@@ -255,12 +233,11 @@ function clearAll() {
   boundaryPoints = [];
   isClosed = false;
   updateDrawing();
-  if (toolbar) toolbar.style.display = 'none';
   if (instructions) instructions.textContent = 'Click on the map to start drawing your boundary';
   if (statArea) statArea.textContent = '\u2014';
   if (mapPrompt) mapPrompt.style.display = '';
   if (btnContinue) btnContinue.disabled = true;
-  if (btnResetBoundary) btnResetBoundary.style.display = 'none';
+  if (btnReset) btnReset.style.display = 'none';
 }
 
 function updateStats() {
@@ -287,10 +264,6 @@ function updateContinueButton() {
 
 if (postcodeInput) postcodeInput.addEventListener('input', updateContinueButton);
 
-// Toolbar buttons
-if (btnUndo) btnUndo.addEventListener('click', undoLastPoint);
-if (btnClear) btnClear.addEventListener('click', clearAll);
-if (btnClose) btnClose.addEventListener('click', () => { if (boundaryPoints.length >= 3 && !isClosed) closePolygon(); });
 
 // ---------------------------------------------------------------------------
 // Confirm toast
@@ -327,8 +300,8 @@ function showConfirmToast(message, onConfirm) {
   activeToast = toast;
 }
 
-if (btnResetBoundary) {
-  btnResetBoundary.addEventListener('click', () => {
+if (btnReset) {
+  btnReset.addEventListener('click', () => {
     showConfirmToast(t('create.resetConfirm') || "Reset boundary? You'll need to redraw.", clearAll);
   });
 }
@@ -540,22 +513,6 @@ if (btnSearch) {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.create-search')) hideSuggestions();
 });
-
-// ---------------------------------------------------------------------------
-// Map style toggle (Satellite / Map)
-// ---------------------------------------------------------------------------
-const styleToggle = document.getElementById('map-style-toggle');
-if (styleToggle) {
-  styleToggle.addEventListener('click', (e) => {
-    const btn = e.target.closest('.map-style-btn');
-    if (!btn || btn.classList.contains('active')) return;
-    const styleName = btn.dataset.style;
-    currentStyle = styleName;
-    styleToggle.querySelectorAll('.map-style-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    map.setStyle(MAP_STYLES[styleName]);
-  });
-}
 
 map.on('style.load', () => {
   initMapLayers();

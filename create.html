@@ -44,18 +44,6 @@
         <div class="create-map-prompt" id="map-prompt">Draw your boundary on the map, then submit.</div>
         <div class="create-map-instructions" id="map-instructions" data-i18n="create.instructions">Click on the map to
           start drawing your land boundary</div>
-        <button class="btn-geolocate" id="btn-geolocate" title="Zoom to my location" aria-label="Zoom to my location">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-        </button>
-        <div class="create-map-toolbar" id="map-toolbar" style="display:none;">
-          <button class="btn-small" id="btn-undo" data-i18n="create.undo">Undo</button>
-          <button class="btn-small" id="btn-clear" data-i18n="create.clear">Clear</button>
-          <button class="btn-small active" id="btn-close" data-i18n="create.close">Close Boundary</button>
-        </div>
-        <div class="create-map-style-toggle" id="map-style-toggle">
-          <button class="map-style-btn active" data-style="satellite">Satellite</button>
-          <button class="map-style-btn" data-style="map">Map</button>
-        </div>
       </div>
       <div class="create-sidebar">
         <!-- ===== STEP 1: Boundary + Post Code ===== -->
@@ -70,12 +58,17 @@
               <ul class="search-suggestions" id="search-suggestions"></ul>
             </div>
 
+            <button class="btn-geolocate-sidebar" id="btn-geolocate" type="button">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+              <span>Use my location</span>
+            </button>
+
             <div id="boundary-result">
               <div class="create-address-row">
                 <span class="create-address-label">Total Area</span>
                 <span class="create-address-value" id="stat-area">&mdash;</span>
               </div>
-              <button class="btn-reset-boundary" id="btn-reset-boundary" style="display:none;" data-i18n="create.resetBoundary">Reset Boundary</button>
+              <button class="btn-small btn-reset" id="btn-reset" style="display:none;">Reset</button>
             </div>
           </div>
 
