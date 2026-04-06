@@ -3373,9 +3373,13 @@ a {
   justify-content: space-between;
   align-items: baseline;
   gap: 16px;
+  padding-bottom: 8px;
+}
+
+#boundary-result {
   border-bottom: 1px solid var(--border);
-  padding-bottom: 16px;
-  margin-bottom: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
 }
 
 .create-address-label {
@@ -3962,14 +3966,7 @@ a {
 
 /* Area override row */
 .create-area-override {
-  margin-top: 10px;
-}
-
-.create-area-override-label {
-  display: block;
-  font-size: 12px;
-  color: #A39E93;
-  margin-bottom: 4px;
+  margin-top: 6px;
 }
 
 .create-area-override-input {
