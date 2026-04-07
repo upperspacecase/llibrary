@@ -2,6 +2,7 @@ import '../styles/main.css';
 
 // ---- State ----
 let data = {};
+let reportVersions = []; // keyed by submission_id string
 let activeTab = 'submissions';
 let password = '';
 let pipelineResults = null;
@@ -19,6 +20,7 @@ const columns = {
         { key: 'notes', label: 'Notes', format: (v, row) => v || (row.userReported?.notes) || '-' },
         { key: 'files', label: 'Files', format: formatFiles },
         { key: '_date', label: 'Date', format: formatDate },
+        { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
     ],
     contributions: [
         { key: 'section', label: 'Section' },
@@ -118,6 +120,9 @@ async function loadData() {
     if (!res.ok) return;
 
     const raw = await res.json();
+
+    // Store report versions indexed by submission_id
+    reportVersions = (raw.reportVersions || []);
 
     // Merge waitlist, landbooks, submissions into one unified list
     const merged = [
@@ -223,6 +228,24 @@ function renderTable() {
                     return `<td class="admin-files-cell">${links}</td>`;
                 } catch { return `<td>-</td>`; }
             }
+            if (str.startsWith('__REPORT__')) {
+                const subId = str.slice(10);
+                if (!subId || row._type !== 'submission') return '<td class="admin-muted">—</td>';
+                const versions = reportVersions.filter(r => String(r.submission_id) === subId);
+                if (!versions.length) {
+                    return `<td><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button></td>`;
+                }
+                // Version dropdown + share button
+                const options = versions.map(v =>
+                    `<option value="${escapeHtml(v.slug)}" data-report-id="${escapeHtml(String(v._id))}">${v.version} — ${formatDate(v.created)}</option>`
+                ).join('');
+                return `<td class="admin-report-cell">
+                    <select class="admin-version-select" data-submission-id="${escapeHtml(subId)}">${options}</select>
+                    <button class="admin-view-btn" data-slug="${escapeHtml(versions[0].slug)}" title="View report">View</button>
+                    <button class="admin-share-btn" data-report-id="${escapeHtml(String(versions[0]._id))}" title="Copy share link">Share</button>
+                    <button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}" title="Generate new version">+ New</button>
+                </td>`;
+            }
             if (str === '__REGION_ACTIONS__') {
                 const name = escapeHtml(row.name);
                 const status = row.status;
@@ -271,6 +294,87 @@ function renderTable() {
                 btn.disabled = false;
                 btn.textContent = status === 'approved' ? 'Approve' : 'Reject';
                 alert('Failed to update region status.');
+            }
+        });
+    });
+
+    // Bind version dropdown change → update view/share buttons
+    body.querySelectorAll('.admin-version-select').forEach(select => {
+        select.addEventListener('change', () => {
+            const cell = select.closest('.admin-report-cell');
+            const selected = select.selectedOptions[0];
+            const viewBtn = cell.querySelector('.admin-view-btn');
+            const shareBtn = cell.querySelector('.admin-share-btn');
+            if (viewBtn) viewBtn.dataset.slug = selected.value;
+            if (shareBtn) shareBtn.dataset.reportId = selected.dataset.reportId;
+        });
+    });
+
+    // Bind view report buttons
+    body.querySelectorAll('.admin-view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.open(`/report/${btn.dataset.slug}`, '_blank');
+        });
+    });
+
+    // Bind share buttons
+    body.querySelectorAll('.admin-share-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+            btn.textContent = '...';
+            try {
+                const res = await fetch('/api/reports/share', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report_id: btn.dataset.reportId }),
+                });
+                if (!res.ok) throw new Error('Share failed');
+                const { url } = await res.json();
+                const fullUrl = `${window.location.origin}${url}`;
+                await navigator.clipboard.writeText(fullUrl);
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Share'; btn.disabled = false; }, 2000);
+            } catch {
+                btn.textContent = 'Share';
+                btn.disabled = false;
+                alert('Failed to generate share link.');
+            }
+        });
+    });
+
+    // Bind generate report buttons
+    body.querySelectorAll('.admin-generate-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const subId = btn.dataset.submissionId;
+            btn.disabled = true;
+            const origText = btn.textContent;
+            btn.textContent = 'Generating...';
+            try {
+                const res = await fetch('/api/reports/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ submission_id: subId, force_refresh: true }),
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Generation failed');
+                }
+                const result = await res.json();
+                // Add to local reportVersions and re-render
+                reportVersions.unshift({
+                    _id: result.id,
+                    submission_id: subId,
+                    slug: result.slug,
+                    version: result.version,
+                    name: result.name,
+                    blob_url: result.blob_url,
+                    created: result.created,
+                });
+                renderTable();
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = origText;
+                alert(`Report generation failed: ${err.message}`);
             }
         });
     });
@@ -819,6 +923,63 @@ style.textContent = `
         border-color: var(--black);
     }
     .admin-pipeline-test-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+    }
+
+    /* Report generation controls */
+    .admin-report-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .admin-version-select {
+        padding: 4px 8px;
+        font-size: 12px;
+        font-family: inherit;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--white);
+        cursor: pointer;
+        max-width: 180px;
+    }
+    .admin-version-select:focus {
+        outline: none;
+        border-color: var(--black);
+    }
+    .admin-generate-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 600;
+        background: #2d6a4f;
+        color: #fff;
+        border: 1px solid #2d6a4f;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: opacity 0.15s;
+        white-space: nowrap;
+    }
+    .admin-generate-btn:hover { opacity: 0.8; }
+    .admin-generate-btn:disabled { opacity: 0.5; cursor: default; }
+    .admin-view-btn, .admin-share-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        background: var(--cream, #f5f0eb);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--black);
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .admin-view-btn:hover, .admin-share-btn:hover {
+        background: var(--border);
+    }
+    .admin-view-btn:disabled, .admin-share-btn:disabled {
         opacity: 0.5;
         cursor: default;
     }

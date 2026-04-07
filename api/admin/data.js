@@ -13,12 +13,16 @@ export default async function handler(req, res) {
     }
 
     try {
-        const [waitlist, landbooks, contributions, resources, submissions] = await Promise.all([
+        const [waitlist, landbooks, contributions, resources, submissions, reportVersions] = await Promise.all([
             getCollection('waitlist').then(c => c.find({}).sort({ createdAt: -1 }).toArray()),
             getCollection('landbooks').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_contributions').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_resources').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('submissions').then(c => c.find({}).sort({ created: -1 }).toArray()),
+            getCollection('report_versions').then(c =>
+                c.find({}, { projection: { html_content: 0, data_snapshot: 0 } })
+                 .sort({ created: -1 }).toArray()
+            ),
         ]);
 
         return res.status(200).json({
@@ -27,6 +31,7 @@ export default async function handler(req, res) {
             contributions,
             resources,
             submissions,
+            reportVersions,
         });
     } catch (err) {
         console.error('Admin data error:', err);

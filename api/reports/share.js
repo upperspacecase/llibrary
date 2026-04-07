@@ -13,7 +13,14 @@ export default async function handler(req, res) {
     if (!report_id) return res.status(400).json({ error: 'report_id required' });
 
     const reports = await getCollection('report_versions');
-    const report = await reports.findOne({ id: report_id });
+    const { ObjectId } = await import('mongodb');
+    let query;
+    try {
+      query = { _id: new ObjectId(report_id) };
+    } catch {
+      query = { _id: report_id };
+    }
+    const report = await reports.findOne(query);
     if (!report) return res.status(404).json({ error: 'Report not found' });
 
     // Build slug from address + version
