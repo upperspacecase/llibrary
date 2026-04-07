@@ -86,6 +86,12 @@ export function computeAllScores(apiResults, areaHa) {
   const carbon = computeCarbonScore(apiResults.soilProps?.ok ? apiResults.soilProps.data : null);
   const resilience = computeResilienceScore(apiResults.riskScores?.ok ? apiResults.riskScores.data : null);
 
+  // Pollination: use Google Pollen API score if available, else derive from biodiversity
+  const pollenData = apiResults.pollen?.ok ? apiResults.pollen.data : null;
+  const pollinationScore = pollenData?.score != null
+    ? pollenData.score
+    : Math.max(0, Math.min(60, bio.score - 10)); // fallback: biodiversity proxy, capped at 60
+
   // Carbon stock for the whole property (tCO2e)
   const carbonStockTotal = Math.round(carbon.stock * areaHa * 10000); // stock is per m2
 
@@ -107,7 +113,7 @@ export function computeAllScores(apiResults, areaHa) {
       { label: 'Biodiversity', score: bio.score, avg: 52, key: 'biodiversity' },
       { label: 'Water Regulation', score: Math.round(water.score * 10), avg: 68, key: 'water' },
       { label: 'Soil Health', score: soil.score, avg: 58, key: 'soil' },
-      { label: 'Pollination', score: Math.min(bio.score - 10, 60), avg: 45, key: 'pollination' },
+      { label: 'Pollination', score: pollinationScore, avg: 45, key: 'pollination' },
     ],
   };
 }
@@ -166,7 +172,7 @@ export function computeEcosystemServices(areaHa, apiResults) {
     },
     {
       name: 'Carbon/Climate Regulation',
-      value: Math.round(organicCarbon * areaHa * 0.3 * 3.67 / 1000 * 45), // SOC * area * depth * conversion * social cost
+      value: Math.round(organicCarbon * areaHa * 0.3 * 3.67 / 1000 * 65), // SOC * area * depth * conversion * EU ETS €65/tCO2 (Q1 2026)
       beneficiaries: 'Global climate',
     },
     {

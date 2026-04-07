@@ -236,6 +236,35 @@ export function processSoilMoisture(forecastData) {
   return { current, daily };
 }
 
+/**
+ * Fetch annual solar irradiance and wind speed from historical archive.
+ * Returns averages over the most recent full calendar year.
+ */
+export async function getSolarWind(lat, lng) {
+  const lastYear = new Date().getFullYear() - 1;
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lng),
+    start_date: `${lastYear}-01-01`,
+    end_date: `${lastYear}-12-31`,
+    daily: 'shortwave_radiation_sum,wind_speed_10m_mean,wind_speed_10m_max',
+    timezone: 'auto',
+  });
+  const res = await fetch(`${ARCHIVE_BASE}?${params}`);
+  if (!res.ok) throw new Error(`Open-Meteo solar/wind error: ${res.status}`);
+  const data = await res.json();
+  const daily = data.daily || {};
+  const rad = (daily.shortwave_radiation_sum || []).filter(v => v != null);
+  const wind = (daily.wind_speed_10m_mean || []).filter(v => v != null);
+  const windMax = (daily.wind_speed_10m_max || []).filter(v => v != null);
+  return {
+    solarIrradianceMJ: rad.length ? Math.round(rad.reduce((a, b) => a + b, 0) / rad.length * 10) / 10 : null,
+    windSpeedMean: wind.length ? Math.round(wind.reduce((a, b) => a + b, 0) / wind.length * 10) / 10 : null,
+    windSpeedMax: windMax.length ? Math.round(windMax.reduce((a, b) => a + b, 0) / windMax.length * 10) / 10 : null,
+    year: lastYear,
+  };
+}
+
 export async function getElevation(lat, lng) {
   const res = await fetch(`${ELEVATION_BASE}?latitude=${lat}&longitude=${lng}`);
   if (!res.ok) throw new Error(`Open-Meteo elevation error: ${res.status}`);

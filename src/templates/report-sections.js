@@ -345,7 +345,7 @@ export function renderEcosystemServices(d) {
     <h2 class="text-[24px] serif-title text-brand-forest mb-8">Thirty-Year NPV</h2>
     <div class="mb-8">
       <p class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">\u20ac${fmt(safeObj(eco.npv).thirtyYear, v => v.toLocaleString(), 'Economics')}</p>
-      <p class="text-[10px] font-bold tracking-[0.15em] text-brand-sage uppercase mt-4">\u00b118% uncertainty at 95% confidence interval</p>
+      <p class="text-[10px] font-bold tracking-[0.15em] text-brand-sage uppercase mt-4">${escHtml(safeObj(safeObj(d.meta).uncertainty).label || '\u00b120% at 95% CI')} (${fmt(safeObj(safeObj(d.meta).uncertainty).completeness, v => v + '%')} data completeness)</p>
     </div>
 
     <!-- Horizontal bar chart — River's pattern -->

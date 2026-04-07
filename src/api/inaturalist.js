@@ -41,6 +41,8 @@ export async function getSpeciesCounts(lat, lng, radiusKm = 15, options = {}) {
   });
   if (options.iconic_taxa) params.set('iconic_taxa', options.iconic_taxa);
   if (options.threatened) params.set('threatened', 'true');
+  if (options.d1) params.set('d1', options.d1);
+  if (options.d2) params.set('d2', options.d2);
 
   const res = await fetch(`${BASE}/observations/species_counts?${params}`);
   if (!res.ok) throw new Error(`iNaturalist species counts error: ${res.status}`);
