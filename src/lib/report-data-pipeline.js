@@ -568,7 +568,9 @@ export function processRawData(raw, submission, areaHa) {
     soil: allScores.soil?.score ?? null,
     pollination: allScores.dimensions?.find(d => d.key === 'pollination')?.score ?? null,
     dimensions: allScores.dimensions,
-    regional: {}, // to be compared later if regional data available
+    regional: Object.fromEntries(
+      (allScores.dimensions || []).map(d => [d.key, d.avg])
+    ), // literature-based global averages from TEEB/IPCC benchmarks
   };
 
   // ── Fire ──────────────────────────────────────────────
@@ -577,7 +579,7 @@ export function processRawData(raw, submission, areaHa) {
   const riskScoresData = raw.riskScores?.ok ? raw.riskScores.data : null;
 
   const fire = {
-    riskScore: riskScoresData?.fire ?? null,
+    riskScore: riskScoresData?.fire != null ? Math.round(riskScoresData.fire / 20) : null, // 0-100 → 0-5
     riskLevel: riskScoresData?.fireLabel ?? scoreToLabel(riskScoresData?.fire ?? 0),
     activeFires: fireSummary.count,
     historical: [], // populated from historical fires data
@@ -607,13 +609,13 @@ export function processRawData(raw, submission, areaHa) {
 
   // ── Flood ─────────────────────────────────────────────
   const flood = {
-    riskScore: riskScoresData?.flood ?? null,
+    riskScore: riskScoresData?.flood != null ? Math.round(riskScoresData.flood / 20) : null, // 0-100 → 0-5
     riskLevel: riskScoresData?.floodLabel ?? scoreToLabel(riskScoresData?.flood ?? 0),
   };
 
   // ── Drought ───────────────────────────────────────────
   const drought = {
-    riskScore: riskScoresData?.drought ?? null,
+    riskScore: riskScoresData?.drought != null ? Math.round(riskScoresData.drought / 20) : null, // 0-100 → 0-5
     riskLevel: riskScoresData?.droughtLabel ?? scoreToLabel(riskScoresData?.drought ?? 0),
   };
 
@@ -897,37 +899,37 @@ function deriveAgriSystems(landCover, climate, soil, terrain) {
 
   // Suggest systems based on land cover and conditions
   if (label.includes('olive') || label.includes('agro-forestry') || label.includes('agroforestry')) {
-    systems.push({ name: 'Olive Groves', suitability: 'High' });
+    systems.push({ name: 'Olive Groves', suitability: 'High', description: 'Existing olive or agroforestry land cover detected' });
   }
   if (label.includes('vineyard')) {
-    systems.push({ name: 'Viticulture', suitability: 'High' });
+    systems.push({ name: 'Viticulture', suitability: 'High', description: 'Existing vineyard land cover detected' });
   }
   if (label.includes('pasture') || label.includes('grassland')) {
-    systems.push({ name: 'Pastoral / Grazing', suitability: 'High' });
+    systems.push({ name: 'Pastoral / Grazing', suitability: 'High', description: 'Existing pasture or grassland cover' });
   }
   if (label.includes('forest') || label.includes('woodland')) {
-    systems.push({ name: 'Agroforestry', suitability: 'High' });
+    systems.push({ name: 'Agroforestry', suitability: 'High', description: 'Existing forest or woodland cover suitable for silvopasture' });
   }
 
   // Climate-based suggestions
   if (climate.zone === 'Mediterranean' || climate.annualMeanTemp > 14) {
     if (!systems.find(s => s.name === 'Olive Groves')) {
-      systems.push({ name: 'Olive Groves', suitability: 'Moderate' });
+      systems.push({ name: 'Olive Groves', suitability: 'Moderate', description: 'Climate suitable for olive cultivation' });
     }
-    systems.push({ name: 'Cork Oak', suitability: 'Moderate' });
+    systems.push({ name: 'Cork Oak', suitability: 'Moderate', description: 'Mediterranean climate supports cork oak silviculture' });
   }
   if (climate.annualRainfall > 500) {
-    systems.push({ name: 'Rain-fed Cereals', suitability: 'Moderate' });
+    systems.push({ name: 'Rain-fed Cereals', suitability: 'Moderate', description: 'Adequate rainfall for rain-fed grain production' });
   }
 
   // Soil-based
   if (soil.ph != null && soil.ph >= 5.5 && soil.ph <= 7.5) {
-    systems.push({ name: 'Horticulture', suitability: 'Moderate' });
+    systems.push({ name: 'Horticulture', suitability: 'Moderate', description: 'Soil pH within optimal range for vegetable/fruit production' });
   }
 
   // Terrain-based
   if (terrain.slope != null && terrain.slope < 10) {
-    systems.push({ name: 'Row Crops', suitability: terrain.slope < 5 ? 'High' : 'Moderate' });
+    systems.push({ name: 'Row Crops', suitability: terrain.slope < 5 ? 'High' : 'Moderate', description: `Slope of ${terrain.slope}% allows mechanised cultivation` });
   }
 
   // Deduplicate
@@ -1014,17 +1016,20 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Create 10m firebreaks around buildings and property boundaries',
       category: 'Fire Safety',
       priority: 'Critical',
+      impact: 'Reduces structural fire exposure',
     });
     shortTerm.push({
       action: 'Develop a fuel management plan — clear dry brush, prune lower branches',
       category: 'Fire Safety',
       priority: 'High',
+      impact: 'Lowers fire intensity and spread rate',
     });
   } else if (riskProfile?.fire?.level === 'Moderate') {
     shortTerm.push({
       action: 'Maintain firebreaks and clear vegetation around structures',
       category: 'Fire Safety',
       priority: 'Medium',
+      impact: 'Maintains defensible space',
     });
   }
 
@@ -1034,6 +1039,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Assess water sources — consider drilling a borehole or building cisterns',
       category: 'Water Security',
       priority: 'High',
+      impact: 'Secures year-round water access',
     });
   }
   if (water.springs === 0 && water.wells === 0) {
@@ -1041,6 +1047,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Commission a hydrogeological survey to identify groundwater potential',
       category: 'Water Security',
       priority: 'Medium',
+      impact: 'Identifies viable water extraction points',
     });
   }
 
@@ -1050,6 +1057,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: `Soil pH is ${soil.ph} — consider ${soil.ph < 5.5 ? 'liming to raise' : 'sulfur amendment to lower'} pH`,
       category: 'Soil Health',
       priority: 'Medium',
+      impact: 'Improves nutrient availability and crop viability',
     });
   }
 
@@ -1059,6 +1067,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Plant native species corridors to improve habitat connectivity',
       category: 'Biodiversity',
       priority: 'Medium',
+      impact: 'Increases species richness and ecological resilience',
     });
   }
 
@@ -1068,6 +1077,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Install erosion control measures on steep slopes — terracing, swales, or cover crops',
       category: 'Land Management',
       priority: 'High',
+      impact: 'Prevents topsoil loss and sedimentation',
     });
   }
 
@@ -1076,6 +1086,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
     action: 'Develop a carbon sequestration plan — explore voluntary carbon market registration',
     category: 'Carbon',
     priority: 'Medium',
+    impact: 'Unlocks carbon credit revenue stream',
   });
 
   // General
@@ -1084,6 +1095,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
       action: 'Design an integrated land management plan covering water, fire, biodiversity, and production',
       category: 'Strategy',
       priority: 'Medium',
+      impact: 'Coordinates interventions for maximum return',
     });
   }
 
@@ -1092,6 +1104,7 @@ function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) 
     action: 'Walk the property boundaries — verify fence lines, access points, and water features',
     category: 'Assessment',
     priority: 'Medium',
+    impact: 'Ground-truths satellite and API data',
   });
 
   return { immediate, shortTerm, longTerm };

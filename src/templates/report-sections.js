@@ -530,7 +530,7 @@ export function renderWater(d) {
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Wells</td><td class="py-3">${fmt(w.wells)}</td></tr>
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Waterways</td><td class="py-3">${fmt(w.waterways)}</td></tr>
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Water Bodies</td><td class="py-3">${fmt(w.waterBodies)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Security Index</td><td class="py-3">${fmt(w.securityIndex, v => v + '/100')}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Security Index</td><td class="py-3">${fmt(w.securityIndex, v => v + '/10')}</td></tr>
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Flood Discharge</td><td class="py-3">${fmt(w.floodDischarge)}</td></tr>
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Flood Risk</td><td class="py-3">${riskBadge(safeObj(w.floodRisk).level)} ${fmt(safeObj(w.floodRisk).score, v => v + '/10')}</td></tr>
       <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Annual Rainfall</td><td class="py-3">${fmt(climate.annualRainfall, v => Math.round(v) + ' mm')}</td></tr>
@@ -590,7 +590,7 @@ export function renderClimate(d) {
       <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Annual Rainfall</div>
     </div>
     <div class="px-4 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.growingSeason, v => v + ' days')}</div>
+      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.growingSeason, v => v + ' months')}</div>
       <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Growing Season</div>
     </div>
   </section>
@@ -1028,7 +1028,7 @@ export function renderTrends(d) {
     <tbody>
       ${trends.fireProneByDecade.map(t => `<tr class="border-b-[0.5pt] border-outline-variant">
         <td class="py-3">${fmt(t.decade || t.label)}</td>
-        <td class="py-3">${fmt(t.days || t.value)}</td>
+        <td class="py-3">${fmt(t.avgDays || t.days || t.value)}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
@@ -1113,7 +1113,7 @@ export function renderCompliance(d) {
       ${items.map(i => `<tr class="border-b-[0.5pt] border-outline-variant">
         <td class="py-3">${fmt(i.name || i.regulation)}</td>
         <td class="py-3">${riskBadge(i.status || i.level)}</td>
-        <td class="py-3">${fmt(i.notes || i.detail)}</td>
+        <td class="py-3">${fmt(i.description || i.notes || i.detail)}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
@@ -1122,8 +1122,8 @@ export function renderCompliance(d) {
   <div class="space-y-4">
     ${timeline.map(t => `
     <div class="flex gap-6 py-3 border-b-[0.5pt] border-outline-variant">
-      <div class="font-serif text-[14pt] text-primary font-bold w-20">${escHtml(String(t.year || t.date))}</div>
-      <div class="text-[10.5pt] text-editorial-charcoal flex-1">${escHtml(t.event || t.description)}</div>
+      <div class="font-serif text-[14pt] text-primary font-bold w-20">${escHtml(String(t.deadline || t.year || t.date || ''))}</div>
+      <div class="text-[10.5pt] text-editorial-charcoal flex-1">${escHtml(t.action || t.event || t.description || '')}</div>
     </div>`).join('')}
   </div>` : ''}
 
