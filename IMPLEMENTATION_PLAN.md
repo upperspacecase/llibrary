@@ -35,28 +35,7 @@ Completed. `store.js` rewritten from localStorage to async fetch. API routes cre
 
 The current landbook report renders 10 sections. The goal is to review, restructure, and refine how these sections are organized — what data goes where, what's missing, and what the ideal report flow should be.
 
-**Current report sections:**
-
-| # | Section | Data Source | Notes |
-|---|---------|------------|-------|
-| 1 | Header | MongoDB landbook doc | Address, area, perimeter, center, date |
-| 2 | Map | MapBox GL + WMS overlays | Boundary polygon, CORINE/EFFIS/Natura toggles |
-| 3 | Elevation & Terrain | Open-Meteo Elevation API | Single elevation point at center |
-| 4 | Weather & Climate | Open-Meteo Forecast + Climate | Current conditions, 7-day forecast, 30-yr averages, frost dates |
-| 5 | Soil | SoilGrids API | Texture, pH, nutrients, WRB classification |
-| 6 | Biodiversity | iNaturalist + GBIF | Species counts, most observed, threatened, regional key species |
-| 7 | Water Features | Overpass (OSM) | Rivers, streams, wells, springs nearby |
-| 8 | Fire Risk | Estimated from weather + EFFIS history | Risk level + regional fire history |
-| 9 | Protected Areas & Zoning | Static data (natura2000.js) | Nearby designations + PT zoning descriptions |
-| 10 | User-Reported Form | MongoDB (userReported) | Primary use, challenges, goals, infrastructure, notes |
-
-> [!IMPORTANT]
-> **What should change?** Before implementing, we need to decide:
-> 1. Should sections be reordered? (e.g., User Knowledge first? Map last?)
-> 2. Are any sections missing? (e.g., Slope/Aspect analysis, Satellite NDVI, Historical imagery, Neighbors/nearby landbooks?)
-> 3. Should the report be paginated, tabbed, or stay as one long scroll?
-> 4. Should the "Your Knowledge" form be inline or a separate modal/page?
-> 5. What print/export format do we want? (PDF, sharable link, both?)
+See [REPORT-ARCHITECTURE.md](REPORT-ARCHITECTURE.md) for the full 18-section template spec, data paths, and API inventory.
 
 ---
 

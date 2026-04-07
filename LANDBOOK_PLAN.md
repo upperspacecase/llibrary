@@ -162,46 +162,7 @@ The PDF has a full executive summary with:
 
 ---
 
-## Section Structure (current v1.0)
-
-| # | Section | Content |
-|---|---------|---------|
-| — | Cover | Property name, location, hectares, report date |
-| — | Table of Contents | Auto-generated links |
-| 1 | Executive Summary | Property details, nearest services, water features |
-| 2 | Map | Interactive Mapbox satellite + WMS layers |
-| 3 | Weather & Climate | Current conditions, 7-day forecast, 30-year climate chart + table, seasonal patterns, frost, wind/UV |
-| 4 | Biodiversity | Species bar chart, photo cards (most observed + threatened), GBIF records, bioindicator callout |
-| 5 | Risk Assessment | Fire risk callout, active fires, flood discharge, seasonal risk calendar |
-| 6 | Elevation & Terrain | Elevation + geology (bedrock, formation, age) |
-| 7 | Soil | 9 properties + WRB classification |
-| 8 | Protected Areas | Nearby protected areas table |
-| 9 | Your Knowledge | User-reported form (land use, goals, infrastructure, challenges) |
-| 10 | Source Citations | All API data sources listed |
-
----
-
-## API Inventory (Global)
-
-All APIs use actual lat/lng from the user's boundary. No Portugal-specific APIs remain.
-
-| API | What It Provides | Coverage | Rate Limits |
-|-----|-----------------|----------|-------------|
-| Open-Meteo Forecast | Current weather + 7-day forecast | Global | Free, generous |
-| Open-Meteo Archive | 30-year climate averages | Global | Free, generous |
-| Open-Meteo Elevation | SRTM 90m DEM | Global | Free |
-| Open-Meteo Flood | GloFAS river discharge | Global | Free |
-| SoilGrids | Soil properties + classification | Global (250m) | Free, 1 req/sec |
-| Macrostrat | Geological map data | Global | Free |
-| iNaturalist | Species observations | Global (coverage varies) | Free, 1 req/sec |
-| GBIF | Biodiversity occurrence records | Global | Free |
-| NASA FIRMS | Active fire detections (VIIRS) | Global | Free (needs API key) |
-| OSM Overpass | Water features, infrastructure, amenities | Global | Free, rate-limited |
-| Mapbox Geocoding | Address autocomplete | Global | Free tier (100k/month) |
-| Nominatim | Reverse geocoding | Global | Free, 1 req/sec |
-| CORINE/WorldCover WMS | Land cover classification | Europe / Global | Free |
-| EFFIS WMS | Fire danger zones | Europe | Free |
-| Natura 2000 | Protected areas | Europe | Free |
+See [REPORT-ARCHITECTURE.md](REPORT-ARCHITECTURE.md) for the full 18-section template spec, data paths, and API inventory.
 
 ---
 
