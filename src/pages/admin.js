@@ -242,7 +242,7 @@ function renderTable() {
                 return `<td class="admin-report-cell">
                     <select class="admin-version-select" data-submission-id="${escapeHtml(subId)}">${options}</select>
                     <button class="admin-view-btn" data-slug="${escapeHtml(versions[0].slug)}" title="View report">View</button>
-                    <button class="admin-share-btn" data-report-id="${escapeHtml(String(versions[0]._id))}" title="Copy share link">Share</button>
+                    <button class="admin-share-btn" title="Copy share link">Share</button>
                     <button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}" title="Generate new version">+ New</button>
                 </td>`;
             }
@@ -304,9 +304,7 @@ function renderTable() {
             const cell = select.closest('.admin-report-cell');
             const selected = select.selectedOptions[0];
             const viewBtn = cell.querySelector('.admin-view-btn');
-            const shareBtn = cell.querySelector('.admin-share-btn');
             if (viewBtn) viewBtn.dataset.slug = selected.value;
-            if (shareBtn) shareBtn.dataset.reportId = selected.dataset.reportId;
         });
     });
 
@@ -317,28 +315,21 @@ function renderTable() {
         });
     });
 
-    // Bind share buttons
+    // Bind share buttons — copy the view link to clipboard
     body.querySelectorAll('.admin-share-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
-            btn.disabled = true;
-            btn.textContent = '...';
+            const cell = btn.closest('.admin-report-cell');
+            const viewBtn = cell.querySelector('.admin-view-btn');
+            const slug = viewBtn ? viewBtn.dataset.slug : null;
+            if (!slug) return;
+            const fullUrl = `${window.location.origin}/report/${slug}`;
             try {
-                const res = await fetch('/api/reports/share', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ report_id: btn.dataset.reportId }),
-                });
-                if (!res.ok) throw new Error('Share failed');
-                const { url } = await res.json();
-                const fullUrl = `${window.location.origin}${url}`;
                 await navigator.clipboard.writeText(fullUrl);
                 btn.textContent = 'Copied!';
-                setTimeout(() => { btn.textContent = 'Share'; btn.disabled = false; }, 2000);
             } catch {
-                btn.textContent = 'Share';
-                btn.disabled = false;
-                alert('Failed to generate share link.');
+                prompt('Share URL:', fullUrl);
             }
+            setTimeout(() => { btn.textContent = 'Share'; }, 2000);
         });
     });
 
@@ -384,12 +375,12 @@ function renderTable() {
 
                 while (true) {
                     const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
+                    if (value) buffer += decoder.decode(value, { stream: true });
 
                     // Process complete SSE blocks (separated by \n\n)
+                    // On final read, also flush whatever remains in the buffer
                     const blocks = buffer.split('\n\n');
-                    buffer = blocks.pop(); // keep incomplete block in buffer
+                    buffer = done ? '' : blocks.pop();
 
                     for (const block of blocks) {
                         if (!block.trim()) continue;
@@ -416,6 +407,7 @@ function renderTable() {
                             text.textContent = parsed.message;
                         }
                     }
+                    if (done) break;
                 }
 
                 if (!result) throw new Error('No result received from server');
