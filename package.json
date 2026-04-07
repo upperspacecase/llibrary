@@ -19,6 +19,7 @@
     "@pinecone-database/pinecone": "^7.1.0",
     "@vercel/blob": "^2.3.0",
     "mapbox-gl": "^3.19.0",
-    "mongodb": "^7.1.0"
+    "mongodb": "^7.1.0",
+    "resend": "^6.10.0"
   }
 }

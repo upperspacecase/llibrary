@@ -23,7 +23,7 @@ export default defineConfig({
         'report-preview': resolve(__dirname, 'report-preview.html'),
         'report-view': resolve(__dirname, 'report-view.html'),
         'full-report-preview': resolve(__dirname, 'full-report-preview.html'),
-        'landbook-report': resolve(__dirname, 'landbook-report.html'),
+
       },
     },
   },

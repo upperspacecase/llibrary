@@ -966,7 +966,23 @@ async function loadVersions() {
 }
 
 function showVersion(v) {
-  container.innerHTML = v.html_content;
+  // Full HTML documents (with Tailwind) render in an iframe for style isolation
+  if (v.html_content && v.html_content.trim().startsWith('<!DOCTYPE')) {
+    container.innerHTML = '';
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'width:100%;border:none;min-height:90vh;';
+    container.appendChild(iframe);
+    iframe.srcdoc = v.html_content;
+    // Auto-resize iframe to content height
+    iframe.onload = () => {
+      try {
+        const h = iframe.contentDocument.documentElement.scrollHeight;
+        iframe.style.height = h + 'px';
+      } catch {}
+    };
+  } else {
+    container.innerHTML = v.html_content;
+  }
   dateEl.textContent = new Date(v.created).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });

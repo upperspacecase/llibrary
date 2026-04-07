@@ -29,8 +29,8 @@ export function parseGeology(data) {
     const units = data.success.data.map(unit => ({
         name: unit.strat_name_long || unit.strat_name || unit.unit_name || 'Unknown',
         age: formatAge(unit),
-        lithology: unit.lith ? unit.lith.map(l => l.lith || l.name).filter(Boolean).join(', ') : 'Unknown',
-        environment: unit.environ ? unit.environ.map(e => e.environ || e.name).filter(Boolean).join(', ') : 'Unknown',
+        lithology: Array.isArray(unit.lith) ? unit.lith.map(l => l.lith || l.name).filter(Boolean).join(', ') : (typeof unit.lith === 'string' ? unit.lith : 'Unknown'),
+        environment: Array.isArray(unit.environ) ? unit.environ.map(e => e.environ || e.name).filter(Boolean).join(', ') : (typeof unit.environ === 'string' ? unit.environ : 'Unknown'),
         description: unit.descrip || '',
         period: unit.t_int_name || unit.Tseries || '',
         ageTop: unit.t_int_age,
