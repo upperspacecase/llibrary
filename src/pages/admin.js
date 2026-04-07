@@ -15,12 +15,12 @@ const columns = {
         { key: '_who', label: 'Who', format: (_, row) => row.name || row.email || row.contact || '-' },
         { key: 'contact', label: 'Contact', format: (v, row) => row.email || v || '-' },
         { key: '_location', label: 'Location', format: (_, row) => row.address || row.postcode || '-' },
+        { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
         { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
         { key: 'landGoals', label: 'Goals', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
         { key: 'notes', label: 'Notes', format: (v, row) => v || (row.userReported?.notes) || '-' },
         { key: 'files', label: 'Files', format: formatFiles },
         { key: '_date', label: 'Date', format: formatDate },
-        { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
     ],
     contributions: [
         { key: 'section', label: 'Section' },
