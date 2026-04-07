@@ -16,8 +16,12 @@ import { fetchAllData, processRawData, buildMapUrls } from '../../src/lib/report
 import { generateNarratives } from '../../src/lib/report-narratives.js';
 import { buildReport } from '../../src/templates/report-template.js';
 
+const HARD_TIMEOUT_MS = 300_000; // must match vercel.json maxDuration
+const SAFETY_MARGIN_MS = 15_000; // bail out before Vercel kills us
+
 function sendProgress(res, phase, message, progress) {
   res.write(`data: ${JSON.stringify({ phase, message, progress })}\n\n`);
+  if (typeof res.flush === 'function') res.flush();
 }
 
 export default async function handler(req, res) {
@@ -68,6 +72,18 @@ export default async function handler(req, res) {
       'X-Accel-Buffering': 'no',
     });
 
+    const deadline = Date.now() + HARD_TIMEOUT_MS - SAFETY_MARGIN_MS;
+    function withDeadline(promise, label) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) return Promise.reject(new Error(`Timed out before starting ${label}`));
+      return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`${label} timed out — try again, cached data will make it faster`)), remaining)
+        ),
+      ]);
+    }
+
     sendProgress(res, 'loaded', 'Submission loaded', 10);
 
     // Calculate area in hectares
@@ -98,7 +114,7 @@ export default async function handler(req, res) {
         ? boundary
         : boundary.map(p => [p.lat || p[0], p.lng || p[1]]);
 
-      const raw = await fetchAllData(lat, lng, boundaryCoords, areaHa);
+      const raw = await withDeadline(fetchAllData(lat, lng, boundaryCoords, areaHa), 'Data fetching');
       sendProgress(res, 'processing', 'Processing raw data...', 50);
       reportData = processRawData(raw, submission, areaHa);
     }
@@ -114,7 +130,7 @@ export default async function handler(req, res) {
       sendProgress(res, 'narratives', 'Generating AI narratives...', 60);
       console.log('[generate] Generating AI narratives...');
       try {
-        reportData.narratives = await generateNarratives(reportData);
+        reportData.narratives = await withDeadline(generateNarratives(reportData), 'AI narrative generation');
       } catch (err) {
         console.error('[generate] Narrative generation failed:', err.message);
         // Continue without narratives — report still renders
@@ -124,7 +140,12 @@ export default async function handler(req, res) {
     // ── 5. Build report HTML ────────────────────────────────
     sendProgress(res, 'building', 'Building report HTML...', 75);
     console.log('[generate] Building report HTML...');
-    const html = buildReport(reportData);
+    let html;
+    try {
+      html = buildReport(reportData);
+    } catch (err) {
+      throw new Error(`Template rendering failed: ${err.message}`);
+    }
 
     // ── 6. Storage ──────────────────────────────────────────
     sendProgress(res, 'uploading', 'Uploading report...', 85);
@@ -186,6 +207,7 @@ export default async function handler(req, res) {
       blob_url: blobUrl,
       created: now.toISOString(),
     })}\n\n`);
+    if (typeof res.flush === 'function') res.flush();
     res.end();
 
   } catch (error) {
@@ -195,6 +217,7 @@ export default async function handler(req, res) {
         error: 'Report generation failed',
         detail: error.message,
       })}\n\n`);
+      if (typeof res.flush === 'function') res.flush();
       res.end();
     } else {
       res.status(500).json({

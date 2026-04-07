@@ -160,6 +160,7 @@ Generate a JSON object with these exact keys. Return ONLY valid JSON, no markdow
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
+      timeout: 90_000,
     });
 
     const text = response.content[0]?.text || '{}';
