@@ -160,7 +160,7 @@ export function renderGlance(d) {
   const resilienceScore = scores.resilience || safeObj(d.energy).independenceScore || 0;
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
 <div class="flex flex-col justify-between h-full">
 
   <!-- TOP BAND -->
@@ -288,7 +288,7 @@ export function renderEcosystemServices(d) {
   const pullQuote = narr.pullQuote || '';
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-16">
+<main class="a4-container">
   <header class="mb-16">
     <div class="flex flex-col gap-4">
       <h1 class="font-serif text-[42pt] text-primary leading-tight">What This Land Provides</h1>
@@ -385,7 +385,7 @@ export function renderScorecard(d) {
   const pullQuote = narr.pullQuote || '';
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('How This Land Performs', false)}
 
   <!-- 60/40 split -->
@@ -451,7 +451,7 @@ export function renderTerrain(d) {
   const pullQuote = narr.pullQuote || '';
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('The Lay of the Land', false)}
 
   <!-- 60/40 split -->
@@ -506,7 +506,7 @@ export function renderWater(d) {
   const narr = safeObj(safeObj(d.narratives).water);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Water', true)}
 
   <!-- 60/40 split -->
@@ -558,7 +558,7 @@ export function renderClimate(d) {
   const rain = safeArr(c.monthlyPrecip).length === 12 ? c.monthlyPrecip : new Array(12).fill(0);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Climate', true)}
 
   <!-- 60/40 split -->
@@ -616,7 +616,7 @@ export function renderBiodiversity(d) {
   const top10 = safeArr(sp.top10);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Biodiversity & Habitat Index', false)}
 
   <!-- 60/40 split -->
@@ -689,7 +689,7 @@ export function renderAgriculture(d) {
   const systems = safeArr(ag.systems);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Agriculture', true)}
 
   <!-- 60/40 split -->
@@ -733,7 +733,7 @@ export function renderOpportunities(d) {
   const narr = safeObj(safeObj(d.narratives).opportunities);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Opportunities', true)}
 
   <!-- 60/40 split -->
@@ -788,7 +788,7 @@ export function renderRisks(d) {
   const narr = safeObj(safeObj(d.narratives).risks);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Risk & Resilience', true)}
 
   <!-- 60/40 split -->
@@ -861,7 +861,7 @@ export function renderResilience(d) {
   ];
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Resilience', true)}
 
   <!-- 60/40 split -->
@@ -942,7 +942,7 @@ export function renderContext(d) {
   ];
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   <section class="mb-12">
     <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Why bioregional context matters</h1>
     <p class="w-[65%] text-[12pt] text-on-surface-variant leading-relaxed">${escHtml(narr.narrative || 'Raw numbers are hard to interpret. We compare your parcel to the bioregion\u2014so you see what\u2019s typical, what\u2019s exceptional, and what to do about it.')}</p>
@@ -983,7 +983,7 @@ export function renderTrends(d) {
   const narr = safeObj(safeObj(d.narratives).temporal);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Change Over Time', false)}
 
   <!-- 60/40 split -->
@@ -1051,7 +1051,7 @@ export function renderMaps(d) {
   ];
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Map Portfolio', false)}
 
   <p class="text-[10.5pt] text-secondary leading-relaxed mb-8">The following pages present the property across multiple cartographic perspectives, from satellite imagery to regional context.</p>
@@ -1089,7 +1089,7 @@ export function renderCompliance(d) {
   const narr = safeObj(safeObj(d.narratives).compliance);
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Compliance', false)}
 
   <!-- 60/40 split -->
@@ -1163,7 +1163,7 @@ export function renderActions(d) {
   }
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('What to Do Next', false)}
 
   <!-- 60/40 split -->
@@ -1204,7 +1204,7 @@ export function renderMethodology(d) {
   ];
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
+<main class="a4-container">
   ${sectionHeader('Methodology, Sources & Disclaimer', false)}
 
   <!-- 60/40 split -->

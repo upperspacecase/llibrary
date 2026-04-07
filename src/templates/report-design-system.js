@@ -112,9 +112,9 @@ body {
 }
 @media screen {
   .a4-container {
-    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-    margin-top: 24px;
-    margin-bottom: 24px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.04);
+    margin-top: 48px;
+    margin-bottom: 48px;
   }
 }
 @media print {
@@ -157,7 +157,7 @@ ${REPORT_CSS}
 </style>
 <meta name="generator" content="LandBook ${version}">
 </head>
-<body class="bg-surface text-on-surface antialiased">
+<body class="text-on-surface antialiased">
 ${innerHtml}
 </body>
 </html>`;
