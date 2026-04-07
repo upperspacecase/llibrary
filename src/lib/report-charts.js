@@ -4,17 +4,17 @@
  */
 
 const COLORS = {
-  deepForest: '#1B4332',
-  terracotta: '#E07A5F',
-  sage: '#8FBC8F',
+  deepForest: '#1B3A2F',
+  terracotta: '#C4705A',
+  sage: '#8B9A7E',
   sand: '#D4A574',
   sky: '#90E0EF',
-  charcoal: '#374151',
+  charcoal: '#2C2C2C',
   lightGray: '#D1D5DB',
   muted: '#6B7280',
 };
 
-const PALETTE = ['#1B4332', '#E07A5F', '#8FBC8F', '#D4A574', '#90E0EF', '#BC6C25'];
+const PALETTE = ['#1B3A2F', '#C4705A', '#8B9A7E', '#D4A574', '#90E0EF', '#3f6653'];
 
 // ---------------------------------------------------------------------------
 // Horizontal Bar Chart (Natural Capital Dimensions)

@@ -38,60 +38,122 @@ export async function generateNarratives(reportData) {
 
 The report is a magazine-quality editorial document. Write in the style of a Financial Times property assessment — authoritative, specific, grounded in data. Use the exact numbers provided. Do not invent data you were not given.
 
-${missingFields ? `\nIMPORTANT: The following data fields were unavailable: ${missingFields}. Do not reference these missing values — write around the gaps naturally.\n` : ''}
+${missingFields ? `IMPORTANT: The following data fields were unavailable: ${missingFields}. Do not reference these missing values — write around the gaps naturally.\n` : ''}
+FORMATTING RULES:
+- "drop-cap" sections: the first word of the first paragraph should be a strong, concrete word (not "The" or "This") so the large decorative initial letter works.
+- pullQuote: a single sentence, no quotation marks — they are added by the template.
+- recommendation: a single actionable paragraph, 1-2 sentences, specific to this property's data.
+- Word counts are approximate — better to be concise than padded.
 
-Property details:
-- Name: ${p.name || 'Unknown'}
-- Location: ${p.address || 'Unknown'}
-- Area: ${p.area ? p.area.toFixed(1) + ' ha' : 'unknown'}
-- Coordinates: ${p.coords?.lat?.toFixed(4) || '?'}, ${p.coords?.lng?.toFixed(4) || '?'}
-- Municipality: ${p.municipality || 'unknown'}
+Below is ALL the data for this property, grouped by the report section that uses it.
 
-Natural Capital Scores (0-100):
-- Overall NCS: ${scores.naturalCapital ?? '?'}/10
-- Carbon: ${scores.carbon ?? '?'}, Biodiversity: ${scores.biodiversity ?? '?'}, Water: ${scores.water ?? '?'}, Soil: ${scores.soil ?? '?'}, Pollination: ${scores.pollination ?? '?'}
+─── PROPERTY ───
+Name: ${p.name || 'Unknown'} | Location: ${p.address || 'Unknown'}
+Area: ${p.area ? p.area.toFixed(1) + ' ha' : '?'} | Coords: ${p.coords?.lat?.toFixed(4) || '?'}, ${p.coords?.lng?.toFixed(4) || '?'}
+Municipality: ${p.municipality || '?'}
 
-Climate: Annual mean ${climate.annualMeanTemp ?? '?'}°C, rainfall ${climate.annualRainfall ?? '?'}mm, growing season ${climate.growingSeason ?? '?'} days, zone: ${climate.zone || '?'}
+─── SCORES (used by Executive Summary + Scorecard) ───
+Natural Capital Score: ${scores.naturalCapital ?? '?'}/100
+Carbon: ${scores.carbon ?? '?'}/100, Biodiversity: ${scores.biodiversity ?? '?'}/100, Water: ${scores.water ?? '?'}/100, Soil: ${scores.soil ?? '?'}/100, Pollination: ${scores.pollination ?? '?'}/100
 
+─── ECONOMICS (used by Ecosystem Services + Opportunities) ───
+Value: ${eco.valuePerHa ? '\u20ac' + Math.round(eco.valuePerHa) + '/ha' : '?'}
+Ecosystem services total: \u20ac${eco.ecosystemServices?.total ?? '?'}/yr
+30-year NPV: \u20ac${eco.npv?.thirtyYear ?? '?'}
+Carbon stock: ${eco.carbonStock ?? '?'} tCO\u2082e | Credit value: \u20ac${eco.carbonCreditValue ?? '?'}
+
+─── TERRAIN (used by Terrain section) ───
 Soil: pH ${soil.ph ?? '?'}, organic carbon ${soil.organicCarbon ?? '?'} g/kg, clay ${soil.clay ?? '?'}%, classification: ${soil.classification || '?'}
 Geology: ${geology.lithology || '?'} (${geology.period || '?'}, ${geology.age ?? '?'} Ma)
 
-Water: ${water.springs ?? '?'} springs, ${water.wells ?? '?'} wells, ${water.waterways ?? '?'} waterways, security index ${water.securityIndex ?? '?'}/10
+─── WATER (used by Water section) ───
+Springs: ${water.springs ?? '?'}, Wells: ${water.wells ?? '?'}, Waterways: ${water.waterways ?? '?'}
+Security index: ${water.securityIndex ?? '?'}/10 | Flood risk: ${(water.floodRisk || {}).level || '?'}
 
+─── CLIMATE (used by Climate section) ───
+Annual mean: ${climate.annualMeanTemp ?? '?'}\u00b0C, rainfall: ${climate.annualRainfall ?? '?'} mm
+Growing season: ${climate.growingSeason ?? '?'} days, zone: ${climate.zone || '?'}
+
+─── BIODIVERSITY (used by Biodiversity section) ───
 Species: ${species.total ?? '?'} documented, ${species.threatened ?? '?'} threatened
-Biodiversity trend: ${species.trends?.direction || '?'}
+Trend: ${species.trends?.direction || '?'}
 
-Risk: Fire ${fire.riskScore ?? '?'}/5, Flood ${flood.riskScore ?? '?'}/5, Drought ${drought.riskScore ?? '?'}/5
+─── RISK (used by Risk section) ───
+Fire: ${fire.riskScore ?? '?'}/5, Flood: ${flood.riskScore ?? '?'}/5, Drought: ${drought.riskScore ?? '?'}/5
 
-Economics: Value ${eco.valuePerHa ? '€' + Math.round(eco.valuePerHa) + '/ha' : '?'}, ecosystem services €${eco.ecosystemServices?.total ?? '?'}/yr, 30yr NPV €${eco.npv?.thirtyYear ?? '?'}
-
+─── AGRICULTURE (used by Agriculture section) ───
 Land cover: ${agriculture.landCover || '?'}
-Energy: Solar ${energy.solar?.level || '?'}, Wind ${energy.wind?.level || '?'}
 
-Trends: Temperature ${trends.tempPerDecade ? (trends.tempPerDecade > 0 ? '+' : '') + trends.tempPerDecade.toFixed(2) + '°C/decade' : '?'}, Precipitation ${trends.precipPerDecade ? (trends.precipPerDecade > 0 ? '+' : '') + trends.precipPerDecade.toFixed(1) + 'mm/decade' : '?'}
+─── ENERGY (used by Resilience section) ───
+Solar: ${energy.solar?.level || '?'}, Wind: ${energy.wind?.level || '?'}
+Independence score: ${energy.independenceScore ?? '?'}/10
 
-Generate a JSON object with these exact keys. Each value is a string of 2-3 paragraphs (~100-150 words) unless noted otherwise. First paragraph of sections marked "drop-cap" should work well with a large decorative first letter.
+─── TRENDS (used by Temporal section) ───
+Temperature: ${trends.tempPerDecade ? (trends.tempPerDecade > 0 ? '+' : '') + trends.tempPerDecade.toFixed(2) + '\u00b0C/decade' : '?'}
+Precipitation: ${trends.precipPerDecade ? (trends.precipPerDecade > 0 ? '+' : '') + trends.precipPerDecade.toFixed(1) + 'mm/decade' : '?'}
+
+──────────────────────────────────────
+
+Generate a JSON object with these exact keys. Return ONLY valid JSON, no markdown fences, no explanation.
 
 {
-  "executiveSummary": { "intro": "(2-3 paragraphs, drop-cap, ~150 words: property positioning within bioregion, key strengths, investment profile)", "pullQuote": "(1 aspirational sentence about this specific property)" },
-  "ecosystemServices": { "intro": "(2 paragraphs, drop-cap, ~120 words: explain ecosystem services, reference SEEA-EA, frame the valuation)" },
-  "scorecard": { "text": "(2 paragraphs, ~100 words: interpret the radar chart, strongest/weakest dimensions, compare to baseline)" },
-  "terrain": { "description": "(2 paragraphs, drop-cap, ~120 words: physical character of the land, geology meaning, soil quality)" },
-  "water": { "narrative": "(2 paragraphs, drop-cap, ~100 words: water security assessment, feature inventory, drought resilience)", "pullQuote": "(1 sentence about water as defining resource)" },
-  "climate": { "profile": "(2 paragraphs, drop-cap, ~100 words: characterize climate, growing season, microclimate)" },
-  "biodiversity": { "intro": "(2 paragraphs, drop-cap, ~120 words: species richness, notable findings, trends)" },
-  "agriculture": { "potential": "(2 paragraphs, drop-cap, ~100 words: what the land can produce, benchmarks)" },
-  "opportunities": { "comparison": "(2 paragraphs, drop-cap, ~100 words: explain 3 scenarios, investment logic)" },
-  "risks": { "narrative": "(2 paragraphs, drop-cap, ~100 words: risk interaction, mitigation priorities)" },
-  "resilience": { "narrative": "(2 paragraphs, drop-cap, ~100 words: energy independence potential, practical feasibility)" },
-  "context": { "narrative": "(2 paragraphs, drop-cap, ~100 words: bioregional position, protected area significance)" },
-  "temporal": { "dynamics": "(2 paragraphs, drop-cap, ~100 words: what trends mean, projection caveats)" },
-  "compliance": { "framework": "(2 paragraphs, drop-cap, ~100 words: regulatory obligations, SEEA-EA alignment)" },
-  "nextSteps": { "framing": "(2 paragraphs, drop-cap, ~100 words: invitation to relationship, community context)" },
-  "methodology": { "text": "(2-3 paragraphs, ~150 words: SEEA-EA framework, conservative estimation, scoring logic)", "disclaimer": "(1 paragraph: informational purposes, verify with professionals)" }
-}
-
-Return ONLY the JSON object, no markdown fences, no explanation.`;
+  "executiveSummary": {
+    "intro": "2-3 paragraphs, drop-cap, ~150 words. Position the property within its bioregion, highlight key strengths, frame the investment profile.",
+    "pullQuote": "1 aspirational sentence about this specific property."
+  },
+  "ecosystemServices": {
+    "intro": "2 paragraphs, drop-cap, ~120 words. Explain what ecosystem services are, reference SEEA-EA framework, frame the valuation.",
+    "pullQuote": "1 sentence capturing the economic significance of these services."
+  },
+  "scorecard": {
+    "text": "2 paragraphs, ~100 words. Interpret the dimension scores, identify strongest/weakest, compare to regional baseline.",
+    "pullQuote": "1 sentence about the overall natural capital position."
+  },
+  "terrain": {
+    "description": "2 paragraphs, drop-cap, ~120 words. Physical character of the land, what the geology means, soil quality implications.",
+    "pullQuote": "1 sentence about the terrain's defining characteristic."
+  },
+  "water": {
+    "narrative": "2 paragraphs, drop-cap, ~100 words. Water security assessment, feature inventory, drought resilience.",
+    "pullQuote": "1 sentence about water as the defining resource."
+  },
+  "climate": {
+    "profile": "2 paragraphs, drop-cap, ~100 words. Characterize the climate, growing season implications, microclimate advantages."
+  },
+  "biodiversity": {
+    "intro": "2 paragraphs, drop-cap, ~120 words. Species richness context, notable findings, conservation significance."
+  },
+  "agriculture": {
+    "potential": "2 paragraphs, drop-cap, ~100 words. What the land can produce, suitability benchmarks."
+  },
+  "opportunities": {
+    "comparison": "2 paragraphs, drop-cap, ~100 words. Explain 3 revenue scenarios (conservative/moderate/optimized), investment logic."
+  },
+  "risks": {
+    "narrative": "2 paragraphs, drop-cap, ~100 words. How fire/flood/drought risks interact, what the scores mean in practice.",
+    "recommendation": "1-2 sentences. Specific, actionable mitigation step grounded in this property's risk data."
+  },
+  "resilience": {
+    "narrative": "2 paragraphs, drop-cap, ~100 words. Energy independence potential, practical feasibility given this property's resources.",
+    "recommendation": "1-2 sentences. Specific, actionable step to improve resilience score."
+  },
+  "context": {
+    "narrative": "2 paragraphs, drop-cap, ~100 words. Bioregional position, what the percentile comparisons reveal."
+  },
+  "temporal": {
+    "dynamics": "2 paragraphs, drop-cap, ~100 words. What temperature/precipitation trends mean for this property, projection caveats."
+  },
+  "compliance": {
+    "framework": "2 paragraphs, drop-cap, ~100 words. Regulatory obligations, SEEA-EA alignment, compliance status."
+  },
+  "nextSteps": {
+    "framing": "2 paragraphs, drop-cap, ~100 words. Invitation to stewardship relationship, community context."
+  },
+  "methodology": {
+    "text": "2-3 paragraphs, ~150 words. SEEA-EA framework, conservative estimation approach, scoring methodology.",
+    "disclaimer": "1 paragraph. For informational purposes only, consult professionals for decisions."
+  }
+}`;
 
   try {
     const response = await anthropic.messages.create({
@@ -110,16 +172,16 @@ Return ONLY the JSON object, no markdown fences, no explanation.`;
     // Return empty structure — report renders with missing narratives
     return {
       executiveSummary: { intro: '', pullQuote: '' },
-      ecosystemServices: { intro: '' },
-      scorecard: { text: '' },
-      terrain: { description: '' },
+      ecosystemServices: { intro: '', pullQuote: '' },
+      scorecard: { text: '', pullQuote: '' },
+      terrain: { description: '', pullQuote: '' },
       water: { narrative: '', pullQuote: '' },
       climate: { profile: '' },
       biodiversity: { intro: '' },
       agriculture: { potential: '' },
       opportunities: { comparison: '' },
-      risks: { narrative: '' },
-      resilience: { narrative: '' },
+      risks: { narrative: '', recommendation: '' },
+      resilience: { narrative: '', recommendation: '' },
       context: { narrative: '' },
       temporal: { dynamics: '' },
       compliance: { framework: '' },

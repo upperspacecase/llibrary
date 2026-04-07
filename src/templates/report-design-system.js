@@ -17,13 +17,23 @@ export const TOKENS = {
   onSurface:            '#151c27',
   onSurfaceVariant:     '#414844',
   outline:              '#717973',
-  outlineVariant:       '#c1c8c2',
-  surface:              '#FAFAF9',
-  editorialTerracotta:  '#E07A5F',
-  editorialCharcoal:    '#374151',
+  outlineVariant:       '#8B9A7E',
+  surface:              '#F5F1E8',
+  editorialTerracotta:  '#C4705A',
+  editorialCharcoal:    '#2C2C2C',
   onTertiaryContainer:  '#75b393',
   tertiaryContainer:    '#00452e',
   white:                '#FFFFFF',
+
+  // Brand palette (River's Environmental Ledger)
+  brandForest:          '#1B3A2F',
+  brandSage:            '#8B9A7E',
+  brandTerracotta:      '#C4705A',
+  brandAmber:           '#D4A574',
+  brandCream:           '#F5F1E8',
+  brandCharcoal:        '#2C2C2C',
+  surfaceContainer:     '#E7EEFE',
+  surfaceTint:          '#3f6653',
 
   // Typography
   serifFont:  "'Libre Baskerville', serif",
@@ -50,12 +60,21 @@ export const TAILWIND_CONFIG = `{
         'on-surface':             '#151c27',
         'on-surface-variant':     '#414844',
         'outline':                '#717973',
-        'outline-variant':        '#c1c8c2',
-        'surface':                '#FAFAF9',
-        'editorial-terracotta':   '#E07A5F',
-        'editorial-charcoal':     '#374151',
+        'outline-variant':        '#8B9A7E',
+        'surface':                '#F5F1E8',
+        'editorial-terracotta':   '#C4705A',
+        'editorial-charcoal':     '#2C2C2C',
         'on-tertiary-container':  '#75b393',
         'tertiary-container':     '#00452e',
+        'surface-container':      '#E7EEFE',
+        'surface-tint':           '#3f6653',
+        'surface-container-low':  '#f0f3ff',
+        'brand-forest':           '#1B3A2F',
+        'brand-sage':             '#8B9A7E',
+        'brand-terracotta':       '#C4705A',
+        'brand-amber':            '#D4A574',
+        'brand-cream':            '#F5F1E8',
+        'brand-charcoal':         '#2C2C2C',
       },
       borderRadius: {
         DEFAULT: '0px',
@@ -81,10 +100,10 @@ export const REPORT_CSS = `
 body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #e5e2db;
+  background: #e5e0d6;
 }
 .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 .drop-cap::first-letter {
   float: left;
@@ -93,20 +112,30 @@ body {
   line-height: 0.8;
   padding-right: 12px;
   padding-top: 4px;
-  color: #012d1d;
+  color: #1B3A2F;
+}
+.serif-title {
+  font-family: 'Libre Baskerville', serif;
+  font-weight: 700;
+  font-style: normal;
+}
+.hairline {
+  height: 0.5px;
+  width: 100%;
+  background-color: #8B9A7E;
 }
 .hairline-b {
-  border-bottom: 0.5pt solid #c1c8c2;
+  border-bottom: 0.5pt solid #8B9A7E;
 }
 .hairline-r {
-  border-right: 0.5pt solid #c1c8c2;
+  border-right: 0.5pt solid #8B9A7E;
 }
 .a4-container {
   width: 210mm;
   min-height: 297mm;
   margin: auto;
-  background: #FAFAF9;
-  padding: 24mm 20mm;
+  background: #F5F1E8;
+  padding: 10% 15%;
   position: relative;
   page-break-after: always;
 }
