@@ -81,6 +81,7 @@ export const REPORT_CSS = `
 body {
   font-family: 'Inter', sans-serif;
   -webkit-font-smoothing: antialiased;
+  background: #e5e2db;
 }
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
@@ -107,9 +108,18 @@ body {
   background: #FAFAF9;
   padding: 24mm 20mm;
   position: relative;
+  page-break-after: always;
+}
+@media screen {
+  .a4-container {
+    box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
 }
 @media print {
   body { background: white; }
+  .a4-container { box-shadow: none; margin: 0; }
   .no-print { display: none; }
 }
 .gauge-svg {
