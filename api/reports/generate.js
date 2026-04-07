@@ -3,9 +3,10 @@
  *
  * Generates a LandBook report for a submission.
  * Thin handler that orchestrates: data pipeline → AI narratives → template → storage.
+ * Streams SSE progress events so the admin UI can show real-time feedback.
  *
  * Body: { submission_id?, force_refresh?, force_narratives? }
- * Returns: { id, version, slug, blob_url, name, created }
+ * Returns: SSE stream with progress events + final result event
  */
 
 import { getCollection } from '../_db.js';
@@ -14,6 +15,10 @@ import { ObjectId } from 'mongodb';
 import { fetchAllData, processRawData, buildMapUrls } from '../../src/lib/report-data-pipeline.js';
 import { generateNarratives } from '../../src/lib/report-narratives.js';
 import { buildReport } from '../../src/templates/report-template.js';
+
+function sendProgress(res, phase, message, progress) {
+  res.write(`data: ${JSON.stringify({ phase, message, progress })}\n\n`);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -55,11 +60,22 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Submission has no coordinates' });
     }
 
+    // ── Switch to SSE streaming ─────────────────────────────
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    sendProgress(res, 'loaded', 'Submission loaded', 10);
+
     // Calculate area in hectares
     const areaSqm = submission.area || 0;
     const areaHa = areaSqm > 0 ? areaSqm / 10000 : 1;
 
     // ── 2. Check for cached data ────────────────────────────
+    sendProgress(res, 'cache', 'Checking cache...', 15);
     const reportVersions = await getCollection('report_versions');
     let reportData = null;
 
@@ -76,12 +92,14 @@ export default async function handler(req, res) {
 
     // ── 3. Fetch fresh data if needed ───────────────────────
     if (!reportData) {
+      sendProgress(res, 'fetching', 'Fetching data from 22 APIs...', 20);
       console.log('[generate] Fetching fresh data from APIs...');
       const boundaryCoords = Array.isArray(boundary[0])
         ? boundary
         : boundary.map(p => [p.lat || p[0], p.lng || p[1]]);
 
       const raw = await fetchAllData(lat, lng, boundaryCoords, areaHa);
+      sendProgress(res, 'processing', 'Processing raw data...', 50);
       reportData = processRawData(raw, submission, areaHa);
     }
 
@@ -93,6 +111,7 @@ export default async function handler(req, res) {
       );
 
     if (!hasNarratives || force_narratives) {
+      sendProgress(res, 'narratives', 'Generating AI narratives...', 60);
       console.log('[generate] Generating AI narratives...');
       try {
         reportData.narratives = await generateNarratives(reportData);
@@ -103,10 +122,12 @@ export default async function handler(req, res) {
     }
 
     // ── 5. Build report HTML ────────────────────────────────
+    sendProgress(res, 'building', 'Building report HTML...', 75);
     console.log('[generate] Building report HTML...');
     const html = buildReport(reportData);
 
     // ── 6. Storage ──────────────────────────────────────────
+    sendProgress(res, 'uploading', 'Uploading report...', 85);
     const propertyName = reportData.property?.name || 'report';
     const slugBase = propertyName
       .split(',')[0]
@@ -139,6 +160,7 @@ export default async function handler(req, res) {
     }
 
     // Save to MongoDB — always store HTML for reliable serving
+    sendProgress(res, 'saving', 'Saving to database...', 92);
     const doc = {
       submission_id: submission._id,
       user_email: submission.email || submission.contact?.email || null,
@@ -155,20 +177,30 @@ export default async function handler(req, res) {
 
     console.log(`[generate] Report ${slug} created (${version})`);
 
-    return res.status(200).json({
+    // Send final result
+    res.write(`event: result\ndata: ${JSON.stringify({
       id: result.insertedId,
       version,
       name: propertyName,
       slug,
       blob_url: blobUrl,
       created: now.toISOString(),
-    });
+    })}\n\n`);
+    res.end();
 
   } catch (error) {
     console.error('[generate] Error:', error);
-    return res.status(500).json({
-      error: 'Report generation failed',
-      detail: error.message,
-    });
+    if (res.headersSent) {
+      res.write(`event: error\ndata: ${JSON.stringify({
+        error: 'Report generation failed',
+        detail: error.message,
+      })}\n\n`);
+      res.end();
+    } else {
+      res.status(500).json({
+        error: 'Report generation failed',
+        detail: error.message,
+      });
+    }
   }
 }

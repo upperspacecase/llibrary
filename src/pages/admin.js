@@ -349,17 +349,77 @@ function renderTable() {
             btn.disabled = true;
             const origText = btn.textContent;
             btn.textContent = 'Generating...';
+
+            // Create progress UI
+            const cell = btn.closest('td');
+            const progressEl = document.createElement('div');
+            progressEl.className = 'report-progress';
+            progressEl.innerHTML = `
+                <div class="report-progress-track"><div class="report-progress-fill"></div></div>
+                <span class="report-progress-text">Starting...</span>`;
+            cell.appendChild(progressEl);
+            const fill = progressEl.querySelector('.report-progress-fill');
+            const text = progressEl.querySelector('.report-progress-text');
+
             try {
                 const res = await fetch('/api/reports/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ submission_id: subId, force_refresh: true }),
                 });
-                if (!res.ok) {
+
+                const contentType = res.headers.get('content-type') || '';
+
+                // Non-SSE response = early validation error
+                if (!contentType.includes('text/event-stream')) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || 'Generation failed');
                 }
-                const result = await res.json();
+
+                // Read SSE stream
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+                let result = null;
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    // Process complete SSE blocks (separated by \n\n)
+                    const blocks = buffer.split('\n\n');
+                    buffer = blocks.pop(); // keep incomplete block in buffer
+
+                    for (const block of blocks) {
+                        if (!block.trim()) continue;
+                        const lines = block.split('\n');
+                        let eventType = 'message';
+                        let data = '';
+                        for (const line of lines) {
+                            if (line.startsWith('event: ')) eventType = line.slice(7);
+                            else if (line.startsWith('data: ')) data = line.slice(6);
+                        }
+                        if (!data) continue;
+
+                        const parsed = JSON.parse(data);
+
+                        if (eventType === 'error') {
+                            throw new Error(parsed.error || parsed.detail || 'Generation failed');
+                        }
+
+                        if (eventType === 'result') {
+                            result = parsed;
+                        } else {
+                            // Progress event
+                            fill.style.width = `${parsed.progress}%`;
+                            text.textContent = parsed.message;
+                        }
+                    }
+                }
+
+                if (!result) throw new Error('No result received from server');
+
                 // Add to local reportVersions and re-render
                 reportVersions.unshift({
                     _id: result.id,
@@ -374,6 +434,7 @@ function renderTable() {
             } catch (err) {
                 btn.disabled = false;
                 btn.textContent = origText;
+                progressEl.remove();
                 alert(`Report generation failed: ${err.message}`);
             }
         });
@@ -963,6 +1024,10 @@ style.textContent = `
     }
     .admin-generate-btn:hover { opacity: 0.8; }
     .admin-generate-btn:disabled { opacity: 0.5; cursor: default; }
+    .report-progress { margin-top: 6px; min-width: 180px; }
+    .report-progress-track { height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+    .report-progress-fill { height: 100%; background: #2d6a4f; border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+    .report-progress-text { font-size: 11px; color: #888; margin-top: 4px; display: block; }
     .admin-view-btn, .admin-share-btn {
         padding: 4px 10px;
         font-size: 12px;
