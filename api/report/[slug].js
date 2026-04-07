@@ -6,7 +6,12 @@ export default async function handler(req, res) {
 
   try {
     const reports = await getCollection('report_versions');
-    const doc = await reports.findOne({ slug });
+    let doc = await reports.findOne({ slug });
+
+    if (!doc) {
+      const shared = await getCollection('shared_reports');
+      doc = await shared.findOne({ slug });
+    }
 
     if (!doc) {
       res.setHeader('Content-Type', 'text/html');
