@@ -38,22 +38,49 @@ function warningBadge(text) {
 function safeArr(v) { return Array.isArray(v) ? v : []; }
 function safeObj(v) { return v && typeof v === 'object' ? v : {}; }
 
-/** SVG semicircle gauge arc */
-function gaugeArc(value, max, radius, color, label) {
-  const pct = Math.min(value / max, 1);
-  const circumference = Math.PI * radius;
+/** SVG semicircle gauge matching reference pattern */
+function gaugeArc(value, max, color, label) {
+  const circumference = Math.PI * 45; // 141.37
+  const pct = Math.min((value || 0) / max, 1);
   const offset = circumference * (1 - pct);
   return `
   <div class="flex flex-col items-center">
-    <svg width="${radius * 2 + 16}" height="${radius + 24}" viewBox="0 0 ${radius * 2 + 16} ${radius + 24}">
-      <path d="M8,${radius + 8} A${radius},${radius} 0 0,1 ${radius * 2 + 8},${radius + 8}"
-            fill="none" stroke="#c1c8c2" stroke-width="6" stroke-linecap="round"/>
-      <path d="M8,${radius + 8} A${radius},${radius} 0 0,1 ${radius * 2 + 8},${radius + 8}"
-            fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round"
-            stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
-    </svg>
-    <span class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">${escHtml(label)}</span>
+    <div class="relative w-32 h-16 overflow-hidden">
+      <svg class="gauge-svg w-32 h-32 absolute top-0" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#E7EEFE" stroke-width="10" stroke-dasharray="141.37" stroke-dashoffset="0"/>
+        <circle cx="50" cy="50" r="45" fill="none" stroke="${color}" stroke-width="10" stroke-dasharray="141.37" stroke-dashoffset="${offset.toFixed(1)}"/>
+      </svg>
+      <div class="absolute bottom-0 w-full text-center"><span class="font-serif text-xl font-bold">${value != null ? escHtml(String(value)) : '\u2014'}</span></div>
+    </div>
+    <span class="font-label text-[8pt] font-bold uppercase tracking-widest mt-4 text-outline">${escHtml(label)}</span>
   </div>`;
+}
+
+/** Get current month and year string */
+function monthYear() {
+  const d = new Date();
+  return d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+}
+
+/** Standard section header */
+function sectionHeader(title, large) {
+  const size = large ? 'text-[48pt]' : 'text-[42pt]';
+  return `
+  <header class="mb-16">
+    <div class="flex flex-col gap-4">
+      <h1 class="font-serif ${size} text-primary leading-tight">${escHtml(title)}</h1>
+      <div class="w-4/5 h-[0.5pt] bg-outline-variant"></div>
+    </div>
+  </header>`;
+}
+
+/** Standard footer */
+function sectionFooter(label) {
+  return `
+  <footer class="flex justify-between items-end mt-16">
+    <div class="text-[8px] font-bold uppercase tracking-widest text-outline">LandBook \u00b7 ${monthYear()}</div>
+    <div class="text-right"><span class="block text-[8px] uppercase tracking-widest text-outline">${escHtml(label)}</span></div>
+  </footer>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -107,90 +134,121 @@ export function renderCover(d) {
 
 export function renderGlance(d) {
   const p = safeObj(d.property);
+  const coords = safeObj(p.coords);
   const scores = safeObj(d.scores);
   const eco = safeObj(d.economics);
-  const reg = safeObj(scores.regional);
+  const reg = safeObj(d.regional);
+  const pctls = safeObj(reg.percentiles);
   const narr = safeObj(safeObj(d.narratives).executiveSummary);
   const maps = safeObj(d.maps);
+  const fire = safeObj(d.fire);
 
   const ncs = scores.naturalCapital || 0;
+  const ncsLabel = ncs >= 80 ? 'Exceptional' : ncs >= 60 ? 'Strong' : ncs >= 40 ? 'Moderate' : 'Developing';
+  const coordsStr = (coords.lat != null && coords.lng != null) ? `${coords.lat.toFixed(4)}\u00b0N, ${coords.lng.toFixed(4)}\u00b0W` : '';
+
+  // Split intro into 3 paragraphs
+  const introText = narr.intro || '';
+  const paragraphs = introText.split(/\n\n+/).filter(Boolean);
+  const p1 = paragraphs[0] || '';
+  const p2 = paragraphs[1] || '';
+  const p3 = paragraphs[2] || '';
+
+  const pullQuote = narr.pullQuote || 'A landscape of extraordinary natural capital.';
+  const waterScore = scores.water || 0;
+  const fireScore = fire.riskScore || 0;
+  const resilienceScore = scores.resilience || safeObj(d.energy).independenceScore || 0;
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
-  <!-- Top band -->
-  <div class="flex justify-between items-end pb-4 border-b-[0.5pt] border-outline-variant">
-    <div>
-      <div class="font-serif italic text-[28pt] text-[#1B4332] leading-none">${escHtml(p.name)}</div>
-    </div>
-    <div class="text-right">
-      <div class="text-[10pt] text-on-surface uppercase tracking-wide">${escHtml(p.address)}</div>
-    </div>
-  </div>
+<main class="flex-1 flex flex-col min-h-screen">
+<div class="flex-1 p-12 flex flex-col justify-between max-w-6xl mx-auto w-full">
 
-  <!-- Map + Quote grid -->
-  <div class="grid grid-cols-3 gap-6 my-8">
-    <div class="col-span-2 h-48 bg-[#f0efeb] overflow-hidden">
-      ${maps.overview
-        ? `<img src="${escHtml(maps.overview)}" alt="Property overview" class="w-full h-full object-cover" />`
-        : maps.satellite
-          ? `<img src="${escHtml(maps.satellite)}" alt="Satellite" class="w-full h-full object-cover" />`
-          : `<div class="w-full h-full flex items-center justify-center text-outline text-[10pt]">Map not available</div>`}
+  <!-- TOP BAND -->
+  <section class="flex justify-between items-end pb-4 border-b-[0.5pt] border-outline-variant">
+    <div><h1 class="font-serif italic text-[28pt] text-[#1B4332] leading-none">${escHtml(p.name)}</h1></div>
+    <div class="text-right"><p class="font-['Inter'] text-[10pt] text-on-surface uppercase tracking-wide">${escHtml(p.address)}${coordsStr ? ' \u00b7 ' + escHtml(coordsStr) : ''}</p></div>
+  </section>
+
+  <!-- MIDDLE SECTION: Bioregion + 15-min radius -->
+  <section class="grid grid-cols-2 gap-0 border-b-[0.5pt] border-outline-variant py-10">
+    <div class="hairline-r px-12 flex flex-col gap-2">
+      <span class="font-label text-[8pt] font-bold uppercase tracking-widest text-outline">Bioregion</span>
+      <div class="flex justify-between items-baseline">
+        <h2 class="font-serif text-[16pt] text-primary">${escHtml(p.municipality || '')} Region</h2>
+        <span class="font-body text-sm font-bold text-on-surface">${fmt(pctls.overall || pctls.carbon, v => v)}th percentile</span>
+      </div>
+    </div>
+    <div class="px-12 flex flex-col gap-2">
+      <span class="font-label text-[8pt] font-bold uppercase tracking-widest text-outline">15-Minute Radius</span>
+      <div class="flex justify-between items-baseline">
+        <h2 class="font-serif text-[16pt] text-primary">${escHtml(p.parish || p.municipality || '')}</h2>
+        <span class="font-body text-sm font-bold text-on-surface">${fmt(pctls.water || pctls.overall, v => v)}th percentile</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP / SATELLITE + QUOTE -->
+  <section class="grid grid-cols-3 gap-6 my-8">
+    <div class="col-span-2 h-48 bg-surface-container overflow-hidden">
+      ${maps.satellite
+        ? `<img src="${escHtml(maps.satellite)}" alt="Satellite" class="w-full h-full object-cover grayscale opacity-80"/>`
+        : `<div class="w-full h-full flex items-center justify-center text-outline text-[10pt]">Map not available</div>`}
     </div>
     <div class="h-48 bg-primary-container p-6 flex flex-col justify-end">
-      ${narr.pullQuote
-        ? `<p class="font-serif text-white text-lg leading-tight italic">${escHtml(narr.pullQuote)}</p>`
-        : `<p class="font-serif text-white text-lg leading-tight italic">A landscape of extraordinary natural capital.</p>`}
+      <p class="font-serif text-white text-lg leading-tight italic">\u201c${escHtml(pullQuote)}\u201d</p>
     </div>
-  </div>
+  </section>
 
-  <!-- KPI band -->
-  <div class="grid grid-cols-4 gap-0 items-center border-b-[0.5pt] border-outline-variant pb-8">
+  <!-- KEY METRICS BAND: 4 columns -->
+  <section class="grid grid-cols-4 gap-0 items-center border-b-[0.5pt] border-outline-variant pb-8">
     <div class="hairline-r px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(p.area, v => v.toLocaleString())}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Hectares</div>
+      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(p.area, v => v.toLocaleString())} ha</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Total Area</div>
     </div>
     <div class="hairline-r px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.valuePerHa, v => '\u20ac' + v.toLocaleString())}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Value / Ha</div>
+      <div class="font-serif text-[18pt] text-primary leading-tight">\u20ac${fmt(eco.valuePerHa, v => v.toLocaleString())}/ha</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Current Valuation</div>
     </div>
     <div class="hairline-r px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(scores.biodiversity, v => v)}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Biodiversity</div>
+      <div class="font-serif text-[18pt] text-primary leading-tight">\u20ac${fmt(eco.totalValue, v => v.toLocaleString())}</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Asset Value</div>
     </div>
     <div class="px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.carbonStock, v => v.toLocaleString())}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Carbon Stock (tC)</div>
+      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.carbonStock, v => v.toLocaleString())} tCO\u2082e</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Carbon Storage</div>
     </div>
-  </div>
+  </section>
 
-  <!-- Narrative columns -->
-  <div class="grid grid-cols-3 gap-8 text-[10.5pt] leading-relaxed text-editorial-charcoal mt-8">
-    <div class="drop-cap">${escHtml(narr.intro)}</div>
-    <div>${escHtml(narr.body || '')}</div>
-    <div>
-      <!-- NCS score -->
-      <div class="text-center mb-4">
-        <div class="font-serif text-[96pt] font-bold text-primary leading-none">${ncs}</div>
-        <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-2">Natural Capital Score</div>
-      </div>
-      <!-- Gauges -->
-      <div class="flex justify-around mt-4">
-        ${gaugeArc(scores.carbon || 0, 100, 32, TOKENS.primary, 'Carbon')}
-        ${gaugeArc(scores.biodiversity || 0, 100, 32, TOKENS.onTertiaryContainer, 'Biodiversity')}
-        ${gaugeArc(scores.water || 0, 100, 32, TOKENS.editorialTerracotta, 'Water')}
+  <!-- 3-COLUMN NARRATIVE with drop-cap -->
+  <section class="py-12">
+    <div class="grid grid-cols-3 gap-8 font-body text-[10.5pt] leading-relaxed text-[#414844]">
+      <div class="drop-cap">${escHtml(p1)}</div>
+      <div>${escHtml(p2)}</div>
+      <div class="flex flex-col justify-between">
+        <p>${escHtml(p3)}</p>
+        <div class="mt-6 border-l-4 border-terracotta pl-4 py-1">
+          <blockquote class="font-serif italic text-primary text-[11pt] leading-snug">\u201c${escHtml(pullQuote)}\u201d</blockquote>
+        </div>
       </div>
     </div>
-  </div>
+  </section>
 
-  ${narr.pullQuote ? `
-  <div class="mt-6 border-l-4 border-editorial-terracotta pl-4 py-1">
-    <p class="font-serif italic text-primary text-[11pt] leading-snug">${escHtml(narr.pullQuote)}</p>
-  </div>` : ''}
-
-  <!-- Footer -->
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook Natural Capital Assessment &middot; ${escHtml(p.name)}
-  </div>
+  <!-- NCS SCORE + GAUGES -->
+  <section class="py-12 border-t-[0.5pt] border-outline-variant flex flex-col items-center text-center">
+    <div class="mb-2"><span class="font-label text-[10pt] font-bold uppercase tracking-[0.2em] text-outline">Natural Capital Score</span></div>
+    <div class="font-serif text-[96pt] font-bold text-primary leading-none mb-4">${ncs}</div>
+    <div class="font-body text-lg text-secondary">
+      <span class="font-bold text-on-surface">${escHtml(ncsLabel)}</span>
+      <span class="mx-2 text-outline-variant">|</span>${fmt(pctls.overall || pctls.carbon, v => v)}th percentile in watershed
+    </div>
+    <!-- 3 SVG gauge arcs -->
+    <div class="grid grid-cols-3 gap-16 mt-16 w-full max-w-3xl">
+      ${gaugeArc(waterScore, 10, '#6B8E6B', 'Water Security')}
+      ${gaugeArc(fireScore, 5, '#F59E0B', 'Fire Risk')}
+      ${gaugeArc(resilienceScore, 10, '#E07A5F', 'Resilience')}
+    </div>
+  </section>
+</div>
 </main>`;
 }
 
@@ -202,85 +260,108 @@ export function renderEcosystemServices(d) {
   const eco = safeObj(d.economics);
   const es = safeObj(eco.ecosystemServices);
   const narr = safeObj(safeObj(d.narratives).ecosystemServices);
+  const maps = safeObj(d.maps);
+  const p = safeObj(d.property);
 
-  const segments = [
-    { label: 'Water', value: es.water || 0 },
-    { label: 'Food', value: es.food || 0 },
-    { label: 'Carbon', value: es.carbon || 0 },
-    { label: 'Regulation', value: es.regulation || 0 },
-    { label: 'Soil', value: es.soil || 0 },
-    { label: 'Cultural', value: es.cultural || 0 },
+  const services = [
+    { name: 'Water Provisioning', value: es.water || 0, beneficiaries: 'Property, downstream users' },
+    { name: 'Food & Fiber', value: es.food || 0, beneficiaries: 'Markets, processors' },
+    { name: 'Carbon/Climate Regulation', value: es.carbon || 0, beneficiaries: 'Global climate' },
+    { name: 'Water Regulation', value: es.regulation || 0, beneficiaries: 'Watershed, aquifer' },
+    { name: 'Soil Protection', value: es.soil || 0, beneficiaries: 'Future productivity' },
+    { name: 'Recreation/Cultural', value: es.cultural || 0, beneficiaries: 'Visitors, future stewards' },
   ];
-  const total = es.total || segments.reduce((a, s) => a + s.value, 0);
-  const barColors = ['#012d1d', '#75b393', '#E07A5F', '#585f6c', '#414844', '#c1c8c2'];
+  const total = es.total || services.reduce((a, s) => a + s.value, 0);
+
+  // Sort by value desc, pick top 3 for bar colors
+  const sorted = [...services].sort((a, b) => b.value - a.value);
+  const barColorMap = { 0: 'bg-primary', 1: 'bg-on-tertiary-container', 2: 'bg-editorial-terracotta' };
+  const colorAssignment = new Map();
+  sorted.forEach((s, i) => { if (i < 3) colorAssignment.set(s.name, barColorMap[i]); });
+
+  // Narrative paragraphs
+  const introText = narr.intro || '';
+  const introParts = introText.split(/\n\n+/).filter(Boolean);
+  const para1 = introParts[0] || '';
+  const para2 = introParts[1] || '';
+
+  const pullQuote = narr.pullQuote || '';
 
   return `
-<main class="a4-container shadow-sm mt-8 mb-4">
-  <!-- Header -->
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">What This Land Provides</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
-
-  <!-- Content grid -->
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-20">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.intro)}</p>
-
-      ${narr.pullQuote ? `
-      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mt-6">
-        ${escHtml(narr.pullQuote)}
-      </blockquote>` : ''}
+<main class="a4-container shadow-sm mt-8 mb-16">
+  <header class="mb-16">
+    <div class="flex flex-col gap-4">
+      <h1 class="font-serif text-[42pt] text-primary leading-tight">What This Land Provides</h1>
+      <div class="w-4/5 h-[0.5pt] bg-outline-variant"></div>
     </div>
-    <div>
-      <!-- Big number -->
-      <div class="mb-8">
-        <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mb-2">30-Year Net Present Value</div>
-        <div class="font-serif text-[58pt] text-primary leading-none tracking-tight">${fmt(safeObj(eco.npv).thirtyYear, v => '\u20ac' + v.toLocaleString(), 'Economics')}</div>
+  </header>
+
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(para1)}</p>
+      ${para2 ? `<p class="text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(para2)}</p>` : ''}
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      ${pullQuote ? `<blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">\u201c${escHtml(pullQuote)}\u201d</blockquote>` : ''}
+      <div class="bg-surface-container-low p-6 space-y-4">
+        <h3 class="font-bold text-[10px] uppercase tracking-widest text-primary">Spatial Context</h3>
+        <div class="aspect-video w-full bg-slate-200 overflow-hidden">
+          ${maps.regional
+            ? `<img src="${escHtml(maps.regional)}" class="w-full h-full object-cover grayscale opacity-50 contrast-125" alt="Regional map"/>`
+            : `<div class="w-full h-full flex items-center justify-center text-outline text-[10pt]">Map not available</div>`}
+        </div>
+        <p class="text-[9pt] italic text-on-surface-variant">${escHtml(p.name)} within its bioregional context.</p>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Stacked bar -->
-  <div class="mb-8">
-    <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mb-3">Annual Ecosystem Services Breakdown</div>
-    <div class="flex h-10 w-full overflow-hidden">
-      ${segments.map((s, i) => {
-        const pct = total > 0 ? ((s.value / total) * 100).toFixed(1) : 0;
-        return pct > 0 ? `<div class="h-full" style="width:${pct}%; background:${barColors[i % barColors.length]};" title="${s.label}: ${pct}%"></div>` : '';
-      }).join('')}
+  <!-- Big number centered -->
+  <section class="border-t-[0.5pt] border-outline-variant pt-12 text-center mb-12">
+    <div class="flex items-center justify-center gap-6 mb-8">
+      <h2 class="font-serif italic text-[28pt] text-primary px-4">Thirty-Year NPV</h2>
     </div>
-    <div class="flex gap-4 mt-2">
-      ${segments.map((s, i) => `<div class="flex items-center gap-1">
-        <div class="w-2.5 h-2.5" style="background:${barColors[i % barColors.length]};"></div>
-        <span class="text-[8pt] text-outline">${escHtml(s.label)}</span>
-      </div>`).join('')}
+    <div class="mb-12">
+      <p class="font-serif text-[58pt] text-primary leading-none tracking-tight">\u20ac${fmt(safeObj(eco.npv).thirtyYear, v => v.toLocaleString(), 'Economics')}</p>
+      <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary mt-4">\u00b118% uncertainty at 95% confidence interval</p>
     </div>
-  </div>
+    <!-- Stacked bar -->
+    <div class="max-w-2xl mx-auto space-y-4">
+      <div class="flex h-[48px] w-full">
+        ${services.map(s => {
+          const pct = total > 0 ? ((s.value / total) * 100).toFixed(1) : 0;
+          const bgClass = colorAssignment.get(s.name) || 'bg-secondary';
+          return pct > 0 ? `<div class="h-full ${bgClass}" style="width:${pct}%"></div>` : '';
+        }).join('')}
+      </div>
+      <div class="flex justify-between text-[9px] font-bold uppercase tracking-widest text-secondary px-1">
+        ${services.filter(s => s.value > 0).map(s => {
+          const pct = total > 0 ? ((s.value / total) * 100).toFixed(0) : 0;
+          const bgClass = colorAssignment.get(s.name) || 'bg-secondary';
+          return `<div class="flex items-center gap-2"><span class="w-2 h-2 ${bgClass}"></span> ${escHtml(s.name)} (${pct}%)</div>`;
+        }).join('')}
+      </div>
+    </div>
+  </section>
 
-  <!-- Table -->
-  <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Service</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Annual Value</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Share</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${segments.map(s => {
-        const share = total ? ((s.value / total) * 100).toFixed(1) : 0;
-        return `<tr class="border-b-[0.5pt] border-outline-variant">
-          <td class="py-2">${escHtml(s.label)}</td>
-          <td class="py-2">${fmt(s.value, v => '\u20ac' + v.toLocaleString())}</td>
-          <td class="py-2">${share}%</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>
+  <!-- Services table -->
+  <section class="border-t-[0.5pt] border-outline-variant pt-8">
+    <table class="w-full text-left text-[10pt]">
+      <thead><tr class="border-b-2 border-primary">
+        <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Ecosystem Service</th>
+        <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Annual Value</th>
+        <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Beneficiaries</th>
+      </tr></thead>
+      <tbody>
+        ${services.map(s => `<tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">${escHtml(s.name)}</td><td class="py-3 font-semibold">\u20ac${fmt(s.value, v => v.toLocaleString())}</td><td class="py-3 text-on-surface-variant">${escHtml(s.beneficiaries)}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  </section>
 
-  <!-- Footer -->
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Economic Valuation
-  </div>
+  <footer class="flex justify-between items-end mt-16">
+    <div class="text-[8px] font-bold uppercase tracking-widest text-outline">LandBook \u00b7 ${monthYear()}</div>
+    <div class="text-right"><span class="block text-[8px] uppercase tracking-widest text-outline">Natural Capital Assessment</span></div>
+  </footer>
 </main>`;
 }
 
@@ -301,24 +382,27 @@ export function renderScorecard(d) {
     { label: 'Pollination', icon: 'yard', score: scores.pollination || 0, avg: reg.pollination || 0 },
   ];
 
+  const pullQuote = narr.pullQuote || '';
+
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">How This Land Performs</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('How This Land Performs', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.text)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.text)}</p>
     </div>
-    <div>
+    <div class="flex flex-col justify-start pt-4">
+      ${pullQuote ? `<blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">\u201c${escHtml(pullQuote)}\u201d</blockquote>` : ''}
       <div class="text-center">
         ${radarChart(dims)}
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Dimension rows -->
-  ${dims.map(dim => {
+  ${dims.map((dim, i) => {
     const diff = dim.score - dim.avg;
     const sign = diff > 0 ? '+' : '';
     return `
@@ -333,9 +417,7 @@ export function renderScorecard(d) {
     </div>`;
   }).join('')}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Natural Capital Scorecard
-  </div>
+  ${sectionFooter('Natural Capital Scorecard')}
 </main>`;
 }
 
@@ -366,65 +448,50 @@ export function renderTerrain(d) {
     ['Age', fmt(geo.age)],
   ];
 
+  const pullQuote = narr.pullQuote || '';
+
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">The Lay of the Land</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('The Lay of the Land', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.description)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.description)}</p>
     </div>
-    <div>
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-[24px] text-primary">landscape</span>
-        <span class="text-[8pt] font-bold uppercase tracking-widest text-outline">Terrain Profile</span>
-      </div>
-      <div class="space-y-2 text-[10.5pt] text-editorial-charcoal">
+    <div class="flex flex-col justify-start pt-4">
+      ${pullQuote ? `<blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">\u201c${escHtml(pullQuote)}\u201d</blockquote>` : ''}
+      <div class="space-y-3 text-[10.5pt] text-editorial-charcoal">
         <div>Elevation: ${fmt(terrain.elevation, v => v + ' m')}</div>
         <div>Slope: ${fmt(terrain.slope, v => v + '\u00b0')}</div>
         <div>Aspect: ${fmt(terrain.aspect)}</div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Soil table -->
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">grass</span>
-    Soil Properties
-  </div>
   <table class="w-full text-left text-[10pt] mb-8">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Property</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Value</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Soil Property</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Value</th>
+    </tr></thead>
     <tbody>
-      ${soilRows.map(([label, val]) => `<tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">${escHtml(label)}</td><td class="py-2">${val}</td></tr>`).join('')}
+      ${soilRows.map(([label, val]) => `<tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">${escHtml(label)}</td><td class="py-3">${val}</td></tr>`).join('')}
     </tbody>
   </table>
 
   <!-- Geology table -->
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">layers</span>
-    Geology
-  </div>
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Attribute</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Detail</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Geology</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Detail</th>
+    </tr></thead>
     <tbody>
-      ${geoRows.map(([label, val]) => `<tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">${escHtml(label)}</td><td class="py-2">${val}</td></tr>`).join('')}
+      ${geoRows.map(([label, val]) => `<tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">${escHtml(label)}</td><td class="py-3">${val}</td></tr>`).join('')}
     </tbody>
   </table>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Terrain &amp; Geology
-  </div>
+  ${sectionFooter('Terrain & Geology')}
 </main>`;
 }
 
@@ -435,63 +502,42 @@ export function renderTerrain(d) {
 export function renderWater(d) {
   const w = safeObj(d.water);
   const fr = safeObj(w.floodRisk);
+  const climate = safeObj(d.climate);
   const narr = safeObj(safeObj(d.narratives).water);
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Water</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Water', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.narrative)}</p>
-
-      ${narr.pullQuote ? `
-      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mt-6">
-        ${escHtml(narr.pullQuote)}
-      </blockquote>` : ''}
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.narrative)}</p>
     </div>
-    <div>
-      <!-- Water KPIs -->
-      <div class="space-y-6">
-        <div class="flex items-center gap-4">
-          <span class="material-symbols-outlined text-[24px] text-primary">water_drop</span>
-          <div>
-            <div class="font-serif text-[36pt] font-normal leading-none text-primary">${fmt(w.securityIndex, v => v)}</div>
-            <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Water Security Index</div>
-          </div>
-        </div>
-        ${gaugeArc(w.securityIndex || 0, 100, 48, TOKENS.primary, 'Security')}
-      </div>
+    <div class="flex flex-col justify-start pt-4">
+      ${narr.pullQuote ? `<blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">\u201c${escHtml(narr.pullQuote)}\u201d</blockquote>` : ''}
     </div>
-  </div>
+  </section>
 
   <!-- Water features table -->
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">waves</span>
-    Water Features
-  </div>
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Feature</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Value</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Feature</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Value</th>
+    </tr></thead>
     <tbody>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Springs</td><td class="py-2">${fmt(w.springs)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Wells</td><td class="py-2">${fmt(w.wells)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Waterways</td><td class="py-2">${fmt(w.waterways)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Water Bodies</td><td class="py-2">${fmt(w.waterBodies)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Security Index</td><td class="py-2">${fmt(w.securityIndex, v => v + '/100')}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Flood Discharge</td><td class="py-2">${fmt(w.floodDischarge)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Flood Risk</td><td class="py-2">${riskBadge(fr.level)} ${fmt(fr.score, v => v + '/10')}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Springs</td><td class="py-3">${fmt(w.springs)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Wells</td><td class="py-3">${fmt(w.wells)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Waterways</td><td class="py-3">${fmt(w.waterways)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Water Bodies</td><td class="py-3">${fmt(w.waterBodies)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Security Index</td><td class="py-3">${fmt(w.securityIndex, v => v + '/100')}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Flood Discharge</td><td class="py-3">${fmt(w.floodDischarge)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Flood Risk</td><td class="py-3">${riskBadge(safeObj(w.floodRisk).level)} ${fmt(safeObj(w.floodRisk).score, v => v + '/10')}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Annual Rainfall</td><td class="py-3">${fmt(climate.annualRainfall, v => Math.round(v) + ' mm')}</td></tr>
     </tbody>
   </table>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Water Resources
-  </div>
+  ${sectionFooter('Water Resources')}
 </main>`;
 }
 
@@ -513,49 +559,41 @@ export function renderClimate(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Climate</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Climate', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.profile)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.profile)}</p>
     </div>
-    <div>
-      <div class="space-y-4">
-        <div class="flex items-center gap-4">
-          <span class="material-symbols-outlined text-[24px] text-primary">thermostat</span>
-          <div>
-            <div class="font-serif text-[36pt] font-normal leading-none text-primary">${fmt(c.annualMeanTemp, v => v.toFixed(1))}<span class="text-[18pt]">\u00b0C</span></div>
-            <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Mean Temperature</div>
-          </div>
-        </div>
-      </div>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">${escHtml(c.zone || '')}</blockquote>
     </div>
-  </div>
+  </section>
 
   <!-- Climate KPIs -->
-  <div class="grid grid-cols-5 gap-0 items-center border-b-[0.5pt] border-outline-variant pb-6 mb-8">
+  <section class="grid grid-cols-5 gap-0 items-center border-b-[0.5pt] border-outline-variant pb-6 mb-8">
     <div class="hairline-r px-4 py-2">
       <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.annualMeanTemp, v => v.toFixed(1) + '\u00b0C')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Mean Temp</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Mean Temp</div>
     </div>
     <div class="hairline-r px-4 py-2">
       <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.summerMean, v => v.toFixed(1) + '\u00b0C')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Summer</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Summer</div>
     </div>
     <div class="hairline-r px-4 py-2">
       <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.winterMean, v => v.toFixed(1) + '\u00b0C')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Winter</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Winter</div>
     </div>
     <div class="hairline-r px-4 py-2">
       <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.annualRainfall, v => Math.round(v) + ' mm')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Annual Rainfall</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Annual Rainfall</div>
     </div>
     <div class="px-4 py-2">
       <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(c.growingSeason, v => v + ' days')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Growing Season</div>
+      <div class="font-['Inter'] text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Growing Season</div>
     </div>
-  </div>
+  </section>
 
   <!-- Chart -->
   <div class="text-center">
@@ -563,9 +601,7 @@ export function renderClimate(d) {
     <div class="text-[9pt] italic text-secondary mt-2">Monthly average temperature and precipitation</div>
   </div>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Climate Profile
-  </div>
+  ${sectionFooter('Climate Profile')}
 </main>`;
 }
 
@@ -581,15 +617,15 @@ export function renderBiodiversity(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Biodiversity &amp; Habitat Index</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('Biodiversity & Habitat Index', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-10">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.intro)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.intro)}</p>
     </div>
-    <div>
-      <!-- Biodiversity KPIs -->
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">${fmt(sp.total)} species recorded \u2014 ${fmt(sp.threatened)} threatened</blockquote>
       <div class="space-y-6">
         <div class="py-4 border-b-[0.5pt] border-outline-variant flex gap-6 items-center">
           <span class="material-symbols-outlined text-[24px] text-primary">pets</span>
@@ -614,7 +650,7 @@ export function renderBiodiversity(d) {
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Species chart -->
   <div class="text-center mb-8">
@@ -625,25 +661,21 @@ export function renderBiodiversity(d) {
   <!-- Top species table -->
   ${top10.length > 0 ? `
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Species</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Group</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Status</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Species</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Group</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Status</th>
+    </tr></thead>
     <tbody>
       ${top10.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(s.name || s.species)}</td>
-        <td class="py-2">${fmt(s.group || s.kingdom)}</td>
-        <td class="py-2">${s.threatened ? riskBadge('Critical') : riskBadge('Low')}</td>
+        <td class="py-3">${fmt(s.name || s.species)}</td>
+        <td class="py-3">${fmt(s.group || s.kingdom)}</td>
+        <td class="py-3">${s.threatened ? riskBadge('Critical') : riskBadge('Low')}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Biodiversity
-  </div>
+  ${sectionFooter('Biodiversity')}
 </main>`;
 }
 
@@ -658,47 +690,35 @@ export function renderAgriculture(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Agriculture</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Agriculture', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.potential)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.potential)}</p>
     </div>
-    <div>
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-[24px] text-primary">agriculture</span>
-        <span class="text-[8pt] font-bold uppercase tracking-widest text-outline">Land Cover</span>
-      </div>
-      <p class="text-[10.5pt] text-editorial-charcoal leading-relaxed">${fmt(ag.landCover)}</p>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">${fmt(ag.landCover)}</blockquote>
     </div>
-  </div>
+  </section>
 
   ${systems.length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">compost</span>
-    Agricultural Systems
-  </div>
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">System</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Description</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Suitability</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">System</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Description</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Suitability</th>
+    </tr></thead>
     <tbody>
       ${systems.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(s.name || s.system)}</td>
-        <td class="py-2">${fmt(s.description || s.detail)}</td>
-        <td class="py-2">${fmt(s.suitability || s.rating)}</td>
+        <td class="py-3">${fmt(s.name || s.system)}</td>
+        <td class="py-3">${fmt(s.description || s.detail)}</td>
+        <td class="py-3">${fmt(s.suitability || s.rating)}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Agriculture
-  </div>
+  ${sectionFooter('Agriculture')}
 </main>`;
 }
 
@@ -709,64 +729,51 @@ export function renderAgriculture(d) {
 export function renderOpportunities(d) {
   const eco = safeObj(d.economics);
   const rev = safeObj(eco.revenueScenarios);
+  const details = safeArr(rev.details);
   const narr = safeObj(safeObj(d.narratives).opportunities);
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Opportunities</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Opportunities', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.comparison)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.comparison)}</p>
     </div>
-    <div>
-      <!-- Big number -->
-      <div class="mb-6">
-        <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mb-2">Total Property Value</div>
-        <div class="font-serif text-[58pt] text-primary leading-none tracking-tight">${fmt(eco.totalValue, v => '\u20ac' + v.toLocaleString())}</div>
-      </div>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">Carbon stock: ${fmt(eco.carbonStock, v => v.toLocaleString())} tC \u00b7 Credit value: \u20ac${fmt(eco.carbonCreditValue, v => v.toLocaleString())}</blockquote>
     </div>
-  </div>
+  </section>
 
   <!-- Revenue scenarios -->
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">trending_up</span>
-    Revenue Scenarios
-  </div>
   <table class="w-full text-left text-[10pt] mb-10">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Scenario</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Annual Revenue</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Scenario</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Annual Revenue</th>
+    </tr></thead>
     <tbody>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Conservative</td><td class="py-2">${fmt(rev.conservative, v => '\u20ac' + v.toLocaleString())}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Moderate</td><td class="py-2">${fmt(rev.moderate, v => '\u20ac' + v.toLocaleString())}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Optimized</td><td class="py-2">${fmt(rev.optimized, v => '\u20ac' + v.toLocaleString())}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Conservative</td><td class="py-3">${fmt(rev.conservative, v => '\u20ac' + v.toLocaleString())}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Moderate</td><td class="py-3">${fmt(rev.moderate, v => '\u20ac' + v.toLocaleString())}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Optimized</td><td class="py-3">${fmt(rev.optimized, v => '\u20ac' + v.toLocaleString())}</td></tr>
     </tbody>
   </table>
 
-  <!-- KPI band -->
-  <div class="grid grid-cols-3 gap-0 items-center border-t-[0.5pt] border-b-[0.5pt] border-outline-variant py-6">
-    <div class="hairline-r px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.totalValue, v => '\u20ac' + v.toLocaleString())}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Total Property Value</div>
-    </div>
-    <div class="hairline-r px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.carbonStock, v => v.toLocaleString() + ' tC')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Carbon Stock</div>
-    </div>
-    <div class="px-6 py-2">
-      <div class="font-serif text-[18pt] text-primary leading-tight">${fmt(eco.carbonAnnualSeq, v => v.toLocaleString() + ' tC/yr')}</div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Annual Sequestration</div>
-    </div>
-  </div>
+  ${details.length > 0 ? `
+  <table class="w-full text-left text-[10pt]">
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Revenue Stream</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Estimate</th>
+    </tr></thead>
+    <tbody>
+      ${details.map(item => `<tr class="border-b-[0.5pt] border-outline-variant">
+        <td class="py-3">${fmt(item.name || item.label)}</td>
+        <td class="py-3">${fmt(item.value || item.estimate, v => '\u20ac' + v.toLocaleString())}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>` : ''}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Economic Opportunities
-  </div>
+  ${sectionFooter('Economic Opportunities')}
 </main>`;
 }
 
@@ -782,14 +789,14 @@ export function renderRisks(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Risk &amp; Resilience</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Risk & Resilience', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.narrative)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.narrative)}</p>
     </div>
-    <div>
+    <div class="flex flex-col justify-start pt-4">
       ${safeObj(fire.activeFires).count != null ? `
       <div class="p-4 bg-[#FEF3C7] mb-4">
         <div class="flex items-center gap-2 mb-1">
@@ -799,46 +806,42 @@ export function renderRisks(d) {
         <div class="text-[10pt] text-[#92400E]">Active fires within monitoring radius: <strong>${fmt(fire.activeFires.count)}</strong></div>
       </div>` : ''}
     </div>
-  </div>
+  </section>
 
-  <!-- Risk KPIs -->
-  <div class="grid grid-cols-3 gap-0 border-b-[0.5pt] border-outline-variant pb-8 mb-8">
-    <div class="hairline-r px-6 py-2 text-center">
-      <div class="font-serif text-[24pt] text-primary">${fmt(fire.riskScore, v => v + '/10')}</div>
+  <!-- 3-col risk KPIs -->
+  <section class="grid grid-cols-3 gap-0 border-b-[0.5pt] border-outline-variant pb-8 mb-12">
+    <div class="hairline-r px-6 py-4 text-center">
+      <div class="font-serif text-[24pt] text-primary">${fmt(fire.riskScore, v => v)}/5</div>
       <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Fire Risk</div>
       <div class="mt-2">${riskBadge(fire.riskLevel)}</div>
     </div>
-    <div class="hairline-r px-6 py-2 text-center">
-      <div class="font-serif text-[24pt] text-primary">${fmt(flood.riskScore, v => v + '/10')}</div>
+    <div class="hairline-r px-6 py-4 text-center">
+      <div class="font-serif text-[24pt] text-primary">${fmt(flood.riskScore, v => v)}/5</div>
       <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Flood Risk</div>
       <div class="mt-2">${riskBadge(flood.riskLevel)}</div>
     </div>
-    <div class="px-6 py-2 text-center">
-      <div class="font-serif text-[24pt] text-primary">${fmt(drought.riskScore, v => v + '/10')}</div>
+    <div class="px-6 py-4 text-center">
+      <div class="font-serif text-[24pt] text-primary">${fmt(drought.riskScore, v => v)}/5</div>
       <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mt-1">Drought Risk</div>
       <div class="mt-2">${riskBadge(drought.riskLevel)}</div>
     </div>
-  </div>
+  </section>
 
   <!-- Risk table -->
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Risk</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Score</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Level</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Risk</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Score</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Level</th>
+    </tr></thead>
     <tbody>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Fire</td><td class="py-2">${fmt(fire.riskScore, v => v + '/10')}</td><td class="py-2">${riskBadge(fire.riskLevel)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Flood</td><td class="py-2">${fmt(flood.riskScore, v => v + '/10')}</td><td class="py-2">${riskBadge(flood.riskLevel)}</td></tr>
-      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-2">Drought</td><td class="py-2">${fmt(drought.riskScore, v => v + '/10')}</td><td class="py-2">${riskBadge(drought.riskLevel)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Fire</td><td class="py-3">${fmt(fire.riskScore, v => v + '/5')}</td><td class="py-3">${riskBadge(fire.riskLevel)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Flood</td><td class="py-3">${fmt(flood.riskScore, v => v + '/5')}</td><td class="py-3">${riskBadge(flood.riskLevel)}</td></tr>
+      <tr class="border-b-[0.5pt] border-outline-variant"><td class="py-3">Drought</td><td class="py-3">${fmt(drought.riskScore, v => v + '/5')}</td><td class="py-3">${riskBadge(drought.riskLevel)}</td></tr>
     </tbody>
   </table>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Risk Assessment
-  </div>
+  ${sectionFooter('Risk Assessment')}
 </main>`;
 }
 
@@ -859,54 +862,35 @@ export function renderResilience(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif text-[42pt] text-primary leading-tight">Resilience</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mt-2 mb-8"></div>
+  ${sectionHeader('Resilience', true)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.narrative)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.narrative)}</p>
     </div>
-    <div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mb-4">Energy Independence</div>
-      <div class="text-center">
-        ${energyBarChart(sources.map(s => ({ label: s.label, potential: s.data.score || 0 })))}
-      </div>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">Energy Independence Score: ${fmt(energy.independenceScore, v => v)}/10</blockquote>
     </div>
-  </div>
+  </section>
 
-  <!-- Energy actions grid -->
-  <div class="grid grid-cols-3 gap-8 text-[10pt]">
-    ${sources.slice(0, 3).map(s => `
-    <div class="py-6 border-t-[0.5px] border-outline-variant">
-      <div class="flex items-center gap-2 mb-3">
-        <span class="material-symbols-outlined text-[16px] text-primary">${s.icon}</span>
-        <span class="text-[8pt] font-bold uppercase tracking-widest text-outline">${escHtml(s.label)}</span>
-      </div>
-      <div class="font-serif text-[24pt] text-primary leading-none mb-2">${fmt(s.data.score || s.data.level || s.data)}</div>
-      <p class="text-[10pt] text-editorial-charcoal leading-relaxed">${fmt(s.data.detail || '')}</p>
-    </div>`).join('')}
-  </div>
-
-  <table class="w-full text-left text-[10pt] mt-8">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Source</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Potential</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Detail</th>
-      </tr>
-    </thead>
+  <!-- Energy sources table -->
+  <table class="w-full text-left text-[10pt]">
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Source</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Potential</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Detail</th>
+    </tr></thead>
     <tbody>
       ${sources.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${escHtml(s.label)}</td>
-        <td class="py-2">${fmt(s.data.level || s.data.score || s.data)}</td>
-        <td class="py-2">${fmt(s.data.detail || '')}</td>
+        <td class="py-3">${escHtml(s.label)}</td>
+        <td class="py-3">${fmt(s.data.level || s.data.score || s.data)}</td>
+        <td class="py-3">${fmt(s.data.detail || '')}</td>
       </tr>`).join('')}
     </tbody>
   </table>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Energy Resilience
-  </div>
+  ${sectionFooter('Energy Resilience')}
 </main>`;
 }
 
@@ -915,68 +899,76 @@ export function renderResilience(d) {
 // ---------------------------------------------------------------------------
 
 export function renderContext(d) {
-  const reg = safeObj(d.regional);
-  const pctls = safeObj(reg.percentiles);
+  const w = safeObj(d.water);
+  const scores = safeObj(d.scores);
+  const soil = safeObj(d.soil);
+  const sp = safeObj(d.species);
+  const climate = safeObj(d.climate);
   const narr = safeObj(safeObj(d.narratives).context);
-  const protectedAreas = safeArr(reg.protectedAreas);
 
   const dimensions = [
-    { label: 'Water', icon: 'water_drop', percentile: pctls.water || 0 },
-    { label: 'Biodiversity', icon: 'forest', percentile: pctls.biodiversity || 0 },
-    { label: 'Soil', icon: 'landscape', percentile: pctls.soil || 0 },
-    { label: 'Carbon', icon: 'eco', percentile: pctls.carbon || 0 },
-    { label: 'Resilience', icon: 'shield', percentile: pctls.resilience || 0 },
+    {
+      label: 'Water Security',
+      icon: 'water_drop',
+      value: w.securityIndex,
+      sublabel: '/ 10',
+      headline: 'Hydrological resilience',
+      description: narr.narrative ? '' : `Springs: ${fmt(w.springs)}, Wells: ${fmt(w.wells)}, Waterways: ${fmt(w.waterways)}`,
+    },
+    {
+      label: 'Soil Health',
+      icon: 'landscape',
+      value: scores.soil,
+      sublabel: 'soil health',
+      headline: 'Edaphic foundation',
+      description: `pH ${fmt(soil.ph, v => v.toFixed(1))}, Organic carbon ${fmt(soil.organicCarbon, v => v + ' g/kg')}, Clay ${fmt(soil.clay, v => v + '%')}`,
+    },
+    {
+      label: 'Biodiversity',
+      icon: 'forest',
+      value: sp.total,
+      sublabel: 'species',
+      headline: 'Biological richness',
+      description: safeArr(sp.groups).map(g => `${escHtml(g.group || g.name || '')}: ${g.count || g.value || 0}`).join(', '),
+    },
+    {
+      label: 'Climate',
+      icon: 'thermostat',
+      value: climate.annualMeanTemp != null ? climate.annualMeanTemp.toFixed(1) + '\u00b0' : null,
+      sublabel: 'annual mean',
+      headline: 'Climatic envelope',
+      description: `Rainfall: ${fmt(climate.annualRainfall, v => Math.round(v) + ' mm')}, Growing season: ${fmt(climate.growingSeason, v => v + ' days')}`,
+    },
   ];
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Bioregional Context</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  <section class="mb-12">
+    <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Why bioregional context matters</h1>
+    <p class="w-[65%] text-[12pt] text-on-surface-variant leading-relaxed">${escHtml(narr.narrative || 'Raw numbers are hard to interpret. We compare your parcel to the bioregion\u2014so you see what\u2019s typical, what\u2019s exceptional, and what to do about it.')}</p>
+  </section>
 
-  <div class="grid grid-cols-3 gap-8 text-[10.5pt] leading-relaxed text-editorial-charcoal mb-10">
-    <div class="drop-cap">${escHtml(narr.narrative)}</div>
-    <div class="col-span-2">
-      ${percentileChart(dimensions)}
-    </div>
-  </div>
+  <section class="flex-grow">
+    ${dimensions.map((dim, i) => {
+      const isLast = i === dimensions.length - 1;
+      return `
+    <div class="py-8 border-t-[0.5px] border-outline-variant${isLast ? ' border-b-[0.5px]' : ''} flex gap-8">
+      <div class="flex-shrink-0 pt-1"><span class="material-symbols-outlined text-primary text-3xl">${dim.icon}</span></div>
+      <div class="flex-grow grid grid-cols-12 gap-6">
+        <div class="col-span-3">
+          <div class="font-serif text-[36pt] font-normal leading-none text-primary">${fmt(dim.value)}</div>
+          <div class="text-[0.7rem] font-bold uppercase tracking-[0.15em] text-on-surface-variant mt-3">${escHtml(dim.sublabel)}</div>
+        </div>
+        <div class="col-span-9">
+          <h3 class="text-base font-semibold mb-3">${escHtml(dim.headline)}</h3>
+          <p class="text-[11pt] text-on-surface-variant mb-4 leading-relaxed">${dim.description}</p>
+        </div>
+      </div>
+    </div>`;
+    }).join('')}
+  </section>
 
-  <!-- Dimension rows -->
-  ${dimensions.map(dim => `
-  <div class="py-8 border-t-[0.5px] border-outline-variant flex gap-8">
-    <span class="material-symbols-outlined text-[24px] text-primary mt-2">${dim.icon}</span>
-    <div class="font-serif text-[36pt] font-normal leading-none text-primary w-24">${dim.percentile}<span class="text-[14pt]">th</span></div>
-    <div class="flex-1">
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-outline mb-1">${escHtml(dim.label)} Percentile</div>
-      <div class="text-[10.5pt] text-editorial-charcoal">Ranked in the ${dim.percentile}th percentile regionally</div>
-      ${dim.percentile < 25 ? warningBadge('Below 25th Percentile') : ''}
-    </div>
-  </div>`).join('')}
-
-  ${protectedAreas.length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 mt-8 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">park</span>
-    Protected Areas
-  </div>
-  <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Name</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Type</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Distance</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${protectedAreas.map(a => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(a.name)}</td>
-        <td class="py-2">${fmt(a.type || a.designation)}</td>
-        <td class="py-2">${fmt(a.distance, v => v + ' km')}</td>
-      </tr>`).join('')}
-    </tbody>
-  </table>` : ''}
-
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Bioregional Context
-  </div>
+  ${sectionFooter('Bioregional Context')}
 </main>`;
 }
 
@@ -992,18 +984,14 @@ export function renderTrends(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Change Over Time</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('Change Over Time', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.dynamics)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.dynamics)}</p>
     </div>
-    <div>
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-[24px] text-primary">timeline</span>
-        <span class="text-[8pt] font-bold uppercase tracking-widest text-outline">Climate Trends</span>
-      </div>
+    <div class="flex flex-col justify-start pt-4">
       <div class="space-y-3">
         <div class="py-3 border-b-[0.5pt] border-outline-variant">
           <div class="font-serif text-[24pt] text-primary leading-none">${fmt(trends.tempPerDecade, v => (v > 0 ? '+' : '') + v.toFixed(2))}<span class="text-[12pt]">\u00b0C</span></div>
@@ -1015,51 +1003,37 @@ export function renderTrends(d) {
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   ${npvScenarios.length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">savings</span>
-    NPV Scenarios
-  </div>
   <table class="w-full text-left text-[10pt] mb-8">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Scenario</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">30-Year NPV</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Scenario</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">30-Year NPV</th>
+    </tr></thead>
     <tbody>
       ${npvScenarios.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(s.name || s.label)}</td>
-        <td class="py-2">${fmt(s.value || s.npv, v => '\u20ac' + v.toLocaleString())}</td>
+        <td class="py-3">${fmt(s.name || s.label)}</td>
+        <td class="py-3">${fmt(s.value || s.npv, v => '\u20ac' + v.toLocaleString())}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
 
   ${safeArr(trends.fireProneByDecade).length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">local_fire_department</span>
-    Fire Risk Trend
-  </div>
   <table class="w-full text-left text-[10pt]">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Decade</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Fire-Prone Days</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Decade</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Fire-Prone Days</th>
+    </tr></thead>
     <tbody>
       ${trends.fireProneByDecade.map(t => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(t.decade || t.label)}</td>
-        <td class="py-2">${fmt(t.days || t.value)}</td>
+        <td class="py-3">${fmt(t.decade || t.label)}</td>
+        <td class="py-3">${fmt(t.days || t.value)}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Temporal Analysis
-  </div>
+  ${sectionFooter('Temporal Analysis')}
 </main>`;
 }
 
@@ -1076,10 +1050,10 @@ export function renderMaps(d) {
     { key: 'detail', title: 'Property Detail', icon: 'zoom_in_map' },
   ];
 
-  let html = `
+  return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Map Portfolio</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('Map Portfolio', false)}
+
   <p class="text-[10.5pt] text-secondary leading-relaxed mb-8">The following pages present the property across multiple cartographic perspectives, from satellite imagery to regional context.</p>
 
   <div class="grid grid-cols-2 gap-6">
@@ -1100,12 +1074,8 @@ export function renderMaps(d) {
     }).join('')}
   </div>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Cartographic Portfolio
-  </div>
+  ${sectionFooter('Cartographic Portfolio')}
 </main>`;
-
-  return html;
 }
 
 // ---------------------------------------------------------------------------
@@ -1120,48 +1090,35 @@ export function renderCompliance(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Compliance</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('Compliance', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-12">
-    <div>
-      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.framework)}</p>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.framework)}</p>
     </div>
-    <div>
-      <div class="flex items-center gap-3 mb-4">
-        <span class="material-symbols-outlined text-[24px] text-primary">gavel</span>
-        <span class="text-[8pt] font-bold uppercase tracking-widest text-outline">Regulatory Overview</span>
-      </div>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">Regulatory compliance overview</blockquote>
     </div>
-  </div>
+  </section>
 
   ${items.length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
-    Regulatory Framework
-  </div>
   <table class="w-full text-left text-[10pt] mb-8">
-    <thead>
-      <tr class="border-b-2 border-primary">
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Regulation</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Status</th>
-        <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Notes</th>
-      </tr>
-    </thead>
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Regulation</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Status</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Notes</th>
+    </tr></thead>
     <tbody>
       ${items.map(i => `<tr class="border-b-[0.5pt] border-outline-variant">
-        <td class="py-2">${fmt(i.name || i.regulation)}</td>
-        <td class="py-2">${riskBadge(i.status || i.level)}</td>
-        <td class="py-2">${fmt(i.notes || i.detail)}</td>
+        <td class="py-3">${fmt(i.name || i.regulation)}</td>
+        <td class="py-3">${riskBadge(i.status || i.level)}</td>
+        <td class="py-3">${fmt(i.notes || i.detail)}</td>
       </tr>`).join('')}
     </tbody>
   </table>` : ''}
 
   ${timeline.length > 0 ? `
-  <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-    <span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
-    Timeline
-  </div>
   <div class="space-y-4">
     ${timeline.map(t => `
     <div class="flex gap-6 py-3 border-b-[0.5pt] border-outline-variant">
@@ -1170,9 +1127,7 @@ export function renderCompliance(d) {
     </div>`).join('')}
   </div>` : ''}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Compliance &amp; Regulation
-  </div>
+  ${sectionFooter('Compliance & Regulation')}
 </main>`;
 }
 
@@ -1209,21 +1164,23 @@ export function renderActions(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">What to Do Next</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('What to Do Next', false)}
 
-  <div class="grid grid-cols-3 gap-8 text-[10.5pt] leading-relaxed text-editorial-charcoal mb-10">
-    <div class="drop-cap">${escHtml(narr.framing)}</div>
-    <div class="col-span-2"></div>
-  </div>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.framing)}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">Strategic action plan</blockquote>
+    </div>
+  </section>
 
   ${actionGrid('Immediate Actions', 'priority_high', actions.immediate)}
   ${actionGrid('Short-Term Actions', 'event_upcoming', actions.shortTerm)}
   ${actionGrid('Long-Term Actions', 'calendar_month', actions.longTerm)}
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Action Plan
-  </div>
+  ${sectionFooter('Action Plan')}
 </main>`;
 }
 
@@ -1248,48 +1205,38 @@ export function renderMethodology(d) {
 
   return `
 <main class="a4-container shadow-sm mt-8 mb-4">
-  <h1 class="font-serif italic text-[32pt] leading-tight text-primary mb-6">Methodology, Sources &amp; Disclaimer</h1>
-  <div class="w-4/5 h-[0.5pt] bg-outline-variant mb-8"></div>
+  ${sectionHeader('Methodology, Sources & Disclaimer', false)}
 
-  <div class="grid grid-cols-[1.5fr_1fr] gap-12 mb-10">
-    <div>
-      <div class="text-[8pt] font-bold uppercase tracking-widest text-primary mb-3 flex items-center gap-2">
-        <span class="material-symbols-outlined text-[16px] text-primary">source</span>
-        Data Sources
-      </div>
-      <table class="w-full text-left text-[10pt]">
-        <thead>
-          <tr class="border-b-2 border-primary">
-            <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Source</th>
-            <th class="text-[8pt] font-bold uppercase tracking-widest text-primary pb-2">Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sources.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
-            <td class="py-2 font-semibold">${escHtml(s.name)}</td>
-            <td class="py-2">${escHtml(s.description)}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+  <!-- 60/40 split -->
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-20">
+    <div class="space-y-8">
+      <p class="drop-cap text-[11pt] leading-[1.6] text-editorial-charcoal font-normal">${escHtml(narr.text)}</p>
     </div>
-    <div>
-      <div class="text-[11pt] leading-[1.6] text-editorial-charcoal">${escHtml(narr.text)}</div>
+    <div class="flex flex-col justify-start pt-4">
+      ${narr.disclaimer ? `<blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">${escHtml(narr.disclaimer)}</blockquote>` : ''}
     </div>
-  </div>
+  </section>
 
-  ${narr.disclaimer ? `
-  <blockquote class="pl-6 border-l-[3pt] border-editorial-terracotta italic font-serif text-[13pt] text-primary leading-relaxed mb-8">
-    ${escHtml(narr.disclaimer)}
-  </blockquote>` : ''}
+  <!-- Sources table -->
+  <table class="w-full text-left text-[10pt]">
+    <thead><tr class="border-b-2 border-primary">
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Source</th>
+      <th class="pb-3 text-[8pt] font-bold uppercase tracking-widest text-primary">Description</th>
+    </tr></thead>
+    <tbody>
+      ${sources.map(s => `<tr class="border-b-[0.5pt] border-outline-variant">
+        <td class="py-3 font-semibold">${escHtml(s.name)}</td>
+        <td class="py-3">${escHtml(s.description)}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
 
-  <div class="border-t-[0.5pt] border-outline-variant pt-6 text-center">
+  <div class="border-t-[0.5pt] border-outline-variant pt-6 text-center mt-12">
     <div class="text-[8pt] font-bold uppercase tracking-widest text-outline">LandBook Natural Capital Assessment</div>
     <div class="text-[9pt] text-secondary mt-2">Generated ${fmt(meta.generatedAt)} &middot; ${fmt(meta.version)}</div>
   </div>
 
-  <div class="absolute bottom-[20mm] left-[20mm] right-[20mm] text-[8px] font-bold uppercase tracking-widest text-outline">
-    LandBook &middot; Methodology &amp; Disclaimer
-  </div>
+  ${sectionFooter('Methodology & Disclaimer')}
 </main>`;
 }
 

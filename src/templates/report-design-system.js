@@ -112,6 +112,9 @@ body {
   body { background: white; }
   .no-print { display: none; }
 }
+.gauge-svg {
+  transform: rotate(-90deg);
+}
 `;
 
 // ---------------------------------------------------------------------------
