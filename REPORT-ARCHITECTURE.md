@@ -552,10 +552,314 @@ Every AI-generated text block follows this contract:
 
 ---
 
+## Data Contract
+
+### Principle
+
+**Nothing is hardcoded except section titles, labels, headers, and disclaimer boilerplate.** Every number, narrative, chart, and map is dynamic — sourced from APIs, computed scores, or AI-generated text.
+
+### `reportData` — Canonical Object Shape
+
+Every section renderer receives a slice of this single object. Renderers never fetch data — they only read.
+
+```js
+reportData = {
+  // ── Property identity ──
+  property: {
+    name,           // string — Mapbox reverse geocode → place_name
+    address,        // string — Mapbox/Nominatim → full address
+    coords,         // { lat, lng } — submission.center
+    area,           // number (ha) — geo.sqmToHectares(submission.area)
+    boundary,       // GeoJSON Polygon — submission.boundary
+    municipality,   // string — DGT CAOP / Nominatim
+    parish,         // string — DGT CAOP
+  },
+
+  // ── Scores (all 0-100 unless noted) ──
+  scores: {
+    naturalCapital,   // number (0-10) — weighted average of dimensions
+    carbon,           // number — computeAllScores().carbonScore
+    biodiversity,     // number — computeAllScores().bioScore
+    water,            // number — computeAllScores().waterScore
+    soil,             // number — computeAllScores().soilScore
+    pollination,      // number — computeAllScores().pollinationScore
+    regional: {       // same dimensions for regional baseline
+      carbon, biodiversity, water, soil, pollination
+    }
+  },
+
+  // ── Climate ──
+  climate: {
+    annualMeanTemp,     // °C — avg of all monthly means
+    summerMean,         // °C — avg Jun/Jul/Aug
+    winterMean,         // °C — avg Dec/Jan/Feb
+    annualRainfall,     // mm — 30yr sum / 30
+    frostDays,          // count — days where min < 0°C
+    growingSeason,      // days — last spring frost → first autumn frost
+    zone,               // string — derived (Mediterranean, Atlantic, etc.)
+    monthlyAvgHigh: [], // 12 values — Open-Meteo Archive 30yr
+    monthlyAvgLow: [],  // 12 values
+    monthlyPrecip: [],  // 12 values (mm)
+    forecast: [],       // 7-day daily — Open-Meteo Forecast
+    ipmaForecast: [],   // 5-day — IPMA (Portugal-specific)
+  },
+
+  // ── Terrain & Soil ──
+  terrain: {
+    elevation,       // m — Open-Meteo Elevation API
+    slope,           // derived from multi-point elevation profile
+    aspect,          // derived from elevation grid
+    profile: [],     // multi-point elevation samples
+  },
+  soil: {
+    ph,              // SoilGrids → phh2o, 0-5cm mean
+    organicCarbon,   // g/kg — SoilGrids → ocd
+    clay,            // % — SoilGrids → clay
+    sand,            // % — SoilGrids → sand
+    silt,            // % — derived (100 - clay - sand)
+    nitrogen,        // g/kg — SoilGrids → nitrogen
+    cec,             // cmol/kg — SoilGrids → cec
+    bulkDensity,     // kg/dm³ — SoilGrids → bdod
+    classification,  // string — SoilGrids → wrb_class_name
+  },
+  geology: {
+    lithology,       // string — Macrostrat → lith.name
+    environment,     // string — Macrostrat → environ.name
+    period,          // string — Macrostrat → t_int_name
+    age,             // Ma — Macrostrat → t_int_age
+  },
+
+  // ── Water ──
+  water: {
+    springs,           // count — Overpass → natural=spring
+    wells,             // count — Overpass → man_made=water_well
+    waterways,         // count — Overpass → waterway=*
+    waterBodies,       // count — Overpass → natural=water
+    annualRainfall,    // mm — (same as climate.annualRainfall)
+    securityIndex,     // 0-10 — computeAllScores().waterScore
+    floodDischarge,    // m³/s — GloFAS → river_discharge
+    floodRisk,         // { level, score } — analyzeFloodRisk()
+  },
+
+  // ── Biodiversity ──
+  species: {
+    total,             // count — iNaturalist → total_results
+    groups: [],        // { name, count } — by iconic_taxon_name
+    top10: [],         // { name, scientific, taxon, photoUrl }
+    threatened,        // count — iNaturalist threatened query
+    gbifTotal,         // count — GBIF → total occurrences
+    gbifKingdoms: [],  // { name, count } — GBIF faceted by kingdom
+    trends: {
+      inatWindows: [], // 3x 5-year windows → counts
+      gbifWindows: [], // 4x 5-year windows → counts
+      direction,       // string — increasing / declining / stable
+    }
+  },
+
+  // ── Fire & Risk ──
+  fire: {
+    riskScore,         // 0-5 — computeRiskProfile().fire
+    riskLevel,         // string — Low/Moderate/High
+    activeFires,       // { count, dates, maxFRP } — NASA FIRMS VIIRS
+    historical: [],    // { year, count } — NASA FIRMS MODIS 10yr
+    peakYear,          // year with most detections
+    seasonal: [],      // { period, riskTag } — derived calendar
+  },
+  flood: {
+    riskScore,         // 0-5 — computeRiskProfile().flood
+    riskLevel,         // string
+  },
+  drought: {
+    riskScore,         // 0-5 — computeRiskProfile().drought
+    riskLevel,         // string
+  },
+
+  // ── Energy ──
+  energy: {
+    solar,             // { level, detail } — derived from lat + elevation + aspect
+    wind,              // { level, detail }
+    microHydro,        // { level, detail }
+    biomass,           // { level, detail }
+    independenceScore, // 0-10
+  },
+
+  // ── Economics ──
+  economics: {
+    valuePerHa,        // € — reportScores.marketValue / area
+    totalValue,        // € — reportScores.marketValue
+    ecosystemServices: {
+      total,           // € annual — computeEcosystemServices().total
+      water, food, carbon, regulation, soil, cultural  // € each
+    },
+    npv: {
+      thirtyYear,      // € — total * NPV_factor
+      scenarios: [],   // { name, npv, assumptions, riskLevel }
+    },
+    revenueScenarios: {
+      conservative,    // { revenue, systems, investment }
+      moderate,        // { revenue, systems, investment }
+      optimized,       // { revenue, systems, investment }
+    },
+    carbonStock,       // tCO2e — literature values by land cover
+    carbonAnnualSeq,   // tCO2e/yr — 2% of stock × area
+    carbonCreditValue, // € — annualSeq × €65-80/tCO2e
+  },
+
+  // ── Agriculture ──
+  agriculture: {
+    landCover,         // string — DGT COS / CORINE
+    systems: [],       // { name, status, potential, revenue, timeline }
+  },
+
+  // ── Maps (Mapbox static URLs with GeoJSON boundary) ──
+  maps: {
+    satellite,         // URL — style=satellite-v9, zoom=15
+    overview,          // URL — style=outdoors-v12, zoom=8
+    regional,          // URL — style=outdoors-v12, zoom=10
+    detail,            // URL — style=outdoors-v12, zoom=14
+  },
+
+  // ── Regional Context ──
+  regional: {
+    protectedAreas: [],  // { name, designation } — Natura 2000 + Overpass
+    percentiles: {       // each 0-100
+      water, biodiversity, soil, carbon, resilience
+    },
+    comparisons: {},     // APIs fetched at wider radius
+  },
+
+  // ── Trends ──
+  trends: {
+    tempPerDecade,           // °C — linear regression over 50yr
+    precipPerDecade,         // mm — linear regression over 50yr
+    fireProneByDecade: [],   // { decade, days } — days > 30°C && precip < 5mm
+    bioWindows: [],          // iNat 3x 5yr windows
+    gbifWindows: [],         // GBIF 4x 5yr windows
+  },
+
+  // ── Compliance (static source — no live API) ──
+  compliance: {
+    items: [],         // { regulation, status, effective, action }
+    timeline: [],      // { year, description }
+  },
+
+  // ── Actions (derived from scores + risk profile) ──
+  actions: {
+    immediate: [],     // { action, cost, purpose }
+    shortTerm: [],     // { action, cost, purpose }
+    longTerm: [],      // { action, cost, purpose }
+  },
+
+  // ── AI Narratives (generated by Claude, cached) ──
+  narratives: {
+    executiveSummary: { intro, pullQuote },
+    ecosystemServices: { intro },
+    scorecard: { text },
+    terrain: { description },
+    water: { narrative, pullQuote },
+    climate: { profile },
+    biodiversity: { intro },
+    agriculture: { potential },
+    opportunities: { comparison },
+    risks: { narrative },
+    resilience: { narrative },
+    context: { narrative },
+    temporal: { dynamics },
+    compliance: { framework },
+    nextSteps: { framing },
+    methodology: { text, disclaimer },
+  },
+
+  // ── Metadata ──
+  meta: {
+    generatedAt,       // ISO timestamp
+    version,           // string — e.g. "v1"
+    apiStatus: {},     // { apiName: { ok, latencyMs, error? } }
+    missingFields: [], // { field, reason } — for AI context and dash rendering
+  }
+}
+```
+
+### Schema Definition (`src/lib/report-data-schema.js`)
+
+Each field has a strict definition:
+
+```js
+{
+  path: 'soil.ph',
+  type: 'number',
+  unit: 'pH',
+  source: 'soilgrids',
+  sourceDetail: 'SoilGrids /properties/query → phh2o, 0-5cm mean',
+  required: true,          // true = show '—' if missing; false = hide element
+  sections: [4],           // which sections use this field
+  format: (v) => v.toFixed(1),
+  validate: (v) => v >= 0 && v <= 14,
+}
+```
+
+The schema serves three purposes:
+1. **Documentation** — replaces prose data path descriptions; machine-readable
+2. **Validation** — `validateReportData(reportData, schema)` runs at generation time, logs warnings for missing required fields, populates `meta.missingFields`
+3. **Formatting** — section renderers call `schema.format(value)` for consistent display; never raw `.toString()`
+
+### Missing Data Handling
+
+When a field is `null` / `undefined` / failed API:
+
+1. **Required fields** → render `—` with `title="Source: {sourceDetail} | Status: {reason}"`
+2. **Optional fields** → hide the containing element entirely
+3. **AI narratives** → Claude receives `meta.missingFields[]` and writes around gaps naturally ("Soil data was unavailable for this assessment...")
+4. **Charts** → omit the data point; if >50% of a chart's data is missing, replace with a "Data unavailable" placeholder
+
+### What Is Hardcoded vs Dynamic
+
+| Hardcoded in template | Dynamic from `reportData` |
+|---|---|
+| Section titles ("What This Land Provides") | All numbers, scores, values |
+| Table column headers ("Ecosystem Service", "Annual Value") | All table cell values |
+| Label text ("Total Area", "Fire Risk") | All chart data points |
+| Disclaimer boilerplate | All narrative paragraphs + pull quotes |
+| CSS, layout structure, fonts | All map images (Mapbox URLs) |
+| Methodology source names ("SoilGrids", "iNaturalist") | Resolution, date accessed |
+| Action item structure (immediate/short/long grouping) | Specific actions, costs, purposes |
+| Compliance regulations (EUDR, CSRD — `source: 'static'`) | Status, effective dates |
+
+### Data Pipeline Flow
+
+```
+POST /api/reports/generate { submission_id, force_refresh?, force_narratives? }
+  │
+  ├─ 1. Load submission from MongoDB
+  ├─ 2. Check cached data_snapshot → skip to 4 if cached & !force_refresh
+  ├─ 3. fetchAllData() → 23+ parallel API calls
+  │     → processRawData() normalizes into reportData shape
+  │     → validateReportData(reportData, schema)
+  │     → populates reportData.meta.missingFields
+  ├─ 4. Check cached narratives → skip to 5 if cached & !force_narratives
+  │     → generateNarratives(reportData) via Claude API
+  │     → Claude receives full reportData + missingFields list
+  │     → Narratives cached in reportData.narratives
+  ├─ 5. buildReport(reportData)
+  │     → 18 section renderers, each reads its slice
+  │     → Charts rendered inline as SVG via report-charts.js
+  │     → Missing required fields show '—' with tooltip
+  │     → Returns self-contained HTML string
+  ├─ 6. Upload to Vercel Blob + save to MongoDB (with user_email)
+  └─ 7. Return { id, version, slug, blob_url }
+```
+
+---
+
 ## What Needs To Be Built
 
 1. **This doc** (done) — reference for all template work
-2. **Shared template** (`src/templates/report-template.js`) — editorial HTML builder consuming a standard data shape + AI narratives
-3. **Refactor generators** — both `generate.js` and `generate-full.js` feed into the shared template instead of inline `buildHTML()`
-4. **AI narrative layer** — Claude API integration during report generation, with caching
-5. **Updated chart library** — adapt `report-charts.js` to the editorial color palette and serif typography
+2. **Data schema** (`src/lib/report-data-schema.js`) — strict field definitions with source, type, format, validation
+3. **Data pipeline** (`src/lib/report-data-pipeline.js`) — extracted API fetches + `processRawData()` + `validateReportData()`
+4. **Shared template** (`src/templates/report-template.js`) — editorial HTML builder consuming `reportData`
+5. **Section renderers** (`src/templates/report-sections.js`) — 18 functions, one per A4 page
+6. **Design system** (`src/templates/report-design-system.js`) — self-contained CSS + `wrapFullPage()`
+7. **AI narrative layer** (`src/lib/report-narratives.js`) — Claude API integration with missing-field awareness
+8. **New generator endpoint** — `api/reports/generate.js` rewritten as thin handler importing shared modules
+9. **Updated chart library** — `report-charts.js` palette → `#012d1d` / `#E07A5F` / `#8FBC8F`
+10. **Archive old generators** — move `api/reports/generate.js` (current), `api/reports/generate-full.js`, `src/pages/landbook-report.js` to `archive/` before rebuilding
