@@ -160,8 +160,8 @@ export function renderGlance(d) {
   const resilienceScore = scores.resilience || safeObj(d.energy).independenceScore || 0;
 
   return `
-<main class="flex-1 flex flex-col min-h-screen">
-<div class="flex-1 p-12 flex flex-col justify-between max-w-6xl mx-auto w-full">
+<main class="a4-container shadow-sm mt-8 mb-4">
+<div class="flex flex-col justify-between h-full">
 
   <!-- TOP BAND -->
   <section class="flex justify-between items-end pb-4 border-b-[0.5pt] border-outline-variant">
