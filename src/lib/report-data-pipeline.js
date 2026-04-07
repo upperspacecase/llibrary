@@ -65,6 +65,9 @@ import {
   computeEcosystemServices,
   computeRevenueScenarios,
   computeRiskProfile,
+  computeSoilScore,
+  computeCarbonScore,
+  computeBioScore,
 } from './report-scores.js';
 
 // ── Helpers ────────────────────────────────────────────────
@@ -175,6 +178,7 @@ export async function fetchAllData(lat, lng, boundary, areaHa) {
     ['nominatim', () => reverseGeocode(lat, lng)],
     ['solarWind', () => getSolarWind(lat, lng)],
     ['pollen', () => getPollenIndex(lat, lng)],
+    ['regionalBaseline', () => fetchRegionalBaseline(lat, lng)],
     // Species trend windows — 3 five-year periods for temporal comparison
     ...computeBioWindows(lat, lng).map((w, i) => [
       `speciesWindow${i}`, () => getSpeciesCounts(lat, lng, 15, { d1: w.d1, d2: w.d2 }),
@@ -585,10 +589,14 @@ export function processRawData(raw, submission, areaHa) {
     },
   };
 
+  // ── Agriculture systems (computed early for revenue scenarios) ──
+  const lcData = raw.landCover?.ok ? raw.landCover.data : null;
+  const agriSystems = deriveAgriSystems(lcData, climate, soil, terrain);
+
   // ── Scores ────────────────────────────────────────────
   const allScores = computeAllScores(raw, areaHa);
   const ecosystemServices = computeEcosystemServices(areaHa, raw);
-  const revenueScenarios = computeRevenueScenarios(areaHa);
+  const revenueScenarios = computeRevenueScenarios(areaHa, agriSystems);
   const riskProfile = computeRiskProfile(raw);
 
   const scores = {
@@ -650,6 +658,9 @@ export function processRawData(raw, submission, areaHa) {
     riskLevel: riskScoresData?.droughtLabel ?? scoreToLabel(riskScoresData?.drought ?? 0),
   };
 
+  // ── Climate trends (computed early for NPV scenarios) ──
+  const trendsData = computeTrends(raw);
+
   // ── Energy potential ──────────────────────────────────
   const solarWindData = raw.solarWind?.ok ? raw.solarWind.data : null;
   const energy = deriveEnergyPotential(lat, terrain, water, annualRainfall, solarWindData);
@@ -697,17 +708,9 @@ export function processRawData(raw, submission, areaHa) {
     services: svcArray, // keep full array too
   };
 
-  // NPV from computeEcosystemServices returns a number; wrap in object with scenarios
+  // NPV from computeEcosystemServices; scenarios adjusted by climate trends
   const npvValue = ecosystemServices.npv ?? 0;
-  const npvObj = {
-    thirtyYear: npvValue,
-    scenarios: [
-      { name: 'Business as Usual', npv: Math.round(npvValue * 0.8), assumptions: 'Current management', riskLevel: 'Low' },
-      { name: 'Climate Resilience', npv: npvValue, assumptions: 'Water efficiency, fire protection', riskLevel: 'Medium' },
-      { name: 'Conservation', npv: Math.round(npvValue * 1.1), assumptions: 'Ecosystem service markets', riskLevel: 'Medium-High' },
-      { name: 'Intensification', npv: Math.round(npvValue * 0.75), assumptions: 'Maximize short-term yields', riskLevel: 'High' },
-    ],
-  };
+  const npvObj = buildNPVScenarios(npvValue, trendsData);
 
   // Transform revenueScenarios array into keyed object for template
   const revArr = revenueScenarios || [];
@@ -733,10 +736,9 @@ export function processRawData(raw, submission, areaHa) {
   };
 
   // ── Agriculture ───────────────────────────────────────
-  const lcData = raw.landCover?.ok ? raw.landCover.data : null;
   const agriculture = {
     landCover: lcData?.label ?? null,
-    systems: deriveAgriSystems(lcData, climate, soil, terrain),
+    systems: agriSystems,
   };
 
   // ── Maps ──────────────────────────────────────────────
@@ -760,15 +762,23 @@ export function processRawData(raw, submission, areaHa) {
     });
   }
 
+  // Regional percentiles from 8-point radius sampling
+  const baseline = raw.regionalBaseline?.ok ? raw.regionalBaseline.data : { averages: {}, sampleCount: 0 };
+  const propertyScores = {
+    soil: scores.soil,
+    carbon: scores.carbon,
+    biodiversity: scores.biodiversity,
+  };
+  const percentiles = computePercentiles(propertyScores, baseline.averages);
+
   const regional = {
     protectedAreas: protectedList,
-    percentiles: {}, // would require regional comparison data
-    comparisons: {},
+    percentiles,
+    averages: baseline.averages,
+    sampleCount: baseline.sampleCount,
   };
 
   // ── Trends ────────────────────────────────────────────
-  const trendsData = computeTrends(raw);
-
   const trends = {
     tempPerDecade: trendsData.tempPerDecade,
     precipPerDecade: trendsData.precipPerDecade,
@@ -777,8 +787,9 @@ export function processRawData(raw, submission, areaHa) {
     gbifWindows: computeGBIFWindows(),
   };
 
-  // ── Compliance (static) ───────────────────────────────
-  const compliance = buildComplianceSection(property);
+  // ── Compliance (country-aware) ─────────────────────────
+  const countryCode = (nominatim?.address?.country_code || '').toUpperCase() || 'PT';
+  const compliance = buildComplianceSection(property, protectedList, countryCode);
 
   // ── Actions ───────────────────────────────────────────
   const actions = deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa);
@@ -812,6 +823,144 @@ export function processRawData(raw, submission, areaHa) {
       uncertainty: computeUncertainty(apiStatus),
     },
   };
+}
+
+// ── NPV scenario builder ─────────────────────────────────
+
+/**
+ * Build 4 NPV scenarios adjusted by observed climate trends.
+ *
+ * Methodology:
+ * - "Business as Usual": applies observed temp/precip trends over 30 years.
+ *   Warming reduces water regulation; drying reduces water provisioning.
+ *   Each +1°C/decade → -3% ecosystem service delivery.
+ *   Each -50mm precip/decade → -2% water-dependent services.
+ * - "Climate Resilience": assumes mitigation investments offset half the decline.
+ * - "Conservation": adds ecosystem service market premium (+8%) on top of resilience.
+ * - "Intensification": short-term yield boost (+5%) but amplified climate risk (-2x trend penalty).
+ */
+function buildNPVScenarios(npvValue, trendsData) {
+  const tempTrend = trendsData?.tempPerDecade || 0; // °C per decade
+  const precipTrend = trendsData?.precipPerDecade || 0; // mm per decade
+
+  // Over 30 years (3 decades): cumulative impact
+  const tempImpact = Math.abs(tempTrend) * 3 * 0.03; // 3% per °C per decade × 3 decades
+  const precipImpact = precipTrend < 0 ? Math.abs(precipTrend) / 50 * 0.02 * 3 : 0; // 2% per 50mm decline × 3 decades
+  const climateDecline = Math.min(0.35, tempImpact + precipImpact); // cap at 35%
+
+  const bauMultiplier = Math.max(0.55, 1 - climateDecline);
+  const resilienceMultiplier = Math.max(0.75, 1 - climateDecline * 0.5);
+  const conservationMultiplier = resilienceMultiplier * 1.08;
+  const intensificationMultiplier = Math.max(0.5, 1.05 - climateDecline * 2);
+
+  return {
+    thirtyYear: npvValue,
+    scenarios: [
+      {
+        name: 'Business as Usual',
+        npv: Math.round(npvValue * bauMultiplier),
+        assumptions: `Current management; ${tempTrend > 0 ? '+' : ''}${tempTrend.toFixed(2)}°C/decade trend applied`,
+        riskLevel: climateDecline > 0.15 ? 'High' : 'Medium',
+      },
+      {
+        name: 'Climate Resilience',
+        npv: Math.round(npvValue * resilienceMultiplier),
+        assumptions: 'Water efficiency + fire protection offset half of projected climate impact',
+        riskLevel: 'Medium',
+      },
+      {
+        name: 'Conservation',
+        npv: Math.round(npvValue * conservationMultiplier),
+        assumptions: 'Resilience measures + ecosystem service market premium (+8%)',
+        riskLevel: 'Medium',
+      },
+      {
+        name: 'Intensification',
+        npv: Math.round(npvValue * intensificationMultiplier),
+        assumptions: 'Short-term yield optimization; amplified climate exposure',
+        riskLevel: climateDecline > 0.1 ? 'High' : 'Medium-High',
+      },
+    ],
+    methodology: {
+      tempTrend,
+      precipTrend,
+      climateDecline: Math.round(climateDecline * 100),
+      note: 'Multipliers derived from observed 50-year climate trends (Open-Meteo ERA5 archive)',
+    },
+  };
+}
+
+// ── Regional baseline sampling ───────────────────────────
+
+/**
+ * Sample 8 points in a 15km radius around the property center.
+ * Fetch lightweight scoring inputs (soil, species, water) for each.
+ * Return averaged dimension scores as the regional baseline + percentiles.
+ */
+export async function fetchRegionalBaseline(lat, lng) {
+  const RADIUS_KM = 15;
+  const SAMPLES = 8;
+  const points = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const angle = (i / SAMPLES) * 2 * Math.PI;
+    // ~0.009 degrees per km at mid-latitudes
+    const dLat = (RADIUS_KM * Math.cos(angle)) * 0.009;
+    const dLng = (RADIUS_KM * Math.sin(angle)) * 0.009 / Math.cos(lat * Math.PI / 180);
+    points.push([lat + dLat, lng + dLng]);
+  }
+
+  // For each sample point, fetch soil + species count (lightweight)
+  const sampleScores = await Promise.all(points.map(async ([sLat, sLng]) => {
+    try {
+      const [soilRes, speciesRes] = await Promise.all([
+        safe('soil', () => getSoilProperties(sLat, sLng)),
+        safe('species', () => getSpeciesCounts(sLat, sLng, 10)),
+      ]);
+
+      const soilScore = computeSoilScore(soilRes.ok ? soilRes.data : null).score;
+      const carbonScore = computeCarbonScore(soilRes.ok ? soilRes.data : null).score;
+      const bioScore = computeBioScore(speciesRes.ok ? speciesRes.data : null).score;
+
+      return { soil: soilScore, carbon: carbonScore, biodiversity: bioScore };
+    } catch {
+      return null;
+    }
+  }));
+
+  const valid = sampleScores.filter(Boolean);
+  if (valid.length === 0) return { averages: {}, percentiles: {}, sampleCount: 0 };
+
+  const avg = (key) => Math.round(valid.reduce((s, v) => s + v[key], 0) / valid.length);
+  const averages = {
+    soil: avg('soil'),
+    carbon: avg('carbon'),
+    biodiversity: avg('biodiversity'),
+  };
+
+  return { averages, sampleCount: valid.length };
+}
+
+/**
+ * Compute percentiles for property scores against regional averages.
+ * Returns percentile rank (0-100) for each dimension.
+ */
+function computePercentiles(propertyScores, regionalAverages) {
+  if (!regionalAverages || !Object.keys(regionalAverages).length) return {};
+  const result = {};
+  for (const [key, avg] of Object.entries(regionalAverages)) {
+    const propVal = propertyScores[key];
+    if (propVal != null && avg != null && avg > 0) {
+      // Simple percentile: how far above/below average (50th = average)
+      const ratio = propVal / avg;
+      result[key] = Math.min(99, Math.max(1, Math.round(ratio * 50)));
+    }
+  }
+  // Overall percentile = average of dimension percentiles
+  const vals = Object.values(result);
+  if (vals.length > 0) {
+    result.overall = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+  return result;
 }
 
 // ── Uncertainty calculation ───────────────────────────────
@@ -1048,68 +1197,81 @@ function deriveAgriSystems(landCover, climate, soil, terrain) {
   });
 }
 
-function buildComplianceSection(property) {
-  // Static Portuguese/EU regulations relevant to rural land
-  const items = [
-    {
-      name: 'PDM (Plano Director Municipal)',
-      description: 'Municipal master plan — zoning, building, land-use rules',
-      authority: 'Câmara Municipal',
-      status: 'Check required',
-    },
-    {
-      name: 'RAN (Reserva Agrícola Nacional)',
-      description: 'National agricultural reserve — restricts non-agricultural use of quality farmland',
-      authority: 'DGADR',
-      status: 'Check required',
-    },
-    {
-      name: 'REN (Reserva Ecológica Nacional)',
-      description: 'National ecological reserve — protects sensitive ecological areas',
-      authority: 'CCDR',
-      status: 'Check required',
-    },
-    {
-      name: 'Natura 2000',
-      description: 'EU habitat and bird protection network',
-      authority: 'ICNF',
-      status: 'Check required',
-    },
-    {
-      name: 'RJUE (Regime Jurídico da Urbanização e Edificação)',
-      description: 'Building and urbanization legal framework',
-      authority: 'Câmara Municipal',
-      status: 'Check required',
-    },
-    {
-      name: 'Water Resources Law (Lei da Água)',
-      description: 'Riparian buffer zones, water abstraction permits',
-      authority: 'APA',
-      status: 'Check required',
-    },
-    {
-      name: 'Forest Fire Prevention (DFCI)',
-      description: 'Fuel management, firebreak maintenance requirements',
-      authority: 'ICNF / Câmara Municipal',
-      status: 'Check required',
-    },
-    {
-      name: 'EU CAP (Common Agricultural Policy)',
-      description: 'Subsidy eligibility, cross-compliance, eco-schemes',
-      authority: 'IFAP',
-      status: 'Check required',
-    },
-  ];
+const REGULATIONS_BY_COUNTRY = {
+  PT: [
+    { name: 'PDM (Plano Director Municipal)', description: 'Municipal master plan — zoning, building, land-use rules', authority: 'Câmara Municipal' },
+    { name: 'RAN (Reserva Agrícola Nacional)', description: 'National agricultural reserve — restricts non-agricultural use of quality farmland', authority: 'DGADR' },
+    { name: 'REN (Reserva Ecológica Nacional)', description: 'National ecological reserve — protects sensitive ecological areas', authority: 'CCDR' },
+    { name: 'Natura 2000', description: 'EU habitat and bird protection network', authority: 'ICNF' },
+    { name: 'RJUE (Regime Jurídico da Urbanização e Edificação)', description: 'Building and urbanization legal framework', authority: 'Câmara Municipal' },
+    { name: 'Water Resources Law (Lei da Água)', description: 'Riparian buffer zones, water abstraction permits', authority: 'APA' },
+    { name: 'Forest Fire Prevention (DFCI)', description: 'Fuel management, firebreak maintenance requirements', authority: 'ICNF / Câmara Municipal' },
+    { name: 'EU CAP (Common Agricultural Policy)', description: 'Subsidy eligibility, cross-compliance, eco-schemes', authority: 'IFAP' },
+  ],
+  ES: [
+    { name: 'PGOU (Plan General de Ordenación Urbana)', description: 'Municipal urban planning and zoning', authority: 'Ayuntamiento' },
+    { name: 'Ley de Montes', description: 'Forest law — reforestation obligations, fire prevention', authority: 'Comunidad Autónoma' },
+    { name: 'Natura 2000', description: 'EU habitat and bird protection network', authority: 'Ministerio para la Transición Ecológica' },
+    { name: 'Ley de Aguas', description: 'Water resources law — concessions, riparian zones', authority: 'Confederación Hidrográfica' },
+    { name: 'PAC (Política Agrícola Común)', description: 'CAP subsidies, eco-schemes, cross-compliance', authority: 'FEGA' },
+    { name: 'Ley de Patrimonio Natural y Biodiversidad', description: 'Protected species and habitats', authority: 'Comunidad Autónoma' },
+  ],
+  FR: [
+    { name: 'PLU (Plan Local d\'Urbanisme)', description: 'Local urban plan — zoning and land use', authority: 'Mairie / Communauté de communes' },
+    { name: 'Natura 2000', description: 'EU habitat and bird protection network', authority: 'DREAL' },
+    { name: 'Code Forestier', description: 'Forest code — reforestation, fire clearing obligations', authority: 'ONF / DDT' },
+    { name: 'Loi sur l\'eau', description: 'Water law — abstraction permits, wetland protection', authority: 'Agence de l\'eau' },
+    { name: 'PAC (Politique Agricole Commune)', description: 'CAP subsidies, eco-schemes, cross-compliance', authority: 'ASP' },
+    { name: 'Code de l\'environnement', description: 'Environmental protection, impact assessments', authority: 'DREAL' },
+  ],
+};
 
-  const timeline = [
+const TIMELINES_BY_COUNTRY = {
+  PT: [
     { action: 'Verify PDM zoning classification', deadline: 'Before any development', priority: 'High' },
     { action: 'Check RAN/REN status at CCDR', deadline: 'Before land use changes', priority: 'High' },
     { action: 'Register with IFAP for CAP subsidies', deadline: 'Annual application cycle', priority: 'Medium' },
     { action: 'Submit DFCI fuel management plan', deadline: 'Before fire season (May)', priority: 'High' },
     { action: 'Apply for water abstraction license if needed', deadline: 'Before installation', priority: 'Medium' },
-  ];
+  ],
+  ES: [
+    { action: 'Verify PGOU classification at Ayuntamiento', deadline: 'Before any development', priority: 'High' },
+    { action: 'Check Natura 2000 / Red Natura overlay', deadline: 'Before land use changes', priority: 'High' },
+    { action: 'Register for PAC at FEGA', deadline: 'Annual application cycle', priority: 'Medium' },
+    { action: 'Submit fire prevention plan if forested', deadline: 'Before fire season (June)', priority: 'High' },
+  ],
+  FR: [
+    { action: 'Verify PLU classification at Mairie', deadline: 'Before any development', priority: 'High' },
+    { action: 'Check Natura 2000 overlay at DREAL', deadline: 'Before land use changes', priority: 'High' },
+    { action: 'Register for PAC at ASP', deadline: 'Annual application cycle (May)', priority: 'Medium' },
+    { action: 'Declare water usage if applicable', deadline: 'Before abstraction', priority: 'Medium' },
+  ],
+};
 
-  return { items, timeline };
+function buildComplianceSection(property, protectedAreas, countryCode) {
+  const cc = countryCode || 'PT'; // default Portugal
+  const baseItems = REGULATIONS_BY_COUNTRY[cc] || REGULATIONS_BY_COUNTRY.PT;
+
+  // Check Natura 2000 overlap from Overpass protected areas data
+  const natura2000Names = protectedAreas
+    .filter(pa => pa.type === 'protected_area' || pa.designation?.includes('natura') || pa.name?.toLowerCase().includes('natura'))
+    .map(pa => pa.name);
+  const inNatura2000 = natura2000Names.length > 0;
+
+  const items = baseItems.map(item => {
+    if (item.name.includes('Natura 2000')) {
+      return {
+        ...item,
+        status: inNatura2000 ? 'Applicable' : 'Not applicable',
+        notes: inNatura2000 ? `Inside: ${natura2000Names.slice(0, 2).join(', ')}` : 'No Natura 2000 sites detected within property boundary',
+      };
+    }
+    return { ...item, status: 'Check required' };
+  });
+
+  const timeline = TIMELINES_BY_COUNTRY[cc] || TIMELINES_BY_COUNTRY.PT;
+
+  return { items, timeline, countryCode: cc };
 }
 
 function deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa) {
