@@ -266,25 +266,21 @@ function renderTable() {
                 const subId = str.slice(10);
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
-                    return `<td><button class="admin-landbook-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button> <button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V3 (Next.js)">V3</button></td>`;
+                    return `<td><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V3 (Next.js)">V3</button></td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
                 const versions = reportVersions.filter(r => String(r.submission_id) === subId);
-                const v2Btn = `<button class="admin-landbook-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V2 dashboard">V2</button>`;
                 const v3Btn = `<button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V3 (Next.js)">V3</button>`;
                 if (!versions.length) {
-                    return `<td class="admin-report-cell"><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button> ${v2Btn} ${v3Btn}</td>`;
+                    return `<td class="admin-report-cell">${v3Btn}</td>`;
                 }
-                // Version dropdown + share button
+                // Version dropdown
                 const options = versions.map(v =>
                     `<option value="${escapeHtml(v.slug)}" data-report-id="${escapeHtml(String(v._id))}">${v.version} — ${formatDate(v.created)}</option>`
                 ).join('');
                 return `<td class="admin-report-cell">
                     <select class="admin-version-select" data-submission-id="${escapeHtml(subId)}">${options}</select>
-                    <button class="admin-view-btn" data-slug="${escapeHtml(versions[0].slug)}" title="View report">View</button>
-                    <button class="admin-share-btn" title="Copy share link">Share</button>
-                    <button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}" title="Generate new version">+ New</button>
-                    ${v2Btn} ${v3Btn}
+                    ${v3Btn}
                 </td>`;
             }
             if (str === '__REGION_ACTIONS__') {
@@ -310,13 +306,6 @@ function renderTable() {
     body.querySelectorAll('.admin-file-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             downloadFile(btn.dataset.url, btn.dataset.name);
-        });
-    });
-
-    // Bind landbook V2 click handlers
-    body.querySelectorAll('.admin-landbook-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            window.open(`/landbook-v2?id=${btn.dataset.landbookId}`, '_blank');
         });
     });
 
@@ -355,139 +344,6 @@ function renderTable() {
         });
     });
 
-    // Bind version dropdown change → update view/share buttons
-    body.querySelectorAll('.admin-version-select').forEach(select => {
-        select.addEventListener('change', () => {
-            const cell = select.closest('.admin-report-cell');
-            const selected = select.selectedOptions[0];
-            const viewBtn = cell.querySelector('.admin-view-btn');
-            if (viewBtn) viewBtn.dataset.slug = selected.value;
-        });
-    });
-
-    // Bind view report buttons
-    body.querySelectorAll('.admin-view-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            window.open(`/report/${btn.dataset.slug}`, '_blank');
-        });
-    });
-
-    // Bind share buttons — copy the view link to clipboard
-    body.querySelectorAll('.admin-share-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const cell = btn.closest('.admin-report-cell');
-            const viewBtn = cell.querySelector('.admin-view-btn');
-            const slug = viewBtn ? viewBtn.dataset.slug : null;
-            if (!slug) return;
-            const fullUrl = `${window.location.origin}/report/${slug}`;
-            try {
-                await navigator.clipboard.writeText(fullUrl);
-                btn.textContent = 'Copied!';
-            } catch {
-                prompt('Share URL:', fullUrl);
-            }
-            setTimeout(() => { btn.textContent = 'Share'; }, 2000);
-        });
-    });
-
-    // Bind generate report buttons
-    body.querySelectorAll('.admin-generate-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const subId = btn.dataset.submissionId;
-            btn.disabled = true;
-            const origText = btn.textContent;
-            btn.textContent = 'Generating...';
-
-            // Create progress UI
-            const cell = btn.closest('td');
-            const progressEl = document.createElement('div');
-            progressEl.className = 'report-progress';
-            progressEl.innerHTML = `
-                <div class="report-progress-track"><div class="report-progress-fill"></div></div>
-                <span class="report-progress-text">Starting...</span>`;
-            cell.appendChild(progressEl);
-            const fill = progressEl.querySelector('.report-progress-fill');
-            const text = progressEl.querySelector('.report-progress-text');
-
-            try {
-                const res = await fetch('/api/reports/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ submission_id: subId, force_refresh: true }),
-                });
-
-                const contentType = res.headers.get('content-type') || '';
-
-                // Non-SSE response = early validation error
-                if (!contentType.includes('text/event-stream')) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || 'Generation failed');
-                }
-
-                // Read SSE stream
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let result = null;
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (value) buffer += decoder.decode(value, { stream: true });
-
-                    // Process complete SSE blocks (separated by \n\n)
-                    // On final read, also flush whatever remains in the buffer
-                    const blocks = buffer.split('\n\n');
-                    buffer = done ? '' : blocks.pop();
-
-                    for (const block of blocks) {
-                        if (!block.trim()) continue;
-                        const lines = block.split('\n');
-                        let eventType = 'message';
-                        let data = '';
-                        for (const line of lines) {
-                            if (line.startsWith('event: ')) eventType = line.slice(7);
-                            else if (line.startsWith('data: ')) data = line.slice(6);
-                        }
-                        if (!data) continue;
-
-                        const parsed = JSON.parse(data);
-
-                        if (eventType === 'error') {
-                            throw new Error(parsed.error || parsed.detail || 'Generation failed');
-                        }
-
-                        if (eventType === 'result') {
-                            result = parsed;
-                        } else {
-                            // Progress event
-                            fill.style.width = `${parsed.progress}%`;
-                            text.textContent = parsed.message;
-                        }
-                    }
-                    if (done) break;
-                }
-
-                if (!result) throw new Error('No result received from server');
-
-                // Add to local reportVersions and re-render
-                reportVersions.unshift({
-                    _id: result.id,
-                    submission_id: subId,
-                    slug: result.slug,
-                    version: result.version,
-                    name: result.name,
-                    blob_url: result.blob_url,
-                    created: result.created,
-                });
-                renderTable();
-            } catch (err) {
-                btn.disabled = false;
-                btn.textContent = origText;
-                progressEl.remove();
-                alert(`Report generation failed: ${err.message}`);
-            }
-        });
-    });
 }
 
 // ---- Data Pipeline ----
@@ -1043,61 +899,6 @@ style.textContent = `
     .admin-version-select:focus {
         outline: none;
         border-color: var(--black);
-    }
-    .admin-generate-btn {
-        padding: 4px 12px;
-        font-size: 12px;
-        font-family: inherit;
-        font-weight: 600;
-        background: #2d6a4f;
-        color: #fff;
-        border: 1px solid #2d6a4f;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: opacity 0.15s;
-        white-space: nowrap;
-    }
-    .admin-generate-btn:hover { opacity: 0.8; }
-    .admin-generate-btn:disabled { opacity: 0.5; cursor: default; }
-    .report-progress { margin-top: 6px; min-width: 180px; }
-    .report-progress-track { height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
-    .report-progress-fill { height: 100%; background: #2d6a4f; border-radius: 2px; transition: width 0.4s ease; width: 0%; }
-    .report-progress-text { font-size: 11px; color: #888; margin-top: 4px; display: block; }
-    .admin-view-btn, .admin-share-btn {
-        padding: 4px 10px;
-        font-size: 12px;
-        font-family: inherit;
-        font-weight: 500;
-        background: var(--cream, #f5f0eb);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        cursor: pointer;
-        color: var(--black);
-        transition: background 0.15s;
-        white-space: nowrap;
-    }
-    .admin-view-btn:hover, .admin-share-btn:hover {
-        background: var(--border);
-    }
-    .admin-view-btn:disabled, .admin-share-btn:disabled {
-        opacity: 0.5;
-        cursor: default;
-    }
-    .admin-landbook-btn {
-        padding: 4px 10px;
-        font-size: 12px;
-        font-family: inherit;
-        font-weight: 500;
-        background: #1a1a1a;
-        border: 1px solid #1a1a1a;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #fff;
-        transition: background 0.15s;
-        white-space: nowrap;
-    }
-    .admin-landbook-btn:hover {
-        background: #333;
     }
     .admin-landbook-v3-btn {
         padding: 4px 10px;
