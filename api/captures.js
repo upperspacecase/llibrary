@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import { put, del } from '@vercel/blob';
 import { getCollection } from './_db.js';
+import { notifyError } from './_notify.js';
 
 export const config = {
   api: { bodyParser: { sizeLimit: '10mb' } },
@@ -54,6 +55,7 @@ async function uploadCapture(req, res) {
     return res.status(201).json(capture);
   } catch (err) {
     console.error('Capture upload error:', err);
+    notifyError({ endpoint: '/api/captures', method: 'POST', action: 'upload capture' }, err);
     return res.status(500).json({ error: 'Upload failed', detail: err.message });
   }
 }
@@ -85,6 +87,7 @@ async function deleteCapture(req, res) {
     return res.status(200).json({ deleted: true });
   } catch (err) {
     console.error('Capture delete error:', err);
+    notifyError({ endpoint: '/api/captures', method: 'DELETE', action: 'delete capture' }, err);
     return res.status(500).json({ error: 'Delete failed', detail: err.message });
   }
 }

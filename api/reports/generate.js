@@ -10,6 +10,7 @@
  */
 
 import { getCollection } from '../_db.js';
+import { notifyError } from '../_notify.js';
 import { put } from '@vercel/blob';
 import { ObjectId } from 'mongodb';
 import { fetchAllData, processRawData, buildMapUrls } from '../../src/lib/report-data-pipeline.js';
@@ -212,6 +213,7 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('[generate] Error:', error);
+    notifyError({ endpoint: '/api/reports/generate', method: 'POST', action: 'generate report', body: req.body }, error);
     if (res.headersSent) {
       res.write(`event: error\ndata: ${JSON.stringify({
         error: 'Report generation failed',

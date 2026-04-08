@@ -1,4 +1,5 @@
 import { getCollection } from '../_db.js';
+import { notifyError } from '../_notify.js';
 
 export default async function handler(req, res) {
     const landbooks = await getCollection('landbooks');
@@ -9,34 +10,39 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-        const email = (body.email || '').trim().toLowerCase();
-        const doc = {
-            id: body.id || crypto.randomUUID(),
-            boundary: body.boundary || [],
-            center: body.center || null,
-            area: body.area || null,
-            perimeter: body.perimeter || null,
-            address: body.address || '',
-            email,
-            autoData: body.autoData || {},
-            userReported: body.userReported || {},
-            created: body.created || new Date().toISOString(),
-            updated: new Date().toISOString(),
-        };
-        await landbooks.insertOne(doc);
+        try {
+            const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+            const email = (body.email || '').trim().toLowerCase();
+            const doc = {
+                id: body.id || crypto.randomUUID(),
+                boundary: body.boundary || [],
+                center: body.center || null,
+                area: body.area || null,
+                perimeter: body.perimeter || null,
+                address: body.address || '',
+                email,
+                autoData: body.autoData || {},
+                userReported: body.userReported || {},
+                created: body.created || new Date().toISOString(),
+                updated: new Date().toISOString(),
+            };
+            await landbooks.insertOne(doc);
 
-        // Upsert email into waitlist (single source of truth for contacts)
-        if (email) {
-            const waitlist = await getCollection('waitlist');
-            await waitlist.updateOne(
-                { email },
-                { $setOnInsert: { email, address: body.address || '', location: null, createdAt: new Date() } },
-                { upsert: true }
-            );
+            if (email) {
+                const waitlist = await getCollection('waitlist');
+                await waitlist.updateOne(
+                    { email },
+                    { $setOnInsert: { email, address: body.address || '', location: null, createdAt: new Date() } },
+                    { upsert: true }
+                );
+            }
+
+            return res.status(201).json(doc);
+        } catch (err) {
+            console.error('Landbooks POST error:', err);
+            notifyError({ endpoint: '/api/landbooks', method: 'POST', action: 'insertOne landbook', body: req.body }, err);
+            return res.status(500).json({ error: 'Server error', detail: err.message });
         }
-
-        return res.status(201).json(doc);
     }
 
     res.setHeader('Allow', 'GET, POST');

@@ -1,5 +1,6 @@
 import { getCollection } from '../_db.js';
 import { requireAdmin } from '../_auth.js';
+import { notifyError } from '../_notify.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST' && req.method !== 'GET') {
@@ -31,6 +32,7 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         console.error('Admin data error:', err);
+        notifyError({ endpoint: '/api/admin/data', method: 'POST', action: 'fetch admin data' }, err);
         return res.status(500).json({ error: 'Failed to fetch data' });
     }
 }

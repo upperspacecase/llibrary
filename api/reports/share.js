@@ -1,4 +1,5 @@
 import { getCollection } from '../_db.js';
+import { notifyError } from '../_notify.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -58,6 +59,7 @@ export default async function handler(req, res) {
     return res.status(201).json({ slug: finalSlug, url: `/report/${finalSlug}` });
   } catch (err) {
     console.error('Share error:', err);
+    notifyError({ endpoint: '/api/reports/share', method: 'POST', action: 'share report', body: req.body }, err);
     return res.status(500).json({ error: 'Share failed', detail: err.message });
   }
 }

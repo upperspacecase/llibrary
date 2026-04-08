@@ -1,5 +1,6 @@
 import { getCollection } from '../_db.js';
 import { requireAdmin } from '../_auth.js';
+import { notifyError } from '../_notify.js';
 
 // Default seed regions — used when no waitlist data exists for a region
 const SEED_REGIONS = [
@@ -108,6 +109,7 @@ async function getRegions(_req, res) {
     return res.status(200).json({ regions });
   } catch (err) {
     console.error('Regions GET error:', err);
+    notifyError({ endpoint: '/api/regions', method: 'GET', action: 'aggregate regions' }, err);
     return res.status(500).json({ error: 'Server error' });
   }
 }
@@ -150,6 +152,7 @@ async function postRegion(req, res) {
     return res.status(201).json({ ok: true, pending: !isApproved });
   } catch (err) {
     console.error('Regions POST error:', err);
+    notifyError({ endpoint: '/api/regions', method: 'POST', action: 'insertOne region request', body: req.body }, err);
     return res.status(500).json({ error: 'Server error' });
   }
 }
@@ -175,6 +178,7 @@ async function patchRegion(req, res) {
     return res.status(200).json({ ok: true, modified: result.modifiedCount });
   } catch (err) {
     console.error('Regions PATCH error:', err);
+    notifyError({ endpoint: '/api/regions', method: 'PATCH', action: 'updateMany region status', body: req.body }, err);
     return res.status(500).json({ error: 'Server error' });
   }
 }

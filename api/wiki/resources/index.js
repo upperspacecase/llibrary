@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { notifyError } from '../../_notify.js';
 import { put, del } from '@vercel/blob';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB (Vercel Blob handles large files well)
@@ -150,7 +151,13 @@ export default async function handler(req, res) {
             updated: new Date().toISOString(),
         };
 
-        await resources.insertOne(doc);
+        try {
+            await resources.insertOne(doc);
+        } catch (err) {
+            console.error('Wiki resources insertOne error:', err);
+            notifyError({ endpoint: '/api/wiki/resources', method: 'POST', action: 'insertOne resource' }, err);
+            return res.status(500).json({ error: 'Failed to save resource', detail: err.message });
+        }
         return res.status(201).json(doc);
     }
 

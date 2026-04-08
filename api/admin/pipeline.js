@@ -6,6 +6,7 @@
 
 import { getCollection } from '../_db.js';
 import { requireAdmin } from '../_auth.js';
+import { notifyError } from '../_notify.js';
 
 // Test coordinate: Odemira, Portugal
 const LAT = 37.5967;
@@ -335,6 +336,7 @@ export default async function handler(req, res) {
             );
         } catch (err) {
             console.error('Pipeline persist error:', err);
+            notifyError({ endpoint: '/api/admin/pipeline', method: 'POST', action: 'persist pipeline result' }, err);
         }
 
         return res.json(result);
@@ -359,6 +361,7 @@ export default async function handler(req, res) {
         await col.bulkWrite(ops);
     } catch (err) {
         console.error('Pipeline persist error:', err);
+        notifyError({ endpoint: '/api/admin/pipeline', method: 'POST', action: 'bulkWrite pipeline results' }, err);
     }
 
     return res.json({ sources: results, testedAt });

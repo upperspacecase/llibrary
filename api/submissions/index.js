@@ -1,4 +1,5 @@
 import { getCollection } from '../_db.js';
+import { notifyError } from '../_notify.js';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -28,6 +29,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true });
     } catch (err) {
       console.error('Submission update error:', err);
+      notifyError({ endpoint: '/api/submissions', method: 'PATCH', action: 'updateOne submissions', body: req.body }, err);
       return res.status(500).json({ error: 'Update failed', detail: err.message });
     }
   }
@@ -83,6 +85,7 @@ export default async function handler(req, res) {
     return res.status(201).json(doc);
   } catch (err) {
     console.error('Submission error:', err);
+    notifyError({ endpoint: '/api/submissions', method: 'POST', action: 'insertOne submissions', body: req.body }, err);
     return res.status(500).json({ error: 'Submission failed', detail: err.message });
   }
 }

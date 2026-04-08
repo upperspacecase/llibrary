@@ -1,4 +1,5 @@
 import { getCollection } from './_db.js';
+import { notifyError } from './_notify.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -23,6 +24,7 @@ export default async function handler(req, res) {
         return res.status(201).json({ ok: true });
     } catch (err) {
         console.error('Waitlist error:', err);
+        notifyError({ endpoint: '/api/waitlist', method: 'POST', action: 'insertOne waitlist', body: req.body }, err);
         return res.status(500).json({ error: 'Server error' });
     }
 }
