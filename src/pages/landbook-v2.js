@@ -3,6 +3,8 @@
  * Sidebar navigation + A4 canvas. Data lives on the landbook document.
  */
 
+import { horizontalBarChart, stackedBarChart, radarChart, monthlyClimateChart, riskBarChart, speciesBarChart, percentileChart, energyBarChart } from '../lib/report-charts.js';
+
 // ── Sections config ──────────────────────────────────────
 const SECTIONS = [
   { id: 'executive',    label: 'Executive Summary',        icon: 'dashboard' },
@@ -80,6 +82,27 @@ function sectionTitle(title) {
 }
 
 function divider() { return '<div class="h-px bg-outline-variant/30 w-full my-6"></div>'; }
+
+function gaugeArc(value, max, color, label) {
+  const halfCirc = 141.37;
+  const total = halfCirc * 2;
+  const raw = (value != null && max > 0) ? value / max : 0;
+  const pct = Math.max(0, Math.min(raw, 1));
+  const filled = pct === 0 ? 3 : halfCirc * pct;
+  return `
+  <div class="text-center">
+    <div class="relative w-32 h-16 mx-auto overflow-hidden">
+      <svg class="w-32 h-32 absolute top-0 left-0" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#E7EEFE" stroke-width="10" stroke-dasharray="${halfCirc} ${total}"/>
+        <circle cx="50" cy="50" r="45" fill="none" stroke="${color}" stroke-width="10" stroke-dasharray="${filled.toFixed(1)} ${total}"/>
+      </svg>
+      <div class="absolute bottom-0 w-full text-center">
+        <span class="text-lg font-bold text-primary">${value != null ? esc(String(value)) : '\u2014'}</span>
+      </div>
+    </div>
+    <p class="text-[10px] font-bold tracking-widest text-primary uppercase mt-2">${esc(label)}</p>
+  </div>`;
+}
 
 // ── Sidebar ──────────────────────────────────────────────
 function renderNav() {
@@ -164,6 +187,12 @@ const renderers = {
       ${kpi(scores.carbon, '/100', 'Carbon Score')}
       ${kpi(scores.biodiversity, '/100', 'Biodiversity Score')}
       ${kpi(fire.riskLevel, '', 'Fire Risk')}
+    </div>
+    ${divider()}
+    <div class="grid grid-cols-3 gap-8">
+      ${gaugeArc(water.securityIndex, 10, '#3f6653', 'Water Security')}
+      ${gaugeArc(fire.riskScore, 5, '#D4A574', 'Fire Risk')}
+      ${gaugeArc(scores.resilience || 0, 10, '#C4705A', 'Resilience')}
     </div>`;
   },
 
@@ -226,6 +255,11 @@ const renderers = {
       }).join('')}
     </div>
     ${divider()}
+    <div class="my-4">${stackedBarChart(
+      services.map(s => ({ label: s.name, value: s.value })),
+      total, 672
+    )}</div>
+    ${divider()}
     <table class="w-full text-left">
       ${tableHeader('Service', 'Annual Value', '% of Total')}
       <tbody>
@@ -254,6 +288,13 @@ const renderers = {
       <div class="text-5xl font-black tracking-tighter text-primary">${scores.naturalCapital || 0}</div>
       <div class="text-sm text-outline">/100</div>
     </div>
+    ${divider()}
+    <div class="flex justify-center my-4">${radarChart(dims, 280)}</div>
+    ${divider()}
+    <div class="my-4">${horizontalBarChart(
+      dims.map(d => ({ label: d.label, value: d.score, avg: d.avg })),
+      672
+    )}</div>
     ${divider()}
     ${dims.map(dim => {
       const diff = dim.score - dim.avg;
@@ -349,6 +390,11 @@ const renderers = {
     <div class="text-[10px] uppercase tracking-widest text-outline mb-3">Climate Zone</div>
     <div class="text-lg font-bold text-primary mb-6">${fmt(c.zone)}</div>
     ${divider()}
+    ${highs.length === 12 ? `${divider()}
+    <div class="my-4">${monthlyClimateChart(
+      highs.map((h, i) => (h + (lows[i] || 0)) / 2),
+      precip, 672, 240
+    )}</div>` : ''}
     ${highs.length === 12 ? `
     <table class="w-full text-left text-sm">
       ${tableHeader('Month', 'High \u00b0C', 'Low \u00b0C', 'Precip mm')}
@@ -372,7 +418,12 @@ const renderers = {
       ${kpi(trends.direction, '', 'Trend')}
     </div>
     ${divider()}
-    ${groups.length > 0 ? `
+    ${groups.length > 0 ? `${divider()}
+    <div class="my-4">${speciesBarChart(
+      groups.map(g => ({ group: g.name || g.group || '', count: g.count || g.value || 0 })),
+      672
+    )}</div>
+    ${divider()}
     <table class="w-full text-left mb-6">
       ${tableHeader('Taxonomic Group', 'Count')}
       <tbody>${groups.map(g => tableRow(g.name || g.group || '', fmt(g.count || g.value))).join('')}</tbody>
@@ -455,6 +506,18 @@ const renderers = {
         ${riskBadge(drought.riskLevel)}
       </div>
     </div>
+    ${divider()}
+    <div class="grid grid-cols-3 gap-8 my-4">
+      ${gaugeArc(fire.riskScore, 5, '#C4705A', 'Fire Risk')}
+      ${gaugeArc(flood.riskScore, 5, '#D4A574', 'Flood Risk')}
+      ${gaugeArc(drought.riskScore, 5, '#3f6653', 'Drought Risk')}
+    </div>
+    ${divider()}
+    <div class="my-4">${riskBarChart([
+      { label: 'Fire', score: fire.riskScore || 0, maxScore: 5, color: '#C4705A' },
+      { label: 'Flood', score: flood.riskScore || 0, maxScore: 5, color: '#90E0EF' },
+      { label: 'Drought', score: drought.riskScore || 0, maxScore: 5, color: '#D4A574' },
+    ], 672)}</div>
     ${fire.activeFires ? `${divider()}
     <div class="flex items-center gap-3 p-4 bg-surface-container mb-6">
       <span class="material-symbols-outlined text-red-500" style="font-size:20px">local_fire_department</span>
@@ -476,10 +539,23 @@ const renderers = {
       { label: 'Biomass', data: safeObj(energy.biomass) },
     ];
 
+    const levelMap = { 'very high': 5, 'high': 4, 'moderate': 3, 'medium': 3, 'low': 2, 'very low': 1, 'none': 0 };
+    function numericPotential(s) {
+      const v = s.data.level || s.data.score || s.data;
+      if (typeof v === 'number') return v;
+      if (typeof v === 'string') return levelMap[v.toLowerCase()] || 0;
+      return 0;
+    }
+
     return `${sectionTitle('Resilience')}
     <div class="mb-8">
       ${kpi(energy.independenceScore, '/10', 'Energy Independence Score')}
     </div>
+    ${divider()}
+    <div class="my-4">${energyBarChart(
+      sources.map(s => ({ label: s.label, potential: numericPotential(s) })),
+      672
+    )}</div>
     ${divider()}
     <table class="w-full text-left">
       ${tableHeader('Energy Source', 'Potential', 'Detail')}
@@ -502,6 +578,12 @@ const renderers = {
       ${kpi(pctls.carbon != null ? pctls.carbon + 'th' : null, '', 'Carbon Percentile')}
       ${kpi(pctls.biodiversity != null ? pctls.biodiversity + 'th' : null, '', 'Biodiversity Percentile')}
     </div>
+    ${divider()}
+    <div class="my-4">${percentileChart([
+      { label: 'Soil Health', percentile: pctls.soil || 0 },
+      { label: 'Carbon Storage', percentile: pctls.carbon || 0 },
+      { label: 'Biodiversity', percentile: pctls.biodiversity || 0 },
+    ], 672)}</div>
     ${areas.length > 0 ? `${divider()}
     <table class="w-full text-left">
       ${tableHeader('Protected Area', 'Type', 'Designation')}
