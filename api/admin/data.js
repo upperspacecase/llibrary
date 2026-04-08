@@ -1,16 +1,12 @@
 import { getCollection } from '../_db.js';
+import { requireAdmin } from '../_auth.js';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
+    if (req.method !== 'POST' && req.method !== 'GET') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { password } = req.body || {};
-    const adminPassword = process.env.ADMIN_PASSWORD;
-
-    if (!adminPassword || password !== adminPassword) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (!requireAdmin(req, res)) return;
 
     try {
         const [waitlist, landbooks, contributions, resources, submissions, reportVersions] = await Promise.all([

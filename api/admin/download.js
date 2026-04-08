@@ -1,16 +1,14 @@
 import { head } from '@vercel/blob';
+import { requireAdmin } from '../_auth.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { password, url, filename } = req.body || {};
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!requireAdmin(req, res)) return;
 
-    if (!adminPassword || password !== adminPassword) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    const { url, filename } = req.body || {};
 
     if (!url) {
         return res.status(400).json({ error: 'url is required' });

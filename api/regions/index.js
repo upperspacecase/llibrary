@@ -1,4 +1,5 @@
 import { getCollection } from '../_db.js';
+import { requireAdmin } from '../_auth.js';
 
 // Default seed regions — used when no waitlist data exists for a region
 const SEED_REGIONS = [
@@ -154,12 +155,9 @@ async function postRegion(req, res) {
 }
 
 async function patchRegion(req, res) {
-  const { password, region, status } = req.body || {};
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!requireAdmin(req, res)) return;
 
-  if (!adminPassword || password !== adminPassword) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  const { region, status } = req.body || {};
   if (!region || !status || !['approved', 'rejected'].includes(status)) {
     return res.status(400).json({ error: 'Valid region and status (approved/rejected) required' });
   }

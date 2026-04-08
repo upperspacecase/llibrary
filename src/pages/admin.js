@@ -4,7 +4,6 @@ import '../styles/main.css';
 let data = {};
 let reportVersions = []; // keyed by submission_id string
 let activeTab = 'submissions';
-let password = '';
 let pipelineResults = null;
 let pipelineTesting = false;
 
@@ -60,7 +59,8 @@ async function downloadFile(url, filename) {
         const res = await fetch('/api/admin/download', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password, url, filename }),
+            credentials: 'include',
+            body: JSON.stringify({ url, filename }),
         });
         if (!res.ok) throw new Error('Download failed');
         const blob = await res.blob();
@@ -79,27 +79,24 @@ async function downloadFile(url, filename) {
 }
 
 // ---- Auth ----
-document.getElementById('login-btn').addEventListener('click', login);
-document.getElementById('password-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') login();
-});
+const GOOGLE_CLIENT_ID = '739273675321-9sltiakr741rl881k8ebfhm1eh1e0qui.apps.googleusercontent.com';
 
-async function login() {
-    const input = document.getElementById('password-input');
+async function handleGoogleCredential(credential) {
     const error = document.getElementById('login-error');
-    password = input.value.trim();
-
-    if (!password) { error.textContent = 'Enter a password.'; return; }
-
     try {
         const res = await fetch('/api/admin/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password }),
+            credentials: 'include',
+            body: JSON.stringify({ credential }),
         });
 
+        if (res.status === 403) {
+            error.textContent = 'This Google account is not authorized.';
+            return;
+        }
         if (!res.ok) {
-            error.textContent = 'Wrong password.';
+            error.textContent = 'Sign-in failed.';
             return;
         }
 
@@ -110,11 +107,49 @@ async function login() {
     }
 }
 
+function initGoogleOneTap() {
+    if (!window.google?.accounts?.id) {
+        // GSI library not loaded yet, retry
+        setTimeout(initGoogleOneTap, 200);
+        return;
+    }
+    google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => handleGoogleCredential(response.credential),
+    });
+    google.accounts.id.renderButton(document.getElementById('google-btn'), {
+        theme: 'outline',
+        size: 'large',
+        text: 'signin_with',
+        width: 300,
+    });
+    google.accounts.id.prompt();
+}
+
+// Auto-login: check for existing session, otherwise show Google sign-in
+(async function init() {
+    try {
+        const res = await fetch('/api/admin/auth', { credentials: 'include' });
+        if (res.ok) {
+            await loadData();
+            return;
+        }
+    } catch { /* no session */ }
+    initGoogleOneTap();
+})();
+
+// Logout
+document.getElementById('logout-btn').addEventListener('click', async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE', credentials: 'include' });
+    google.accounts.id.disableAutoSelect();
+    window.location.reload();
+});
+
 async function loadData() {
     const res = await fetch('/api/admin/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        credentials: 'include',
     });
 
     if (!res.ok) return;
@@ -154,6 +189,7 @@ async function loadData() {
 
     document.getElementById('login-view').style.display = 'none';
     document.getElementById('dashboard-view').style.display = 'block';
+    document.getElementById('logout-btn').style.display = 'inline-block';
     renderStats();
     renderTable();
 }
@@ -283,7 +319,8 @@ function renderTable() {
                 const res = await fetch('/api/regions', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password, region, status }),
+                    credentials: 'include',
+                    body: JSON.stringify({ region, status }),
                 });
                 if (!res.ok) throw new Error('Failed');
                 // Update local data and re-render
@@ -531,7 +568,7 @@ async function testAllSources() {
         const res = await fetch('/api/admin/pipeline', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password }),
+            credentials: 'include',
         });
         if (!res.ok) throw new Error('Pipeline test failed');
         const result = await res.json();
@@ -562,7 +599,8 @@ async function testSingleSource(sourceId) {
         const res = await fetch('/api/admin/pipeline', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password, source: sourceId }),
+            credentials: 'include',
+            body: JSON.stringify({ source: sourceId }),
         });
         if (!res.ok) throw new Error('Test failed');
         const result = await res.json();
@@ -608,20 +646,6 @@ style.textContent = `
     }
     .admin-login-card h2 {
         margin-bottom: 8px;
-    }
-    .admin-login-card input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        font-size: 15px;
-        font-family: inherit;
-        background: var(--white);
-        margin-top: 24px;
-    }
-    .admin-login-card input:focus {
-        outline: none;
-        border-color: var(--black);
     }
     .admin-btn {
         width: 100%;

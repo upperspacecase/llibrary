@@ -1,10 +1,11 @@
 /**
  * Data Pipeline Health Check — tests all external data sources.
- * POST /api/admin/pipeline  { password }           → test all
- * POST /api/admin/pipeline  { password, source }    → test one by id
+ * POST /api/admin/pipeline  (cookie auth)            → test all
+ * POST /api/admin/pipeline  { source }  (cookie auth) → test one by id
  */
 
 import { getCollection } from '../_db.js';
+import { requireAdmin } from '../_auth.js';
 
 // Test coordinate: Odemira, Portugal
 const LAT = 37.5967;
@@ -314,10 +315,9 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { password, source } = req.body || {};
-    if (password !== process.env.ADMIN_PASSWORD) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    if (!requireAdmin(req, res)) return;
+
+    const { source } = req.body || {};
 
     // Single source test
     if (source) {
