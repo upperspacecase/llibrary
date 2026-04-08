@@ -25,17 +25,17 @@ export const dynamic = "force-dynamic";
 
 async function getLandbook(id: string): Promise<Landbook | null> {
   const col = await getCollection("landbooks");
-  let doc = await col.findOne({ id });
-  if (!doc) {
-    // Fall back to submissions collection (same as /api/landbooks/[id])
-    const subs = await getCollection("submissions");
-    const sub = await subs.findOne({ id });
-    if (sub) {
-      doc = { ...sub, address: (sub as Record<string, unknown>).address || (sub as Record<string, unknown>).postcode || "" } as typeof doc;
-    }
-  }
-  if (!doc) return null;
-  return JSON.parse(JSON.stringify(doc)) as Landbook;
+  const doc = await col.findOne({ id });
+  if (doc) return JSON.parse(JSON.stringify(doc)) as Landbook;
+
+  // Fall back to submissions collection (same as /api/landbooks/[id])
+  const subs = await getCollection("submissions");
+  const sub = await subs.findOne({ id });
+  if (!sub) return null;
+
+  const plain = JSON.parse(JSON.stringify(sub));
+  plain.address = plain.address || plain.postcode || "";
+  return plain as Landbook;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
