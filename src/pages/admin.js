@@ -266,7 +266,11 @@ function renderTable() {
             }
             if (str.startsWith('__REPORT__')) {
                 const subId = str.slice(10);
-                if (!subId || row._type !== 'submission') return '<td class="admin-muted">—</td>';
+                if (!subId) return '<td class="admin-muted">—</td>';
+                if (row._type === 'landbook') {
+                    return `<td><button class="admin-view-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button></td>`;
+                }
+                if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
                 const versions = reportVersions.filter(r => String(r.submission_id) === subId);
                 if (!versions.length) {
                     return `<td><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button></td>`;
@@ -305,6 +309,13 @@ function renderTable() {
     body.querySelectorAll('.admin-file-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             downloadFile(btn.dataset.url, btn.dataset.name);
+        });
+    });
+
+    // Bind landbook V2 click handlers
+    body.querySelectorAll('[data-landbook-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.open(`/landbook-v2?id=${btn.dataset.landbookId}`, '_blank');
         });
     });
 
