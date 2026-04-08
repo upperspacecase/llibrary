@@ -7,7 +7,15 @@ export default async function handler(req, res) {
         const landbooks = await getCollection('landbooks');
 
         if (req.method === 'GET') {
-            const landbook = await landbooks.findOne({ id });
+            let landbook = await landbooks.findOne({ id });
+            if (!landbook) {
+                // Fall back to submissions collection so v2 dashboard works with submission IDs
+                const submissions = await getCollection('submissions');
+                const sub = await submissions.findOne({ id });
+                if (sub) {
+                    landbook = { ...sub, address: sub.address || sub.postcode || '' };
+                }
+            }
             if (!landbook) return res.status(404).json({ error: 'Landbook not found' });
             return res.status(200).json(landbook);
         }

@@ -10,16 +10,14 @@ let pipelineTesting = false;
 // ---- Column configs per collection ----
 const columns = {
     submissions: [
-        { key: '_type', label: 'Type' },
         { key: '_who', label: 'Who', format: (_, row) => row.name || row.email || row.contact || '-' },
-        { key: 'contact', label: 'Contact', format: (v, row) => row.email || v || '-' },
         { key: '_location', label: 'Location', format: (_, row) => row.address || row.postcode || '-' },
         { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
         { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
-        { key: 'landGoals', label: 'Goals', format: v => Array.isArray(v) && v.length ? v.join(', ') : '-' },
-        { key: 'notes', label: 'Notes', format: (v, row) => v || (row.userReported?.notes) || '-' },
         { key: 'files', label: 'Files', format: formatFiles },
         { key: '_date', label: 'Date', format: formatDate },
+        { key: 'contact', label: 'Contact', format: (v, row) => row.email || v || '-' },
+        { key: '_type', label: 'Type' },
     ],
     contributions: [
         { key: 'section', label: 'Section' },
@@ -268,12 +266,13 @@ function renderTable() {
                 const subId = str.slice(10);
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
-                    return `<td><button class="admin-view-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button></td>`;
+                    return `<td><button class="admin-landbook-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button></td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
                 const versions = reportVersions.filter(r => String(r.submission_id) === subId);
+                const v2Btn = `<button class="admin-landbook-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V2 dashboard">V2</button>`;
                 if (!versions.length) {
-                    return `<td><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button></td>`;
+                    return `<td class="admin-report-cell"><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button> ${v2Btn}</td>`;
                 }
                 // Version dropdown + share button
                 const options = versions.map(v =>
@@ -284,6 +283,7 @@ function renderTable() {
                     <button class="admin-view-btn" data-slug="${escapeHtml(versions[0].slug)}" title="View report">View</button>
                     <button class="admin-share-btn" title="Copy share link">Share</button>
                     <button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}" title="Generate new version">+ New</button>
+                    ${v2Btn}
                 </td>`;
             }
             if (str === '__REGION_ACTIONS__') {
@@ -313,7 +313,7 @@ function renderTable() {
     });
 
     // Bind landbook V2 click handlers
-    body.querySelectorAll('[data-landbook-id]').forEach(btn => {
+    body.querySelectorAll('.admin-landbook-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             window.open(`/landbook-v2?id=${btn.dataset.landbookId}`, '_blank');
         });
@@ -734,7 +734,6 @@ style.textContent = `
         overflow-x: auto;
     }
     .admin-table {
-        width: 100%;
         border-collapse: collapse;
         font-size: 14px;
     }
@@ -1074,6 +1073,22 @@ style.textContent = `
     .admin-view-btn:disabled, .admin-share-btn:disabled {
         opacity: 0.5;
         cursor: default;
+    }
+    .admin-landbook-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        background: #1a1a1a;
+        border: 1px solid #1a1a1a;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #fff;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .admin-landbook-btn:hover {
+        background: #333;
     }
 `;
 document.head.appendChild(style);

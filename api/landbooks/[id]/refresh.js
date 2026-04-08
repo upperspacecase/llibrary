@@ -17,9 +17,17 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   try {
-    // 1. Load the landbook
+    // 1. Load the landbook (or fall back to submissions)
     const landbooks = await getCollection('landbooks');
-    const landbook = await landbooks.findOne({ id });
+    let landbook = await landbooks.findOne({ id });
+    let collection = landbooks;
+
+    if (!landbook) {
+      const submissions = await getCollection('submissions');
+      landbook = await submissions.findOne({ id });
+      collection = submissions;
+      if (landbook) landbook.address = landbook.address || landbook.postcode || '';
+    }
 
     if (!landbook) {
       return res.status(404).json({ error: 'Landbook not found' });
@@ -51,8 +59,8 @@ export default async function handler(req, res) {
 
     const data = processRawData(raw, submission, areaHa);
 
-    // 5. Save to landbook document
-    await landbooks.findOneAndUpdate(
+    // 5. Save to document
+    await collection.findOneAndUpdate(
       { id },
       {
         $set: {
