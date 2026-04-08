@@ -45,49 +45,49 @@ function safeArr(v) { return Array.isArray(v) ? v : []; }
 function riskBadge(level) {
   if (!level) return '';
   const l = String(level).toLowerCase();
-  if (l === 'low' || l === 'very low') return `<span class="px-2 py-1 bg-zinc-200 text-zinc-700 text-[10px] font-bold">${esc(level).toUpperCase()}</span>`;
+  if (l === 'low' || l === 'very low') return `<span class="px-2 py-1 bg-[#b1f0ce] text-[#012d1d] text-[10px] font-bold">${esc(level).toUpperCase()}</span>`;
   if (l === 'moderate') return `<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-[10px] font-bold">${esc(level).toUpperCase()}</span>`;
   return `<span class="px-2 py-1 bg-red-100 text-red-800 text-[10px] font-bold">${esc(level).toUpperCase()}</span>`;
 }
 
 function kpi(value, unit, label) {
   return `<div>
-    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">${esc(label)}</div>
+    <div class="text-[10px] uppercase tracking-widest text-outline mb-2">${esc(label)}</div>
     <div class="flex items-baseline gap-1">
-      <span class="text-3xl font-black tracking-tighter text-zinc-900">${fmt(value)}</span>
-      ${unit ? `<span class="text-sm text-zinc-400">${esc(unit)}</span>` : ''}
+      <span class="text-3xl font-black tracking-tighter text-primary">${fmt(value)}</span>
+      ${unit ? `<span class="text-sm text-outline">${esc(unit)}</span>` : ''}
     </div>
   </div>`;
 }
 
 function tableHeader(...cols) {
-  return `<thead><tr class="border-b border-zinc-200">${cols.map(c =>
-    `<th class="py-3 text-[10px] font-bold tracking-widest text-zinc-400 uppercase text-left">${esc(c)}</th>`
+  return `<thead><tr class="border-b border-outline-variant">${cols.map(c =>
+    `<th class="py-3 text-[10px] font-bold tracking-widest text-outline uppercase text-left">${esc(c)}</th>`
   ).join('')}</tr></thead>`;
 }
 
 function tableRow(...cells) {
-  return `<tr class="border-b border-zinc-100">${cells.map((c, i) =>
-    `<td class="py-3 text-sm ${i === 0 ? 'font-bold text-zinc-900' : 'text-zinc-600'}">${c}</td>`
+  return `<tr class="border-b border-outline-variant/50">${cells.map((c, i) =>
+    `<td class="py-3 text-sm ${i === 0 ? 'font-bold text-primary' : 'text-on-surface'}">${c}</td>`
   ).join('')}</tr>`;
 }
 
 function sectionTitle(title) {
   return `<div class="mb-8">
-    <h1 class="text-2xl font-bold tracking-tighter text-zinc-900 mb-2">${esc(title)}</h1>
-    <div class="h-px bg-zinc-200 w-full"></div>
+    <h1 class="text-2xl font-bold tracking-tighter font-serif text-primary mb-2">${esc(title)}</h1>
+    <div class="h-px bg-outline-variant w-full"></div>
   </div>`;
 }
 
-function divider() { return '<div class="h-px bg-zinc-100 w-full my-6"></div>'; }
+function divider() { return '<div class="h-px bg-outline-variant/30 w-full my-6"></div>'; }
 
 // ── Sidebar ──────────────────────────────────────────────
 function renderNav() {
   nav.innerHTML = SECTIONS.map(s => `
-    <a href="#" data-section="${s.id}" class="flex items-center gap-3 px-4 py-2 transition-colors duration-150 font-['Inter'] text-sm tracking-tight
+    <a href="#" data-section="${s.id}" class="flex items-center gap-3 px-6 py-2.5 font-['Inter'] text-sm
       ${s.id === activeSection
-        ? 'bg-zinc-200 text-zinc-900 font-bold'
-        : 'text-zinc-500 hover:bg-zinc-200'}">
+        ? 'bg-white text-[#012d1d] font-bold border-l-4 border-[#012d1d]'
+        : 'text-slate-600 hover:bg-slate-100 hover:translate-x-1 transition-transform duration-200'}">
       <span class="material-symbols-outlined" style="font-size:20px">${s.icon}</span>
       <span>${s.label}</span>
     </a>
@@ -110,27 +110,27 @@ function renderCanvas() {
     return;
   }
   const renderer = renderers[activeSection];
-  canvas.innerHTML = renderer ? `<div class="px-12 py-16">${renderer(data)}</div>` : emptyState();
+  canvas.innerHTML = renderer ? `<div class="compact-body">${renderer(data)}</div>` : emptyState();
 }
 
 function emptyState() {
   return `<div class="flex flex-col items-center justify-center h-full min-h-[500px] px-12 py-16 text-center">
-    <span class="material-symbols-outlined text-6xl text-zinc-200 mb-8">architecture</span>
-    <h2 class="text-2xl font-bold tracking-tighter text-zinc-900 mb-4">NO DATA YET</h2>
-    <p class="text-zinc-400 text-sm tracking-tight uppercase mb-8">Click "Update Data" to fetch environmental data for this property.</p>
-    <div class="h-px bg-zinc-100 w-full mb-8"></div>
+    <span class="material-symbols-outlined text-6xl text-outline-variant mb-8">architecture</span>
+    <h2 class="text-2xl font-bold tracking-tighter text-primary mb-4">NO DATA YET</h2>
+    <p class="text-outline text-sm tracking-tight uppercase mb-8">Click "Update Data" to fetch environmental data for this property.</p>
+    <div class="h-px bg-surface-container w-full mb-8"></div>
     <div class="flex flex-col gap-4 text-left">
       <div class="flex items-center gap-4">
-        <div class="w-2 h-2 bg-zinc-300"></div>
-        <span class="text-[10px] tracking-[0.2em] uppercase text-zinc-500 font-bold">22 API Sources</span>
+        <div class="w-2 h-2 bg-outline-variant"></div>
+        <span class="text-[10px] tracking-[0.2em] uppercase text-outline font-bold">22 API Sources</span>
       </div>
       <div class="flex items-center gap-4">
-        <div class="w-2 h-2 bg-zinc-300"></div>
-        <span class="text-[10px] tracking-[0.2em] uppercase text-zinc-500 font-bold">18 Analysis Sections</span>
+        <div class="w-2 h-2 bg-outline-variant"></div>
+        <span class="text-[10px] tracking-[0.2em] uppercase text-outline font-bold">18 Analysis Sections</span>
       </div>
       <div class="flex items-center gap-4">
-        <div class="w-2 h-2 bg-zinc-300"></div>
-        <span class="text-[10px] tracking-[0.2em] uppercase text-zinc-500 font-bold">Cached On Your Landbook</span>
+        <div class="w-2 h-2 bg-outline-variant"></div>
+        <span class="text-[10px] tracking-[0.2em] uppercase text-outline font-bold">Cached On Your Landbook</span>
       </div>
     </div>
   </div>`;
@@ -150,8 +150,8 @@ const renderers = {
 
     return `${sectionTitle('Executive Summary')}
     <div class="mb-8">
-      <div class="text-lg font-bold text-zinc-900 mb-1">${esc(p.name)}</div>
-      <div class="text-sm text-zinc-400">${esc(p.address)}</div>
+      <div class="text-lg font-bold text-primary mb-1">${esc(p.name)}</div>
+      <div class="text-sm text-outline">${esc(p.address)}</div>
     </div>
     <div class="grid grid-cols-4 gap-8 mb-8">
       ${kpi(p.area ? p.area.toFixed(1) : null, 'ha', 'Total Area')}
@@ -174,7 +174,7 @@ const renderers = {
     const meta = safeObj(d.meta);
     const coords = safeObj(p.coords);
 
-    return `<div class="relative min-h-[600px] flex flex-col justify-between -mx-12 -mt-16 -mb-0 px-12 pt-16 pb-12 bg-zinc-900 text-white overflow-hidden">
+    return `<div class="relative min-h-[600px] flex flex-col justify-between -mx-16 -mt-16 -mb-0 px-16 pt-16 pb-12 bg-primary text-white overflow-hidden">
       ${maps.satellite ? `<img src="${esc(maps.satellite)}" class="absolute inset-0 w-full h-full object-cover opacity-30" alt=""/>` : ''}
       <div class="relative z-10">
         <div class="text-[10px] font-bold tracking-[0.2em] uppercase opacity-70 mb-1">LANDBOOK</div>
@@ -211,17 +211,17 @@ const renderers = {
 
     return `${sectionTitle('What This Land Provides')}
     <div class="text-center mb-8">
-      <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Thirty-Year NPV</div>
-      <div class="text-4xl font-black tracking-tighter text-zinc-900">\u20ac${fmt(npv.thirtyYear, v => v.toLocaleString())}</div>
+      <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Thirty-Year NPV</div>
+      <div class="text-4xl font-black tracking-tighter text-primary">\u20ac${fmt(npv.thirtyYear, v => v.toLocaleString())}</div>
     </div>
     ${divider()}
     <div class="grid grid-cols-3 gap-6 mb-8">
       ${services.map(s => {
         const pct = total > 0 ? ((s.value / total) * 100).toFixed(0) : 0;
         return `<div>
-          <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-1">${esc(s.name)}</div>
-          <div class="text-xl font-black text-zinc-900">\u20ac${s.value.toLocaleString()}</div>
-          <div class="mt-2 h-1 bg-zinc-100"><div class="h-full bg-zinc-900" style="width:${pct}%"></div></div>
+          <div class="text-[10px] uppercase tracking-widest text-outline mb-1">${esc(s.name)}</div>
+          <div class="text-xl font-black text-primary">\u20ac${s.value.toLocaleString()}</div>
+          <div class="mt-2 h-1 bg-surface-container"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
         </div>`;
       }).join('')}
     </div>
@@ -250,22 +250,22 @@ const renderers = {
 
     return `${sectionTitle('How This Land Performs')}
     <div class="text-center mb-8">
-      <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Natural Capital Score</div>
-      <div class="text-5xl font-black tracking-tighter text-zinc-900">${scores.naturalCapital || 0}</div>
-      <div class="text-sm text-zinc-400">/100</div>
+      <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Natural Capital Score</div>
+      <div class="text-5xl font-black tracking-tighter text-primary">${scores.naturalCapital || 0}</div>
+      <div class="text-sm text-outline">/100</div>
     </div>
     ${divider()}
     ${dims.map(dim => {
       const diff = dim.score - dim.avg;
       const sign = diff > 0 ? '+' : '';
       const pct = Math.min(dim.score, 100);
-      return `<div class="flex items-center gap-6 py-4 border-b border-zinc-100 last:border-0">
-        <div class="w-24 text-sm font-bold text-zinc-900">${dim.label}</div>
+      return `<div class="flex items-center gap-6 py-4 border-b border-outline-variant/50 last:border-0">
+        <div class="w-24 text-sm font-bold text-primary">${dim.label}</div>
         <div class="flex-1">
-          <div class="h-2 bg-zinc-100 w-full"><div class="h-full bg-zinc-900" style="width:${pct}%"></div></div>
+          <div class="h-2 bg-surface-container w-full"><div class="h-full bg-primary" style="width:${pct}%"></div></div>
         </div>
-        <div class="w-12 text-right text-sm font-black text-zinc-900">${dim.score}</div>
-        <div class="w-20 text-right text-[10px] font-bold ${diff >= 0 ? 'text-zinc-500' : 'text-red-500'}">${sign}${diff} vs avg</div>
+        <div class="w-12 text-right text-sm font-black text-primary">${dim.score}</div>
+        <div class="w-20 text-right text-[10px] font-bold ${diff >= 0 ? 'text-outline' : 'text-red-500'}">${sign}${diff} vs avg</div>
       </div>`;
     }).join('')}`;
   },
@@ -346,8 +346,8 @@ const renderers = {
       ${kpi(c.growingSeason, 'months', 'Growing Season')}
     </div>
     ${divider()}
-    <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-3">Climate Zone</div>
-    <div class="text-lg font-bold text-zinc-900 mb-6">${fmt(c.zone)}</div>
+    <div class="text-[10px] uppercase tracking-widest text-outline mb-3">Climate Zone</div>
+    <div class="text-lg font-bold text-primary mb-6">${fmt(c.zone)}</div>
     ${divider()}
     ${highs.length === 12 ? `
     <table class="w-full text-left text-sm">
@@ -391,8 +391,8 @@ const renderers = {
 
     return `${sectionTitle('Agriculture')}
     <div class="mb-6">
-      <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Land Cover</div>
-      <div class="text-lg font-bold text-zinc-900">${fmt(ag.landCover)}</div>
+      <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Land Cover</div>
+      <div class="text-lg font-bold text-primary">${fmt(ag.landCover)}</div>
     </div>
     ${divider()}
     ${systems.length > 0 ? `
@@ -403,7 +403,7 @@ const renderers = {
         fmt(s.description || s.detail),
         fmt(s.suitability || s.rating)
       )).join('')}</tbody>
-    </table>` : '<p class="text-sm text-zinc-400">No agricultural systems data available.</p>'}`;
+    </table>` : '<p class="text-sm text-outline">No agricultural systems data available.</p>'}`;
   },
 
   opportunities(d) {
@@ -440,25 +440,25 @@ const renderers = {
     return `${sectionTitle('Risks')}
     <div class="grid grid-cols-3 gap-8 mb-8">
       <div>
-        <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Fire Risk</div>
-        <div class="text-3xl font-black text-zinc-900 mb-1">${fmt(fire.riskScore, v => v + '/5')}</div>
+        <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Fire Risk</div>
+        <div class="text-3xl font-black text-primary mb-1">${fmt(fire.riskScore, v => v + '/5')}</div>
         ${riskBadge(fire.riskLevel)}
       </div>
       <div>
-        <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Flood Risk</div>
-        <div class="text-3xl font-black text-zinc-900 mb-1">${fmt(flood.riskScore, v => v + '/5')}</div>
+        <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Flood Risk</div>
+        <div class="text-3xl font-black text-primary mb-1">${fmt(flood.riskScore, v => v + '/5')}</div>
         ${riskBadge(flood.riskLevel)}
       </div>
       <div>
-        <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Drought Risk</div>
-        <div class="text-3xl font-black text-zinc-900 mb-1">${fmt(drought.riskScore, v => v + '/5')}</div>
+        <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Drought Risk</div>
+        <div class="text-3xl font-black text-primary mb-1">${fmt(drought.riskScore, v => v + '/5')}</div>
         ${riskBadge(drought.riskLevel)}
       </div>
     </div>
     ${fire.activeFires ? `${divider()}
-    <div class="flex items-center gap-3 p-4 bg-zinc-100 mb-6">
+    <div class="flex items-center gap-3 p-4 bg-surface-container mb-6">
       <span class="material-symbols-outlined text-red-500" style="font-size:20px">local_fire_department</span>
-      <span class="text-sm text-zinc-900 font-bold">Active fires within monitoring radius: ${fire.activeFires}</span>
+      <span class="text-sm text-primary font-bold">Active fires within monitoring radius: ${fire.activeFires}</span>
     </div>` : ''}
     ${safeArr(fire.historical).length > 0 ? `${divider()}
     <table class="w-full text-left">
@@ -518,12 +518,12 @@ const renderers = {
     return `${sectionTitle('Change Over Time')}
     <div class="grid grid-cols-2 gap-8 mb-8">
       <div>
-        <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Temp Trend / Decade</div>
-        <div class="text-3xl font-black tracking-tighter text-zinc-900">${fmt(trends.tempPerDecade, v => (v > 0 ? '+' : '') + v.toFixed(2))}\u00b0C</div>
+        <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Temp Trend / Decade</div>
+        <div class="text-3xl font-black tracking-tighter text-primary">${fmt(trends.tempPerDecade, v => (v > 0 ? '+' : '') + v.toFixed(2))}\u00b0C</div>
       </div>
       <div>
-        <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">Precip Trend / Decade</div>
-        <div class="text-3xl font-black tracking-tighter text-zinc-900">${fmt(trends.precipPerDecade, v => (v > 0 ? '+' : '') + v.toFixed(1))} mm</div>
+        <div class="text-[10px] uppercase tracking-widest text-outline mb-2">Precip Trend / Decade</div>
+        <div class="text-3xl font-black tracking-tighter text-primary">${fmt(trends.precipPerDecade, v => (v > 0 ? '+' : '') + v.toFixed(1))} mm</div>
       </div>
     </div>
     ${npvScenarios.length > 0 ? `${divider()}
@@ -553,14 +553,14 @@ const renderers = {
     <div class="grid grid-cols-2 gap-4">
       ${entries.map(e => {
         const src = maps[e.key];
-        return `<div class="border border-zinc-200 overflow-hidden">
-          <div class="h-48 bg-zinc-50">
+        return `<div class="border border-outline-variant overflow-hidden">
+          <div class="h-48 bg-surface-container-low">
             ${src
               ? `<img src="${esc(src)}" alt="${esc(e.title)}" class="w-full h-full object-cover"/>`
-              : `<div class="w-full h-full flex items-center justify-center text-zinc-300 text-sm">Not available</div>`}
+              : `<div class="w-full h-full flex items-center justify-center text-outline-variant text-sm">Not available</div>`}
           </div>
           <div class="px-3 py-2">
-            <span class="text-[10px] font-bold uppercase tracking-widest text-zinc-400">${esc(e.title)}</span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-outline">${esc(e.title)}</span>
           </div>
         </div>`;
       }).join('')}
@@ -581,7 +581,7 @@ const renderers = {
         riskBadge(i.status || i.level),
         fmt(i.description || i.notes || i.detail)
       )).join('')}</tbody>
-    </table>` : '<p class="text-sm text-zinc-400 mb-6">No compliance data available.</p>'}
+    </table>` : '<p class="text-sm text-outline mb-6">No compliance data available.</p>'}
     ${timeline.length > 0 ? `${divider()}
     <table class="w-full text-left">
       ${tableHeader('Year', 'Event')}
@@ -599,12 +599,12 @@ const renderers = {
       const list = safeArr(items);
       if (!list.length) return '';
       return `<div class="mb-6">
-        <div class="text-[10px] font-black tracking-[0.2em] uppercase text-zinc-400 mb-3">${esc(title)}</div>
-        ${list.map(a => `<div class="py-3 border-b border-zinc-100">
-          <div class="text-sm font-bold text-zinc-900">${fmt(a.action || a.name || a.description)}</div>
+        <div class="text-[10px] font-black tracking-[0.2em] uppercase text-outline mb-3">${esc(title)}</div>
+        ${list.map(a => `<div class="py-3 border-b border-outline-variant/50">
+          <div class="text-sm font-bold text-primary">${fmt(a.action || a.name || a.description)}</div>
           <div class="flex gap-4 mt-1">
-            ${a.priority ? `<span class="text-[10px] uppercase tracking-widest text-zinc-400">Priority: ${esc(a.priority)}</span>` : ''}
-            ${a.impact ? `<span class="text-[10px] uppercase tracking-widest text-zinc-400">Impact: ${esc(a.impact)}</span>` : ''}
+            ${a.priority ? `<span class="text-[10px] uppercase tracking-widest text-outline">Priority: ${esc(a.priority)}</span>` : ''}
+            ${a.impact ? `<span class="text-[10px] uppercase tracking-widest text-outline">Impact: ${esc(a.impact)}</span>` : ''}
           </div>
         </div>`).join('')}
       </div>`;
@@ -615,7 +615,7 @@ const renderers = {
     ${group('Short-Term Actions', actions.shortTerm)}
     ${group('Long-Term Actions', actions.longTerm)}
     ${!safeArr(actions.immediate).length && !safeArr(actions.shortTerm).length && !safeArr(actions.longTerm).length
-      ? '<p class="text-sm text-zinc-400">No action items generated yet.</p>' : ''}`;
+      ? '<p class="text-sm text-outline">No action items generated yet.</p>' : ''}`;
   },
 
   methodology(d) {
@@ -643,8 +643,8 @@ const renderers = {
     </div>
     ${divider()}
     <div class="mb-6">
-      <div class="text-[10px] uppercase tracking-widest text-zinc-400 mb-2">API Coverage</div>
-      <div class="text-sm text-zinc-900 font-bold">${okCount} succeeded, ${failCount} failed of ${statusEntries.length} sources</div>
+      <div class="text-[10px] uppercase tracking-widest text-outline mb-2">API Coverage</div>
+      <div class="text-sm text-primary font-bold">${okCount} succeeded, ${failCount} failed of ${statusEntries.length} sources</div>
     </div>
     ${divider()}
     <table class="w-full text-left mb-6">
@@ -655,7 +655,7 @@ const renderers = {
     <table class="w-full text-left">
       ${tableHeader('API', 'Status')}
       <tbody>${statusEntries.map(([k, v]) => tableRow(k, v === 'ok'
-        ? '<span class="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-1">OK</span>'
+        ? '<span class="text-[10px] font-bold text-outline bg-surface-container px-2 py-1">OK</span>'
         : `<span class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1">FAIL</span>`
       )).join('')}</tbody>
     </table>` : ''}`;
@@ -694,7 +694,7 @@ async function init() {
 
   if (!id) {
     canvas.innerHTML = `<div class="flex items-center justify-center h-full min-h-[500px] px-12 py-16">
-      <p class="text-zinc-400 text-sm">No landbook ID provided. Add ?id=your-landbook-id to the URL.</p>
+      <p class="text-outline text-sm">No landbook ID provided. Add ?id=your-landbook-id to the URL.</p>
     </div>`;
     return;
   }
@@ -705,7 +705,7 @@ async function init() {
     landbook = await res.json();
   } catch {
     canvas.innerHTML = `<div class="flex items-center justify-center h-full min-h-[500px] px-12 py-16">
-      <p class="text-zinc-400 text-sm">Landbook not found.</p>
+      <p class="text-outline text-sm">Landbook not found.</p>
     </div>`;
     return;
   }
