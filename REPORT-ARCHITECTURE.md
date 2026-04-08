@@ -7,20 +7,11 @@
 
 ## Design System
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Primary | `#012d1d` | Headlines, big numbers, serif display |
-| Primary Container | `#1B4332` | Dark panels, cover bg, quote blocks |
-| Terracotta | `#E07A5F` | Accent borders, pull quote rules, trend arrows |
-| Surface | `#FAFAF9` | Page background (warm off-white) |
-| Outline Variant | `#c1c8c2` | Hairline dividers (0.5pt) |
-| On-Surface | `#151c27` | Body text |
-| Secondary | `#585f6c` | Muted labels |
-| Outline | `#717973` | Uppercase micro-labels |
-| Headline font | `Inter` | Labels, body, KPIs |
-| Serif font | `Libre Baskerville` | Display titles, pull quotes, big numbers |
-| Page size | A4 (210mm x 297mm) | 24mm padding |
-| Border radius | `0px` | Sharp editorial edges throughout |
+> **Full spec:** [`src/templates/DESIGN-SYSTEM.md`](src/templates/DESIGN-SYSTEM.md) — River's Environmental Ledger
+>
+> **Code tokens:** [`src/templates/report-design-system.js`](src/templates/report-design-system.js)
+
+Quick reference: Forest `#1B3A2F` · Sage `#8B9A7E` · Terracotta `#C4705A` · Amber `#D4A574` · Cream `#F5F1E8` · Charcoal `#2C2C2C` · Libre Baskerville (serif) · Inter (sans) · A4 210mm × 297mm · No border-radius
 
 ---
 
