@@ -174,7 +174,7 @@ export function wrapFullPage(innerHtml, { title = 'LandBook Report', version = '
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(title)}</title>
-<link rel="icon" type="image/jpeg" href="https://llibrary-eight.vercel.app/favicon1.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="https://llibrary-eight.vercel.app/favicon-32x32.png">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
