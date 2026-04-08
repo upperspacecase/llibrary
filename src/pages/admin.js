@@ -266,13 +266,14 @@ function renderTable() {
                 const subId = str.slice(10);
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
-                    return `<td><button class="admin-landbook-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button></td>`;
+                    return `<td><button class="admin-landbook-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V2 dashboard">LandBook V2</button> <button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V3 (Next.js)">V3</button></td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
                 const versions = reportVersions.filter(r => String(r.submission_id) === subId);
                 const v2Btn = `<button class="admin-landbook-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V2 dashboard">V2</button>`;
+                const v3Btn = `<button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V3 (Next.js)">V3</button>`;
                 if (!versions.length) {
-                    return `<td class="admin-report-cell"><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button> ${v2Btn}</td>`;
+                    return `<td class="admin-report-cell"><button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}">Generate</button> ${v2Btn} ${v3Btn}</td>`;
                 }
                 // Version dropdown + share button
                 const options = versions.map(v =>
@@ -283,7 +284,7 @@ function renderTable() {
                     <button class="admin-view-btn" data-slug="${escapeHtml(versions[0].slug)}" title="View report">View</button>
                     <button class="admin-share-btn" title="Copy share link">Share</button>
                     <button class="admin-generate-btn" data-submission-id="${escapeHtml(subId)}" title="Generate new version">+ New</button>
-                    ${v2Btn}
+                    ${v2Btn} ${v3Btn}
                 </td>`;
             }
             if (str === '__REGION_ACTIONS__') {
@@ -316,6 +317,14 @@ function renderTable() {
     body.querySelectorAll('.admin-landbook-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             window.open(`/landbook-v2?id=${btn.dataset.landbookId}`, '_blank');
+        });
+    });
+
+    // Bind landbook V3 (Next.js) click handlers
+    const LANDBOOK_V3_BASE = window.__LANDBOOK_V3_URL || 'https://landbook.landlibrary.co';
+    body.querySelectorAll('.admin-landbook-v3-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            window.open(`${LANDBOOK_V3_BASE}/landbook/${btn.dataset.landbookId}`, '_blank');
         });
     });
 
@@ -1089,6 +1098,22 @@ style.textContent = `
     }
     .admin-landbook-btn:hover {
         background: #333;
+    }
+    .admin-landbook-v3-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        background: #1B3A2F;
+        border: 1px solid #1B3A2F;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #F5F1E8;
+        transition: background 0.15s;
+        white-space: nowrap;
+    }
+    .admin-landbook-v3-btn:hover {
+        background: #274e3d;
     }
 `;
 document.head.appendChild(style);
