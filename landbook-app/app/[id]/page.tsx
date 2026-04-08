@@ -25,7 +25,15 @@ export const dynamic = "force-dynamic";
 
 async function getLandbook(id: string): Promise<Landbook | null> {
   const col = await getCollection("landbooks");
-  const doc = await col.findOne({ id });
+  let doc = await col.findOne({ id });
+  if (!doc) {
+    // Fall back to submissions collection (same as /api/landbooks/[id])
+    const subs = await getCollection("submissions");
+    const sub = await subs.findOne({ id });
+    if (sub) {
+      doc = { ...sub, address: (sub as Record<string, unknown>).address || (sub as Record<string, unknown>).postcode || "" } as typeof doc;
+    }
+  }
   if (!doc) return null;
   return JSON.parse(JSON.stringify(doc)) as Landbook;
 }
