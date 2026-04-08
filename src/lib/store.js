@@ -187,7 +187,10 @@ export async function saveSubmission(data, files = []) {
     body: JSON.stringify(doc),
   });
 
-  if (!res.ok) throw new Error(`Failed to save submission: ${res.status}`);
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail.detail || detail.error || `Failed to save submission: ${res.status}`);
+  }
   return res.json();
 }
 
