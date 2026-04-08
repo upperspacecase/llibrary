@@ -324,7 +324,7 @@ function renderTable() {
     const LANDBOOK_V3_BASE = window.__LANDBOOK_V3_URL || 'https://landbook.landlibrary.co';
     body.querySelectorAll('.admin-landbook-v3-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            window.open(`${LANDBOOK_V3_BASE}/landbook/${btn.dataset.landbookId}`, '_blank');
+            window.open(`${LANDBOOK_V3_BASE}/${btn.dataset.landbookId}`, '_blank');
         });
     });
 
