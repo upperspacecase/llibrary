@@ -1,0 +1,1114 @@
+{{!-- LandBook Report — Handlebars Template --}}
+{{!-- 18 A4 pages. Edit layout here; data comes from prepareTemplateData(). --}}
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 0 — Cover                                                             --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<div class="w-[210mm] h-[297mm] mx-auto relative overflow-hidden" style="page-break-after:always;">
+  {{#if cover.satellite}}
+    <img src="{{cover.satellite}}" alt="Satellite view" class="absolute inset-0 w-full h-full object-cover object-center z-0" />
+  {{else}}
+    <div class="absolute inset-0 w-full h-full bg-brand-forest z-0"></div>
+  {{/if}}
+
+  <div class="absolute inset-0 z-[1]" style="background:linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.55) 100%);"></div>
+
+  <div class="absolute top-[15mm] left-1/2 -translate-x-1/2 z-[2] text-center text-white">
+    <h1 class="text-[10px] font-bold tracking-[0.2em] uppercase mb-[5mm]">LandBook</h1>
+    <p class="text-[10px] font-bold tracking-[0.2em] uppercase opacity-90">Natural Capital Assessment</p>
+  </div>
+
+  <div class="absolute top-[15mm] right-[20mm] z-[2] text-white text-[10px] font-bold tracking-[0.2em] uppercase opacity-90">
+    {{fmt cover.lat "decimal4"}}{{#if cover.lat}}, {{/if}}{{fmt cover.lng "decimal4"}}
+  </div>
+
+  <div class="absolute bottom-[60mm] left-[20mm] z-[2] text-white">
+    <div class="serif-title text-5xl mb-[5mm]" style="text-shadow:2px 2px 8px rgba(0,0,0,0.5);">{{cover.name}}</div>
+    <div class="text-[14pt] font-light mb-[10mm] opacity-95">{{cover.address}}</div>
+    <div class="text-[10px] font-bold tracking-[0.15em] uppercase opacity-80 flex gap-[15mm]">
+      <span>{{fmt cover.area}} ha</span>
+      <span>&euro;{{fmt cover.valuePerHa}}/ha</span>
+      <span>NCS {{fmt cover.naturalCapital}}/100</span>
+    </div>
+  </div>
+
+  <div class="absolute bottom-[15mm] right-[20mm] z-[2] text-white text-[10px] font-bold tracking-[0.15em] uppercase opacity-80">
+    {{fmt cover.generatedAt}} &middot; {{fmt cover.version}}
+  </div>
+</div>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 1 — Property at a Glance (Executive Summary)                          --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+<div class="flex flex-col justify-between h-full">
+
+  <!-- PAGE HEADER -->
+  <header class="mb-12">
+    <div class="flex justify-between items-baseline">
+      <h1 class="serif-title text-5xl text-brand-forest">{{glance.name}}</h1>
+      <div class="text-right">
+        <p class="text-[10px] font-bold tracking-[0.2em] text-brand-forest uppercase">{{glance.coordsStr}}</p>
+        <p class="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase">{{glance.address}}</p>
+      </div>
+    </div>
+    <div class="hairline mt-4"></div>
+  </header>
+
+  <!-- BIOREGION + 15-MIN RADIUS -->
+  <section class="grid grid-cols-2 gap-0 py-8">
+    <div class="hairline-r px-12 flex flex-col gap-2">
+      <span class="text-[8px] uppercase tracking-widest text-brand-sage">Bioregion</span>
+      <div class="flex justify-between items-baseline">
+        <h2 class="text-[24px] serif-title text-brand-forest">{{glance.municipality}} Region</h2>
+        <span class="text-sm font-bold text-brand-forest">{{fmt glance.percentileOverall}}th percentile</span>
+      </div>
+    </div>
+    <div class="px-12 flex flex-col gap-2">
+      <span class="text-[8px] uppercase tracking-widest text-brand-sage">15-Minute Radius</span>
+      <div class="flex justify-between items-baseline">
+        <h2 class="text-[24px] serif-title text-brand-forest">{{glance.parish}}</h2>
+        <span class="text-sm font-bold text-brand-forest">{{fmt glance.percentileWater}}th percentile</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- MAP / SATELLITE + QUOTE -->
+  <section class="grid grid-cols-3 gap-6 my-8">
+    <div class="col-span-2 h-48 bg-surface-container overflow-hidden">
+      {{#if glance.satellite}}
+        <img src="{{glance.satellite}}" alt="Satellite" class="w-full h-full object-cover grayscale opacity-80"/>
+      {{else}}
+        <div class="w-full h-full flex items-center justify-center text-brand-sage text-sm">Map not available</div>
+      {{/if}}
+    </div>
+    <div class="h-48 bg-brand-forest p-6 flex flex-col justify-end">
+      <p class="serif-title text-brand-cream text-lg leading-tight">&ldquo;{{glance.pullQuote}}&rdquo;</p>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- KEY METRICS -->
+  <section class="grid grid-cols-4 gap-0 items-center py-8">
+    <div class="hairline-r px-6 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{localeNumber glance.area}}</div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Hectares</div>
+    </div>
+    <div class="hairline-r px-6 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">&euro;{{localeNumber glance.valuePerHa}}</div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Per Hectare</div>
+    </div>
+    <div class="hairline-r px-6 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">&euro;{{localeNumber glance.totalValue}}</div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Asset Value</div>
+    </div>
+    <div class="px-6 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{localeNumber glance.carbonStock}}</div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">tCO&sub2;e Stored</div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- 3-COLUMN NARRATIVE -->
+  <section class="py-12">
+    <div class="grid grid-cols-3 gap-8 text-[14.6px] leading-relaxed text-on-surface">
+      {{#each glance.paragraphs}}
+        {{#ifEq @index 0}}<div class="drop-cap">{{this}}</div>{{else}}<div>{{this}}</div>{{/ifEq}}
+      {{/each}}
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- NCS SCORE + GAUGES -->
+  <section class="py-12 flex flex-col items-center text-center">
+    <div class="mb-2"><span class="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase">Natural Capital Score</span></div>
+    <div class="text-[96pt] font-black text-brand-forest leading-none mb-4">{{glance.ncs}}</div>
+    <div class="text-lg text-on-surface">
+      <span class="font-bold text-brand-forest">{{glance.ncsLabel}}</span>
+      <span class="mx-2 text-brand-sage">|</span>{{fmt glance.percentileOverall}}th percentile in watershed
+    </div>
+    <div class="grid grid-cols-3 gap-16 mt-16 w-full max-w-3xl">
+      {{{glance.gauges.waterSecurity}}}
+      {{{glance.gauges.fireRisk}}}
+      {{{glance.gauges.resilience}}}
+    </div>
+  </section>
+</div>
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 2 — What This Land Provides (Ecosystem Services)                      --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="What This Land Provides"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{ecosystemServices.para1}}</p>
+      {{#if ecosystemServices.para2}}
+        <p class="text-[14.6px] leading-relaxed text-on-surface">{{ecosystemServices.para2}}</p>
+      {{/if}}
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      {{> pull-quote text=ecosystemServices.pullQuote}}
+      <div class="mt-6 p-6 space-y-4">
+        <h3 class="text-[10px] font-bold tracking-widest text-brand-sage uppercase">Spatial Context</h3>
+        <div class="aspect-video w-full bg-brand-cream overflow-hidden">
+          {{#if ecosystemServices.regionalMap}}
+            <img src="{{ecosystemServices.regionalMap}}" class="w-full h-full object-cover grayscale opacity-50 contrast-125" alt="Regional map"/>
+          {{else}}
+            <div class="w-full h-full flex items-center justify-center text-brand-sage text-sm">Map not available</div>
+          {{/if}}
+        </div>
+        <p class="text-[12px] italic text-brand-forest">{{ecosystemServices.propertyName}} within its bioregional context.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- NPV hero figure -->
+  <section class="py-12 text-center">
+    <h2 class="text-[24px] serif-title text-brand-forest mb-8">Thirty-Year NPV</h2>
+    <div class="mb-8">
+      <p class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">&euro;{{localeNumber ecosystemServices.npvThirtyYear}}</p>
+      <p class="text-[10px] font-bold tracking-[0.15em] text-brand-sage uppercase mt-4">{{ecosystemServices.uncertaintyLabel}} ({{fmt ecosystemServices.completeness}}% data completeness)</p>
+    </div>
+
+    <!-- Horizontal bar chart -->
+    <div class="max-w-2xl mx-auto">
+      <div class="flex justify-between items-end mb-4">
+        <h4 class="text-[10px] font-bold tracking-widest text-brand-forest uppercase">Valuation Composition</h4>
+        <p class="text-[14.4px] font-bold text-brand-forest">&euro;{{localeNumber ecosystemServices.total}}</p>
+      </div>
+      <div class="flex h-12 w-full">
+        {{#each ecosystemServices.services}}
+          {{#if this.hasValue}}
+            <div class="h-full {{this.bgClass}}" style="width:{{this.pct}}%"></div>
+          {{/if}}
+        {{/each}}
+      </div>
+      <div class="flex gap-6 mt-4">
+        {{#each ecosystemServices.services}}
+          {{#if this.hasValue}}
+            <div class="flex items-center gap-2"><div class="w-2 h-2 {{this.bgClass}}"></div><span class="text-[10px] font-bold text-brand-forest">{{this.name}} {{this.pctInt}}%</span></div>
+          {{/if}}
+        {{/each}}
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- Services table -->
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Ecosystem Service</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Annual Value</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Beneficiaries</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each ecosystemServices.services}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">&euro;{{localeNumber this.value}}</td>
+          <td class="py-4 text-sm text-on-surface">{{this.beneficiaries}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{> section-footer label="Natural Capital Assessment"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 3 — How This Land Performs (Scorecard)                                 --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="How This Land Performs"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{scorecard.text}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      {{> pull-quote text=scorecard.pullQuote}}
+      <div class="text-center mt-6">
+        {{{scorecard.charts.radar}}}
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#each scorecard.dims}}
+  <div class="py-8 flex gap-8 items-start">
+    <div class="w-16 h-16 bg-brand-forest flex items-center justify-center shrink-0">
+      <span class="material-symbols-outlined text-brand-cream text-3xl">{{this.icon}}</span>
+    </div>
+    <div>
+      <div class="flex items-baseline gap-4 mb-2">
+        <span class="text-[30px] font-black text-brand-forest">{{this.score}}</span>
+        <span class="text-[10px] font-bold text-brand-terracotta uppercase tracking-widest">{{this.diffLabel}} ({{this.sign}}{{this.diff}})</span>
+      </div>
+      <p class="text-sm text-on-surface leading-relaxed max-w-[300px]">{{this.label}} &mdash; Regional avg: {{this.avg}}/100</p>
+      {{#if this.showWarning}}
+        <div class="mt-2">{{warningBadge "Below Regional Average"}}</div>
+      {{/if}}
+    </div>
+  </div>
+  {{#unlessLast @index ../scorecard.dims}}<div class="hairline"></div>{{/unlessLast}}
+  {{/each}}
+
+  {{> section-footer label="Natural Capital Scorecard"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 4 — The Lay of the Land (Terrain)                                      --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="The Lay of the Land"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{terrain.description}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      {{> pull-quote text=terrain.pullQuote}}
+      <div class="space-y-3 text-sm text-on-surface mt-6">
+        <div>Elevation: {{fmt terrain.elevation}} m</div>
+        <div>Slope: {{fmt terrain.slope}}&deg;</div>
+        <div>Aspect: {{fmt terrain.aspect}}</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- Soil table -->
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Soil Property</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Value</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each terrain.soilRows}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.label}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.value}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hairline"></div>
+
+  <!-- Geology table -->
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Geology</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Detail</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each terrain.geoRows}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.label}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.value}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{> section-footer label="Terrain & Geology"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 5 — Water                                                              --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Water"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{water.narrative}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      {{> pull-quote text=water.pullQuote}}
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Feature</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Value</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Springs</td><td class="py-4 text-sm text-on-surface">{{fmt water.springs}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Wells</td><td class="py-4 text-sm text-on-surface">{{fmt water.wells}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Waterways</td><td class="py-4 text-sm text-on-surface">{{fmt water.waterways}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Water Bodies</td><td class="py-4 text-sm text-on-surface">{{fmt water.waterBodies}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Security Index</td><td class="py-4 text-sm text-on-surface">{{fmt water.securityIndex "score100"}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Flood Discharge</td><td class="py-4 text-sm text-on-surface">{{fmt water.floodDischarge}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Flood Risk</td><td class="py-4 text-right">{{{riskBadge water.floodRiskLevel}}} {{fmt water.floodRiskScore "score10"}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Annual Rainfall</td><td class="py-4 text-sm text-on-surface">{{fmt water.annualRainfall "int"}} mm</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  {{> section-footer label="Water Resources"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 6 — Climate                                                            --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Climate"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{climate.profile}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">{{climate.zone}}</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- Climate KPIs -->
+  <section class="grid grid-cols-5 gap-0 items-center py-8">
+    <div class="hairline-r px-4 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{fmt climate.annualMeanTemp "decimal1"}}<span class="text-xl">&deg;C</span></div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Mean Temp</div>
+    </div>
+    <div class="hairline-r px-4 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{fmt climate.summerMean "decimal1"}}<span class="text-xl">&deg;C</span></div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Summer</div>
+    </div>
+    <div class="hairline-r px-4 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{fmt climate.winterMean "decimal1"}}<span class="text-xl">&deg;C</span></div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Winter</div>
+    </div>
+    <div class="hairline-r px-4 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{fmt climate.annualRainfall "int"}}<span class="text-xl"> mm</span></div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Annual Rainfall</div>
+    </div>
+    <div class="px-4 py-2">
+      <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{fmt climate.growingSeason}}<span class="text-xl"> d</span></div>
+      <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Growing Season</div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- Chart -->
+  <div class="text-center py-8">
+    {{{climate.charts.climate}}}
+    <div class="text-[12px] italic text-brand-forest mt-2">Monthly average temperature and precipitation</div>
+  </div>
+
+  <div class="hairline"></div>
+
+  <!-- Seasonal management cards -->
+  <section class="py-12">
+    <h4 class="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase mb-8">SEASONAL MANAGEMENT</h4>
+    <div class="grid grid-cols-4 gap-8">
+      <div>
+        <span class="text-[10px] font-bold text-brand-sage uppercase block mb-4">JAN&ndash;MAR</span>
+        <div class="mb-4"><span class="inline-block bg-brand-sage text-white px-3 py-1 text-[10px] font-bold">RECHARGE</span></div>
+        <p class="text-[13px] text-brand-forest leading-relaxed">Peak aquifer saturation window.</p>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold text-brand-sage uppercase block mb-4">APR&ndash;MAY</span>
+        <div class="mb-4"><span class="inline-block bg-brand-forest text-white px-3 py-1 text-[10px] font-bold">GROWTH</span></div>
+        <p class="text-[13px] text-brand-forest leading-relaxed">Maximum biomass production phase.</p>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold text-brand-sage uppercase block mb-4">JUN&ndash;AUG</span>
+        <div class="mb-4"><span class="inline-block bg-brand-terracotta text-white px-3 py-1 text-[10px] font-bold">DORMANCY</span></div>
+        <p class="text-[13px] text-brand-forest leading-relaxed">Highest evaporation vulnerability.</p>
+      </div>
+      <div>
+        <span class="text-[10px] font-bold text-brand-sage uppercase block mb-4">SEP&ndash;DEC</span>
+        <div class="mb-4"><span class="inline-block bg-brand-amber text-white px-3 py-1 text-[10px] font-bold">HARVEST</span></div>
+        <p class="text-[13px] text-brand-forest leading-relaxed">Ideal for soil remediation works.</p>
+      </div>
+    </div>
+  </section>
+
+  {{> section-footer label="Climate Profile"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 7 — Biodiversity & Habitat Index                                       --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Biodiversity & Habitat Index"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{biodiversity.intro}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4 space-y-6">
+      <div class="py-4 flex gap-8 items-start">
+        <div class="w-16 h-16 bg-brand-forest flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-brand-cream text-3xl">pets</span>
+        </div>
+        <div>
+          <div class="flex items-baseline gap-4 mb-2">
+            <span class="text-[30px] font-black text-brand-forest">{{fmt biodiversity.total}}</span>
+            <span class="text-[10px] font-bold text-brand-terracotta uppercase tracking-widest">Total Species</span>
+          </div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="py-4 flex gap-8 items-start">
+        <div class="w-16 h-16 bg-brand-terracotta flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-brand-cream text-3xl">warning</span>
+        </div>
+        <div>
+          <div class="flex items-baseline gap-4 mb-2">
+            <span class="text-[30px] font-black text-brand-forest">{{fmt biodiversity.threatened}}</span>
+            <span class="text-[10px] font-bold text-brand-terracotta uppercase tracking-widest">Threatened</span>
+          </div>
+        </div>
+      </div>
+      <div class="hairline"></div>
+      <div class="py-4 flex gap-8 items-start">
+        <div class="w-16 h-16 bg-brand-forest flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-brand-cream text-3xl">database</span>
+        </div>
+        <div>
+          <div class="flex items-baseline gap-4 mb-2">
+            <span class="text-[30px] font-black text-brand-forest">{{fmt biodiversity.gbifTotal}}</span>
+            <span class="text-[10px] font-bold text-brand-terracotta uppercase tracking-widest">GBIF Records</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- Species chart -->
+  <div class="text-center py-8">
+    {{{biodiversity.charts.species}}}
+    <div class="text-[12px] italic text-brand-forest mt-2">Species recorded by taxonomic group</div>
+  </div>
+
+  <div class="hairline"></div>
+
+  <!-- Top species table -->
+  {{#if biodiversity.top10.length}}
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Species</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Group</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase text-right">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each biodiversity.top10}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.group}}</td>
+          <td class="py-4 text-right">{{#if this.threatened}}{{{riskBadge "Critical"}}}{{else}}{{{riskBadge "Low"}}}{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Biodiversity"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 8 — Agriculture                                                        --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Agriculture"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{agriculture.potential}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">{{fmt agriculture.landCover}}</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#if agriculture.topSystems.length}}
+  <div class="flex gap-1 py-4">
+    {{#each agriculture.topSystems}}
+    <div class="flex-1 {{this.bgClass}} p-4 h-24 flex flex-col justify-end">
+      <span class="text-[9px] font-bold text-brand-cream uppercase tracking-widest">{{this.name}}</span>
+    </div>
+    {{/each}}
+  </div>
+
+  <div class="hairline"></div>
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">System</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Description</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Suitability</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each agriculture.systems}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.description}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.suitability}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Agriculture"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 9 — Opportunities                                                      --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Opportunities"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{opportunities.comparison}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">Carbon stock: {{localeNumber opportunities.carbonStock}} tC &middot; Credit value: &euro;{{localeNumber opportunities.carbonCreditValue}}</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Scenario</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Annual Revenue</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Conservative</td><td class="py-4 text-sm text-on-surface">&euro;{{localeNumber opportunities.conservative}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Moderate</td><td class="py-4 text-sm text-on-surface">&euro;{{localeNumber opportunities.moderate}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Optimized</td><td class="py-4 text-sm text-on-surface">&euro;{{localeNumber opportunities.optimized}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  {{#if opportunities.details.length}}
+  <div class="hairline"></div>
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Revenue Stream</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Estimate</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each opportunities.details}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">&euro;{{localeNumber this.value}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Economic Opportunities"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 10 — Risk & Resilience                                                 --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Risk & Resilience"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{risks.narrative}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      {{#if risks.hasActiveFires}}
+      <div class="p-4 bg-brand-amber/20 mb-4">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="material-symbols-outlined text-[16px] text-brand-amber">local_fire_department</span>
+          <span class="text-[10px] font-bold uppercase tracking-widest text-brand-amber">Active Alert</span>
+        </div>
+        <div class="text-sm text-brand-amber">Active fires within monitoring radius: <strong>{{fmt risks.activeFires.count}}</strong></div>
+      </div>
+      {{/if}}
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <!-- 3-col risk gauges -->
+  <div class="grid grid-cols-3 gap-8 py-16">
+    {{{risks.gauges.fire}}}
+    {{{risks.gauges.flood}}}
+    {{{risks.gauges.drought}}}
+  </div>
+
+  <div class="hairline"></div>
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Risk</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Score</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase text-right">Severity</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Fire</td><td class="py-4 text-sm text-on-surface">{{fmt risks.fire.riskScore "score5"}}</td><td class="py-4 text-right">{{{riskBadge risks.fire.riskLevel}}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Flood</td><td class="py-4 text-sm text-on-surface">{{fmt risks.flood.riskScore "score5"}}</td><td class="py-4 text-right">{{{riskBadge risks.flood.riskLevel}}}</td></tr>
+        <tr><td class="py-4 text-sm font-bold text-brand-forest">Drought</td><td class="py-4 text-sm text-on-surface">{{fmt risks.drought.riskScore "score5"}}</td><td class="py-4 text-right">{{{riskBadge risks.drought.riskLevel}}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hairline"></div>
+
+  {{#if risks.recommendation}}
+  <div class="py-8">
+    <span class="text-[10px] font-black tracking-[0.2em] text-brand-terracotta uppercase block mb-3">RECOMMENDATION</span>
+    <p class="text-brand-forest font-medium leading-relaxed">{{risks.recommendation}}</p>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Risk Assessment"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 11 — Resilience                                                        --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Resilience"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{resilience.narrative}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">Energy Independence Score: {{fmt resilience.independenceScore}}/10</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#if resilience.recommendation}}
+  <div class="py-8">
+    <span class="text-[10px] font-black tracking-[0.2em] text-brand-terracotta uppercase block mb-3">RECOMMENDATION</span>
+    <p class="text-brand-forest font-medium leading-relaxed">{{resilience.recommendation}}</p>
+  </div>
+  <div class="hairline"></div>
+  {{/if}}
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Source</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Potential</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Detail</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each resilience.sources}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.label}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.level}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.detail}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  {{> section-footer label="Energy Resilience"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 12 — Bioregional Context                                               --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  <section class="mb-12">
+    <h1 class="serif-title text-[36px] text-brand-forest leading-tight mb-6">Why bioregional context matters</h1>
+    <div class="hairline mt-4 mb-8"></div>
+    <p class="w-[65%] text-[14.6px] leading-relaxed text-on-surface">{{context.narrative}}</p>
+  </section>
+
+  <section>
+    {{#each context.dimensions}}
+    <div class="py-8 flex gap-8 items-start">
+      <div class="w-16 h-16 bg-brand-forest flex items-center justify-center shrink-0">
+        <span class="material-symbols-outlined text-brand-cream text-3xl">{{this.icon}}</span>
+      </div>
+      <div>
+        <div class="flex items-baseline gap-4 mb-2">
+          <span class="text-[30px] font-black text-brand-forest">{{fmt this.value}}</span>
+          <span class="text-[10px] font-bold text-brand-terracotta uppercase tracking-widest">{{this.sublabel}}</span>
+        </div>
+        <p class="text-sm text-on-surface leading-relaxed max-w-[300px]">{{this.headline}} &mdash; {{{this.description}}}</p>
+      </div>
+    </div>
+    {{#unlessLast @index ../context.dimensions}}<div class="hairline"></div>{{/unlessLast}}
+    {{/each}}
+  </section>
+
+  {{> section-footer label="Bioregional Context"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 13 — Change Over Time                                                  --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Change Over Time"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{trends.dynamics}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="space-y-6">
+        <div class="py-3">
+          <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{signPrefix trends.tempPerDecade}}{{fmt trends.tempPerDecade "decimal2"}}&deg;C</div>
+          <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Per Decade</div>
+        </div>
+        <div class="hairline"></div>
+        <div class="py-3">
+          <div class="text-[43px] font-black tracking-tighter text-brand-forest leading-none">{{signPrefix trends.precipPerDecade}}{{fmt trends.precipPerDecade "decimal1"}} mm</div>
+          <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase mt-2">Precip / Decade</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#if trends.npvScenarios.length}}
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Scenario</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">30-Year NPV</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each trends.npvScenarios}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">&euro;{{localeNumber this.value}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{#if trends.fireProneByDecade.length}}
+  <div class="hairline"></div>
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Decade</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Fire-Prone Days</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each trends.fireProneByDecade}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.decade}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.days}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Temporal Analysis"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 14 — Map Portfolio                                                     --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Map Portfolio"}}
+
+  <p class="text-[14.6px] leading-relaxed text-on-surface mb-8">The following pages present the property across multiple cartographic perspectives, from satellite imagery to regional context.</p>
+
+  <div class="hairline"></div>
+
+  <div class="grid grid-cols-2 gap-6 py-8">
+    {{#each maps.entries}}
+    <div class="border-[0.5px] border-brand-sage overflow-hidden">
+      <div class="h-56 bg-brand-cream overflow-hidden">
+        {{#if this.src}}
+          <img src="{{this.src}}" alt="{{this.title}}" class="w-full h-full object-cover" />
+        {{else}}
+          <div class="w-full h-full flex items-center justify-center text-brand-sage text-sm">Not available</div>
+        {{/if}}
+      </div>
+      <div class="p-3 flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px] text-brand-forest">{{this.icon}}</span>
+        <span class="text-[10px] font-bold uppercase tracking-widest text-brand-sage">{{this.title}}</span>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  {{> section-footer label="Cartographic Portfolio"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 15 — Compliance                                                        --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Compliance"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{compliance.status}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">Regulatory compliance overview</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#if compliance.items.length}}
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Regulation</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Status</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Notes</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each compliance.items}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{fmt this.name}}</td>
+          <td class="py-4 text-right">{{{riskBadge this.status}}}</td>
+          <td class="py-4 text-sm text-on-surface">{{fmt this.detail}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{#if compliance.timeline.length}}
+  <div class="hairline"></div>
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Year</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Event Description</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each compliance.timeline}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.date}}</td>
+          <td class="py-4 text-sm text-on-surface">{{this.event}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{> section-footer label="Compliance & Regulation"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 16 — What to Do Next (Actions)                                         --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="What to Do Next"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{actions.recommendation}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+      <div class="flex justify-end">
+        <blockquote class="max-w-[320px] border-l-4 border-brand-terracotta pl-6 py-2">
+          <p class="serif-title text-xl text-brand-forest leading-relaxed">Strategic action plan</p>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  {{#if actions.immediate.length}}
+  <div class="py-8">
+    <span class="text-[10px] font-black tracking-[0.2em] text-brand-terracotta uppercase block mb-3">Immediate Actions</span>
+    {{#each actions.immediate}}
+    <div class="mb-4">
+      <p class="text-brand-forest font-medium leading-relaxed">{{fmt this.title}}</p>
+    </div>
+    {{/each}}
+  </div>
+  <div class="hairline"></div>
+  {{/if}}
+
+  {{#if actions.shortTerm.length}}
+  <div class="py-8">
+    <span class="text-[10px] font-black tracking-[0.2em] text-brand-terracotta uppercase block mb-3">Short-Term Actions</span>
+    {{#each actions.shortTerm}}
+    <div class="mb-4">
+      <p class="text-brand-forest font-medium leading-relaxed">{{fmt this.title}}</p>
+    </div>
+    {{/each}}
+  </div>
+  <div class="hairline"></div>
+  {{/if}}
+
+  {{#if actions.longTerm.length}}
+  <div class="py-8">
+    <span class="text-[10px] font-black tracking-[0.2em] text-brand-terracotta uppercase block mb-3">Long-Term Actions</span>
+    {{#each actions.longTerm}}
+    <div class="mb-4">
+      <p class="text-brand-forest font-medium leading-relaxed">{{fmt this.title}}</p>
+    </div>
+    {{/each}}
+  </div>
+  <div class="hairline"></div>
+  {{/if}}
+
+  {{> section-footer label="Action Plan"}}
+</main>
+
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{!-- 17 — Methodology, Sources & Disclaimer                                --}}
+{{!-- ═══════════════════════════════════════════════════════════════════════ --}}
+
+<main class="a4-container">
+  {{> section-header title="Methodology, Sources & Disclaimer"}}
+
+  <section class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-12 mb-12">
+    <div class="space-y-8">
+      <p class="drop-cap text-[14.6px] leading-relaxed text-on-surface">{{methodology.text}}</p>
+    </div>
+    <div class="flex flex-col justify-start pt-4">
+    </div>
+  </section>
+
+  <div class="hairline"></div>
+
+  <div class="py-4">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b-[0.5px] border-brand-sage">
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Source</th>
+          <th class="py-3 text-[10px] font-bold tracking-widest text-brand-sage uppercase">Description</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y-[0.5px] divide-brand-sage/20">
+        {{#each methodology.sources}}
+        <tr>
+          <td class="py-4 text-sm font-bold text-brand-forest">{{this.name}}</td>
+          <td class="py-4 text-sm text-on-surface">{{this.description}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="hairline"></div>
+
+  <div class="pt-6 text-center">
+    <div class="text-[10px] font-bold tracking-[0.15em] text-brand-forest uppercase">LandBook Natural Capital Assessment</div>
+    <div class="text-[12px] italic text-brand-forest mt-2">Generated {{fmt methodology.generatedAt}} &middot; {{fmt methodology.version}}</div>
+  </div>
+
+  {{> section-footer label="Methodology & Disclaimer"}}
+</main>
