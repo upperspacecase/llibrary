@@ -1,12 +1,12 @@
 /**
  * POST /api/landbooks/:id/refresh
  *
- * Runs the data pipeline (22+ APIs) and saves the result to landbook.data.
- * No AI narratives, no HTML rendering — just data fetching and normalization.
+ * Runs the data pipeline (22+ APIs), generates AI narratives, and saves to landbook.data.
  */
 
 import { getCollection } from '../../_db.js';
 import { fetchAllData, processRawData, buildMapUrls } from '../../../src/lib/report-data-pipeline.js';
+import { generateNarratives } from '../../../src/lib/report-narratives.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -59,7 +59,15 @@ export default async function handler(req, res) {
 
     const data = processRawData(raw, submission, areaHa);
 
-    // 5. Save to document
+    // 5. Generate AI narratives
+    try {
+      data.narratives = await generateNarratives(data);
+    } catch (err) {
+      console.warn('[refresh] Narrative generation failed, continuing without:', err.message);
+      data.narratives = {};
+    }
+
+    // 6. Save to document
     await collection.findOneAndUpdate(
       { id },
       {

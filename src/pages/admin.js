@@ -266,22 +266,10 @@ function renderTable() {
                 const subId = str.slice(10);
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
-                    return `<td><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook V3 (Next.js)">V3</button></td>`;
+                    return `<td><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook">LandBook</button></td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
-                const versions = reportVersions.filter(r => String(r.submission_id) === subId);
-                const v3Btn = `<button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook V3 (Next.js)">V3</button>`;
-                if (!versions.length) {
-                    return `<td class="admin-report-cell">${v3Btn}</td>`;
-                }
-                // Version dropdown
-                const options = versions.map(v =>
-                    `<option value="${escapeHtml(v.slug)}" data-report-id="${escapeHtml(String(v._id))}">${v.version} — ${formatDate(v.created)}</option>`
-                ).join('');
-                return `<td class="admin-report-cell">
-                    <select class="admin-version-select" data-submission-id="${escapeHtml(subId)}">${options}</select>
-                    ${v3Btn}
-                </td>`;
+                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook">LandBook</button></td>`;
             }
             if (str === '__REGION_ACTIONS__') {
                 const name = escapeHtml(row.name);
