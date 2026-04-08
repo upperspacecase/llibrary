@@ -50,7 +50,7 @@ export function notifyError(context, error) {
   const env = process.env.VERCEL_ENV || process.env.NODE_ENV || 'unknown';
 
   resend.emails.send({
-    from: 'LandLibrary Alerts <alerts@landlibrary.co>',
+    from: 'LandLibrary Alerts <hi@landlibrary.co>',
     to: alertEmail,
     subject: `[LandLibrary] Error: ${context.method} ${context.endpoint}`.slice(0, 78),
     html: `
