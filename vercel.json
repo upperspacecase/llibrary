@@ -1,10 +1,7 @@
 {
   "functions": {
-    "api/reports/generate.js": {
-      "maxDuration": 300
-    },
     "api/landbooks/[id]/refresh.js": {
-      "maxDuration": 120
+      "maxDuration": 300
     }
   },
   "framework": "vite",
