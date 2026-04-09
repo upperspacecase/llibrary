@@ -242,6 +242,59 @@ export interface ReportData {
   meta: Meta;
 }
 
+// ── 3-Layer Pipeline Types ────────────────────────────────
+
+export interface FactField<T = number | string | null> {
+  value: T;
+  unit: string | null;
+  confidence: "high" | "medium" | "low" | "missing";
+  sourceRef: string | null;
+  reason?: string;
+}
+
+export interface ObservationDoc {
+  landbookId: string;
+  source: string;
+  fetchedAt: string;
+  status: "ok" | "error";
+  raw: unknown;
+  error: string | null;
+  confidence: "high" | "medium" | "low" | "missing";
+  ttl: number;
+  group: string | null;
+  label: string;
+}
+
+export interface ReportDoc {
+  landbookId: string;
+  version: number;
+  generatedAt: string;
+  narratives: NarrativesV2;
+  scores: Scores;
+  factSnapshotVersion: number | null;
+  model: string | null;
+  promptVersion: string | null;
+  cost: { inputTokens: number; outputTokens: number; model: string; estimatedUSD: number } | null;
+}
+
+/** Narrative slots matching the 14-section layout */
+export interface NarrativesV2 {
+  overview?: { summary?: string; pullQuote?: string };
+  regionEcosystem?: { narrative?: string };
+  landWater?: { narrative?: string; pullQuote?: string };
+  biodiversity?: { narrative?: string };
+  climateSeasons?: { narrative?: string };
+  valueBenefits?: { narrative?: string; methodology?: string };
+  landUse?: { narrative?: string };
+  historyTrends?: { narrative?: string };
+  risksResilience?: { narrative?: string; recommendation?: string };
+  futureScenarios?: { narrative?: string };
+  recommendations?: { framing?: string };
+  sourcesMethodology?: { text?: string; disclaimer?: string };
+}
+
+// ── Existing Types ────────────────────────────────────────
+
 export interface Landbook {
   id: string;
   boundary: number[][];

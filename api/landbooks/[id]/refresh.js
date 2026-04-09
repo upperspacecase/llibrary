@@ -7,6 +7,9 @@
 import { getCollection } from '../../_db.js';
 import { fetchAllData, processRawData, buildMapUrls } from '../../../src/lib/report-data-pipeline.js';
 import { generateNarratives } from '../../../src/lib/report-narratives.js';
+import { saveAllObservations } from '../../../src/lib/observation-store.js';
+import { saveFacts, reportDataToFacts } from '../../../src/lib/fact-store.js';
+import { saveReport } from '../../../src/lib/report-store.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -78,6 +81,27 @@ export default async function handler(req, res) {
         },
       }
     );
+
+    // 7. Dual-write to 3-layer collections (fire-and-forget)
+    try {
+      await saveAllObservations(id, raw);
+    } catch (err) {
+      console.warn('[refresh] Observation persist failed:', err.message);
+    }
+    try {
+      await saveFacts(id, reportDataToFacts(data));
+    } catch (err) {
+      console.warn('[refresh] Fact persist failed:', err.message);
+    }
+    try {
+      await saveReport(id, {
+        narratives: data.narratives || {},
+        scores: data.scores || {},
+        model: 'claude-sonnet-4-20250514',
+      });
+    } catch (err) {
+      console.warn('[refresh] Report persist failed:', err.message);
+    }
 
     return res.status(200).json({ ok: true, data });
   } catch (error) {
