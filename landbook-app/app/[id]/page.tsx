@@ -49,12 +49,83 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   };
 }
 
+/**
+ * Try to assemble ReportData from the 3-layer collections (facts + reports).
+ * Falls back to null if the collections aren't populated yet.
+ */
+async function getReportDataFromLayers(id: string): Promise<ReportData | null> {
+  try {
+    const factsCol = await getCollection("facts");
+    const reportsCol = await getCollection("reports");
+
+    const factDoc = await factsCol.findOne({ landbookId: id });
+    if (!factDoc) return null;
+
+    // Unwrap fact fields back to plain values
+    const unwrap = (field: unknown): unknown => {
+      if (field && typeof field === "object" && "value" in (field as Record<string, unknown>)) {
+        return (field as Record<string, unknown>).value;
+      }
+      return field ?? null;
+    };
+
+    const unwrapSection = (section: Record<string, unknown> | undefined): Record<string, unknown> => {
+      if (!section) return {};
+      const result: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(section)) {
+        result[key] = unwrap(val);
+      }
+      return result;
+    };
+
+    // Build ReportData from fact fields
+    const data: ReportData = {
+      property: unwrapSection(factDoc.property) as ReportData["property"],
+      scores: unwrapSection(factDoc.scores) as ReportData["scores"],
+      climate: unwrapSection(factDoc.climate) as ReportData["climate"],
+      terrain: unwrapSection(factDoc.terrain) as ReportData["terrain"],
+      soil: unwrapSection(factDoc.soil) as ReportData["soil"],
+      geology: unwrapSection(factDoc.geology) as ReportData["geology"],
+      water: unwrapSection(factDoc.water) as ReportData["water"],
+      species: unwrapSection(factDoc.species) as ReportData["species"],
+      fire: unwrapSection(factDoc.fire) as ReportData["fire"],
+      flood: unwrapSection(factDoc.flood) as ReportData["flood"],
+      drought: unwrapSection(factDoc.drought) as ReportData["drought"],
+      energy: unwrapSection(factDoc.energy) as ReportData["energy"],
+      economics: unwrapSection(factDoc.economics) as ReportData["economics"],
+      maps: unwrapSection(factDoc.maps) as ReportData["maps"],
+      regional: unwrapSection(factDoc.regional) as ReportData["regional"],
+      trends: unwrapSection(factDoc.trends) as ReportData["trends"],
+      compliance: unwrapSection(factDoc.compliance) as ReportData["compliance"],
+      actions: unwrapSection(factDoc.actions) as ReportData["actions"],
+      agriculture: unwrapSection(factDoc.agriculture) as ReportData["agriculture"],
+      narratives: {},
+      meta: unwrapSection(factDoc.meta) as ReportData["meta"],
+    };
+
+    // Merge narratives from latest report
+    const reportDoc = await reportsCol.findOne(
+      { landbookId: id },
+      { sort: { version: -1 } }
+    );
+    if (reportDoc?.narratives) {
+      data.narratives = JSON.parse(JSON.stringify(reportDoc.narratives));
+    }
+
+    return data;
+  } catch (err) {
+    console.warn("[page] 3-layer read failed, will fall back to blob:", (err as Error).message);
+    return null;
+  }
+}
+
 export default async function LandbookPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const landbook = await getLandbook(id);
   if (!landbook) notFound();
 
-  const data = landbook.data;
+  // Try 3-layer read first, fall back to blob
+  const data = (await getReportDataFromLayers(id)) || landbook.data;
 
   if (!data) {
     return (
