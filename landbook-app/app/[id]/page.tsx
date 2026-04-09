@@ -69,7 +69,7 @@ async function getReportDataFromLayers(id: string): Promise<ReportData | null> {
       return field ?? null;
     };
 
-    const unwrapSection = (section: Record<string, unknown> | undefined): Record<string, unknown> => {
+    const unwrapSection = (section: Record<string, unknown> | undefined): unknown => {
       if (!section) return {};
       const result: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(section)) {
