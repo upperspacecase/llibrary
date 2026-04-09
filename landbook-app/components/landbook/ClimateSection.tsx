@@ -15,7 +15,7 @@ export function ClimateSection({
   const precip = climate.monthlyPrecip || [];
 
   return (
-    <section>
+    <section id="climate">
       <SectionTitle title="Climate" />
 
       {narratives?.profile && (

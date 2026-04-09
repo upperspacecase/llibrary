@@ -29,7 +29,7 @@ export function MethodologySection({
   const failCount = statusEntries.filter(([, v]) => v !== "ok").length;
 
   return (
-    <section>
+    <section id="methodology">
       <SectionTitle title="Methodology" />
 
       {narratives?.text && (

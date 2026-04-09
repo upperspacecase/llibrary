@@ -18,7 +18,7 @@ export function TerrainSoil({
   narratives?: Narratives["terrain"];
 }) {
   return (
-    <section>
+    <section id="terrain-soil">
       <SectionTitle title="Terrain & Soil" />
 
       {narratives?.description && (

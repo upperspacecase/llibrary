@@ -16,7 +16,7 @@ export function WaterSection({
   narratives?: Narratives["water"];
 }) {
   return (
-    <section>
+    <section id="water">
       <SectionTitle title="Water" />
 
       {narratives?.narrative && (

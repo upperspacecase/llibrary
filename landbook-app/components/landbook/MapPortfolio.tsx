@@ -10,7 +10,7 @@ const MAP_ENTRIES = [
 
 export function MapPortfolio({ maps }: { maps: Maps }) {
   return (
-    <section>
+    <section id="map-portfolio">
       <SectionTitle title="Map Portfolio" />
       <div className="grid grid-cols-2 gap-4">
         {MAP_ENTRIES.map((e) => {

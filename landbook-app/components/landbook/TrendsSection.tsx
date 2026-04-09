@@ -19,7 +19,7 @@ export function TrendsSection({
   const fireDecades = trends.fireProneByDecade || [];
 
   return (
-    <section>
+    <section id="trends">
       <SectionTitle title="Change Over Time" />
 
       {narratives?.dynamics && (

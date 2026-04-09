@@ -22,7 +22,7 @@ export function OpportunitiesSection({
   ].filter((s) => s.value > 0);
 
   return (
-    <section>
+    <section id="opportunities">
       <SectionTitle title="Opportunities" />
 
       {narratives?.comparison && (

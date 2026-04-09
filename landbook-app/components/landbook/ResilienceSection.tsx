@@ -21,7 +21,7 @@ export function ResilienceSection({
   ];
 
   return (
-    <section>
+    <section id="resilience">
       <SectionTitle title="Resilience" />
 
       {narratives?.narrative && (

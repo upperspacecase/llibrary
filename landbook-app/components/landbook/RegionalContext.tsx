@@ -17,7 +17,7 @@ export function RegionalContext({
   const areas = regional.protectedAreas || [];
 
   return (
-    <section>
+    <section id="regional-context">
       <SectionTitle title="Regional Context" />
 
       {narratives?.narrative && (

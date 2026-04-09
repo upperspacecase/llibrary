@@ -17,7 +17,7 @@ export function ComplianceSection({
   const timeline = compliance.timeline || [];
 
   return (
-    <section>
+    <section id="compliance">
       <SectionTitle title="Compliance" />
 
       {narratives?.framework && (

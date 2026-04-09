@@ -17,7 +17,7 @@ export function ExecutiveSummary({
   narratives?: Narratives["executiveSummary"];
 }) {
   return (
-    <section>
+    <section id="executive-summary">
       <SectionTitle title="Executive Summary" />
       <div className="mb-8">
         <div className="serif-title text-lg text-brand-forest mb-1">

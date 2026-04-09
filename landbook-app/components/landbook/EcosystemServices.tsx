@@ -25,7 +25,7 @@ export function EcosystemServices({
   const total = es.total || services.reduce((a, s) => a + s.value, 0);
 
   return (
-    <section>
+    <section id="ecosystem-services">
       <SectionTitle title="What This Land Provides" />
 
       {narratives?.intro && (

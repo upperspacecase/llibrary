@@ -37,7 +37,7 @@ export function NextSteps({
   }
 
   return (
-    <section>
+    <section id="next-steps">
       <SectionTitle title="Next Steps" />
 
       {narratives?.framing && (

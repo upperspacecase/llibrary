@@ -18,7 +18,7 @@ export function BiodiversitySection({
   const habitatTypes = groups.slice(0, 5).map((g) => g.name || g.group || "");
 
   return (
-    <section>
+    <section id="biodiversity">
       <SectionTitle title="Biodiversity & Habitat" />
 
       {narratives?.intro && (

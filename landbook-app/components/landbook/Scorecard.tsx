@@ -18,7 +18,7 @@ export function Scorecard({
   ];
 
   return (
-    <section>
+    <section id="scorecard">
       <SectionTitle title="How This Land Performs" />
 
       {narratives?.text && (

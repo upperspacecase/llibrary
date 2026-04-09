@@ -16,7 +16,7 @@ export function AgricultureSection({
   const systems = agriculture.systems || [];
 
   return (
-    <section>
+    <section id="agriculture">
       <SectionTitle title="Agriculture" />
 
       {narratives?.potential && (

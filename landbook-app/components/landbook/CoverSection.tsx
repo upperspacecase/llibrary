@@ -28,35 +28,51 @@ export function CoverSection({
       : "";
 
   return (
-    <div className="relative min-h-[600px] flex flex-col justify-between px-12 pt-16 pb-12 bg-brand-forest text-brand-cream overflow-hidden">
-      {maps.satellite && (
-        <img
-          src={maps.satellite}
-          className="absolute inset-0 w-full h-full object-cover opacity-20"
-          alt=""
-        />
-      )}
-      <div className="relative z-10">
-        <div className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-70 mb-1">
-          LANDBOOK
-        </div>
-        <div className="text-[10px] font-bold tracking-[0.2em] uppercase opacity-70">
-          Natural Capital Assessment
-        </div>
+    <div className="relative min-h-[700px] flex flex-col items-center justify-between px-12 pt-16 pb-10 bg-brand-cream overflow-hidden text-center">
+      <img
+        src="/topo-bg.jpg"
+        className="absolute inset-0 w-full h-full object-cover opacity-40"
+        alt=""
+      />
+
+      {/* Top — Branding */}
+      <div className="relative z-10 pt-4">
+        <h1 className="text-2xl tracking-[0.2em] text-brand-charcoal mb-1">
+          <span className="font-light">LAND</span><span className="font-bold italic">BOOK</span>
+        </h1>
+        <p className="text-sm italic text-brand-sage">Notes from the field.</p>
       </div>
+
+      {/* Center — Property */}
       <div className="relative z-10">
-        <div className="serif-title text-5xl text-brand-cream mb-2">
+        <h2 className="serif-title text-4xl text-brand-charcoal mb-4">
           {property.name}
-        </div>
-        <div className="text-sm opacity-70 mb-6">{property.address}</div>
-        <div className="flex gap-8 text-[10px] font-bold tracking-[0.2em] uppercase opacity-70">
-          <span>{property.area ? property.area.toFixed(1) + " ha" : "\u2014"}</span>
-          <span>NCS {scores.naturalCapital ?? "\u2014"}/100</span>
-          <span>{coordStr}</span>
-        </div>
+        </h2>
+        <p className="text-base text-brand-charcoal/70 leading-relaxed">
+          {property.address}
+        </p>
+        {coordStr && (
+          <p className="text-xs tracking-widest text-brand-sage mt-3 font-mono">
+            {coordStr}
+          </p>
+        )}
       </div>
-      <div className="relative z-10 text-[10px] opacity-50 text-right">
-        {meta.generatedAt ?? "\u2014"} &middot; {meta.version ?? "\u2014"}
+
+      {/* Bottom — Meta & Disclaimer */}
+      <div className="relative z-10 w-full">
+        <div className="text-xs font-bold tracking-[0.25em] text-brand-charcoal mb-2">
+          LANDLIBRARY
+        </div>
+        <p className="text-[11px] text-brand-sage mb-6">
+          Date: {meta.generatedAt ?? "\u2014"} | Version: {meta.version ?? "\u2014"}
+        </p>
+        <div className="border-t border-brand-sage/30 pt-3 mx-auto max-w-[400px]">
+          <p className="text-[10px] font-bold text-brand-terracotta mb-1">Disclaimer</p>
+          <p className="text-[9px] text-brand-sage leading-snug">
+            This assessment represents conditions at time of documentation.
+            Land characteristics evolve; verify critical details before decisions.
+          </p>
+        </div>
       </div>
     </div>
   );

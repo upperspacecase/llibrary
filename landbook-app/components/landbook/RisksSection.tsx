@@ -18,7 +18,7 @@ export function RisksSection({
   narratives?: Narratives["risks"];
 }) {
   return (
-    <section>
+    <section id="risks">
       <SectionTitle title="Risks" />
 
       {narratives?.narrative && (
