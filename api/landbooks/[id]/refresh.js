@@ -82,28 +82,55 @@ export default async function handler(req, res) {
       }
     );
 
-    // 7. Dual-write to 3-layer collections (fire-and-forget)
+    // 7. Dual-write to 3-layer collections
+    const layerResults = { observations: null, facts: null, report: null };
     try {
       await saveAllObservations(id, raw);
+      const obsCount = Object.keys(raw).length;
+      layerResults.observations = { ok: true, count: obsCount };
     } catch (err) {
       console.warn('[refresh] Observation persist failed:', err.message);
+      layerResults.observations = { ok: false, error: err.message };
     }
     try {
       await saveFacts(id, reportDataToFacts(data));
+      layerResults.facts = { ok: true };
     } catch (err) {
       console.warn('[refresh] Fact persist failed:', err.message);
+      layerResults.facts = { ok: false, error: err.message };
     }
     try {
-      await saveReport(id, {
+      const reportDoc = await saveReport(id, {
         narratives: data.narratives || {},
         scores: data.scores || {},
         model: 'claude-sonnet-4-20250514',
       });
+      layerResults.report = { ok: true, version: reportDoc.version };
     } catch (err) {
       console.warn('[refresh] Report persist failed:', err.message);
+      layerResults.report = { ok: false, error: err.message };
     }
 
-    return res.status(200).json({ ok: true, data });
+    // Build per-source summary for admin feedback
+    const sourceResults = {};
+    for (const [key, result] of Object.entries(raw)) {
+      sourceResults[key] = { ok: result.ok, error: result.ok ? null : result.error };
+    }
+
+    return res.status(200).json({
+      ok: true,
+      sources: sourceResults,
+      layers: layerResults,
+      narrativeKeys: Object.keys(data.narratives || {}),
+      scores: data.scores ? {
+        naturalCapital: data.scores.naturalCapital,
+        carbon: data.scores.carbon,
+        biodiversity: data.scores.biodiversity,
+        water: data.scores.water,
+        soil: data.scores.soil,
+      } : null,
+      meta: data.meta || {},
+    });
   } catch (error) {
     console.error('[refresh] Error:', error);
     return res.status(500).json({ error: error.message || 'Pipeline failed' });

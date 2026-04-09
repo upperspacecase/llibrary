@@ -315,31 +315,48 @@ function renderTable() {
             btn.disabled = true;
             btn.textContent = 'Running...';
             btn.classList.add('running');
+
+            // Remove any existing results panel for this row
+            const row = btn.closest('tr');
+            const existingPanel = row.nextElementSibling;
+            if (existingPanel?.classList.contains('admin-pipeline-results-row')) {
+                existingPanel.remove();
+            }
+
             try {
                 const res = await fetch(`/api/landbooks/${landbookId}/refresh`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                 });
+                const result = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    throw new Error(err.error || 'Pipeline failed');
+                    throw new Error(result.error || 'Pipeline failed');
                 }
+
                 btn.textContent = '✓ Done';
                 btn.classList.remove('running');
                 btn.classList.add('done');
-                // Reload data so the button text updates to "Refresh"
-                setTimeout(() => loadData(), 1500);
+
+                // Show detailed results panel
+                showPipelineResults(row, result);
+
+                // Reload data after delay so button updates to "Refresh"
+                setTimeout(() => loadData(), 5000);
             } catch (err) {
                 btn.textContent = '✗ Failed';
                 btn.classList.remove('running');
                 btn.classList.add('failed');
                 btn.title = err.message;
+
+                // Show error panel
+                showPipelineError(row, err.message);
+
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.classList.remove('failed');
                     btn.disabled = false;
-                }, 3000);
+                }, 5000);
             }
         });
     });
@@ -525,6 +542,103 @@ async function testSingleSource(sourceId) {
 }
 
 document.getElementById('test-all-btn').addEventListener('click', testAllSources);
+
+// ---- Pipeline Results Panel ----
+
+function showPipelineResults(row, result) {
+    const sources = result.sources || {};
+    const layers = result.layers || {};
+    const scores = result.scores || {};
+    const meta = result.meta || {};
+
+    const sourceKeys = Object.keys(sources);
+    const okCount = sourceKeys.filter(k => sources[k].ok).length;
+    const failCount = sourceKeys.length - okCount;
+
+    // Build source chips
+    const sourceChips = sourceKeys.map(key => {
+        const s = sources[key];
+        const cls = s.ok ? 'pr-src-ok' : 'pr-src-fail';
+        const tip = s.ok ? key : `${key}: ${s.error}`;
+        return `<span class="${cls}" title="${escapeHtml(tip)}">${escapeHtml(key)}</span>`;
+    }).join('');
+
+    // Layer status
+    const layerItems = [
+        { name: 'Observations', data: layers.observations, detail: layers.observations?.ok ? `${layers.observations.count} saved` : layers.observations?.error },
+        { name: 'Facts', data: layers.facts, detail: layers.facts?.ok ? 'rebuilt' : layers.facts?.error },
+        { name: 'Report', data: layers.report, detail: layers.report?.ok ? `v${layers.report.version}` : layers.report?.error },
+    ];
+    const layerHtml = layerItems.map(l => {
+        const ok = l.data?.ok;
+        return `<span class="pr-layer ${ok ? 'pr-layer-ok' : 'pr-layer-fail'}">${l.name}: ${l.detail || (ok ? '✓' : '✗')}</span>`;
+    }).join('');
+
+    // Scores
+    const scoreHtml = scores.naturalCapital != null
+        ? `<span class="pr-score">NC ${scores.naturalCapital}</span>` +
+          `<span class="pr-score">C ${scores.carbon ?? '—'}</span>` +
+          `<span class="pr-score">B ${scores.biodiversity ?? '—'}</span>` +
+          `<span class="pr-score">W ${scores.water ?? '—'}</span>` +
+          `<span class="pr-score">S ${scores.soil ?? '—'}</span>`
+        : '<span class="pr-muted">No scores</span>';
+
+    // Narratives
+    const narKeys = result.narrativeKeys || [];
+    const narHtml = narKeys.length > 0
+        ? `<span class="pr-nar">${narKeys.length} narratives</span>`
+        : '<span class="pr-muted">No narratives</span>';
+
+    // Uncertainty
+    const unc = meta.uncertainty;
+    const uncHtml = unc ? `<span class="pr-unc">${unc.label} (${unc.completeness}% complete)</span>` : '';
+
+    const colSpan = row.children.length;
+    const panelRow = document.createElement('tr');
+    panelRow.className = 'admin-pipeline-results-row';
+    panelRow.innerHTML = `<td colspan="${colSpan}">
+        <div class="pr-panel">
+            <div class="pr-section">
+                <div class="pr-heading">Sources <span class="pr-count">${okCount}/${sourceKeys.length} ok${failCount ? `, ${failCount} failed` : ''}</span></div>
+                <div class="pr-chips">${sourceChips}</div>
+            </div>
+            <div class="pr-section">
+                <div class="pr-heading">Storage Layers</div>
+                <div class="pr-chips">${layerHtml}</div>
+            </div>
+            <div class="pr-section">
+                <div class="pr-heading">Scores</div>
+                <div class="pr-chips">${scoreHtml}</div>
+            </div>
+            <div class="pr-row-flex">
+                <div class="pr-section">
+                    <div class="pr-heading">Narratives</div>
+                    <div class="pr-chips">${narHtml}</div>
+                </div>
+                <div class="pr-section">
+                    <div class="pr-heading">Confidence</div>
+                    <div class="pr-chips">${uncHtml}</div>
+                </div>
+            </div>
+            <button class="pr-close" onclick="this.closest('.admin-pipeline-results-row').remove()">Dismiss</button>
+        </div>
+    </td>`;
+    row.after(panelRow);
+}
+
+function showPipelineError(row, message) {
+    const colSpan = row.children.length;
+    const panelRow = document.createElement('tr');
+    panelRow.className = 'admin-pipeline-results-row';
+    panelRow.innerHTML = `<td colspan="${colSpan}">
+        <div class="pr-panel pr-panel-error">
+            <div class="pr-heading" style="color:var(--coral,#e74c3c)">Pipeline Failed</div>
+            <div class="pr-error-msg">${escapeHtml(message)}</div>
+            <button class="pr-close" onclick="this.closest('.admin-pipeline-results-row').remove()">Dismiss</button>
+        </div>
+    </td>`;
+    row.after(panelRow);
+}
 
 function escapeHtml(s) {
     const div = document.createElement('div');
@@ -978,6 +1092,145 @@ style.textContent = `
         background: #fde8e8;
         border-color: #c62828;
         color: #c62828;
+    }
+
+    /* Pipeline results panel (inline below row) */
+    .admin-pipeline-results-row td {
+        padding: 0 !important;
+        border-bottom: 2px solid var(--border);
+    }
+    .pr-panel {
+        background: #fafaf8;
+        border-left: 3px solid #2d6a4f;
+        padding: 16px 20px;
+        margin: 0;
+    }
+    .pr-panel-error {
+        border-left-color: var(--coral, #e74c3c);
+    }
+    .pr-section {
+        margin-bottom: 12px;
+    }
+    .pr-section:last-of-type {
+        margin-bottom: 8px;
+    }
+    .pr-heading {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+        margin-bottom: 6px;
+    }
+    .pr-count {
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+    .pr-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+    }
+    .pr-row-flex {
+        display: flex;
+        gap: 32px;
+    }
+    .pr-src-ok {
+        display: inline-block;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: 500;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        border-radius: 3px;
+        background: #d4edda;
+        color: #1b5e20;
+        white-space: nowrap;
+    }
+    .pr-src-fail {
+        display: inline-block;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: 500;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        border-radius: 3px;
+        background: #fde8e8;
+        color: #c62828;
+        white-space: nowrap;
+        cursor: help;
+    }
+    .pr-layer {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 10px;
+        white-space: nowrap;
+    }
+    .pr-layer-ok {
+        background: #d4edda;
+        color: #1b5e20;
+    }
+    .pr-layer-fail {
+        background: #fde8e8;
+        color: #c62828;
+    }
+    .pr-score {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        background: #e8f0fe;
+        color: #1a56db;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+    .pr-nar {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #f3e8ff;
+        color: #7c3aed;
+        border-radius: 10px;
+    }
+    .pr-unc {
+        display: inline-block;
+        padding: 3px 10px;
+        font-size: 11px;
+        font-weight: 500;
+        background: var(--cream, #f5f0eb);
+        color: var(--muted);
+        border-radius: 10px;
+    }
+    .pr-muted {
+        font-size: 11px;
+        color: var(--muted);
+        font-style: italic;
+    }
+    .pr-error-msg {
+        font-size: 13px;
+        color: var(--coral, #e74c3c);
+        margin: 8px 0;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+    .pr-close {
+        margin-top: 8px;
+        padding: 3px 12px;
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 500;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--muted);
+    }
+    .pr-close:hover {
+        color: var(--black);
+        border-color: var(--black);
     }
 `;
 document.head.appendChild(style);
