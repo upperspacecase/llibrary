@@ -96,6 +96,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               water={data.water}
               fire={data.fire}
               maps={data.maps}
+              meta={data.meta}
               narratives={n.executiveSummary}
             />
           </div>

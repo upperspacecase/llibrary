@@ -196,11 +196,21 @@ export interface Narratives {
   methodology?: { text?: string; disclaimer?: string };
 }
 
+export interface Uncertainty {
+  interval: number;
+  confidence: number;
+  label: string;
+  completeness: number;
+  apisOk: number;
+  apisTotal: number;
+}
+
 export interface Meta {
   generatedAt: string | null;
   version: string | null;
   apiStatus: Record<string, string>;
   missingFields?: Array<{ field: string }>;
+  uncertainty?: Uncertainty;
 }
 
 export interface Agriculture {
