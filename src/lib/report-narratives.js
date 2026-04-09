@@ -191,3 +191,177 @@ Generate a JSON object with these exact keys. Return ONLY valid JSON, no markdow
     };
   }
 }
+
+// ── V2 Narratives (14-section layout) ────────────────────
+
+/**
+ * Generate narrative text matching the 14-section report layout.
+ * 11 narrative slots with explicit length constraints.
+ *
+ * @param {object} reportData - The canonical ReportData shape
+ * @returns {object} NarrativesV2 shape
+ */
+export async function generateNarrativesV2(reportData) {
+  const p = reportData.property || {};
+  const scores = reportData.scores || {};
+  const climate = reportData.climate || {};
+  const soil = reportData.soil || {};
+  const geology = reportData.geology || {};
+  const water = reportData.water || {};
+  const species = reportData.species || {};
+  const fire = reportData.fire || {};
+  const flood = reportData.flood || {};
+  const drought = reportData.drought || {};
+  const energy = reportData.energy || {};
+  const eco = reportData.economics || {};
+  const agriculture = reportData.agriculture || {};
+  const regional = reportData.regional || {};
+  const trends = reportData.trends || {};
+  const meta = reportData.meta || {};
+
+  const missingFields = (meta.missingFields || []).map(f => f.field || f).join(', ');
+
+  const prompt = `You are writing the narrative text for a LandBook Natural Capital Assessment report for "${p.name || 'this property'}" in ${p.address || 'Portugal'}.
+
+Write in the style of a Financial Times property assessment — authoritative, specific, grounded in data. Use exact numbers provided. Do not invent data you were not given.
+
+${missingFields ? `UNAVAILABLE DATA: ${missingFields}. Write around gaps naturally — do not reference missing values.\n` : ''}
+FORMATTING RULES:
+- First word of each narrative should be a strong, concrete word (not "The" / "This" / "Located") for drop-cap styling.
+- pullQuote: a single sentence, no quotation marks.
+- recommendation: 1-2 actionable sentences specific to this property.
+- STRICT WORD LIMITS: each slot has a max word count. Stay within it.
+
+─── PROPERTY DATA ───
+Name: ${p.name || '?'} | Location: ${p.address || '?'}
+Area: ${p.area ? p.area.toFixed(1) + ' ha' : '?'} | Coords: ${p.coords?.lat?.toFixed(4) || '?'}, ${p.coords?.lng?.toFixed(4) || '?'}
+Municipality: ${p.municipality || '?'} | Parish: ${p.parish || '?'}
+
+─── SCORES ───
+Natural Capital: ${scores.naturalCapital ?? '?'}/100
+Carbon: ${scores.carbon ?? '?'}, Biodiversity: ${scores.biodiversity ?? '?'}, Water: ${scores.water ?? '?'}, Soil: ${scores.soil ?? '?'}, Pollination: ${scores.pollination ?? '?'}
+
+─── ECONOMICS ───
+Value: ${eco.valuePerHa ? '\u20ac' + Math.round(eco.valuePerHa) + '/ha' : '?'} | Total: \u20ac${eco.ecosystemServices?.total ?? '?'}/yr
+30yr NPV: \u20ac${eco.npv?.thirtyYear ?? '?'} | Carbon stock: ${eco.carbonStock ?? '?'} tCO\u2082e | Credits: \u20ac${eco.carbonCreditValue ?? '?'}/yr
+
+─── TERRAIN & SOIL ───
+Elevation: ${reportData.terrain?.elevation ?? '?'}m | Slope: ${reportData.terrain?.slope ?? '?'}% | Aspect: ${reportData.terrain?.aspect || '?'}
+Soil pH: ${soil.ph ?? '?'}, OC: ${soil.organicCarbon ?? '?'} g/kg, Clay: ${soil.clay ?? '?'}%, Class: ${soil.classification || '?'}
+Geology: ${geology.lithology || '?'} (${geology.period || '?'}, ${geology.age ?? '?'} Ma)
+
+─── WATER ───
+Springs: ${water.springs ?? '?'}, Wells: ${water.wells ?? '?'}, Waterways: ${water.waterways ?? '?'}, Bodies: ${water.waterBodies ?? '?'}
+Security: ${water.securityIndex ?? '?'}/10 | Flood: ${water.floodRisk || '?'}
+
+─── CLIMATE ───
+Mean: ${climate.annualMeanTemp ?? '?'}\u00b0C | Rain: ${climate.annualRainfall ?? '?'}mm | Season: ${climate.growingSeason ?? '?'} months | Zone: ${climate.zone || '?'}
+
+─── BIODIVERSITY ───
+Species: ${species.total ?? '?'}, Threatened: ${species.threatened ?? '?'}, Trend: ${species.trends?.direction || '?'}
+
+─── RISKS ───
+Fire: ${fire.riskScore ?? '?'}/5, Flood: ${flood.riskScore ?? '?'}/5, Drought: ${drought.riskScore ?? '?'}/5
+
+─── ENERGY ───
+Solar: ${energy.solar?.level || '?'} (${energy.solar?.detail || '?'}), Wind: ${energy.wind?.level || '?'} (${energy.wind?.detail || '?'})
+Independence: ${energy.independenceScore ?? '?'}/100
+
+─── AGRICULTURE ───
+Land cover: ${agriculture.landCover || '?'}
+Systems: ${(agriculture.systems || []).map(s => s.name).join(', ') || '?'}
+
+─── TRENDS ───
+Temp: ${trends.tempPerDecade != null ? (trends.tempPerDecade > 0 ? '+' : '') + trends.tempPerDecade.toFixed(2) + '\u00b0C/decade' : '?'}
+Precip: ${trends.precipPerDecade != null ? (trends.precipPerDecade > 0 ? '+' : '') + trends.precipPerDecade.toFixed(1) + 'mm/decade' : '?'}
+
+─── REGIONAL ───
+Protected areas: ${(regional.protectedAreas || []).map(a => a.name).join(', ') || 'None detected'}
+
+──────────────────────────────────────
+
+Generate a JSON object with EXACTLY these keys. Return ONLY valid JSON — no markdown fences, no explanation.
+
+{
+  "overview": {
+    "summary": "2-3 paragraphs, MAX 150 WORDS. Position the property within its bioregion. Highlight 2-3 key strengths from the data. Frame the investment profile using actual valuation numbers.",
+    "pullQuote": "1 aspirational sentence about this specific property and its potential."
+  },
+  "regionEcosystem": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Bioregional context — what the regional percentiles reveal. Protected area significance if any. How this property fits into the wider landscape."
+  },
+  "landWater": {
+    "narrative": "2 paragraphs, MAX 150 WORDS. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
+    "pullQuote": "1 sentence about the land or water as a defining characteristic."
+  },
+  "biodiversity": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Species richness in context. Notable findings from the data. Conservation significance and observation trends."
+  },
+  "climateSeasons": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Characterize the climate zone. Growing season implications. Energy potential from solar/wind resources."
+  },
+  "valueBenefits": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
+    "methodology": "1 paragraph, MAX 100 WORDS. Conservative estimation principles, benefit-transfer methodology, what the uncertainty interval means."
+  },
+  "landUse": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Current land cover and what it supports. Production potential and suitable systems. Compliance context if relevant."
+  },
+  "historyTrends": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. What temperature and precipitation trends mean for this property. Projection caveats. How trends affect long-term value."
+  },
+  "risksResilience": {
+    "narrative": "2 paragraphs, MAX 150 WORDS. How fire/flood/drought risks interact at this property. Energy independence potential. What the scores mean in practice.",
+    "recommendation": "1-2 sentences. Specific, actionable mitigation step grounded in this property's risk and energy data."
+  },
+  "futureScenarios": {
+    "narrative": "2 paragraphs, MAX 120 WORDS. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity."
+  },
+  "recommendations": {
+    "framing": "2 paragraphs, MAX 100 WORDS. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden."
+  },
+  "sourcesMethodology": {
+    "text": "1-2 paragraphs, MAX 120 WORDS. SEEA-EA framework basis. How scores are computed. Data sources used. Conservative approach.",
+    "disclaimer": "1 short paragraph, MAX 50 WORDS. For informational purposes only, consult qualified professionals for investment or management decisions."
+  }
+}`;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: prompt }],
+      timeout: 90_000,
+    });
+
+    const text = response.content[0]?.text || '{}';
+    const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const narratives = JSON.parse(cleaned);
+
+    return {
+      narratives,
+      usage: response.usage || null,
+    };
+  } catch (error) {
+    console.error('[narratives-v2] Claude API call failed:', error.message);
+    return {
+      narratives: EMPTY_NARRATIVES_V2,
+      usage: null,
+    };
+  }
+}
+
+const EMPTY_NARRATIVES_V2 = {
+  overview: { summary: '', pullQuote: '' },
+  regionEcosystem: { narrative: '' },
+  landWater: { narrative: '', pullQuote: '' },
+  biodiversity: { narrative: '' },
+  climateSeasons: { narrative: '' },
+  valueBenefits: { narrative: '', methodology: '' },
+  landUse: { narrative: '' },
+  historyTrends: { narrative: '' },
+  risksResilience: { narrative: '', recommendation: '' },
+  futureScenarios: { narrative: '' },
+  recommendations: { framing: '' },
+  sourcesMethodology: { text: '', disclaimer: '' },
+};
