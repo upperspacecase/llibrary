@@ -40,7 +40,7 @@ export function CoverSection({
 
       {/* Top — LandBook logo */}
       <div className="relative z-10 pt-4 flex flex-col items-center">
-        <img src="/landbook-logo.png" alt="LandBook" className="h-[140px] mb-2" />
+        <img src="/landbook-logo.png" alt="LandBook" className="h-[112px] mb-2" />
         <p className="text-sm italic text-brand-sage">Notes from the field.</p>
       </div>
 
@@ -61,7 +61,7 @@ export function CoverSection({
 
       {/* Bottom — LandLibrary logo, meta & disclaimer */}
       <div className="relative z-10 w-full flex flex-col items-center">
-        <img src="/landlibrary-logo.png" alt="LandLibrary" className="h-20 mb-3" />
+        <img src="/landlibrary-logo.png" alt="LandLibrary" className="h-16 mb-3" />
         <p className="text-[11px] text-brand-sage mb-6">
           Date: {formatDate(meta.generatedAt)}
         </p>
