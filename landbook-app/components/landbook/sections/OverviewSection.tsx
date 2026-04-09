@@ -1,7 +1,5 @@
 import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, ReportData } from "@/lib/types";
-import {
-  SectionTitle, Gauge, KPI, Hairline, PullQuote, SubsectionHeader,
-} from "@/components/river";
+import { Hairline } from "@/components/river";
 
 /**
  * Classify every data field in the report as Verified / Computed / Unverified.
@@ -75,6 +73,24 @@ function classifyDataSources(meta: Meta, data: Pick<ReportData, "narratives">) {
   return { verified, computed, ai: aiFields, unverified, total };
 }
 
+function formatCurrency(value: number | null | undefined): string {
+  if (value == null) return "\u2014";
+  if (value >= 1_000_000) return `\u20ac${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= 1_000) return `\u20ac${(value / 1_000).toFixed(1)}K`;
+  return `\u20ac${value.toLocaleString()}`;
+}
+
+function formatScore(value: number | null | undefined): string {
+  if (value == null) return "\u2014";
+  return (value / 10).toFixed(1);
+}
+
+function formatCoord(lat: number, lng: number): string {
+  const ns = lat >= 0 ? "N" : "S";
+  const ew = lng >= 0 ? "E" : "W";
+  return `${Math.abs(lat).toFixed(4)}\u00b0 ${ns}, ${Math.abs(lng).toFixed(4)}\u00b0 ${ew}`;
+}
+
 export function OverviewSection({
   property,
   scores,
@@ -98,260 +114,347 @@ export function OverviewSection({
 }) {
   return (
     <section id="overview">
-      <SectionTitle title="Overview" />
-
-      {/* 1.1 Property Identity */}
-      <SubsectionHeader id="1.1" title="Property Identity" sources={["Pipeline"]} />
-      <div className="mb-8">
-        <div className="serif-title text-lg text-brand-forest mb-1">{property.name}</div>
-        <div className="text-sm text-brand-sage mb-2">{property.address}</div>
-        {property.coords?.lat != null && (
-          <div className="text-xs font-mono text-brand-sage">
-            {property.coords.lat.toFixed(5)}, {property.coords.lng.toFixed(5)}
+      {/* Block 1 — Header */}
+      <header className="mb-12">
+        <div className="border-b-[0.5pt] border-outline-variant pb-8">
+          <span className="text-[10px] font-bold tracking-[0.3em] text-brand-sage block mb-4 uppercase font-body">
+            Property Overview
+          </span>
+          <h1 className="font-serif text-5xl font-bold text-brand-forest tracking-tighter mb-4">
+            {property.name}
+          </h1>
+          <div className="flex items-center gap-6 text-brand-sage text-[11px] uppercase tracking-widest font-medium font-body">
+            <span>{property.address}</span>
+            {property.coords?.lat != null && (
+              <>
+                <div className="w-1 h-1 bg-brand-terracotta" />
+                <span>{formatCoord(property.coords.lat, property.coords.lng)}</span>
+              </>
+            )}
           </div>
-        )}
-        {property.area != null && (
-          <div className="text-xs text-brand-sage mt-1">{property.area.toFixed(1)} ha</div>
-        )}
-      </div>
-      {/* TODO: Land Use Designation & Ownership Structure — re-enable when data pipeline supports it
-      <PlaceholderBox
-        id="1.1"
-        title="Land Use Designation & Ownership Structure"
-        status="NEW — NOT IN DATA PIPELINE"
-      />
-      */}
+        </div>
+      </header>
 
-      <Hairline />
+      {/* Block 2 — Hero Image */}
+      <section className="mb-16">
+        <div className="relative h-[480px] w-full overflow-hidden border-[0.5pt] border-outline-variant">
+          {maps.satellite ? (
+            <img
+              alt={property.name}
+              className="w-full h-full object-cover filter saturate-[0.85]"
+              src={maps.satellite}
+            />
+          ) : (
+            <div className="w-full h-full bg-brand-sage/10 flex items-center justify-center text-brand-sage text-sm">
+              Satellite image not available
+            </div>
+          )}
+        </div>
+      </section>
 
-      {/* 1.2 Hero Metrics Dashboard */}
-      <SubsectionHeader id="1.2" title="Hero Metrics Dashboard" sources={["Pipeline", "Computed"]} />
-      <div className="grid grid-cols-3 gap-8 mb-8">
-        <Gauge value={scores.naturalCapital} max={100} color="forest" label="Natural Capital" />
-        <Gauge value={water.securityIndex} max={10} color="forest" label="Water Security" />
-        <Gauge value={fire.riskScore} max={5} color="terracotta" label="Fire Risk" />
-      </div>
-      <div className="grid grid-cols-4 gap-8 mb-8">
-        <KPI value={property.area?.toFixed(1)} unit="ha" label="Total Area" />
-        <KPI
-          value={economics.valuePerHa ? `\u20ac${economics.valuePerHa.toLocaleString()}` : null}
-          unit="/ha"
-          label="Ecosystem Value"
-        />
-        <KPI value={scores.carbon} unit="/100" label="Carbon Score" />
-        <KPI value={scores.biodiversity} unit="/100" label="Biodiversity Score" />
-      </div>
-      {/* Data Confidence — Verified / Computed / AI / Unverified breakdown */}
-      {(() => {
-        const c = classifyDataSources(meta, { narratives: allNarratives });
-        const verifiedPct = Math.round((c.verified / c.total) * 100);
-        const computedPct = Math.round((c.computed / c.total) * 100);
-        const aiPct = Math.round((c.ai / c.total) * 100);
-        const unverifiedPct = 100 - verifiedPct - computedPct - aiPct;
-        const unc = meta.uncertainty;
-
-        const segments = [
-          { label: "Verified", count: c.verified, pct: verifiedPct, color: "bg-brand-forest" },
-          { label: "Computed", count: c.computed, pct: computedPct, color: "bg-brand-forest/50" },
-          { label: "AI-Generated", count: c.ai, pct: aiPct, color: "bg-brand-sage" },
-          ...(c.unverified > 0 ? [{ label: "Unverified", count: c.unverified, pct: unverifiedPct, color: "bg-brand-terracotta" }] : []),
-        ];
-
-        return (
-          <div className="border-[0.5px] border-brand-sage/30 p-6 mb-8">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage mb-4">
-              Sources &amp; Methods
-            </div>
-            {/* Stacked bar */}
-            <div className="flex h-3 w-full overflow-hidden mb-4">
-              {segments.map((seg) => (
-                <div key={seg.label} className={`${seg.color} h-full`} style={{ width: `${seg.pct}%` }} />
-              ))}
-            </div>
-            {/* Legend with counts */}
-            <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-4">
-              {segments.map((seg) => (
-                <div key={seg.label} className="flex items-center gap-3">
-                  <div className={`w-3 h-3 ${seg.color} shrink-0`} />
-                  <div>
-                    <div className="text-sm font-black text-brand-forest">{seg.count} <span className="font-bold text-[10px] text-brand-sage">({seg.pct}%)</span></div>
-                    <div className="text-[10px] text-brand-sage">{seg.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-baseline justify-between pt-3 border-t-[0.5px] border-brand-sage/20">
-              <div className="text-[10px] text-brand-sage">
-                {c.total} total data points across {Object.keys(meta.apiStatus || {}).length} API sources
-              </div>
-              {unc && (
-                <div className="text-sm font-bold text-brand-forest">{unc.label}</div>
-              )}
-            </div>
+      {/* Block 3 — Editorial Narrative */}
+      <section className="mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          <div className="space-y-6">
+            {narratives?.intro ? (
+              <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
+                {narratives.intro}
+              </p>
+            ) : (
+              <p className="text-sm text-brand-sage italic">No summary available.</p>
+            )}
           </div>
-        );
-      })()}
-
-      <Hairline />
-
-      {/* 1.3 At-a-Glance Summary */}
-      <SubsectionHeader id="1.3" title="At-a-Glance Summary" sources={["AI"]} />
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-sm text-brand-sage mb-8">No summary generated yet.</p>
-      )}
-
-      <Hairline />
-
-      {/* 1.4 Key Visual Signature */}
-      <SubsectionHeader id="1.4" title="Key Visual Signature" sources={["Pipeline", "Computed"]} />
-      {maps.satellite ? (
-        <div className="border-[0.5px] border-brand-sage/30 overflow-hidden mb-6">
-          <img src={maps.satellite} alt="Satellite view" className="w-full h-64 object-cover" />
-        </div>
-      ) : (
-        <div className="h-48 bg-brand-sage/10 flex items-center justify-center text-brand-sage text-sm mb-6">
-          Satellite image not available
-        </div>
-      )}
-
-      {/* Scorecard bars (existing) */}
-      {(() => {
-        const reg = scores.regional || {} as Record<string, number>;
-        const dims = [
-          { label: "Carbon", score: scores.carbon || 0, avg: reg.carbon || 0 },
-          { label: "Biodiversity", score: scores.biodiversity || 0, avg: reg.biodiversity || 0 },
-          { label: "Water", score: scores.water || 0, avg: reg.water || 0 },
-          { label: "Soil", score: scores.soil || 0, avg: reg.soil || 0 },
-          { label: "Pollination", score: scores.pollination || 0, avg: reg.pollination || 0 },
-        ];
-        return dims.map((dim) => {
-          const diff = dim.score - dim.avg;
-          const sign = diff > 0 ? "+" : "";
-          const pct = Math.min(dim.score, 100);
-          return (
-            <div key={dim.label} className="flex items-center gap-6 py-3 border-b-[0.5px] border-brand-sage/20 last:border-0">
-              <div className="w-24 text-sm font-bold text-brand-forest">{dim.label}</div>
-              <div className="flex-1">
-                <div className="h-2 bg-brand-sage/20 w-full">
-                  <div className="h-full bg-brand-forest" style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-              <div className="w-12 text-right text-sm font-black text-brand-forest">{dim.score}</div>
-              <div className={`w-20 text-right text-[10px] font-bold ${diff >= 0 ? "text-brand-sage" : "text-brand-terracotta"}`}>
-                {sign}{diff} vs avg
+          {narratives?.pullQuote && (
+            <div className="relative pt-4">
+              <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
+                <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+                  &ldquo;{narratives.pullQuote}&rdquo;
+                </blockquote>
+                <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
+                  &mdash; Executive Summary
+                </p>
               </div>
             </div>
-          );
-        });
-      })()}
+          )}
+        </div>
+      </section>
 
-      {/* Radar / Spider chart — property scores vs regional average */}
-      {(() => {
-        const reg = scores.regional || {} as Record<string, number>;
-        const dims = [
-          { label: "Carbon", value: scores.carbon || 0, avg: reg.carbon || 0 },
-          { label: "Biodiversity", value: scores.biodiversity || 0, avg: reg.biodiversity || 0 },
-          { label: "Water", value: scores.water || 0, avg: reg.water || 0 },
-          { label: "Soil", value: scores.soil || 0, avg: reg.soil || 0 },
-          { label: "Pollination", value: scores.pollination || 0, avg: reg.pollination || 0 },
-        ];
-        const n = dims.length;
-        const cx = 150, cy = 150, maxR = 110;
-        const angleStep = (2 * Math.PI) / n;
-        const startAngle = -Math.PI / 2; // top
+      {/* Block 4 — Key Metrics */}
+      <section className="mb-20">
+        <Hairline />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-10">
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Ecosystem Value
+            </span>
+            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {formatCurrency(economics.totalValue)}
+            </p>
+          </div>
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Total Area
+            </span>
+            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {property.area != null ? property.area.toFixed(1) : "\u2014"}
+              <span className="text-xl ml-1">ha</span>
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-10">
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Biodiversity Score
+            </span>
+            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {formatScore(scores.biodiversity)}
+              <span className="text-xl ml-1">/10</span>
+            </p>
+          </div>
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Carbon Score
+            </span>
+            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {formatScore(scores.carbon)}
+              <span className="text-xl ml-1">/10</span>
+            </p>
+          </div>
+        </div>
+      </section>
 
-        const pointAt = (i: number, val: number) => {
-          const angle = startAngle + i * angleStep;
-          const r = (val / 100) * maxR;
-          return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-        };
+      {/* Block 5 — Performance Indicators */}
+      <section className="mb-20">
+        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-10 font-body">
+          Performance Indicators
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* Natural Capital */}
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+                Natural Capital Score
+              </p>
+              <span className="text-xl font-bold font-serif text-brand-forest">
+                {scores.naturalCapital != null ? (scores.naturalCapital / 10).toFixed(1) : "\u2014"}
+              </span>
+            </div>
+            <div className="h-2 w-full bg-brand-sage/20">
+              <div
+                className="h-full bg-brand-forest"
+                style={{ width: `${Math.min(scores.naturalCapital || 0, 100)}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Property Composite</p>
+          </div>
 
-        const gridLevels = [20, 40, 60, 80, 100];
+          {/* Water Security */}
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+                Water Security
+              </p>
+              <span className="text-xl font-bold font-serif text-brand-forest">
+                {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
+              </span>
+            </div>
+            <div className="h-2 w-full bg-brand-sage/20">
+              <div
+                className="h-full bg-brand-forest"
+                style={{ width: `${Math.min((water.securityIndex || 0) * 10, 100)}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Catchment Resilience</p>
+          </div>
 
-        const propertyPoints = dims.map((d, i) => pointAt(i, d.value));
-        const avgPoints = dims.map((d, i) => pointAt(i, d.avg));
+          {/* Fire Risk */}
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+                Fire Risk
+              </p>
+              <span className="text-xl font-bold font-serif text-brand-forest">
+                {fire.riskScore != null ? `${fire.riskScore}/5` : "\u2014"}
+              </span>
+            </div>
+            <div className="h-2 w-full bg-brand-sage/20">
+              <div
+                className="h-full bg-brand-forest"
+                style={{ width: `${Math.min((fire.riskScore || 0) * 20, 100)}%` }}
+              />
+            </div>
+            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Landscape Vulnerability</p>
+          </div>
+        </div>
+      </section>
 
-        const toPath = (pts: { x: number; y: number }[]) =>
-          pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") + " Z";
+      {/* Block 6 — Radar Chart & Block 7 — Sources */}
+      <section className="flex flex-col items-center pb-10 mt-auto border-t-[0.5pt] border-outline-variant pt-16">
+        {/* Radar Chart */}
+        <div className="w-full mb-8">
+          <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body text-center">
+            Natural Capital Radar
+          </h4>
+          {(() => {
+            const reg = scores.regional || {} as Record<string, number>;
+            const dims = [
+              { label: "Carbon", value: scores.carbon || 0, avg: reg.carbon || 0 },
+              { label: "Biodiversity", value: scores.biodiversity || 0, avg: reg.biodiversity || 0 },
+              { label: "Water", value: scores.water || 0, avg: reg.water || 0 },
+              { label: "Soil", value: scores.soil || 0, avg: reg.soil || 0 },
+              { label: "Pollination", value: scores.pollination || 0, avg: reg.pollination || 0 },
+            ];
+            const n = dims.length;
+            const cx = 200, cy = 200, maxR = 140;
+            const angleStep = (2 * Math.PI) / n;
+            const startAngle = -Math.PI / 2;
 
-        return (
-          <div className="flex justify-center mb-8 mt-4">
-            <svg viewBox="0 0 300 300" className="w-72 h-72">
-              {/* Grid rings */}
-              {gridLevels.map((level) => {
-                const pts = Array.from({ length: n }, (_, i) => pointAt(i, level));
-                return (
-                  <polygon
-                    key={level}
-                    points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
-                    fill="none"
-                    stroke="#A3B18A"
-                    strokeOpacity={0.25}
-                    strokeWidth={0.5}
+            const pointAt = (i: number, val: number) => {
+              const angle = startAngle + i * angleStep;
+              const r = (val / 100) * maxR;
+              return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+            };
+
+            const gridLevels = [20, 40, 60, 80, 100];
+
+            const propertyPoints = dims.map((d, i) => pointAt(i, d.value));
+            const avgPoints = dims.map((d, i) => pointAt(i, d.avg));
+
+            const toPath = (pts: { x: number; y: number }[]) =>
+              pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ") + " Z";
+
+            return (
+              <div className="flex justify-center items-center py-4 relative">
+                <svg className="w-[320px] h-[320px]" viewBox="0 0 400 400">
+                  {/* Grid rings */}
+                  {gridLevels.map((level) => {
+                    const pts = Array.from({ length: n }, (_, i) => pointAt(i, level));
+                    return (
+                      <polygon
+                        key={level}
+                        points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
+                        fill="none"
+                        stroke="#8B9A7E"
+                        strokeOpacity={0.3}
+                        strokeWidth={0.5}
+                      />
+                    );
+                  })}
+                  {/* Regional average polygon */}
+                  <path
+                    d={toPath(avgPoints)}
+                    fill="rgba(139,154,126,0.08)"
+                    stroke="#8B9A7E"
+                    strokeWidth={1.5}
+                    strokeDasharray="4"
                   />
-                );
-              })}
-              {/* Axis lines */}
-              {dims.map((_, i) => {
-                const p = pointAt(i, 100);
-                return (
-                  <line
-                    key={i}
-                    x1={cx}
-                    y1={cy}
-                    x2={p.x}
-                    y2={p.y}
-                    stroke="#A3B18A"
-                    strokeOpacity={0.25}
-                    strokeWidth={0.5}
+                  {/* Property polygon */}
+                  <path
+                    d={toPath(propertyPoints)}
+                    fill="rgba(27,58,47,0.15)"
+                    stroke="#1B3A2F"
+                    strokeWidth={2}
                   />
-                );
-              })}
-              {/* Regional average polygon */}
-              <path d={toPath(avgPoints)} fill="#A3B18A" fillOpacity={0.15} stroke="#A3B18A" strokeWidth={1} strokeDasharray="4 3" />
-              {/* Property polygon */}
-              <path d={toPath(propertyPoints)} fill="#1B4332" fillOpacity={0.12} stroke="#1B4332" strokeWidth={1.5} />
-              {/* Property score dots */}
-              {propertyPoints.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r={3} fill="#1B4332" />
-              ))}
-              {/* Labels */}
-              {dims.map((d, i) => {
-                const p = pointAt(i, 118);
-                const anchor = p.x < cx - 5 ? "end" : p.x > cx + 5 ? "start" : "middle";
-                return (
-                  <text
-                    key={d.label}
-                    x={p.x}
-                    y={p.y}
-                    textAnchor={anchor}
-                    dominantBaseline="central"
-                    className="text-[10px] font-bold fill-brand-forest"
-                  >
-                    {d.label}
-                  </text>
-                );
-              })}
-            </svg>
+                  {/* Property score dots */}
+                  {propertyPoints.map((p, i) => (
+                    <circle key={i} cx={p.x} cy={p.y} r={3} fill="#1B3A2F" />
+                  ))}
+                </svg>
+                {/* Axis labels positioned around the chart */}
+                {dims.map((d, i) => {
+                  const p = pointAt(i, 125);
+                  const relX = ((p.x / 400) * 100);
+                  const relY = ((p.y / 400) * 100);
+                  return (
+                    <span
+                      key={d.label}
+                      className="absolute text-[10px] uppercase font-bold tracking-widest text-brand-forest font-body whitespace-nowrap"
+                      style={{
+                        left: `${relX}%`,
+                        top: `${relY}%`,
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    >
+                      {d.label}
+                    </span>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          <div className="flex justify-center gap-8 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 bg-brand-forest" />
+              <span className="text-[10px] uppercase font-bold tracking-widest text-brand-sage font-body">
+                Property
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-0.5 border-b border-dashed border-brand-sage" />
+              <span className="text-[10px] uppercase font-bold tracking-widest text-brand-sage font-body">
+                Regional Average
+              </span>
+            </div>
           </div>
-        );
-      })()}
-      <div className="flex items-center gap-6 justify-center mb-8 text-[10px]">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-[2px] bg-brand-forest" />
-          <span className="text-brand-forest font-bold">Property</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-[2px] bg-brand-sage border-dashed" style={{ borderTop: "2px dashed #A3B18A", height: 0 }} />
-          <span className="text-brand-sage font-bold">Regional Avg</span>
-        </div>
-      </div>
 
-      <PullQuote text={narratives?.pullQuote} />
+        {/* Sources & Confidence */}
+        <div className="hairline w-full max-w-[480px] my-4 opacity-50" />
+        <div className="w-full max-w-[480px] space-y-8 mt-8">
+          {(() => {
+            const c = classifyDataSources(meta, { narratives: allNarratives });
+            const verifiedPct = Math.round((c.verified / c.total) * 100);
+            const computedPct = Math.round((c.computed / c.total) * 100);
+            const aiPct = Math.round((c.ai / c.total) * 100);
+            const unverifiedPct = 100 - verifiedPct - computedPct - aiPct;
+            const unc = meta.uncertainty;
+
+            const segments = [
+              { label: "Verified", pct: verifiedPct, color: "bg-brand-forest", desc: "Ground-truth sensor data and property site visit." },
+              { label: "Computed", pct: computedPct, color: "bg-brand-sage", desc: "Algorithmically derived from verified API data." },
+              ...(c.ai > 0 ? [{ label: "AI-Generated", pct: aiPct, color: "bg-brand-sage/50", desc: "AI-generated narrative and analysis text." }] : []),
+              ...(c.unverified > 0 ? [{ label: "Unverified", pct: unverifiedPct, color: "bg-brand-sage/20", desc: "Data source unavailable or unconfirmed." }] : []),
+            ];
+
+            return (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
+                    Sources
+                  </h4>
+                  {unc && (
+                    <span className="text-[10px] italic text-brand-forest font-body">
+                      {unc.label} Confidence
+                    </span>
+                  )}
+                </div>
+                <div className="flex h-12 w-full mb-8">
+                  {segments.map((seg) => (
+                    <div
+                      key={seg.label}
+                      className={`${seg.color} h-full`}
+                      style={{ width: `${seg.pct}%` }}
+                      title={`${seg.label} ${seg.pct}%`}
+                    />
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {segments.map((seg, i) => (
+                    <div key={seg.label} className={`space-y-1 ${i % 2 === 1 ? "text-right" : ""}`}>
+                      <span className="text-[10px] font-bold text-brand-forest uppercase tracking-widest font-body block">
+                        {seg.pct}% {seg.label}
+                      </span>
+                      <p className={`text-[11px] text-brand-sage leading-relaxed italic font-body ${i % 2 === 1 ? "text-right" : ""}`}>
+                        {seg.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </section>
     </section>
   );
 }
