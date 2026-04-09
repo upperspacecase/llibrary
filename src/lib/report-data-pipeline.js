@@ -210,7 +210,7 @@ export async function fetchAllData(lat, lng, boundary, areaHa) {
 
 // ── Multi-point elevation for slope/aspect ─────────────────
 
-async function getMultiPointElevation(boundary, center) {
+export async function getMultiPointElevation(boundary, center) {
   const points = [center];
   const step = Math.max(1, Math.floor(boundary.length / 8));
   for (let i = 0; i < boundary.length; i += step) {
@@ -272,7 +272,7 @@ async function getMultiPointElevation(boundary, center) {
 
 // ── Land cover via WMS GetFeatureInfo ───────────────────────
 
-async function getLandCoverAtPoint(lat, lng) {
+export async function getLandCoverAtPoint(lat, lng) {
   // Try CORINE
   const d = 0.0005;
   const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;

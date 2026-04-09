@@ -38,6 +38,7 @@ import { fetchRiskScores } from '../../../src/api/risk-scores.js';
 import { getAdminUnit } from '../../../src/api/dgt.js';
 import { getForecast as getIPMAForecast, getNearestForecastLocation } from '../../../src/api/ipma.js';
 import { reverseGeocode } from '../../../src/api/nominatim.js';
+import { getLandCoverAtPoint } from '../../../src/lib/report-data-pipeline.js';
 
 async function safe(label, fn) {
   try {
@@ -96,7 +97,7 @@ function getFetchFn(source, lat, lng, boundary) {
     riskScores: () => fetchRiskScores(lat, lng),
     admin: () => getAdminUnit(lat, lng),
     ipmaLocation: () => getNearestForecastLocation(lat, lng),
-    landCover: null, // inline WMS call in pipeline, not easily extracted
+    landCover: () => getLandCoverAtPoint(lat, lng),
     nominatim: () => reverseGeocode(lat, lng),
     solarWind: () => getSolarWind(lat, lng),
     pollen: () => getPollenIndex(lat, lng),
