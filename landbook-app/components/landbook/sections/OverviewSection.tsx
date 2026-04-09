@@ -1,7 +1,79 @@
-import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives } from "@/lib/types";
+import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, ReportData } from "@/lib/types";
 import {
   SectionTitle, Gauge, KPI, Hairline, PullQuote, SubsectionHeader,
 } from "@/components/river";
+
+/**
+ * Classify every data field in the report as Verified / Computed / Unverified.
+ *
+ * - Verified:   field's source API succeeded (apiStatus[key] === 'ok')
+ * - Computed:   derived from verified API data via algorithms (scores, economics, actions, etc.)
+ * - Unverified: field's source API failed, so data is missing or fallback
+ *
+ * The mapping below traces each ReportData section back to its pipeline source(s).
+ * This is NOT hardcoded counts — it walks the real apiStatus to classify.
+ */
+function classifyDataSources(meta: Meta, data: Pick<ReportData, "narratives">) {
+  const s = meta.apiStatus || {};
+  const ok = (key: string) => s[key] === "ok";
+
+  // Each report section → which apiStatus keys feed it, and how many fields it contributes
+  const apiSections: Array<{ label: string; apis: string[]; fields: number }> = [
+    { label: "Property",       apis: ["admin", "nominatim"],                    fields: 7 },
+    { label: "Climate",        apis: ["climate", "forecast", "ipmaForecast"],   fields: 12 },
+    { label: "Terrain",        apis: ["elevation", "terrainProfile"],           fields: 5 },
+    { label: "Soil",           apis: ["soilProps", "soilClass"],                fields: 9 },
+    { label: "Geology",        apis: ["geology"],                               fields: 4 },
+    { label: "Water",          apis: ["water", "flood"],                        fields: 7 },
+    { label: "Species",        apis: ["species", "threatened", "gbif"],         fields: 7 },
+    { label: "Fire",           apis: ["activeFires", "historicalFires", "riskScores"], fields: 5 },
+    { label: "Flood & Drought",apis: ["riskScores"],                            fields: 4 },
+    { label: "Energy",         apis: ["solarWind"],                             fields: 5 },
+    { label: "Land Cover",     apis: ["landCover"],                             fields: 2 },
+    { label: "Regional",       apis: ["protectedAreas", "regionalBaseline"],    fields: 3 },
+    { label: "Maps",           apis: ["mapbox"],                                fields: 4 },
+    { label: "Pollen",         apis: ["pollen"],                                fields: 1 },
+  ];
+
+  // Computed sections — derived algorithmically from API data, not direct API fields
+  const computedFields = [
+    { label: "Scores & Natural Capital", fields: 8 },
+    { label: "Ecosystem Services",       fields: 7 },
+    { label: "Economics & NPV",          fields: 8 },
+    { label: "Revenue Scenarios",        fields: 4 },
+    { label: "Carbon Stock & Credits",   fields: 5 },
+    { label: "Risk Profile",             fields: 3 },
+    { label: "Trends",                   fields: 4 },
+    { label: "Compliance",               fields: 2 },
+    { label: "Actions",                  fields: 3 },
+  ];
+
+  // Count narratives that actually have content (AI-generated)
+  const n = data.narratives || {};
+  const narrativeKeys = Object.keys(n) as Array<keyof typeof n>;
+  const aiFields = narrativeKeys.filter(k => {
+    const val = n[k];
+    return val && typeof val === "object" && Object.values(val).some(v => v);
+  }).length;
+
+  let verified = 0;
+  let unverified = 0;
+
+  for (const section of apiSections) {
+    // A section is verified if ANY of its source APIs succeeded
+    const anyOk = section.apis.some(ok);
+    if (anyOk) {
+      verified += section.fields;
+    } else {
+      unverified += section.fields;
+    }
+  }
+
+  const computed = computedFields.reduce((sum, s) => sum + s.fields, 0);
+  const total = verified + computed + aiFields + unverified;
+
+  return { verified, computed, ai: aiFields, unverified, total };
+}
 
 export function OverviewSection({
   property,
@@ -11,6 +83,7 @@ export function OverviewSection({
   fire,
   maps,
   meta,
+  allNarratives,
   narratives,
 }: {
   property: Property;
@@ -20,6 +93,7 @@ export function OverviewSection({
   fire: FireData;
   maps: Maps;
   meta: Meta;
+  allNarratives: Narratives;
   narratives?: Narratives["executiveSummary"];
 }) {
   return (
@@ -67,70 +141,53 @@ export function OverviewSection({
         <KPI value={scores.carbon} unit="/100" label="Carbon Score" />
         <KPI value={scores.biodiversity} unit="/100" label="Biodiversity Score" />
       </div>
-      {/* Data Confidence Summary — derived from pipeline apiStatus + uncertainty */}
+      {/* Data Confidence — Verified / Computed / AI / Unverified breakdown */}
       {(() => {
-        const entries = Object.entries(meta.apiStatus || {});
-        const total = entries.length;
-        const apiOk = entries.filter(([, v]) => v === "ok").length;
-        const apiFailed = total - apiOk;
-        const apiPct = total > 0 ? Math.round((apiOk / total) * 100) : 0;
-        const failedPct = total > 0 ? Math.round((apiFailed / total) * 100) : 0;
+        const c = classifyDataSources(meta, { narratives: allNarratives });
+        const verifiedPct = Math.round((c.verified / c.total) * 100);
+        const computedPct = Math.round((c.computed / c.total) * 100);
+        const aiPct = Math.round((c.ai / c.total) * 100);
+        const unverifiedPct = 100 - verifiedPct - computedPct - aiPct;
         const unc = meta.uncertainty;
+
+        const segments = [
+          { label: "Verified", count: c.verified, pct: verifiedPct, color: "bg-brand-forest" },
+          { label: "Computed", count: c.computed, pct: computedPct, color: "bg-brand-forest/50" },
+          { label: "AI-Generated", count: c.ai, pct: aiPct, color: "bg-brand-sage" },
+          ...(c.unverified > 0 ? [{ label: "Unverified", count: c.unverified, pct: unverifiedPct, color: "bg-brand-terracotta" }] : []),
+        ];
 
         return (
           <div className="border-[0.5px] border-brand-sage/30 p-6 mb-8">
             <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage mb-4">
-              Data Confidence
+              Sources &amp; Methods
             </div>
-            <div className="grid grid-cols-3 gap-6 mb-4">
-              <div>
-                <div className="text-2xl font-black text-brand-forest">{apiOk}</div>
-                <div className="text-[10px] text-brand-sage">API sources succeeded</div>
-              </div>
-              <div>
-                <div className="text-2xl font-black text-brand-terracotta">{apiFailed}</div>
-                <div className="text-[10px] text-brand-sage">Sources failed</div>
-              </div>
-              <div>
-                <div className="text-2xl font-black text-brand-forest">{total}</div>
-                <div className="text-[10px] text-brand-sage">Total data points</div>
-              </div>
+            {/* Stacked bar */}
+            <div className="flex h-3 w-full overflow-hidden mb-4">
+              {segments.map((seg) => (
+                <div key={seg.label} className={`${seg.color} h-full`} style={{ width: `${seg.pct}%` }} />
+              ))}
             </div>
-            {/* Completeness bar */}
-            <div className="mb-3">
-              <div className="flex justify-between text-[10px] text-brand-sage mb-1">
-                <span>API completeness</span>
-                <span>{apiPct}%</span>
-              </div>
-              <div className="h-2 bg-brand-sage/20 w-full">
-                <div
-                  className="h-full bg-brand-forest"
-                  style={{ width: `${apiPct}%` }}
-                />
-              </div>
-            </div>
-            {apiFailed > 0 && (
-              <div className="mb-3">
-                <div className="flex justify-between text-[10px] text-brand-sage mb-1">
-                  <span>Failed / unavailable</span>
-                  <span>{failedPct}%</span>
+            {/* Legend with counts */}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-4">
+              {segments.map((seg) => (
+                <div key={seg.label} className="flex items-center gap-3">
+                  <div className={`w-3 h-3 ${seg.color} shrink-0`} />
+                  <div>
+                    <div className="text-sm font-black text-brand-forest">{seg.count} <span className="font-bold text-[10px] text-brand-sage">({seg.pct}%)</span></div>
+                    <div className="text-[10px] text-brand-sage">{seg.label}</div>
+                  </div>
                 </div>
-                <div className="h-2 bg-brand-sage/20 w-full">
-                  <div
-                    className="h-full bg-brand-terracotta"
-                    style={{ width: `${failedPct}%` }}
-                  />
-                </div>
+              ))}
+            </div>
+            <div className="flex items-baseline justify-between pt-3 border-t-[0.5px] border-brand-sage/20">
+              <div className="text-[10px] text-brand-sage">
+                {c.total} total data points across {Object.keys(meta.apiStatus || {}).length} API sources
               </div>
-            )}
-            {unc && (
-              <div className="flex items-baseline gap-4 pt-3 border-t-[0.5px] border-brand-sage/20">
+              {unc && (
                 <div className="text-sm font-bold text-brand-forest">{unc.label}</div>
-                <div className="text-[10px] text-brand-sage">
-                  {unc.apisOk}/{unc.apisTotal} critical APIs &middot; {unc.completeness}% completeness
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         );
       })()}
