@@ -40,6 +40,7 @@ export async function saveReport(landbookId, report) {
     narratives: report.narratives || {},
     scores: report.scores || {},
     factSnapshotVersion: report.factSnapshotVersion || null,
+    factsContentHash: report.factsContentHash || null,
     model: report.model || null,
     promptVersion: report.promptVersion || null,
     cost: report.cost || null,

@@ -12,6 +12,7 @@ import { getCollection } from '../../_db.js';
 import { getFacts, factsToReportData } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
 import { generateNarratives, generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
+import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -67,6 +68,7 @@ export default async function handler(req, res) {
       narratives,
       scores: data.scores || {},
       factSnapshotVersion: factDoc?.version || null,
+      factsContentHash: factDoc?.contentHash || null,
       model,
       promptVersion: v2 ? 'v2-14section' : 'v1-18section',
       cost,
@@ -89,10 +91,14 @@ export default async function handler(req, res) {
       );
     }
 
+    // 5. Update landbook status (narrativesStale → false)
+    await updateLandbookStatus(id);
+
     return res.status(200).json({
       ok: true,
       version: reportDoc.version,
       narrativeKeys: Object.keys(narratives),
+      narrativesStale: false,
       cost,
     });
   } catch (error) {

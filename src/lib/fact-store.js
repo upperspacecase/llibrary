@@ -5,6 +5,7 @@
  * One document per landbook — every leaf field wrapped as { value, unit, confidence, sourceRef }.
  */
 
+import { createHash } from 'crypto';
 import { getCollection } from '../../api/_db.js';
 
 const COLLECTION = 'facts';
@@ -40,18 +41,29 @@ function unwrap(field) {
 
 export async function saveFacts(landbookId, facts) {
   const c = await col();
+
+  // Compute content hash from fact values (excluding meta fields)
+  const { landbookId: _lid, updatedAt: _u, version: _v, contentHash: _h, _id: _m, ...values } = facts;
+  const contentHash = createHash('sha256')
+    .update(JSON.stringify(values, Object.keys(values).sort()))
+    .digest('hex')
+    .slice(0, 16);
+
   await c.updateOne(
     { landbookId },
     {
       $set: {
         ...facts,
         landbookId,
+        contentHash,
         updatedAt: new Date().toISOString(),
       },
       $inc: { version: 1 },
     },
     { upsert: true }
   );
+
+  return { contentHash };
 }
 
 export async function getFacts(landbookId) {

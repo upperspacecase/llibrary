@@ -12,6 +12,7 @@ import { getCollection } from '../../_db.js';
 import { SOURCE_REGISTRY, sourcesByGroup } from '../../../src/lib/source-registry.js';
 import { saveObservation } from '../../../src/lib/observation-store.js';
 import { rebuildFacts } from '../../../src/lib/fact-builder.js';
+import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 
 // API fetch functions — same imports as report-data-pipeline.js
 import {
@@ -176,9 +177,13 @@ export default async function handler(req, res) {
     // 4. Rebuild facts from all observations
     const data = await rebuildFacts(id);
 
+    // 5. Update landbook status (marks narratives as stale if facts changed)
+    const status = await updateLandbookStatus(id);
+
     return res.status(200).json({
       ok: true,
       refreshed: Object.keys(results),
+      narrativesStale: status.narrativesStale,
       results: Object.fromEntries(
         Object.entries(results).map(([k, v]) => [k, { ok: v.ok, error: v.error || null }])
       ),

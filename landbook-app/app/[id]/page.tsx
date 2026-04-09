@@ -52,8 +52,9 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 /**
  * Try to assemble ReportData from the 3-layer collections (facts + reports).
  * Falls back to null if the collections aren't populated yet.
+ * Also detects whether narratives are stale relative to current facts.
  */
-async function getReportDataFromLayers(id: string): Promise<ReportData | null> {
+async function getReportDataFromLayers(id: string): Promise<{ data: ReportData; narrativesStale: boolean } | null> {
   try {
     const factsCol = await getCollection("facts");
     const reportsCol = await getCollection("reports");
@@ -112,7 +113,12 @@ async function getReportDataFromLayers(id: string): Promise<ReportData | null> {
       data.narratives = JSON.parse(JSON.stringify(reportDoc.narratives));
     }
 
-    return data;
+    // Detect narrative staleness via content hash comparison
+    const factsHash = (factDoc as Record<string, unknown>).contentHash as string | undefined;
+    const reportHash = (reportDoc as Record<string, unknown> | null)?.factsContentHash as string | undefined;
+    const narrativesStale = !reportDoc || !factsHash || factsHash !== reportHash;
+
+    return { data, narrativesStale };
   } catch (err) {
     console.warn("[page] 3-layer read failed, will fall back to blob:", (err as Error).message);
     return null;
@@ -125,7 +131,9 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
   if (!landbook) notFound();
 
   // Try 3-layer read first, fall back to blob
-  const data = (await getReportDataFromLayers(id)) || landbook.data;
+  const layerResult = await getReportDataFromLayers(id);
+  const data = layerResult?.data || landbook.data;
+  const narrativesStale = layerResult?.narrativesStale ?? false;
 
   if (!data) {
     return (
@@ -156,6 +164,26 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
             meta={data.meta}
           />
         </div>
+
+        {/* Narrative staleness banner */}
+        {narrativesStale && (
+          <div className="max-w-[800px] mx-auto mb-6 print:hidden">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg px-6 py-4 flex items-center justify-between">
+              <div>
+                <p className="text-amber-800 text-sm font-medium">Narratives out of date</p>
+                <p className="text-amber-600 text-xs mt-0.5">
+                  Data has been updated since narratives were last generated.
+                </p>
+              </div>
+              <a
+                href={`/api/landbooks/${id}/regenerate-narratives`}
+                className="text-xs font-medium text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded transition-colors"
+              >
+                Regenerate
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Section pages */}
         <div className="max-w-[800px] mx-auto space-y-12">

@@ -10,6 +10,7 @@ import { generateNarratives } from '../../../src/lib/report-narratives.js';
 import { saveAllObservations } from '../../../src/lib/observation-store.js';
 import { saveFacts, reportDataToFacts } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
+import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -92,8 +93,10 @@ export default async function handler(req, res) {
       console.warn('[refresh] Observation persist failed:', err.message);
       layerResults.observations = { ok: false, error: err.message };
     }
+    let factsContentHash = null;
     try {
-      await saveFacts(id, reportDataToFacts(data));
+      const factResult = await saveFacts(id, reportDataToFacts(data));
+      factsContentHash = factResult.contentHash;
       layerResults.facts = { ok: true };
     } catch (err) {
       console.warn('[refresh] Fact persist failed:', err.message);
@@ -103,12 +106,20 @@ export default async function handler(req, res) {
       const reportDoc = await saveReport(id, {
         narratives: data.narratives || {},
         scores: data.scores || {},
+        factsContentHash,
         model: 'claude-sonnet-4-20250514',
       });
       layerResults.report = { ok: true, version: reportDoc.version };
     } catch (err) {
       console.warn('[refresh] Report persist failed:', err.message);
       layerResults.report = { ok: false, error: err.message };
+    }
+
+    // 8. Update landbook status
+    try {
+      await updateLandbookStatus(id);
+    } catch (err) {
+      console.warn('[refresh] Status update failed:', err.message);
     }
 
     // Build per-source summary for admin feedback
