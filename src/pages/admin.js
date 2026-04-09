@@ -3,6 +3,7 @@ import '../styles/main.css';
 // ---- State ----
 let data = {};
 let reportVersions = []; // keyed by submission_id string
+let pipelineStatusIndex = {}; // 3-layer status per landbookId from server
 let activeTab = 'submissions';
 let pipelineResults = null;
 let pipelineTesting = false;
@@ -15,10 +16,9 @@ const columns = {
         { key: '_who', label: 'Who', format: (_, row) => row.name || row.email || row.contact || '-' },
         { key: '_location', label: 'Location', format: (_, row) => row.address || row.postcode || '-' },
         { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
+        { key: '_pipeline', label: 'Pipeline', format: (_, row) => `__PIPELINE__${row._id || row.id || ''}` },
         { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
-        { key: 'files', label: 'Files', format: formatFiles },
         { key: '_date', label: 'Date', format: formatDate },
-        { key: 'contact', label: 'Contact', format: (v, row) => row.email || v || '-' },
         { key: '_type', label: 'Type' },
     ],
     contributions: [
@@ -42,6 +42,19 @@ const columns = {
         { key: '_actions', label: 'Actions', format: () => '__REGION_ACTIONS__' },
     ],
 };
+
+function formatTimeAgo(isoStr) {
+    if (!isoStr) return '';
+    const diff = Date.now() - new Date(isoStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days < 7) return `${days}d ago`;
+    return `${Math.floor(days / 7)}w ago`;
+}
 
 function formatDate(v) {
     if (!v) return '-';
@@ -158,6 +171,7 @@ async function loadData() {
 
     // Store report versions indexed by submission_id
     reportVersions = (raw.reportVersions || []);
+    pipelineStatusIndex = raw.pipelineStatus || {};
 
     // Merge waitlist, landbooks, submissions into one unified list
     const merged = [
@@ -281,6 +295,31 @@ function renderTable() {
                 const sToggleBtn = sHasRun ? `<button class="admin-pr-toggle-btn" data-landbook-id="${sId}" title="Show last pipeline results">Results</button>` : '';
                 return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${sId}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${sId}" title="${subHasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${subHasData ? '↻ Refresh' : '▶ Run Pipeline'}</button>${sToggleBtn}</td>`;
             }
+            if (str.startsWith('__PIPELINE__')) {
+                const lbId = str.slice(12);
+                if (!lbId) return '<td class="admin-muted">—</td>';
+                const ps = pipelineStatusIndex[lbId];
+                if (!ps) return '<td class="admin-muted pip-empty">—</td>';
+                const obs = ps.observations;
+                const fct = ps.facts;
+                const rep = ps.report;
+                const parts = [];
+                if (obs) {
+                    const cls = obs.failed > 0 ? 'pip-warn' : 'pip-ok';
+                    parts.push(`<span class="pip-chip ${cls}" title="${obs.ok} ok, ${obs.failed} failed">${obs.ok}/${obs.total} sources</span>`);
+                }
+                if (fct) {
+                    parts.push(`<span class="pip-chip pip-ok" title="Facts v${fct.version || '?'}, updated ${fct.updatedAt || '?'}">Facts ✓</span>`);
+                }
+                if (rep) {
+                    parts.push(`<span class="pip-chip pip-ok" title="Report v${rep.version}, ${rep.totalVersions} versions, ${rep.model || '?'}">Report v${rep.version}</span>`);
+                }
+                if (obs?.lastFetched) {
+                    const ago = formatTimeAgo(obs.lastFetched);
+                    parts.push(`<span class="pip-time" title="${obs.lastFetched}">${ago}</span>`);
+                }
+                return `<td class="pip-cell">${parts.join('')}</td>`;
+            }
             if (str === '__REGION_ACTIONS__') {
                 const name = escapeHtml(row.name);
                 const status = row.status;
@@ -345,6 +384,9 @@ function renderTable() {
                 // Show results panel and render the toggle button
                 const row = btn.closest('tr');
                 showPipelineResults(row, result, landbookId);
+
+                // Reload data so the Pipeline status column updates
+                setTimeout(() => loadData(), 2000);
             } catch (err) {
                 lastPipelineRun[landbookId] = { ok: false, error: err.message, time: new Date() };
 
@@ -1271,6 +1313,40 @@ style.textContent = `
         color: var(--black);
         border-color: var(--black);
     }
+    /* Pipeline status column */
+    .pip-cell {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        white-space: normal;
+        max-width: 260px;
+    }
+    .pip-chip {
+        display: inline-block;
+        padding: 2px 7px;
+        font-size: 10px;
+        font-weight: 600;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+    .pip-ok {
+        background: #d4edda;
+        color: #1b5e20;
+    }
+    .pip-warn {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .pip-time {
+        font-size: 10px;
+        color: var(--muted);
+        white-space: nowrap;
+    }
+    .pip-empty {
+        font-size: 11px;
+    }
+
     .admin-pr-toggle-btn {
         padding: 4px 10px;
         font-size: 11px;
