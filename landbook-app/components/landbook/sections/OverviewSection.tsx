@@ -158,31 +158,25 @@ export function OverviewSection({
       </section>
 
       {/* Block 3 — Editorial Narrative */}
-      {(intro || pullQuote) && (
-        <section className="mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-            {intro && (
-              <div className="space-y-6">
-                <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
-                  {intro}
-                </p>
-              </div>
-            )}
-            {pullQuote && (
-              <div className="relative pt-4">
-                <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
-                  <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-                    &ldquo;{pullQuote}&rdquo;
-                  </blockquote>
-                  <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
-                    &mdash; Executive Summary
-                  </p>
-                </div>
-              </div>
-            )}
+      <section className="mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          <div className="space-y-6">
+            <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
+              {intro || `${property.name} is a ${property.area != null ? `${property.area.toFixed(1)} hectare` : ""} property located in ${property.address || "the region"}. ${scores.naturalCapital != null ? `With a Natural Capital score of ${(scores.naturalCapital / 10).toFixed(1)} out of 10, the property ${scores.naturalCapital >= 70 ? "demonstrates strong ecological foundations" : scores.naturalCapital >= 40 ? "presents meaningful potential for ecological enhancement" : "offers significant opportunity for natural capital development"}.` : ""}`}
+            </p>
           </div>
-        </section>
-      )}
+          <div className="relative pt-4">
+            <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
+              <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+                &ldquo;{pullQuote || `A ${property.area != null ? `${property.area.toFixed(1)} ha` : ""} natural capital assessment.`}&rdquo;
+              </blockquote>
+              <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
+                &mdash; {intro ? "Executive Summary" : "Property Overview"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Block 4 — Key Metrics */}
       <section className="mb-20">
