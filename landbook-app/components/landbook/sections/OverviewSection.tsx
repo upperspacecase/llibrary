@@ -1,4 +1,4 @@
-import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, ReportData } from "@/lib/types";
+import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, NarrativesV2, ReportData } from "@/lib/types";
 import { Hairline } from "@/components/river";
 
 /**
@@ -112,6 +112,11 @@ export function OverviewSection({
   allNarratives: Narratives;
   narratives?: Narratives["executiveSummary"];
 }) {
+  // Resolve narrative text from V1 (executiveSummary) or V2 (overview) format
+  const v2 = (allNarratives as unknown as NarrativesV2)?.overview;
+  const intro = narratives?.intro || v2?.summary || null;
+  const pullQuote = narratives?.pullQuote || v2?.pullQuote || null;
+
   return (
     <section id="overview">
       {/* Block 1 — Header */}
@@ -153,31 +158,31 @@ export function OverviewSection({
       </section>
 
       {/* Block 3 — Editorial Narrative */}
-      <section className="mb-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-          <div className="space-y-6">
-            {narratives?.intro ? (
-              <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
-                {narratives.intro}
-              </p>
-            ) : (
-              <p className="text-sm text-brand-sage italic">No summary available.</p>
-            )}
-          </div>
-          {narratives?.pullQuote && (
-            <div className="relative pt-4">
-              <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
-                <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-                  &ldquo;{narratives.pullQuote}&rdquo;
-                </blockquote>
-                <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
-                  &mdash; Executive Summary
+      {(intro || pullQuote) && (
+        <section className="mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+            {intro && (
+              <div className="space-y-6">
+                <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
+                  {intro}
                 </p>
               </div>
-            </div>
-          )}
-        </div>
-      </section>
+            )}
+            {pullQuote && (
+              <div className="relative pt-4">
+                <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
+                  <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+                    &ldquo;{pullQuote}&rdquo;
+                  </blockquote>
+                  <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
+                    &mdash; Executive Summary
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Block 4 — Key Metrics */}
       <section className="mb-20">
