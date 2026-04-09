@@ -69,18 +69,65 @@ export function RisksResilienceSection({
       <PlaceholderBox
         id="10.1"
         title="Pest/disease risks, market volatility, regulatory change risks"
-        status="PARTIAL — FIRE/FLOOD/DROUGHT EXIST, PESTS/MARKET/REGULATORY ARE NEW"
-      />
+        status="DERIVED FROM climate zone, risk scores, regional context"
+        synthetic
+      >
+        <DataTable
+          headers={["Risk Category", "Estimated Level", "Basis"]}
+          rows={[
+            [
+              "Pest / Disease",
+              (() => {
+                const fireScore = fire.riskScore ?? 0;
+                const droughtScore = drought.riskScore ?? 0;
+                const avg = (fireScore + droughtScore) / 2;
+                return avg >= 3.5 ? "High" : avg >= 2 ? "Moderate" : "Low";
+              })(),
+              "Warmer / drier climates correlate with higher pest pressure",
+            ],
+            ["Market Volatility", "Moderate", "Default estimate for rural land assets"],
+            [
+              "Regulatory Change",
+              "Moderate",
+              "Standard baseline — refine with local protected-area status",
+            ],
+          ]}
+        />
+      </PlaceholderBox>
 
       <Hairline />
 
       {/* 10.2 Risk Scoring Matrix */}
       <SubsectionHeader id="10.2" title="Risk Scoring Matrix" sources={["Computed"]} />
-      <PlaceholderBox
-        id="10.2"
-        title="Impact x Likelihood matrix per hazard, confidence levels, monitoring indicators"
-        status="PARTIAL — INDIVIDUAL SCORES EXIST, MATRIX FORMAT IS NEW"
-      />
+      {(() => {
+        const hazards = [
+          { name: "Fire", score: fire.riskScore },
+          { name: "Flood", score: flood.riskScore },
+          { name: "Drought", score: drought.riskScore },
+        ];
+        const toLikelihood = (s: number | null) =>
+          s == null ? "—" : s >= 4 ? "High" : s >= 3 ? "Medium" : "Low";
+        const toImpact = (s: number | null) =>
+          s == null ? "—" : s >= 4 ? "Severe" : s >= 3 ? "Moderate" : "Minor";
+        return (
+          <DataTable
+            headers={["Hazard", "Score (0–5)", "Likelihood", "Impact", "Risk Rating"]}
+            rows={hazards.map((h) => [
+              h.name,
+              h.score != null ? String(h.score) : "—",
+              toLikelihood(h.score),
+              toImpact(h.score),
+              h.score != null
+                ? h.score >= 4
+                  ? "Critical"
+                  : h.score >= 3
+                    ? "Elevated"
+                    : "Acceptable"
+                : "—",
+            ])}
+          />
+        );
+      })()}
 
       <Hairline />
 
@@ -115,31 +162,59 @@ export function RisksResilienceSection({
       )}
       <PlaceholderBox
         id="10.3"
-        title="Heat stress analysis, extreme-event probability"
-        status="PARTIAL — TRENDS DATA EXISTS, DETAILED ANALYSIS IS NEW"
-      />
+        title="Heat stress projections, extreme-event probability"
+        status="DERIVED FROM trends.tempPerDecade, fire-prone days"
+        synthetic
+      >
+        <div className="space-y-3 text-sm text-brand-charcoal">
+          {trends.tempPerDecade != null && (
+            <>
+              <p>
+                <span className="font-bold">Projected warming (30 yr):</span>{" "}
+                +{(trends.tempPerDecade * 3).toFixed(1)}°C above current baseline
+              </p>
+              <p>
+                <span className="font-bold">Est. additional heat-stress days / yr:</span>{" "}
+                {Math.round(trends.tempPerDecade * 3 * 8)}
+                <span className="text-brand-sage ml-1">(~8 days per °C above threshold)</span>
+              </p>
+            </>
+          )}
+          {fireDecades.length >= 2 && (
+            <p>
+              <span className="font-bold">Fire-prone trend:</span>{" "}
+              {(() => {
+                const first = fireDecades[0];
+                const last = fireDecades[fireDecades.length - 1];
+                const v1 = first.avgDays ?? first.days ?? first.value ?? 0;
+                const v2 = last.avgDays ?? last.days ?? last.value ?? 0;
+                const diff = v2 - v1;
+                return diff > 0
+                  ? `+${diff.toFixed(0)} fire-prone days from ${first.decade || first.label} to ${last.decade || last.label}`
+                  : `${diff.toFixed(0)} fire-prone days (stable or improving)`;
+              })()}
+            </p>
+          )}
+          {trends.precipPerDecade != null && trends.precipPerDecade < 0 && (
+            <p>
+              <span className="font-bold">Drying trend:</span>{" "}
+              {Math.abs(trends.precipPerDecade * 3).toFixed(0)} mm less rainfall projected over 30 years — increased drought event probability
+            </p>
+          )}
+        </div>
+      </PlaceholderBox>
 
       <Hairline />
 
-      {/* 10.4 Biotic Risks */}
+      {/* 10.4 Biotic Risks — COMMENTED OUT: no data source yet
       <SubsectionHeader id="10.4" title="Biotic Risks" sources={["NEW"]} />
       <PlaceholderBox
         id="10.4"
         title="Invasive species, pathogens, pests, biodiversity attrition"
         status="ENTIRELY NEW — NO DATA SOURCE"
       />
-
       <Hairline />
-
-      {/* 10.5 Socio-Economic Risks */}
-      <SubsectionHeader id="10.5" title="Socio-Economic Risks" sources={["NEW"]} />
-      <PlaceholderBox
-        id="10.5"
-        title="Labor availability, input costs, land-use conflict, market access"
-        status="ENTIRELY NEW — NO DATA SOURCE"
-      />
-
-      <Hairline />
+      */}
 
       {/* 10.6 Resilience Capacity */}
       <SubsectionHeader id="10.6" title="Resilience Capacity" sources={["Computed"]} />
@@ -150,9 +225,58 @@ export function RisksResilienceSection({
       )}
       <PlaceholderBox
         id="10.6"
-        title="Water redundancy, ecosystem buffers, genetic diversity, social capital"
-        status="PARTIAL — ENERGY INDEPENDENCE EXISTS, BROADER METRICS ARE NEW"
-      />
+        title="Resilience capacity metrics"
+        status="DERIVED FROM energy.independenceScore, risk scores, trend data"
+        synthetic
+      >
+        <DataTable
+          headers={["Resilience Dimension", "Score", "Assessment"]}
+          rows={[
+            [
+              "Energy Independence",
+              energy.independenceScore != null ? `${energy.independenceScore}/10` : "—",
+              energy.independenceScore != null
+                ? energy.independenceScore >= 7
+                  ? "Strong — multiple renewable sources"
+                  : energy.independenceScore >= 4
+                    ? "Moderate — some off-grid potential"
+                    : "Low — grid-dependent"
+                : "—",
+            ],
+            [
+              "Water Security",
+              (() => {
+                const droughtScore = drought.riskScore ?? 3;
+                const waterRes = Math.max(1, 10 - droughtScore * 2);
+                return `${waterRes}/10`;
+              })(),
+              (drought.riskScore ?? 3) <= 2
+                ? "Strong — low drought exposure"
+                : (drought.riskScore ?? 3) <= 3
+                  ? "Moderate — seasonal stress possible"
+                  : "Vulnerable — high drought risk",
+            ],
+            [
+              "Ecosystem Buffers",
+              (() => {
+                const avgRisk = ((fire.riskScore ?? 3) + (flood.riskScore ?? 3) + (drought.riskScore ?? 3)) / 3;
+                const bufferScore = Math.max(1, Math.round(10 - avgRisk * 1.5));
+                return `${bufferScore}/10`;
+              })(),
+              "Derived from combined hazard exposure",
+            ],
+            [
+              "Adaptive Capacity",
+              (() => {
+                const eScore = energy.independenceScore ?? 3;
+                const trendPenalty = trends.tempPerDecade != null && trends.tempPerDecade > 0.3 ? 2 : 0;
+                return `${Math.max(1, Math.round(eScore - trendPenalty))}/10`;
+              })(),
+              "Based on infrastructure + climate trajectory",
+            ],
+          ]}
+        />
+      </PlaceholderBox>
 
       <Hairline />
 

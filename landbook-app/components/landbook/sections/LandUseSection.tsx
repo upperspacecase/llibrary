@@ -42,9 +42,23 @@ export function LandUseSection({
       </div>
       <PlaceholderBox
         id="8.1"
-        title="Detailed land-use map with intensity classification (extensive / moderate / intensive)"
-        status="PARTIAL — LAND COVER TYPE EXISTS, INTENSITY MAPPING IS NEW"
-      />
+        title="Land Use Intensity Classification"
+        status="DERIVED FROM CORINE LAND COVER TYPE"
+        synthetic
+      >
+        <div className="text-sm text-brand-charcoal">
+          <p>
+            <span className="font-bold">Estimated intensity:</span>{" "}
+            {(() => {
+              const lc = (agriculture.landCover || "").toLowerCase();
+              if (lc.includes("forest") || lc.includes("natural") || lc.includes("scrub")) return "Extensive \u2014 minimal management inputs";
+              if (lc.includes("pasture") || lc.includes("agro") || lc.includes("olive") || lc.includes("vineyard")) return "Moderate \u2014 semi-natural management";
+              if (lc.includes("arable") || lc.includes("crop") || lc.includes("irrigated")) return "Intensive \u2014 regular management inputs";
+              return "Unclassified \u2014 insufficient land cover data";
+            })()}
+          </p>
+        </div>
+      </PlaceholderBox>
 
       <Hairline />
 
@@ -71,23 +85,22 @@ export function LandUseSection({
 
       {/* 8.3 Infrastructure Inventory */}
       <SubsectionHeader id="8.3" title="Infrastructure Inventory" sources={["NEW"]} />
-      <PlaceholderBox
-        id="8.3"
-        title="Buildings, roads, fences, water-distribution, energy infrastructure"
-        status="PARTIALLY NEW — OVERPASS CAN QUERY THIS, COMPONENT IS NEW"
-      />
+      {/* 8.3 BUILD — infrastructure from Overpass. Data will come from pipeline enhancement. */}
+      <p className="text-sm text-brand-sage mb-6">
+        Infrastructure inventory will be populated via Overpass API query for buildings, roads, and utilities.
+      </p>
 
       <Hairline />
 
-      {/* 8.4 Land Use History */}
+      {/* 8.4 Land Use History — COMMENTED OUT: needs historical time-series
       <SubsectionHeader id="8.4" title="Land Use History" sources={["NEW"]} />
       <PlaceholderBox
         id="8.4"
         title="Trajectory of change, intensification, abandonment, re-naturalization"
         status="NEW — NEED HISTORICAL LAND USE DATA"
       />
-
       <Hairline />
+      */}
 
       {/* 8.5 Use-Dependent Values */}
       <SubsectionHeader id="8.5" title="Use-Dependent Values" sources={["Computed"]} />
@@ -120,19 +133,28 @@ export function LandUseSection({
       )}
       <PlaceholderBox
         id="8.5"
-        title="Cost & margin breakdown by land-use unit"
-        status="PARTIAL — REVENUES EXIST, COSTS/MARGINS ARE NEW"
-      />
-
-      <Hairline />
-
-      {/* 8.6 Wound Index Assessment */}
-      <SubsectionHeader id="8.6" title="Wound Index Assessment" sources={["NEW"]} />
-      <PlaceholderBox
-        id="8.6"
-        title="Degradation hotspots, erosion, compaction, over-use markers"
-        status="ENTIRELY NEW — NO DATA SOURCE OR COMPUTATION"
-      />
+        title="Cost & Margin Estimates"
+        status="DERIVED FROM REVENUE SCENARIOS"
+        synthetic
+      >
+        {(() => {
+          const cons = economics.revenueScenarios?.conservative ?? 0;
+          const mod = economics.revenueScenarios?.moderate ?? 0;
+          const opt = economics.revenueScenarios?.optimized ?? 0;
+          return cons > 0 ? (
+            <DataTable
+              headers={["Scenario", "Revenue", "Est. Costs (40\u201360%)", "Est. Margin"]}
+              rows={[
+                ["Conservative", `\u20ac${cons.toLocaleString()}`, `\u20ac${Math.round(cons * 0.5).toLocaleString()}`, `\u20ac${Math.round(cons * 0.5).toLocaleString()}`],
+                ["Moderate", `\u20ac${mod.toLocaleString()}`, `\u20ac${Math.round(mod * 0.45).toLocaleString()}`, `\u20ac${Math.round(mod * 0.55).toLocaleString()}`],
+                ["Optimized", `\u20ac${opt.toLocaleString()}`, `\u20ac${Math.round(opt * 0.4).toLocaleString()}`, `\u20ac${Math.round(opt * 0.6).toLocaleString()}`],
+              ]}
+            />
+          ) : (
+            <p className="text-sm text-brand-sage">Revenue scenario data needed for cost estimation.</p>
+          );
+        })()}
+      </PlaceholderBox>
 
       <Hairline />
 
@@ -155,11 +177,13 @@ export function LandUseSection({
       ) : (
         <p className="text-sm text-brand-sage mb-6">No regulatory data available.</p>
       )}
+      {/* 8.7 Easements — COMMENTED OUT: regulatory data exists but easements don't
       <PlaceholderBox
         id="8.7"
         title="Easements, development rights, cultural-heritage overlays"
         status="PARTIAL — REGULATORY TABLE EXISTS, EASEMENTS & DEV RIGHTS ARE NEW"
       />
+      */}
     </section>
   );
 }

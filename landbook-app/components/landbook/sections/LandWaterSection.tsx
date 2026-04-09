@@ -52,11 +52,13 @@ export function LandWaterSection({
           description="The slope profile influences water runoff patterns, erosion risk, and agricultural suitability."
         />
       )}
+      {/* 4.1 Microtopography — COMMENTED OUT: no micro-DEM data
       <PlaceholderBox
         id="4.1"
         title="Microtopography analysis"
         status="NEW — DETAILED MICRO-TERRAIN DATA NOT YET AVAILABLE"
       />
+      */}
 
       <Hairline />
 
@@ -71,11 +73,13 @@ export function LandWaterSection({
           ["Age", fmt(geology.age)],
         ]}
       />
+      {/* 4.2 Seismic — COMMENTED OUT: no seismic data in pipeline
       <PlaceholderBox
         id="4.2"
         title="Stability assessment & seismic notes"
         status="NEW — SEISMIC DATA NOT IN PIPELINE"
       />
+      */}
 
       <Hairline />
 
@@ -95,9 +99,34 @@ export function LandWaterSection({
       />
       <PlaceholderBox
         id="4.3"
-        title="Agricultural capability classes & data quality flag"
-        status="NEW — AG CAPABILITY CLASSIFICATION NOT YET COMPUTED"
-      />
+        title="Agricultural Capability Classification"
+        status="DERIVED FROM SOIL TEXTURE + PH + SLOPE"
+        synthetic
+      >
+        {(() => {
+          const slopeClass = terrain.slope != null
+            ? terrain.slope < 5 ? "I\u2013II" : terrain.slope < 15 ? "III\u2013IV" : terrain.slope < 30 ? "V\u2013VI" : "VII\u2013VIII"
+            : null;
+          const phClass = soil.ph != null
+            ? soil.ph >= 5.5 && soil.ph <= 7.5 ? "Optimal" : soil.ph >= 4.5 ? "Marginal" : "Limiting"
+            : null;
+          const ocClass = soil.organicCarbon != null
+            ? soil.organicCarbon > 20 ? "High fertility" : soil.organicCarbon > 10 ? "Moderate" : "Low \u2014 amendment needed"
+            : null;
+          return (
+            <DataTable
+              headers={["Factor", "Value", "Class"]}
+              rows={[
+                ["Slope", terrain.slope != null ? `${terrain.slope}%` : "\u2014", slopeClass ?? "\u2014"],
+                ["Soil pH", soil.ph != null ? soil.ph.toFixed(1) : "\u2014", phClass ?? "\u2014"],
+                ["Organic Carbon", soil.organicCarbon != null ? `${soil.organicCarbon} g/kg` : "\u2014", ocClass ?? "\u2014"],
+                ["Texture", soil.clay != null ? `Clay ${soil.clay}% / Sand ${soil.sand}%` : "\u2014",
+                  soil.clay != null ? (soil.clay > 40 ? "Heavy" : soil.clay > 25 ? "Medium" : "Light") : "\u2014"],
+              ]}
+            />
+          );
+        })()}
+      </PlaceholderBox>
 
       <Hairline />
 
@@ -113,11 +142,13 @@ export function LandWaterSection({
         <KPI value={water.wells} label="Wells" />
         <KPI value={water.waterways} label="Waterways" />
       </div>
+      {/* 4.4 Water rights — COMMENTED OUT: no yield/rights data in pipeline
       <PlaceholderBox
         id="4.4"
         title="Spring yields, seasonality, legal water rights, abstraction constraints"
         status="NEW — YIELD & RIGHTS DATA NOT IN PIPELINE"
       />
+      */}
 
       <Hairline />
 
@@ -132,11 +163,6 @@ export function LandWaterSection({
           ["Annual Rainfall", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm` : "\u2014"],
         ]}
       />
-      <PlaceholderBox
-        id="4.5"
-        title="Subsurface flow mapping, wetland delineation, flood-prone zone analysis"
-        status="NEW — SUBSURFACE & WETLAND DATA NOT YET AVAILABLE"
-      />
 
       <Hairline />
 
@@ -147,9 +173,21 @@ export function LandWaterSection({
       </div>
       <PlaceholderBox
         id="4.6"
-        title="Drought resilience, storage capacity, recharge rates, water quality parameters"
-        status="PARTIAL — INDEX EXISTS, DETAILED BREAKDOWN IS NEW"
-      />
+        title="Water Security Breakdown"
+        status="DERIVED FROM WATER INDEX + DROUGHT RISK + PRECIPITATION"
+        synthetic
+      >
+        <DataTable
+          headers={["Component", "Indicator", "Assessment"]}
+          rows={[
+            ["Drought Resilience", drought.riskLevel ?? "\u2014", drought.riskScore != null && drought.riskScore <= 2 ? "Good" : "At risk"],
+            ["Surface Water", `${water.waterways ?? 0} waterways, ${water.waterBodies ?? 0} bodies`, (water.waterways ?? 0) + (water.waterBodies ?? 0) > 2 ? "Adequate" : "Limited"],
+            ["Groundwater Access", `${water.springs ?? 0} springs, ${water.wells ?? 0} wells`, (water.springs ?? 0) + (water.wells ?? 0) > 0 ? "Available" : "Unknown"],
+            ["Annual Recharge", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm/yr` : "\u2014",
+              climate.annualRainfall != null ? (climate.annualRainfall > 600 ? "Good" : climate.annualRainfall > 400 ? "Moderate" : "Low") : "\u2014"],
+          ]}
+        />
+      </PlaceholderBox>
 
       <PullQuote text={narratives?.terrain?.pullQuote || narratives?.water?.pullQuote} />
     </section>

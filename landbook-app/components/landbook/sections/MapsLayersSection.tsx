@@ -39,15 +39,15 @@ export function MapsLayersSection({ maps }: { maps: Maps }) {
 
       <Hairline />
 
-      {/* 3.3 Watershed Context */}
+      {/* 3.3 Watershed Context — COMMENTED OUT: needs new map layer
       <SubsectionHeader id="3.3" title="Watershed Context" sources={["NEW"]} />
       <PlaceholderBox
         id="3.3"
         title="Mira River basin, drainage divides, flow paths"
         status="NEW MAP LAYER"
       />
-
       <Hairline />
+      */}
 
       {/* 3.4 Property Detail */}
       <SubsectionHeader id="3.4" title="Property Detail (1:5,000)" sources={["Pipeline"]} />
@@ -55,63 +55,53 @@ export function MapsLayersSection({ maps }: { maps: Maps }) {
 
       <Hairline />
 
-      {/* 3.5 Topography & Hydrology */}
-      <SubsectionHeader id="3.5" title="Topography & Hydrology" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.5"
-        title="Elevation, slope, aspect, drainage patterning"
-        status="NEW MAP — TERRAIN DATA EXISTS IN PIPELINE, VISUALIZATION IS NEW"
-      />
+      {/* 3.5 Topography & Hydrology — BUILD: terrain data exists, map viz pending */}
+      <SubsectionHeader id="3.5" title="Topography & Hydrology" sources={["Pipeline"]} />
+      <p className="text-sm text-brand-sage mb-6">
+        Terrain data (elevation, slope, aspect) available from pipeline. Map visualization pending Mapbox layer integration.
+      </p>
 
       <Hairline />
 
-      {/* 3.6 Solar Potential Analysis */}
+      {/* 3.6 Solar Potential Analysis — COMMENTED OUT: needs map visualization
       <SubsectionHeader id="3.6" title="Solar Potential Analysis" sources={["NEW"]} />
       <PlaceholderBox
         id="3.6"
         title="Irradiance, optimal placement zones"
         status="NEW MAP LAYER — SOLAR DATA PARTIAL IN PIPELINE"
       />
-
       <Hairline />
+      */}
 
-      {/* 3.7 Accessibility & Services */}
+      {/* 3.7 Accessibility & Services — COMMENTED OUT: needs routing/isochrone API
       <SubsectionHeader id="3.7" title="Accessibility & Services" sources={["NEW"]} />
       <PlaceholderBox
         id="3.7"
         title="15-minute radius network (roads, suppliers, markets)"
         status="NEW MAP LAYER — TIED TO SECTION 2.1"
       />
-
       <Hairline />
+      */}
 
-      {/* 3.8 Land Cover Change Detection */}
+      {/* 3.8 Land Cover Change Detection — COMMENTED OUT: needs satellite time-series
       <SubsectionHeader id="3.8" title="Land Cover Change Detection (2000-2024)" sources={["NEW"]} />
       <PlaceholderBox
         id="3.8"
         title="Before/after satellite comparison"
         status="NEW — NEED SATELLITE TIME-SERIES COMPARISON IMAGERY"
       />
+      */}
 
       <Hairline />
 
-      {/* 3.9 3D Perspective Views */}
-      <SubsectionHeader id="3.9" title="3D Perspective Views" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.9"
-        title="Terrain fly-through-style shaping"
-        status="ENTIRELY NEW — NEED 3D TERRAIN RENDERER"
-      />
-
-      <Hairline />
-
-      {/* 3.10 Layer Control */}
+      {/* 3.10 Layer Control — COMMENTED OUT: complex interactive UI feature
       <SubsectionHeader id="3.10" title="Layer Control" sources={["NEW"]} />
       <PlaceholderBox
         id="3.10"
         title="Toggle: ecology, risk, value, land use, infrastructure"
         status="NEW INTERACTIVE UI ELEMENT"
       />
+      */}
 
       {/* Existing 4-map grid as reference */}
       <Hairline />

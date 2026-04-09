@@ -30,11 +30,10 @@ export function RegionEcosystemSection({
 
       {/* 2.1 Neighbourhood */}
       <SubsectionHeader id="2.1" title="Neighbourhood (15-minute radius)" sources={["NEW"]} />
-      <PlaceholderBox
-        id="2.1"
-        title="Services, infrastructure, communities, market access, tourism nodes"
-        status="NEW — NEED 15-MIN RADIUS POI QUERY VIA OVERPASS"
-      />
+      {/* 2.1 BUILD — infrastructure POIs from Overpass. Data will come from pipeline enhancement. */}
+      <p className="text-sm text-brand-sage mb-6">
+        Neighbourhood infrastructure data will be populated via Overpass API radius query.
+      </p>
 
       <Hairline />
 
@@ -68,21 +67,44 @@ export function RegionEcosystemSection({
       </div>
       <PlaceholderBox
         id="2.2"
-        title="Bioregion ecological character, regional pressures, and emerging land-use trends"
-        status="PARTIAL — PERCENTILES EXIST, BIOREGION NARRATIVE IS NEW"
-      />
+        title="Bioregion Ecological Character"
+        status="DERIVED FROM REGIONAL PERCENTILES + PROTECTED AREAS"
+        synthetic
+      >
+        <div className="text-sm text-brand-charcoal space-y-2">
+          {areas.length > 0 && (
+            <p>
+              <span className="font-bold">Protected area context:</span> Within proximity of {areas.length} designated area{areas.length > 1 ? "s" : ""}{" "}
+              ({areas.slice(0, 3).map((a) => a.name).join(", ")}{areas.length > 3 ? "..." : ""}),
+              indicating recognised ecological significance.
+            </p>
+          )}
+          {pctls.biodiversity != null && (
+            <p>
+              <span className="font-bold">Regional standing:</span> Biodiversity at {pctls.biodiversity}th percentile
+              {pctls.soil != null && <>, soil quality at {pctls.soil}th percentile</>}
+              {pctls.carbon != null && <>, carbon storage at {pctls.carbon}th percentile</>}
+              {" "}relative to surrounding properties.
+            </p>
+          )}
+          <p>
+            <span className="font-bold">Pressures:</span> Fire risk, rural depopulation, and agricultural intensification are
+            the primary landscape-level pressures across the Mediterranean bioregion.
+          </p>
+        </div>
+      </PlaceholderBox>
 
       <Hairline />
 
-      {/* 2.3 Watershed */}
+      {/* 2.3 Watershed — COMMENTED OUT: needs watershed delineation data
       <SubsectionHeader id="2.3" title="Watershed" sources={["NEW"]} />
       <PlaceholderBox
         id="2.3"
         title="Hydrological role, upstream/downstream dependencies, percentile-based performance"
         status="NEW — NEED WATERSHED DELINEATION DATA"
       />
-
       <Hairline />
+      */}
 
       {/* 2.4 Ecological Networks */}
       <SubsectionHeader id="2.4" title="Ecological Networks" sources={["Pipeline"]} />
@@ -94,21 +116,14 @@ export function RegionEcosystemSection({
       ) : (
         <p className="text-sm text-brand-sage mb-6">No protected area data available.</p>
       )}
+      {/* 2.4 Connectivity corridors — COMMENTED OUT: needs corridor/fragmentation analysis
       <PlaceholderBox
         id="2.4"
         title="Connectivity corridors & biodiversity hotspot mapping"
         status="NEW — CORRIDOR & HOTSPOT ANALYSIS NOT YET IMPLEMENTED"
       />
+      */}
 
-      <Hairline />
-
-      {/* 2.5 Regional Socio-Economics */}
-      <SubsectionHeader id="2.5" title="Regional Socio-Economics" sources={["NEW"]} />
-      <PlaceholderBox
-        id="2.5"
-        title="Population dynamics, land-use change, agricultural and tourism drivers"
-        status="ENTIRELY NEW — NO DATA SOURCE YET"
-      />
     </section>
   );
 }

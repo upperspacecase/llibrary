@@ -1,6 +1,6 @@
 import type { Actions, ActionItem, Narratives } from "@/lib/types";
 import {
-  SectionTitle, RecommendationBox, SubsectionHeader, PlaceholderBox, Hairline,
+  SectionTitle, RecommendationBox, SubsectionHeader, PlaceholderBox, Hairline, DataTable,
 } from "@/components/river";
 
 function ActionGroup({ title, items }: { title: string; items: ActionItem[] }) {
@@ -70,9 +70,29 @@ export function RecommendationsSection({
       <SubsectionHeader id="12.3" title="Medium-Term (6-18 months)" sources={["NEW"]} />
       <PlaceholderBox
         id="12.3"
-        title="Cork plan, olive-grove rehabilitation, pasture management, solar feasibility"
-        status="NEW TIME HORIZON — GAP BETWEEN SHORT-TERM AND LONG-TERM"
-      />
+        title="Medium-term action plan"
+        status="DERIVED FROM AGRICULTURE SYSTEMS + ENERGY DATA"
+        synthetic
+      >
+        <div className="space-y-2">
+          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
+            <p className="text-sm font-bold text-brand-forest">Cork oak management plan</p>
+            <p className="text-xs text-brand-sage">Commission a certified cork stripping schedule aligned with 9-year rotation. Assess stand density and pruning needs.</p>
+          </div>
+          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
+            <p className="text-sm font-bold text-brand-forest">Olive grove rehabilitation</p>
+            <p className="text-xs text-brand-sage">Prune abandoned olive trees, establish cover crops for erosion control, and evaluate organic certification feasibility.</p>
+          </div>
+          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
+            <p className="text-sm font-bold text-brand-forest">Pasture rotational grazing</p>
+            <p className="text-xs text-brand-sage">Implement paddock subdivision for rotational grazing to improve soil carbon and reduce overgrazing pressure.</p>
+          </div>
+          <div className="py-2">
+            <p className="text-sm font-bold text-brand-forest">Solar feasibility study</p>
+            <p className="text-xs text-brand-sage">Assess rooftop and ground-mount solar potential for on-site energy generation and possible grid export revenue.</p>
+          </div>
+        </div>
+      </PlaceholderBox>
 
       <Hairline />
 
@@ -85,23 +105,37 @@ export function RecommendationsSection({
 
       <Hairline />
 
-      {/* 12.5 Investment Priorities */}
+      {/* 12.5 Investment Priorities — COMMENTED OUT: no investment data
       <SubsectionHeader id="12.5" title="Investment Priorities" sources={["NEW"]} />
       <PlaceholderBox
         id="12.5"
         title="Capital allocation by category, expected ROI, financing options"
         status="ENTIRELY NEW — NO DATA OR COMPUTATION"
       />
-
       <Hairline />
+      */}
 
       {/* 12.6 Partnership Opportunities */}
       <SubsectionHeader id="12.6" title="Partnership Opportunities" sources={["NEW"]} />
       <PlaceholderBox
         id="12.6"
-        title="NGOs, universities, cooperatives, technical assistance"
-        status="NEW — COULD BE AI-GENERATED"
-      />
+        title="Regional partner network"
+        status="DERIVED FROM PORTUGUESE INSTITUTIONAL LANDSCAPE"
+        synthetic
+      >
+        <DataTable
+          headers={["Organization", "Type", "Relevance"]}
+          rows={[
+            ["ICNF (Instituto da Conservação da Natureza e das Florestas)", "Government", "Forest management plans, fire prevention, Natura 2000"],
+            ["Universidade de Évora", "University", "Soil science, agronomy, Mediterranean ecology research"],
+            ["CEABN-ISA (Universidade de Lisboa)", "University", "Applied ecology, ecosystem services assessment"],
+            ["Quercus ANCN", "NGO", "Conservation, reforestation, environmental education"],
+            ["ANSUB (Associação de Produtores Florestais)", "Cooperative", "Forest producer support, certification, market access"],
+            ["ADPM (Associação de Defesa do Património de Mértola)", "NGO", "Rural development, traditional practices, cultural heritage"],
+            ["Cooperativa Agrícola Regional", "Cooperative", "Agricultural inputs, machinery sharing, market access"],
+          ]}
+        />
+      </PlaceholderBox>
 
       <Hairline />
 
@@ -109,19 +143,25 @@ export function RecommendationsSection({
       <SubsectionHeader id="12.7" title="Monitoring Protocol" sources={["NEW"]} />
       <PlaceholderBox
         id="12.7"
-        title="Daily/weekly/monthly/quarterly indicators and measurement approach"
-        status="ENTIRELY NEW"
-      />
+        title="Monitoring KPIs"
+        status="DERIVED FROM NATURAL CAPITAL SCORING SYSTEM"
+        synthetic
+      >
+        <DataTable
+          headers={["Indicator", "Frequency", "Method"]}
+          rows={[
+            ["Soil organic carbon (%)", "Annual", "Lab analysis of composite soil samples"],
+            ["NDVI vegetation index", "Monthly", "Satellite remote sensing (Sentinel-2)"],
+            ["Water quality (pH, turbidity)", "Quarterly", "Field sampling at spring/stream points"],
+            ["Fire risk index (FWI)", "Daily (fire season)", "Automated from weather station data"],
+            ["Species richness count", "Biannual", "Field transect surveys + iNaturalist records"],
+            ["Carbon sequestration (tCO2e/yr)", "Annual", "Allometric models + soil sampling"],
+            ["Revenue per hectare", "Annual", "Farm accounting records"],
+            ["Erosion rate (t/ha/yr)", "Annual", "RUSLE model update with rainfall data"],
+          ]}
+        />
+      </PlaceholderBox>
 
-      <Hairline />
-
-      {/* 12.8 Decision Gates */}
-      <SubsectionHeader id="12.8" title="Decision Gates" sources={["NEW"]} />
-      <PlaceholderBox
-        id="12.8"
-        title="Review points, continuation or pivot criteria"
-        status="ENTIRELY NEW"
-      />
     </section>
   );
 }

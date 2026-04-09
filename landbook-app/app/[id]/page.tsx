@@ -149,6 +149,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
             <ValueBenefitsSection
               economics={data.economics}
               scores={data.scores}
+              meta={data.meta}
               narratives={{ ecosystemServices: n.ecosystemServices, methodology: n.methodology }}
             />
           </div>

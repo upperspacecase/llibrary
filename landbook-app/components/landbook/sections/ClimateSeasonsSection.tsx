@@ -41,11 +41,7 @@ export function ClimateSeasonsSection({
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Climate Zone</div>
         <div className="serif-title text-lg text-brand-forest">{climate.zone ?? "\u2014"}</div>
       </div>
-      <PlaceholderBox
-        id="6.1"
-        title="Regional comparison (vs neighbouring municipalities)"
-        status="NEW — REGIONAL CLIMATE COMPARISON NOT YET IMPLEMENTED"
-      />
+      {/* Regional comparison deferred until 20km ring data is in the pipeline */}
 
       <Hairline />
 
@@ -58,11 +54,31 @@ export function ClimateSeasonsSection({
         <KPI value={climate.frostDays} unit="days" label="Frost Days" />
         <KPI value={climate.growingSeason} unit="months" label="Growing Season" />
       </div>
-      <PlaceholderBox
-        id="6.2"
-        title="Growing Degree Days (GDD) computation"
-        status="NEW — GDD NOT YET COMPUTED FROM PIPELINE DATA"
-      />
+      {highs.length === 12 && lows.length === 12 && (() => {
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const base = 10;
+        let totalGDD = 0;
+        const monthlyGDD = MONTHS.map((m, i) => {
+          const avgTemp = (highs[i] + lows[i]) / 2;
+          const gdd = avgTemp > base ? Math.round((avgTemp - base) * daysInMonth[i]) : 0;
+          totalGDD += gdd;
+          return { month: m, avgTemp: avgTemp.toFixed(1), gdd };
+        });
+        return (
+          <div className="mb-6">
+            <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">
+              Growing Degree Days (base 10 °C)
+            </div>
+            <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none mb-4">
+              {totalGDD.toLocaleString()} <span className="text-sm font-normal text-brand-sage">GDD</span>
+            </p>
+            <DataTable
+              headers={["Month", "Avg °C", "GDD"]}
+              rows={monthlyGDD.map((r) => [r.month, r.avgTemp, String(r.gdd)])}
+            />
+          </div>
+        );
+      })()}
 
       <Hairline />
 
@@ -73,11 +89,52 @@ export function ClimateSeasonsSection({
         unit="mm"
         label="Annual Rainfall"
       />
-      <PlaceholderBox
-        id="6.3"
-        title="Drought probability, intense-event frequency, seasonality index"
-        status="NEW — PRECIPITATION ANALYTICS NOT YET COMPUTED"
-      />
+      {precip.length === 12 && (() => {
+        const dryMonths = precip.map((p, i) => ({ month: MONTHS[i], precip: p })).filter((m) => m.precip < 30);
+        const maxPrecip = Math.max(...precip);
+        const minPrecip = Math.min(...precip);
+        const wettestIdx = precip.indexOf(maxPrecip);
+        const driestIdx = precip.indexOf(minPrecip);
+        const totalRain = climate.annualRainfall ?? precip.reduce((s, v) => s + v, 0);
+        const meanMonthly = totalRain / 12;
+        const seasonalityIndex = meanMonthly > 0
+          ? Math.round(precip.reduce((s, v) => s + Math.abs(v - meanMonthly), 0) / totalRain * 100) / 100
+          : 0;
+        return (
+          <PlaceholderBox id="6.3" title="Drought & Seasonality Indicators" status="DERIVED FROM MONTHLY PRECIPITATION DATA" synthetic>
+            <div className="grid grid-cols-2 gap-4 text-sm text-brand-forest">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Dry Months (&lt; 30 mm)</span>
+                <span className="font-bold">{dryMonths.length}</span>
+                {dryMonths.length > 0 && (
+                  <span className="text-xs text-brand-sage ml-2">({dryMonths.map((m) => m.month).join(", ")})</span>
+                )}
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Total Annual Rainfall</span>
+                <span className="font-bold">{Math.round(totalRain).toLocaleString()} mm</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Wettest Month</span>
+                <span className="font-bold">{MONTHS[wettestIdx]}</span>
+                <span className="text-xs text-brand-sage ml-1">({Math.round(maxPrecip)} mm)</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Driest Month</span>
+                <span className="font-bold">{MONTHS[driestIdx]}</span>
+                <span className="text-xs text-brand-sage ml-1">({Math.round(minPrecip)} mm)</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Seasonality Index</span>
+                <span className="font-bold">{seasonalityIndex.toFixed(2)}</span>
+                <span className="text-xs text-brand-sage ml-1">
+                  ({seasonalityIndex < 0.2 ? "Low" : seasonalityIndex < 0.4 ? "Moderate" : seasonalityIndex < 0.6 ? "High" : "Very High"})
+                </span>
+              </div>
+            </div>
+          </PlaceholderBox>
+        );
+      })()}
 
       <Hairline />
 
@@ -96,11 +153,7 @@ export function ClimateSeasonsSection({
           </div>
         );
       })()}
-      <PlaceholderBox
-        id="6.4"
-        title="UV index, Photosynthetically Active Radiation (PAR)"
-        status="NEW — UV & PAR DATA NOT IN PIPELINE"
-      />
+      {/* UV/PAR deferred until Google Solar API integration */}
 
       <Hairline />
 
@@ -119,11 +172,7 @@ export function ClimateSeasonsSection({
           </div>
         );
       })()}
-      <PlaceholderBox
-        id="6.5"
-        title="Prevailing directions, storm frequency"
-        status="PARTIAL — BASIC WIND DATA EXISTS, DETAILED ANALYSIS IS NEW"
-      />
+      {/* Detailed wind analysis deferred until directional data is in the pipeline */}
 
       <Hairline />
 
@@ -147,11 +196,6 @@ export function ClimateSeasonsSection({
           </p>
         </div>
       </div>
-      <PlaceholderBox
-        id="6.6"
-        title="Microclimatic variation analysis"
-        status="NEW — MICROCLIMATE DATA NOT AVAILABLE"
-      />
 
       <Hairline />
 
@@ -165,11 +209,64 @@ export function ClimateSeasonsSection({
           { period: "SEP\u2013DEC", tag: "HARVEST", description: "Ideal for soil remediation and preparation works." },
         ]}
       />
-      <PlaceholderBox
-        id="6.7"
-        title="Phenology detail, risk-period flags"
-        status="PARTIAL — SEASONAL GRID EXISTS, PHENOLOGY DETAIL IS NEW"
-      />
+      {highs.length === 12 && lows.length === 12 && (() => {
+        const frostDays = climate.frostDays ?? 0;
+        const growingSeason = climate.growingSeason ?? 0;
+
+        // Estimate last spring frost: scan forward from Jan until monthly avg low > 2°C
+        let lastFrostMonth = -1;
+        for (let i = 0; i < 6; i++) {
+          if (lows[i] != null && lows[i] <= 2) lastFrostMonth = i;
+        }
+        // Estimate first autumn frost: scan backward from Dec until monthly avg low > 2°C
+        let firstFrostMonth = -1;
+        for (let i = 11; i >= 6; i--) {
+          if (lows[i] != null && lows[i] <= 2) { firstFrostMonth = i; break; }
+        }
+
+        const lastFrostLabel = lastFrostMonth >= 0 ? `Late ${MONTHS[lastFrostMonth]}` : "None detected";
+        const firstFrostLabel = firstFrostMonth >= 0 ? `Early ${MONTHS[firstFrostMonth]}` : "None detected";
+        const growingSeasonLength = growingSeason > 0 ? `${growingSeason} months` : "\u2014";
+
+        // Risk periods: months where avg low < 5°C (frost risk) or avg high > 35°C (heat stress)
+        const frostRisk = MONTHS.filter((_, i) => lows[i] != null && lows[i] < 5);
+        const heatRisk = MONTHS.filter((_, i) => highs[i] != null && highs[i] > 35);
+
+        return (
+          <PlaceholderBox id="6.7" title="Phenology Estimates" status="DERIVED FROM GROWING SEASON + FROST DAYS + MONTHLY TEMPS" synthetic>
+            <div className="grid grid-cols-2 gap-4 text-sm text-brand-forest">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Last Spring Frost (est.)</span>
+                <span className="font-bold">{lastFrostLabel}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">First Autumn Frost (est.)</span>
+                <span className="font-bold">{firstFrostLabel}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Growing Season Length</span>
+                <span className="font-bold">{growingSeasonLength}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Frost Days / Year</span>
+                <span className="font-bold">{frostDays}</span>
+              </div>
+              {frostRisk.length > 0 && (
+                <div>
+                  <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Frost Risk Months</span>
+                  <span className="font-bold">{frostRisk.join(", ")}</span>
+                </div>
+              )}
+              {heatRisk.length > 0 && (
+                <div>
+                  <span className="text-[10px] uppercase tracking-widest text-brand-sage block mb-1">Heat Stress Months</span>
+                  <span className="font-bold">{heatRisk.join(", ")}</span>
+                </div>
+              )}
+            </div>
+          </PlaceholderBox>
+        );
+      })()}
 
       <Hairline />
 
