@@ -3,23 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 
 const NAV_ITEMS = [
-  { id: "executive-summary", icon: "description", label: "Executive Summary" },
-  { id: "ecosystem-services", icon: "eco", label: "Ecosystem Services" },
-  { id: "scorecard", icon: "assessment", label: "Scorecard" },
-  { id: "terrain-soil", icon: "terrain", label: "Terrain & Soil" },
-  { id: "water", icon: "water_drop", label: "Water" },
-  { id: "climate", icon: "thermostat", label: "Climate" },
-  { id: "biodiversity", icon: "visibility", label: "Biodiversity" },
-  { id: "agriculture", icon: "agriculture", label: "Agriculture" },
-  { id: "opportunities", icon: "lightbulb", label: "Opportunities" },
-  { id: "risks", icon: "warning", label: "Risk Assessment" },
-  { id: "resilience", icon: "shield", label: "Resilience" },
-  { id: "regional-context", icon: "location_on", label: "Regional Context" },
-  { id: "trends", icon: "trending_up", label: "Trends" },
-  { id: "map-portfolio", icon: "map", label: "Map Portfolio" },
-  { id: "compliance", icon: "gavel", label: "Compliance" },
-  { id: "next-steps", icon: "checklist", label: "Next Steps" },
-  { id: "methodology", icon: "science", label: "Methodology" },
+  { id: "overview", icon: "description", label: "Overview" },
+  { id: "region-ecosystem", icon: "location_on", label: "Region & Ecosystem" },
+  { id: "maps-layers", icon: "map", label: "Maps & Layers" },
+  { id: "land-water", icon: "terrain", label: "Land & Water" },
+  { id: "biodiversity-habitat", icon: "forest", label: "Biodiversity & Habitat" },
+  { id: "climate-seasons", icon: "thermostat", label: "Climate & Seasons" },
+  { id: "value-benefits", icon: "eco", label: "Value & Benefits" },
+  { id: "land-use", icon: "agriculture", label: "Land Use" },
+  { id: "history-trends", icon: "trending_up", label: "History & Trends" },
+  { id: "risks-resilience", icon: "shield", label: "Risks & Resilience" },
+  { id: "future-scenarios", icon: "lightbulb", label: "Future Scenarios" },
+  { id: "recommendations", icon: "checklist", label: "Recommendations" },
+  { id: "your-knowledge", icon: "school", label: "Your Knowledge" },
+  { id: "sources-methodology", icon: "science", label: "Sources & Methodology" },
 ];
 
 export function SideNav({ propertyName }: { propertyName: string }) {

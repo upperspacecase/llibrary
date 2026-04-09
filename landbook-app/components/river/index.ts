@@ -13,3 +13,6 @@ export { SeasonalGrid } from "./SeasonalGrid";
 export type { Season } from "./SeasonalGrid";
 export { DataTable } from "./DataTable";
 export { RiskBadge } from "./RiskBadge";
+export { PlaceholderBox } from "./PlaceholderBox";
+export { DataSourceBadge } from "./DataSourceBadge";
+export { SubsectionHeader } from "./SubsectionHeader";

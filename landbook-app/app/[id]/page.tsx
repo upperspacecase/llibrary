@@ -4,23 +4,22 @@ import type { Landbook, ReportData } from "@/lib/types";
 
 import { SideNav } from "@/components/landbook/SideNav";
 import { CoverSection } from "@/components/landbook/CoverSection";
-import { ExecutiveSummary } from "@/components/landbook/ExecutiveSummary";
-import { EcosystemServices } from "@/components/landbook/EcosystemServices";
-import { Scorecard } from "@/components/landbook/Scorecard";
-import { TerrainSoil } from "@/components/landbook/TerrainSoil";
-import { WaterSection } from "@/components/landbook/WaterSection";
-import { ClimateSection } from "@/components/landbook/ClimateSection";
-import { BiodiversitySection } from "@/components/landbook/BiodiversitySection";
-import { AgricultureSection } from "@/components/landbook/AgricultureSection";
-import { OpportunitiesSection } from "@/components/landbook/OpportunitiesSection";
-import { RisksSection } from "@/components/landbook/RisksSection";
-import { ResilienceSection } from "@/components/landbook/ResilienceSection";
-import { RegionalContext } from "@/components/landbook/RegionalContext";
-import { TrendsSection } from "@/components/landbook/TrendsSection";
-import { MapPortfolio } from "@/components/landbook/MapPortfolio";
-import { ComplianceSection } from "@/components/landbook/ComplianceSection";
-import { NextSteps } from "@/components/landbook/NextSteps";
-import { MethodologySection } from "@/components/landbook/MethodologySection";
+import {
+  OverviewSection,
+  RegionEcosystemSection,
+  MapsLayersSection,
+  LandWaterSection,
+  BiodiversityHabitatSection,
+  ClimateSeasonsSection,
+  ValueBenefitsSection,
+  LandUseSection,
+  HistoryTrendsSection,
+  RisksResilienceSection,
+  FutureScenariosSection,
+  RecommendationsSection,
+  YourKnowledgeSection,
+  SourcesMethodologySection,
+} from "@/components/landbook/sections";
 
 export const dynamic = "force-dynamic";
 
@@ -71,7 +70,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
   }
 
   const n = data.narratives || {};
-
   const propertyName = data.property?.name || "Property";
 
   return (
@@ -91,126 +89,117 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
         {/* Section pages */}
         <div className="max-w-[800px] mx-auto space-y-12">
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <ExecutiveSummary
+            <OverviewSection
               property={data.property}
               scores={data.scores}
               economics={data.economics}
               water={data.water}
               fire={data.fire}
+              maps={data.maps}
               narratives={n.executiveSummary}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <EcosystemServices
-              economics={data.economics}
-              narratives={n.ecosystemServices}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <Scorecard
-              scores={data.scores}
-              narratives={n.scorecard}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <TerrainSoil
-              terrain={data.terrain}
-              soil={data.soil}
-              geology={data.geology}
-              narratives={n.terrain}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <WaterSection
-              water={data.water}
-              climate={data.climate}
-              narratives={n.water}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <ClimateSection
-              climate={data.climate}
-              narratives={n.climate}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <BiodiversitySection
-              species={data.species}
-              narratives={n.biodiversity}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <AgricultureSection
-              agriculture={data.agriculture}
-              narratives={n.agriculture}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <OpportunitiesSection
-              economics={data.economics}
-              narratives={n.opportunities}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <RisksSection
-              fire={data.fire}
-              flood={data.flood}
-              drought={data.drought}
-              narratives={n.risks}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <ResilienceSection
-              energy={data.energy}
-              narratives={n.resilience}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <RegionalContext
+            <RegionEcosystemSection
               regional={data.regional}
               narratives={n.context}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <TrendsSection
+            <MapsLayersSection maps={data.maps} />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <LandWaterSection
+              terrain={data.terrain}
+              soil={data.soil}
+              geology={data.geology}
+              water={data.water}
+              climate={data.climate}
+              drought={data.drought}
+              narratives={{ terrain: n.terrain, water: n.water }}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <BiodiversityHabitatSection
+              species={data.species}
+              agriculture={data.agriculture}
+              regional={data.regional}
+              economics={data.economics}
+              scores={data.scores}
+              narratives={n.biodiversity}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <ClimateSeasonsSection
+              climate={data.climate}
+              energy={data.energy}
+              trends={data.trends}
+              narratives={n.climate}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <ValueBenefitsSection
+              economics={data.economics}
+              scores={data.scores}
+              narratives={{ ecosystemServices: n.ecosystemServices, methodology: n.methodology }}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <LandUseSection
+              agriculture={data.agriculture}
+              compliance={data.compliance}
+              economics={data.economics}
+              narratives={{ agriculture: n.agriculture, compliance: n.compliance }}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <HistoryTrendsSection
               trends={data.trends}
               economics={data.economics}
+              fire={data.fire}
               narratives={n.temporal}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <MapPortfolio maps={data.maps} />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <ComplianceSection
-              compliance={data.compliance}
-              narratives={n.compliance}
+            <RisksResilienceSection
+              fire={data.fire}
+              flood={data.flood}
+              drought={data.drought}
+              energy={data.energy}
+              trends={data.trends}
+              narratives={{ risks: n.risks, resilience: n.resilience }}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <NextSteps
+            <FutureScenariosSection
+              economics={data.economics}
+              narratives={n.opportunities}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <RecommendationsSection
               actions={data.actions}
               narratives={n.nextSteps}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <MethodologySection
+            <YourKnowledgeSection />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <SourcesMethodologySection
               meta={data.meta}
               narratives={n.methodology}
             />
