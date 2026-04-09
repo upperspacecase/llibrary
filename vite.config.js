@@ -19,6 +19,7 @@ export default defineConfig({
         onboard: resolve(__dirname, 'onboard.html'),
         passport: resolve(__dirname, 'passport.html'),
         directory: resolve(__dirname, 'directory.html'),
+        audit: resolve(__dirname, 'landbook-audit-working.html'),
       },
     },
   },
