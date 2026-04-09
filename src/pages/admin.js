@@ -6,6 +6,8 @@ let reportVersions = []; // keyed by submission_id string
 let activeTab = 'submissions';
 let pipelineResults = null;
 let pipelineTesting = false;
+/** Stores last pipeline run result per landbookId, survives re-renders */
+const lastPipelineRun = {};
 
 // ---- Column configs per collection ----
 const columns = {
@@ -267,11 +269,17 @@ function renderTable() {
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
                     const hasData = !!row.data;
-                    return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${escapeHtml(subId)}" title="${hasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${hasData ? '↻ Refresh' : '▶ Run Pipeline'}</button></td>`;
+                    const lbId = escapeHtml(subId);
+                    const hasRun = !!lastPipelineRun[subId];
+                    const toggleBtn = hasRun ? `<button class="admin-pr-toggle-btn" data-landbook-id="${lbId}" title="Show last pipeline results">Results</button>` : '';
+                    return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${lbId}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${lbId}" title="${hasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${hasData ? '↻ Refresh' : '▶ Run Pipeline'}</button>${toggleBtn}</td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
                 const subHasData = !!row.data;
-                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="${subHasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${subHasData ? '↻ Refresh' : '▶ Run Pipeline'}</button></td>`;
+                const sId = escapeHtml(row.id || '');
+                const sHasRun = !!lastPipelineRun[row.id];
+                const sToggleBtn = sHasRun ? `<button class="admin-pr-toggle-btn" data-landbook-id="${sId}" title="Show last pipeline results">Results</button>` : '';
+                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${sId}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${sId}" title="${subHasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${subHasData ? '↻ Refresh' : '▶ Run Pipeline'}</button>${sToggleBtn}</td>`;
             }
             if (str === '__REGION_ACTIONS__') {
                 const name = escapeHtml(row.name);
@@ -316,13 +324,6 @@ function renderTable() {
             btn.textContent = 'Running...';
             btn.classList.add('running');
 
-            // Remove any existing results panel for this row
-            const row = btn.closest('tr');
-            const existingPanel = row.nextElementSibling;
-            if (existingPanel?.classList.contains('admin-pipeline-results-row')) {
-                existingPanel.remove();
-            }
-
             try {
                 const res = await fetch(`/api/landbooks/${landbookId}/refresh`, {
                     method: 'POST',
@@ -334,29 +335,55 @@ function renderTable() {
                     throw new Error(result.error || 'Pipeline failed');
                 }
 
-                btn.textContent = '✓ Done';
+                // Store result so it survives re-renders
+                lastPipelineRun[landbookId] = { ok: true, result, time: new Date() };
+
+                btn.textContent = '↻ Refresh';
                 btn.classList.remove('running');
-                btn.classList.add('done');
+                btn.disabled = false;
 
-                // Show detailed results panel
-                showPipelineResults(row, result);
-
-                // Reload data after delay so button updates to "Refresh"
-                setTimeout(() => loadData(), 5000);
+                // Show results panel and render the toggle button
+                const row = btn.closest('tr');
+                showPipelineResults(row, result, landbookId);
             } catch (err) {
+                lastPipelineRun[landbookId] = { ok: false, error: err.message, time: new Date() };
+
                 btn.textContent = '✗ Failed';
                 btn.classList.remove('running');
                 btn.classList.add('failed');
                 btn.title = err.message;
 
-                // Show error panel
-                showPipelineError(row, err.message);
+                const row = btn.closest('tr');
+                showPipelineError(row, err.message, landbookId);
 
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.classList.remove('failed');
                     btn.disabled = false;
-                }, 5000);
+                }, 3000);
+            }
+        });
+    });
+
+    // Bind toggle buttons for previously-run pipelines (survive re-renders)
+    body.querySelectorAll('.admin-pr-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const landbookId = btn.dataset.landbookId;
+            const row = btn.closest('tr');
+            const existing = row.nextElementSibling;
+            if (existing?.classList.contains('admin-pipeline-results-row')) {
+                existing.remove();
+                btn.textContent = 'Results';
+                return;
+            }
+            const cached = lastPipelineRun[landbookId];
+            if (!cached) return;
+            if (cached.ok) {
+                showPipelineResults(row, cached.result, landbookId);
+                btn.textContent = 'Hide';
+            } else {
+                showPipelineError(row, cached.error, landbookId);
+                btn.textContent = 'Hide';
             }
         });
     });
@@ -545,7 +572,15 @@ document.getElementById('test-all-btn').addEventListener('click', testAllSources
 
 // ---- Pipeline Results Panel ----
 
-function showPipelineResults(row, result) {
+function showPipelineResults(row, result, landbookId) {
+    // Remove existing panel if open
+    const existing = row.nextElementSibling;
+    if (existing?.classList.contains('admin-pipeline-results-row')) {
+        existing.remove();
+    }
+    // Update toggle button text if it exists
+    const toggleBtn = row.querySelector('.admin-pr-toggle-btn');
+    if (toggleBtn) toggleBtn.textContent = 'Hide';
     const sources = result.sources || {};
     const layers = result.layers || {};
     const scores = result.scores || {};
@@ -620,13 +655,17 @@ function showPipelineResults(row, result) {
                     <div class="pr-chips">${uncHtml}</div>
                 </div>
             </div>
-            <button class="pr-close" onclick="this.closest('.admin-pipeline-results-row').remove()">Dismiss</button>
+            <button class="pr-close" onclick="const r=this.closest('.admin-pipeline-results-row');const t=r.previousElementSibling?.querySelector('.admin-pr-toggle-btn');if(t)t.textContent='Results';r.remove()">Dismiss</button>
         </div>
     </td>`;
     row.after(panelRow);
 }
 
-function showPipelineError(row, message) {
+function showPipelineError(row, message, landbookId) {
+    const existing = row.nextElementSibling;
+    if (existing?.classList.contains('admin-pipeline-results-row')) {
+        existing.remove();
+    }
     const colSpan = row.children.length;
     const panelRow = document.createElement('tr');
     panelRow.className = 'admin-pipeline-results-row';
@@ -634,7 +673,7 @@ function showPipelineError(row, message) {
         <div class="pr-panel pr-panel-error">
             <div class="pr-heading" style="color:var(--coral,#e74c3c)">Pipeline Failed</div>
             <div class="pr-error-msg">${escapeHtml(message)}</div>
-            <button class="pr-close" onclick="this.closest('.admin-pipeline-results-row').remove()">Dismiss</button>
+            <button class="pr-close" onclick="const r=this.closest('.admin-pipeline-results-row');const t=r.previousElementSibling?.querySelector('.admin-pr-toggle-btn');if(t)t.textContent='Results';r.remove()">Dismiss</button>
         </div>
     </td>`;
     row.after(panelRow);
@@ -1231,6 +1270,22 @@ style.textContent = `
     .pr-close:hover {
         color: var(--black);
         border-color: var(--black);
+    }
+    .admin-pr-toggle-btn {
+        padding: 4px 10px;
+        font-size: 11px;
+        font-family: inherit;
+        font-weight: 500;
+        background: #e8f0fe;
+        border: 1px solid #c3d7f7;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #1a56db;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .admin-pr-toggle-btn:hover {
+        background: #d0e3fc;
     }
 `;
 document.head.appendChild(style);
