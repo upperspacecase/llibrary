@@ -266,10 +266,12 @@ function renderTable() {
                 const subId = str.slice(10);
                 if (!subId) return '<td class="admin-muted">—</td>';
                 if (row._type === 'landbook') {
-                    return `<td><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook">LandBook</button></td>`;
+                    const hasData = !!row.data;
+                    return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(subId)}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${escapeHtml(subId)}" title="${hasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${hasData ? '↻ Refresh' : '▶ Run Pipeline'}</button></td>`;
                 }
                 if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
-                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook">LandBook</button></td>`;
+                const subHasData = !!row.data;
+                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${escapeHtml(row.id || '')}" title="${subHasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${subHasData ? '↻ Refresh' : '▶ Run Pipeline'}</button></td>`;
             }
             if (str === '__REGION_ACTIONS__') {
                 const name = escapeHtml(row.name);
@@ -302,6 +304,43 @@ function renderTable() {
     body.querySelectorAll('.admin-landbook-v3-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             window.open(`${LANDBOOK_V3_BASE}/${btn.dataset.landbookId}`, '_blank');
+        });
+    });
+
+    // Bind pipeline run button handlers
+    body.querySelectorAll('.admin-pipeline-run-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const landbookId = btn.dataset.landbookId;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            btn.classList.add('running');
+            try {
+                const res = await fetch(`/api/landbooks/${landbookId}/refresh`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Pipeline failed');
+                }
+                btn.textContent = '✓ Done';
+                btn.classList.remove('running');
+                btn.classList.add('done');
+                // Reload data so the button text updates to "Refresh"
+                setTimeout(() => loadData(), 1500);
+            } catch (err) {
+                btn.textContent = '✗ Failed';
+                btn.classList.remove('running');
+                btn.classList.add('failed');
+                btn.title = err.message;
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('failed');
+                    btn.disabled = false;
+                }, 3000);
+            }
         });
     });
 
@@ -903,6 +942,42 @@ style.textContent = `
     }
     .admin-landbook-v3-btn:hover {
         background: #274e3d;
+    }
+    .admin-pipeline-run-btn {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 500;
+        background: var(--white, #fff);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .admin-pipeline-run-btn:hover {
+        color: var(--black);
+        border-color: var(--black);
+    }
+    .admin-pipeline-run-btn:disabled {
+        opacity: 0.7;
+        cursor: default;
+    }
+    .admin-pipeline-run-btn.running {
+        background: #fff3cd;
+        border-color: #856404;
+        color: #856404;
+    }
+    .admin-pipeline-run-btn.done {
+        background: #d4edda;
+        border-color: #1b5e20;
+        color: #1b5e20;
+    }
+    .admin-pipeline-run-btn.failed {
+        background: #fde8e8;
+        border-color: #c62828;
+        color: #c62828;
     }
 `;
 document.head.appendChild(style);
