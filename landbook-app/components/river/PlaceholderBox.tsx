@@ -12,7 +12,7 @@ export function PlaceholderBox({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="border-2 border-brand-terracotta/60 bg-brand-terracotta/5 p-5 mb-6">
+    <div className="p-5 mb-6">
       <div className="flex items-start gap-3">
         <span
           className="material-symbols-outlined text-brand-terracotta shrink-0"

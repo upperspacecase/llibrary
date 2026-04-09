@@ -97,6 +97,17 @@ export function SideNav({ propertyName }: { propertyName: string }) {
             );
           })}
         </nav>
+
+        {/* Support */}
+        <div className="px-6 py-4 mt-auto">
+          <a
+            href="mailto:hi@landlibrary.co"
+            className="flex items-center gap-2 text-gray-500 hover:text-brand-forest transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">mail</span>
+            Support
+          </a>
+        </div>
       </div>
     </aside>
   );
