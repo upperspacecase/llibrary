@@ -1,29 +1,28 @@
 import type { Actions, ActionItem, Narratives } from "@/lib/types";
-import {
-  SectionTitle, RecommendationBox, SubsectionHeader, PlaceholderBox, Hairline, DataTable,
-} from "@/components/river";
+import { SectionTitle, PlaceholderBox, DataTable } from "@/components/river";
 
-function ActionGroup({ title, items }: { title: string; items: ActionItem[] }) {
+function CheckboxGroup({ label, items }: { label: string; items: ActionItem[] }) {
   if (!items.length) return null;
   return (
-    <div className="mb-6">
-      <div className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-sage mb-3">
-        {title}
-      </div>
-      {items.map((a, i) => (
-        <div key={i} className="py-3 border-b-[0.5px] border-brand-sage/20">
-          <RecommendationBox
-            label={a.priority?.toUpperCase() || "ACTION"}
-            text={a.action || a.name || a.description}
-          />
-          {a.impact && (
-            <span className="text-[10px] uppercase tracking-widest text-brand-sage">
-              Impact: {a.impact}
+    <section>
+      <h2 className="font-label text-[11px] font-bold uppercase tracking-[0.25em] text-landbook-forest mb-6">
+        {label}
+      </h2>
+      <ul className="space-y-5">
+        {items.map((a, i) => (
+          <li key={i} className="flex items-start gap-4">
+            <input
+              type="checkbox"
+              className="appearance-none w-[14px] h-[14px] border-[0.5pt] border-brand-forest bg-transparent cursor-pointer relative mt-1 shrink-0
+                checked:after:content-['✓'] checked:after:absolute checked:after:-top-1 checked:after:left-[1px] checked:after:text-[12px] checked:after:text-brand-forest"
+            />
+            <span className="text-[14px] text-on-surface leading-snug">
+              {a.action || a.name || a.description}
             </span>
-          )}
-        </div>
-      ))}
-    </div>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -48,120 +47,86 @@ export function RecommendationsSection({
         </p>
       )}
 
-      {/* 12.1 Immediate */}
-      <SubsectionHeader id="12.1" title="Immediate (0-30 days)" sources={["AI"]} />
-      <ActionGroup title="Critical data gaps & emergency actions" items={immediate} />
-      {!immediate.length && (
-        <p className="text-sm text-brand-sage mb-6">No immediate actions generated.</p>
-      )}
+      {/* Checkbox Lists */}
+      <div className="space-y-14 flex-1">
+        <CheckboxGroup label="Immediate (0–6 months)" items={immediate} />
 
-      <Hairline />
+        {immediate.length > 0 && (shortTerm.length > 0 || longTerm.length > 0) && (
+          <div className="w-full h-[0.5pt] bg-landbook-sage/40" />
+        )}
 
-      {/* 12.2 Short-Term */}
-      <SubsectionHeader id="12.2" title="Short-Term (1-6 months)" sources={["AI"]} />
-      <ActionGroup title="Risk reduction & basic compliance" items={shortTerm} />
-      {!shortTerm.length && (
-        <p className="text-sm text-brand-sage mb-6">No short-term actions generated.</p>
-      )}
+        <CheckboxGroup label="Short-Term (6–24 months)" items={shortTerm} />
 
-      <Hairline />
+        {shortTerm.length > 0 && longTerm.length > 0 && (
+          <div className="w-full h-[0.5pt] bg-landbook-sage/40" />
+        )}
 
-      {/* 12.3 Medium-Term */}
-      <SubsectionHeader id="12.3" title="Medium-Term (6-18 months)" sources={["NEW"]} />
-      <PlaceholderBox
-        id="12.3"
-        title="Medium-term action plan"
-        status="DERIVED FROM AGRICULTURE SYSTEMS + ENERGY DATA"
-        synthetic
-      >
-        <div className="space-y-2">
-          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
-            <p className="text-sm font-bold text-brand-forest">Cork oak management plan</p>
-            <p className="text-xs text-brand-sage">Commission a certified cork stripping schedule aligned with 9-year rotation. Assess stand density and pruning needs.</p>
-          </div>
-          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
-            <p className="text-sm font-bold text-brand-forest">Olive grove rehabilitation</p>
-            <p className="text-xs text-brand-sage">Prune abandoned olive trees, establish cover crops for erosion control, and evaluate organic certification feasibility.</p>
-          </div>
-          <div className="py-2 border-b-[0.5px] border-brand-sage/20">
-            <p className="text-sm font-bold text-brand-forest">Pasture rotational grazing</p>
-            <p className="text-xs text-brand-sage">Implement paddock subdivision for rotational grazing to improve soil carbon and reduce overgrazing pressure.</p>
-          </div>
-          <div className="py-2">
-            <p className="text-sm font-bold text-brand-forest">Solar feasibility study</p>
-            <p className="text-xs text-brand-sage">Assess rooftop and ground-mount solar potential for on-site energy generation and possible grid export revenue.</p>
-          </div>
-        </div>
-      </PlaceholderBox>
+        <CheckboxGroup label="Ongoing" items={longTerm} />
 
-      <Hairline />
+        <div className="w-full h-[0.5pt] bg-landbook-sage/40" />
 
-      {/* 12.4 Long-Term */}
-      <SubsectionHeader id="12.4" title="Long-Term (2-5 years)" sources={["AI"]} />
-      <ActionGroup title="Strategic investments & transformation" items={longTerm} />
-      {!longTerm.length && (
-        <p className="text-sm text-brand-sage mb-6">No long-term actions generated.</p>
-      )}
+        {/* Partnership Opportunities */}
+        <section>
+          <h2 className="font-label text-[11px] font-bold uppercase tracking-[0.25em] text-landbook-forest mb-6">
+            Partnership Opportunities
+          </h2>
+          <PlaceholderBox
+            id="12.6"
+            title="Regional partner network"
+            status="DERIVED FROM PORTUGUESE INSTITUTIONAL LANDSCAPE"
+            synthetic
+          >
+            <DataTable
+              headers={["Organization", "Type", "Relevance"]}
+              rows={[
+                ["ICNF (Instituto da Conservação da Natureza e das Florestas)", "Government", "Forest management plans, fire prevention, Natura 2000"],
+                ["Universidade de Évora", "University", "Soil science, agronomy, Mediterranean ecology research"],
+                ["CEABN-ISA (Universidade de Lisboa)", "University", "Applied ecology, ecosystem services assessment"],
+                ["Quercus ANCN", "NGO", "Conservation, reforestation, environmental education"],
+                ["ANSUB (Associação de Produtores Florestais)", "Cooperative", "Forest producer support, certification, market access"],
+                ["ADPM (Associação de Defesa do Património de Mértola)", "NGO", "Rural development, traditional practices, cultural heritage"],
+                ["Cooperativa Agrícola Regional", "Cooperative", "Agricultural inputs, machinery sharing, market access"],
+              ]}
+            />
+          </PlaceholderBox>
+        </section>
 
-      <Hairline />
+        <div className="w-full h-[0.5pt] bg-landbook-sage/40" />
 
-      {/* 12.5 Investment Priorities — COMMENTED OUT: no investment data
-      <SubsectionHeader id="12.5" title="Investment Priorities" sources={["NEW"]} />
-      <PlaceholderBox
-        id="12.5"
-        title="Capital allocation by category, expected ROI, financing options"
-        status="ENTIRELY NEW — NO DATA OR COMPUTATION"
-      />
-      <Hairline />
-      */}
+        {/* Monitoring Protocol */}
+        <section>
+          <h2 className="font-label text-[11px] font-bold uppercase tracking-[0.25em] text-landbook-forest mb-6">
+            Monitoring Protocol
+          </h2>
+          <PlaceholderBox
+            id="12.7"
+            title="Monitoring KPIs"
+            status="DERIVED FROM NATURAL CAPITAL SCORING SYSTEM"
+            synthetic
+          >
+            <DataTable
+              headers={["Indicator", "Frequency", "Method"]}
+              rows={[
+                ["Soil organic carbon (%)", "Annual", "Lab analysis of composite soil samples"],
+                ["NDVI vegetation index", "Monthly", "Satellite remote sensing (Sentinel-2)"],
+                ["Water quality (pH, turbidity)", "Quarterly", "Field sampling at spring/stream points"],
+                ["Fire risk index (FWI)", "Daily (fire season)", "Automated from weather station data"],
+                ["Species richness count", "Biannual", "Field transect surveys + iNaturalist records"],
+                ["Carbon sequestration (tCO2e/yr)", "Annual", "Allometric models + soil sampling"],
+                ["Revenue per hectare", "Annual", "Farm accounting records"],
+                ["Erosion rate (t/ha/yr)", "Annual", "RUSLE model update with rainfall data"],
+              ]}
+            />
+          </PlaceholderBox>
+        </section>
 
-      {/* 12.6 Partnership Opportunities */}
-      <SubsectionHeader id="12.6" title="Partnership Opportunities" sources={["NEW"]} />
-      <PlaceholderBox
-        id="12.6"
-        title="Regional partner network"
-        status="DERIVED FROM PORTUGUESE INSTITUTIONAL LANDSCAPE"
-        synthetic
-      >
-        <DataTable
-          headers={["Organization", "Type", "Relevance"]}
-          rows={[
-            ["ICNF (Instituto da Conservação da Natureza e das Florestas)", "Government", "Forest management plans, fire prevention, Natura 2000"],
-            ["Universidade de Évora", "University", "Soil science, agronomy, Mediterranean ecology research"],
-            ["CEABN-ISA (Universidade de Lisboa)", "University", "Applied ecology, ecosystem services assessment"],
-            ["Quercus ANCN", "NGO", "Conservation, reforestation, environmental education"],
-            ["ANSUB (Associação de Produtores Florestais)", "Cooperative", "Forest producer support, certification, market access"],
-            ["ADPM (Associação de Defesa do Património de Mértola)", "NGO", "Rural development, traditional practices, cultural heritage"],
-            ["Cooperativa Agrícola Regional", "Cooperative", "Agricultural inputs, machinery sharing, market access"],
-          ]}
-        />
-      </PlaceholderBox>
-
-      <Hairline />
-
-      {/* 12.7 Monitoring Protocol */}
-      <SubsectionHeader id="12.7" title="Monitoring Protocol" sources={["NEW"]} />
-      <PlaceholderBox
-        id="12.7"
-        title="Monitoring KPIs"
-        status="DERIVED FROM NATURAL CAPITAL SCORING SYSTEM"
-        synthetic
-      >
-        <DataTable
-          headers={["Indicator", "Frequency", "Method"]}
-          rows={[
-            ["Soil organic carbon (%)", "Annual", "Lab analysis of composite soil samples"],
-            ["NDVI vegetation index", "Monthly", "Satellite remote sensing (Sentinel-2)"],
-            ["Water quality (pH, turbidity)", "Quarterly", "Field sampling at spring/stream points"],
-            ["Fire risk index (FWI)", "Daily (fire season)", "Automated from weather station data"],
-            ["Species richness count", "Biannual", "Field transect surveys + iNaturalist records"],
-            ["Carbon sequestration (tCO2e/yr)", "Annual", "Allometric models + soil sampling"],
-            ["Revenue per hectare", "Annual", "Farm accounting records"],
-            ["Erosion rate (t/ha/yr)", "Annual", "RUSLE model update with rainfall data"],
-          ]}
-        />
-      </PlaceholderBox>
-
+        {/* Disclaimer */}
+        <aside className="w-full border-l-[4px] border-landbook-sage py-4 pl-8 pr-4 bg-landbook-sage/5">
+          <p className="font-serif italic text-[13px] leading-relaxed text-landbook-forest/80">
+            Disclaimer: All recommendations based on remote assessment and field verification. Consult licensed professionals before major investments. Data sources include IPMA, IGP, and LandBook proprietary analysis.
+          </p>
+        </aside>
+      </div>
     </section>
   );
 }
