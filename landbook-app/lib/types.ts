@@ -194,7 +194,7 @@ export interface Narratives {
   landWater?: { intro?: string; callout?: string };
   biodiversity?: { intro?: string; callout?: string };
   climateSeasons?: { intro?: string; callout?: string };
-  valueBenefits?: { intro?: string; callout?: string };
+  valueBenefits?: { intro?: string; callout?: string; assetCallout?: string };
   landUse?: { intro?: string; callout?: string };
   historyTrends?: { intro?: string; callout?: string };
   risksResilience?: { intro?: string; callout?: string; recommendation?: string };

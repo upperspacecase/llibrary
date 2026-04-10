@@ -17,3 +17,5 @@ export { PlaceholderBox } from "./PlaceholderBox";
 export { DataSourceBadge } from "./DataSourceBadge";
 export { DataSourceError } from "./DataSourceError";
 export { SubsectionHeader } from "./SubsectionHeader";
+export { Treemap } from "./Treemap";
+export type { TreemapSegment } from "./Treemap";
