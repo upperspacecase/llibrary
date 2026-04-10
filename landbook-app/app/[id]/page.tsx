@@ -197,14 +197,14 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               maps={data.maps}
               meta={data.meta}
               allNarratives={data.narratives}
-              narratives={n.executiveSummary}
+              narratives={n.overview}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <RegionEcosystemSection
               regional={data.regional}
-              narratives={n.context}
+              narratives={n.regionEcosystem}
             />
           </div>
 
@@ -220,7 +220,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               water={data.water}
               climate={data.climate}
               drought={data.drought}
-              narratives={{ terrain: n.terrain, water: n.water }}
+              narratives={n.landWater}
             />
           </div>
 
@@ -240,7 +240,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               climate={data.climate}
               energy={data.energy}
               trends={data.trends}
-              narratives={n.climate}
+              narratives={n.climateSeasons}
             />
           </div>
 
@@ -249,7 +249,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               economics={data.economics}
               scores={data.scores}
               meta={data.meta}
-              narratives={{ ecosystemServices: n.ecosystemServices, methodology: n.methodology }}
+              narratives={n.valueBenefits}
             />
           </div>
 
@@ -258,7 +258,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               agriculture={data.agriculture}
               compliance={data.compliance}
               economics={data.economics}
-              narratives={{ agriculture: n.agriculture, compliance: n.compliance }}
+              narratives={n.landUse}
             />
           </div>
 
@@ -267,7 +267,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               trends={data.trends}
               economics={data.economics}
               fire={data.fire}
-              narratives={n.temporal}
+              narratives={n.historyTrends}
             />
           </div>
 
@@ -278,21 +278,21 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               drought={data.drought}
               energy={data.energy}
               trends={data.trends}
-              narratives={{ risks: n.risks, resilience: n.resilience }}
+              narratives={n.risksResilience}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <FutureScenariosSection
               economics={data.economics}
-              narratives={n.opportunities}
+              narratives={n.futureScenarios}
             />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <RecommendationsSection
               actions={data.actions}
-              narratives={n.nextSteps}
+              narratives={n.recommendations}
             />
           </div>
 
@@ -303,7 +303,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <SourcesMethodologySection
               meta={data.meta}
-              narratives={n.methodology}
+              narratives={n.sourcesMethodology}
             />
           </div>
         </div>

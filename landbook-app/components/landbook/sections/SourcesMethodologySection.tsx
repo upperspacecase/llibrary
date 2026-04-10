@@ -24,7 +24,7 @@ export function SourcesMethodologySection({
   narratives,
 }: {
   meta: Meta;
-  narratives?: Narratives["methodology"];
+  narratives?: Narratives["sourcesMethodology"];
 }) {
   const statusEntries = Object.entries(meta.apiStatus || {});
   const okCount = statusEntries.filter(([, v]) => v === "ok").length;
@@ -34,9 +34,9 @@ export function SourcesMethodologySection({
     <section id="sources-methodology">
       <SectionTitle title="Sources & Methodology" />
 
-      {narratives?.text && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.text}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
@@ -51,7 +51,7 @@ export function SourcesMethodologySection({
 
       {/* 14.2 Source Health Dashboard */}
       <SubsectionHeader id="14.2" title="Source Health Dashboard" sources={["Pipeline"]} />
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">API Coverage</div>
         <div className="text-sm text-brand-forest font-bold">
           {okCount} succeeded, {failCount} failed of {statusEntries.length} sources
@@ -104,13 +104,7 @@ export function SourcesMethodologySection({
 
       {/* 14.4 Methodology Documentation */}
       <SubsectionHeader id="14.4" title="Methodology Documentation" sources={["AI"]} />
-      {narratives?.text ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
-          {narratives.text}
-        </p>
-      ) : (
-        <p className="text-sm text-brand-sage mb-8">Methodology documentation not yet generated.</p>
-      )}
+      {/* Methodology detail handled by static PlaceholderBox below */}
       <PlaceholderBox
         id="14.4"
         title="SEEA-EA valuation methodology"
@@ -148,7 +142,7 @@ export function SourcesMethodologySection({
 
       {/* 14.6 Update Schedule */}
       <SubsectionHeader id="14.6" title="Update Schedule" sources={["Pipeline"]} />
-      <div className="grid grid-cols-2 gap-12 mb-8">
+      <div className="grid grid-cols-2 gap-8 mb-6">
         <KPI value={fmt(meta.generatedAt)} label="Generated" />
         <KPI value={fmt(meta.version)} label="Pipeline Version" />
       </div>

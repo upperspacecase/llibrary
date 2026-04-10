@@ -24,21 +24,21 @@ export function LandWaterSection({
   water: Water;
   climate: Climate;
   drought: RiskData;
-  narratives?: { terrain?: Narratives["terrain"]; water?: Narratives["water"] };
+  narratives?: Narratives["landWater"];
 }) {
   return (
     <section id="land-water">
       <SectionTitle title="Land & Water" />
 
-      {narratives?.terrain?.description && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.terrain.description}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
       {/* 4.1 Terrain Analysis */}
       <SubsectionHeader id="4.1" title="Terrain Analysis" sources={["Pipeline"]} />
-      <div className="grid grid-cols-4 gap-12 mb-12">
+      <div className="grid grid-cols-4 gap-8 mb-8">
         <KPI value={terrain.elevation} unit="m" label="Elevation" />
         <KPI value={terrain.slope} unit="%" label="Slope" />
         <KPI value={terrain.aspect} label="Aspect" />
@@ -132,12 +132,8 @@ export function LandWaterSection({
 
       {/* 4.4 Water Resources Inventory */}
       <SubsectionHeader id="4.4" title="Water Resources Inventory" sources={["Pipeline"]} />
-      {narratives?.water?.narrative && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
-          {narratives.water.narrative}
-        </p>
-      )}
-      <div className="grid grid-cols-3 gap-12 mb-12">
+      {/* Water narrative removed — intro covers both terrain and water context */}
+      <div className="grid grid-cols-3 gap-8 mb-8">
         <KPI value={water.springs} label="Springs" />
         <KPI value={water.wells} label="Wells" />
         <KPI value={water.waterways} label="Waterways" />
@@ -168,7 +164,7 @@ export function LandWaterSection({
 
       {/* 4.6 Water Security Assessment */}
       <SubsectionHeader id="4.6" title="Water Security Assessment" sources={["Computed"]} />
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6">
         <Gauge value={water.securityIndex} max={10} color="forest" label="Water Security Index" />
       </div>
       <PlaceholderBox
@@ -189,7 +185,13 @@ export function LandWaterSection({
         />
       </PlaceholderBox>
 
-      <PullQuote text={narratives?.terrain?.pullQuote || narratives?.water?.pullQuote} />
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      )}
     </section>
   );
 }

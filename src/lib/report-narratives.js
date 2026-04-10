@@ -282,46 +282,55 @@ Protected areas: ${(regional.protectedAreas || []).map(a => a.name).join(', ') |
 
 Generate a JSON object with EXACTLY these keys. Return ONLY valid JSON — no markdown fences, no explanation.
 
+Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) and a "callout" (a single punchy sentence displayed as a styled blockquote — NOT a repeat of the intro, something that stands alone and adds emphasis).
+
 {
   "overview": {
-    "summary": "2-3 paragraphs, MAX 150 WORDS. Position the property within its bioregion. Highlight 2-3 key strengths from the data. Frame the investment profile using actual valuation numbers.",
-    "pullQuote": "1 aspirational sentence about this specific property and its potential."
+    "intro": "2-3 paragraphs, MAX 150 WORDS. Position the property within its bioregion. Highlight 2-3 key strengths from the data. Frame the investment profile using actual valuation numbers.",
+    "callout": "1 aspirational sentence about this specific property and its potential."
   },
   "regionEcosystem": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Bioregional context — what the regional percentiles reveal. Protected area significance if any. How this property fits into the wider landscape."
+    "intro": "2 paragraphs, MAX 120 WORDS. Bioregional context — what the regional percentiles reveal. Protected area significance if any. How this property fits into the wider landscape.",
+    "callout": "1 sentence about the property's position relative to its neighbours."
   },
   "landWater": {
-    "narrative": "2 paragraphs, MAX 150 WORDS. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
-    "pullQuote": "1 sentence about the land or water as a defining characteristic."
+    "intro": "2 paragraphs, MAX 150 WORDS. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
+    "callout": "1 sentence about the defining physical characteristic (the water network, the soil depth, etc)."
   },
   "biodiversity": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Species richness in context. Notable findings from the data. Conservation significance and observation trends."
+    "intro": "2 paragraphs, MAX 120 WORDS. Species richness in context. Notable findings from the data. Conservation significance and observation trends.",
+    "callout": "1 sentence about the most notable biodiversity finding."
   },
   "climateSeasons": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Characterize the climate zone. Growing season implications. Energy potential from solar/wind resources."
+    "intro": "2 paragraphs, MAX 120 WORDS. Characterize the climate zone. Growing season implications. Energy potential from solar/wind resources.",
+    "callout": "1 sentence about the climate advantage or challenge."
   },
   "valueBenefits": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
-    "methodology": "1 paragraph, MAX 100 WORDS. Conservative estimation principles, benefit-transfer methodology, what the uncertainty interval means."
+    "intro": "2 paragraphs, MAX 120 WORDS. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
+    "callout": "1 sentence capturing the economic significance."
   },
   "landUse": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Current land cover and what it supports. Production potential and suitable systems. Compliance context if relevant."
+    "intro": "2 paragraphs, MAX 120 WORDS. Current land cover and what it supports. Production potential and suitable systems.",
+    "callout": "1 sentence about the most promising land use opportunity."
   },
   "historyTrends": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. What temperature and precipitation trends mean for this property. Projection caveats. How trends affect long-term value."
+    "intro": "2 paragraphs, MAX 120 WORDS. What temperature and precipitation trends mean for this property. Projection caveats. How trends affect long-term value.",
+    "callout": "1 sentence about the trajectory — improving, stable, or concerning."
   },
   "risksResilience": {
-    "narrative": "2 paragraphs, MAX 150 WORDS. How fire/flood/drought risks interact at this property. Energy independence potential. What the scores mean in practice.",
+    "intro": "2 paragraphs, MAX 150 WORDS. How fire/flood/drought risks interact at this property. Energy independence potential. What the scores mean in practice.",
+    "callout": "1 sentence about the overall risk profile.",
     "recommendation": "1-2 sentences. Specific, actionable mitigation step grounded in this property's risk and energy data."
   },
   "futureScenarios": {
-    "narrative": "2 paragraphs, MAX 120 WORDS. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity."
+    "intro": "2 paragraphs, MAX 120 WORDS. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity.",
+    "callout": "1 sentence about the return opportunity."
   },
   "recommendations": {
-    "framing": "2 paragraphs, MAX 100 WORDS. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden."
+    "intro": "2 paragraphs, MAX 100 WORDS. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden."
   },
   "sourcesMethodology": {
-    "text": "1-2 paragraphs, MAX 120 WORDS. SEEA-EA framework basis. How scores are computed. Data sources used. Conservative approach.",
+    "intro": "1-2 paragraphs, MAX 120 WORDS. SEEA-EA framework basis. How scores are computed. Data sources used. Conservative approach.",
     "disclaimer": "1 short paragraph, MAX 50 WORDS. For informational purposes only, consult qualified professionals for investment or management decisions."
   }
 }`;
@@ -352,16 +361,16 @@ Generate a JSON object with EXACTLY these keys. Return ONLY valid JSON — no ma
 }
 
 const EMPTY_NARRATIVES_V2 = {
-  overview: { summary: '', pullQuote: '' },
-  regionEcosystem: { narrative: '' },
-  landWater: { narrative: '', pullQuote: '' },
-  biodiversity: { narrative: '' },
-  climateSeasons: { narrative: '' },
-  valueBenefits: { narrative: '', methodology: '' },
-  landUse: { narrative: '' },
-  historyTrends: { narrative: '' },
-  risksResilience: { narrative: '', recommendation: '' },
-  futureScenarios: { narrative: '' },
-  recommendations: { framing: '' },
-  sourcesMethodology: { text: '', disclaimer: '' },
+  overview: { intro: '', callout: '' },
+  regionEcosystem: { intro: '', callout: '' },
+  landWater: { intro: '', callout: '' },
+  biodiversity: { intro: '', callout: '' },
+  climateSeasons: { intro: '', callout: '' },
+  valueBenefits: { intro: '', callout: '' },
+  landUse: { intro: '', callout: '' },
+  historyTrends: { intro: '', callout: '' },
+  risksResilience: { intro: '', callout: '', recommendation: '' },
+  futureScenarios: { intro: '', callout: '' },
+  recommendations: { intro: '' },
+  sourcesMethodology: { intro: '', disclaimer: '' },
 };

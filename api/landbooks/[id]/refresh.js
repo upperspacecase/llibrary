@@ -6,7 +6,7 @@
 
 import { getCollection } from '../../_db.js';
 import { fetchAllData, processRawData, buildMapUrls } from '../../../src/lib/report-data-pipeline.js';
-import { generateNarratives } from '../../../src/lib/report-narratives.js';
+import { generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
 import { saveAllObservations } from '../../../src/lib/observation-store.js';
 import { saveFacts, reportDataToFacts } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
@@ -63,9 +63,10 @@ export default async function handler(req, res) {
 
     const data = processRawData(raw, submission, areaHa);
 
-    // 5. Generate AI narratives
+    // 5. Generate AI narratives (V2 — intro/callout per section)
     try {
-      data.narratives = await generateNarratives(data);
+      const result = await generateNarrativesV2(data);
+      data.narratives = result.narratives;
     } catch (err) {
       console.warn('[refresh] Narrative generation failed, continuing without:', err.message);
       data.narratives = {};

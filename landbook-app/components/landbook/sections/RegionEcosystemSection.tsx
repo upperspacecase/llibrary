@@ -13,7 +13,7 @@ export function RegionEcosystemSection({
   narratives,
 }: {
   regional: Regional;
-  narratives?: Narratives["context"];
+  narratives?: Narratives["regionEcosystem"];
 }) {
   const pctls = regional.percentiles || {};
   const areas = regional.protectedAreas || [];
@@ -22,16 +22,16 @@ export function RegionEcosystemSection({
     <section id="region-ecosystem">
       <SectionTitle title="Region & Ecosystem" />
 
-      {narratives?.narrative && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.narrative}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
       {/* 2.1 Neighbourhood */}
       <SubsectionHeader id="2.1" title="Neighbourhood (15-minute radius)" sources={["NEW"]} />
       {/* 2.1 BUILD — infrastructure POIs from Overpass. Data will come from pipeline enhancement. */}
-      <p className="text-sm text-brand-sage mb-8">
+      <p className="text-sm text-brand-sage mb-6">
         Neighbourhood infrastructure data will be populated via Overpass API radius query.
       </p>
 
@@ -39,7 +39,7 @@ export function RegionEcosystemSection({
 
       {/* 2.2 Bioregion */}
       <SubsectionHeader id="2.2" title="Bioregion" sources={["Pipeline", "AI"]} />
-      <div className="space-y-8 mb-8">
+      <div className="space-y-6 mb-6">
         {pctls.soil != null && (
           <PercentileCard
             icon="landscape"
@@ -94,6 +94,14 @@ export function RegionEcosystemSection({
         </div>
       </PlaceholderBox>
 
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      )}
+
       <Hairline />
 
       {/* 2.3 Watershed — COMMENTED OUT: needs watershed delineation data
@@ -114,7 +122,7 @@ export function RegionEcosystemSection({
           rows={areas.map((a) => [a.name, fmt(a.type), fmt(a.designation)])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-8">No protected area data available.</p>
+        <p className="text-sm text-brand-sage mb-6">No protected area data available.</p>
       )}
       {/* 2.4 Connectivity corridors — COMMENTED OUT: needs corridor/fragmentation analysis
       <PlaceholderBox

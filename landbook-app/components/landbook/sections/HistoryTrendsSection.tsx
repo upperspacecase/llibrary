@@ -17,7 +17,7 @@ export function HistoryTrendsSection({
   trends: Trends;
   economics: Economics;
   fire: FireData;
-  narratives?: Narratives["temporal"];
+  narratives?: Narratives["historyTrends"];
 }) {
   const npvScenarios = economics.npv?.scenarios || [];
   const fireDecades = trends.fireProneByDecade || [];
@@ -26,9 +26,9 @@ export function HistoryTrendsSection({
     <section id="history-trends">
       <SectionTitle title="History & Trends" />
 
-      {narratives?.dynamics && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.dynamics}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
@@ -138,6 +138,14 @@ export function HistoryTrendsSection({
         )}
       </PlaceholderBox>
 
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      )}
+
       <Hairline />
 
       {/* 9.5 Disturbance Events */}
@@ -148,7 +156,7 @@ export function HistoryTrendsSection({
           rows={fire.historical.map((h) => [String(h.year), fmt(h.count)])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-8">No historical fire data available.</p>
+        <p className="text-sm text-brand-sage mb-6">No historical fire data available.</p>
       )}
       <PlaceholderBox
         id="9.5"
@@ -216,7 +224,7 @@ export function HistoryTrendsSection({
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
             Climate Trend Summary
           </div>
-          <div className="grid grid-cols-2 gap-12 mb-8">
+          <div className="grid grid-cols-2 gap-8 mb-6">
             <div className="text-center">
               <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp / Decade</div>
               <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none">

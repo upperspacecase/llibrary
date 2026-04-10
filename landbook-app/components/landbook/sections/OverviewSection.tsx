@@ -1,4 +1,4 @@
-import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, NarrativesV2, ReportData } from "@/lib/types";
+import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, ReportData } from "@/lib/types";
 import { Hairline } from "@/components/river";
 
 /**
@@ -110,12 +110,10 @@ export function OverviewSection({
   maps: Maps;
   meta: Meta;
   allNarratives: Narratives;
-  narratives?: Narratives["executiveSummary"];
+  narratives?: Narratives["overview"];
 }) {
-  // Resolve narrative text from V1 (executiveSummary) or V2 (overview) format
-  const v2 = (allNarratives as unknown as NarrativesV2)?.overview;
-  const intro = narratives?.intro || v2?.summary || null;
-  const pullQuote = narratives?.pullQuote || v2?.pullQuote || null;
+  const intro = narratives?.intro || null;
+  const callout = narratives?.callout || null;
 
   return (
     <section id="overview">
@@ -168,7 +166,7 @@ export function OverviewSection({
           <div className="relative pt-4">
             <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
               <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-                &ldquo;{pullQuote || `A ${property.area != null ? `${property.area.toFixed(1)} ha` : ""} natural capital assessment.`}&rdquo;
+                &ldquo;{callout || `A ${property.area != null ? `${property.area.toFixed(1)} ha` : ""} natural capital assessment.`}&rdquo;
               </blockquote>
               <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
                 &mdash; {intro ? "Executive Summary" : "Property Overview"}

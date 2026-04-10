@@ -13,7 +13,7 @@ export function FutureScenariosSection({
   narratives,
 }: {
   economics: Economics;
-  narratives?: Narratives["opportunities"];
+  narratives?: Narratives["futureScenarios"];
 }) {
   const rev = economics.revenueScenarios || {} as Record<string, unknown>;
   const details = (rev.details as Array<{ name?: string; label?: string; value?: number; estimate?: number }>) || [];
@@ -28,15 +28,15 @@ export function FutureScenariosSection({
     <section id="future-scenarios">
       <SectionTitle title="Future Scenarios" />
 
-      {narratives?.comparison && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.comparison}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
       {/* 11.1 Scenario Framework */}
       <SubsectionHeader id="11.1" title="Scenario Framework" sources={["Computed"]} />
-      <div className="grid grid-cols-3 gap-12 mb-12">
+      <div className="grid grid-cols-3 gap-8 mb-8">
         <KPI
           value={rev.conservative != null ? `\u20ac${(rev.conservative as number).toLocaleString()}` : null}
           unit="/yr"
@@ -88,7 +88,7 @@ export function FutureScenariosSection({
           ])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-8">NPV scenario data not yet computed.</p>
+        <p className="text-sm text-brand-sage mb-6">NPV scenario data not yet computed.</p>
       )}
 
       <Hairline />
@@ -128,6 +128,14 @@ export function FutureScenariosSection({
           ]}
         />
       </PlaceholderBox>
+
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      )}
 
       <Hairline />
 
@@ -175,7 +183,7 @@ export function FutureScenariosSection({
 
       {/* 11.5 Revenue Opportunities */}
       <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
-      <div className="grid grid-cols-2 gap-12 mb-8">
+      <div className="grid grid-cols-2 gap-8 mb-6">
         <KPI
           value={economics.carbonStock ? `${economics.carbonStock.toLocaleString()} tC` : null}
           label="Carbon Stock"

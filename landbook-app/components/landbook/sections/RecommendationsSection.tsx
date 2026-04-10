@@ -6,8 +6,8 @@ import {
 function ActionGroup({ title, items }: { title: string; items: ActionItem[] }) {
   if (!items.length) return null;
   return (
-    <div className="mb-8">
-      <div className="text-[10px] font-bold tracking-[0.3em] uppercase text-brand-sage font-body mb-3">
+    <div className="mb-6">
+      <div className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-sage mb-3">
         {title}
       </div>
       {items.map((a, i) => (
@@ -32,7 +32,7 @@ export function RecommendationsSection({
   narratives,
 }: {
   actions: Actions;
-  narratives?: Narratives["nextSteps"];
+  narratives?: Narratives["recommendations"];
 }) {
   const immediate = actions.immediate || [];
   const shortTerm = actions.shortTerm || [];
@@ -42,9 +42,9 @@ export function RecommendationsSection({
     <section id="recommendations">
       <SectionTitle title="Recommendations" />
 
-      {narratives?.framing && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.framing}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
@@ -52,7 +52,7 @@ export function RecommendationsSection({
       <SubsectionHeader id="12.1" title="Immediate (0-30 days)" sources={["AI"]} />
       <ActionGroup title="Critical data gaps & emergency actions" items={immediate} />
       {!immediate.length && (
-        <p className="text-sm text-brand-sage mb-8">No immediate actions generated.</p>
+        <p className="text-sm text-brand-sage mb-6">No immediate actions generated.</p>
       )}
 
       <Hairline />
@@ -61,7 +61,7 @@ export function RecommendationsSection({
       <SubsectionHeader id="12.2" title="Short-Term (1-6 months)" sources={["AI"]} />
       <ActionGroup title="Risk reduction & basic compliance" items={shortTerm} />
       {!shortTerm.length && (
-        <p className="text-sm text-brand-sage mb-8">No short-term actions generated.</p>
+        <p className="text-sm text-brand-sage mb-6">No short-term actions generated.</p>
       )}
 
       <Hairline />
@@ -100,7 +100,7 @@ export function RecommendationsSection({
       <SubsectionHeader id="12.4" title="Long-Term (2-5 years)" sources={["AI"]} />
       <ActionGroup title="Strategic investments & transformation" items={longTerm} />
       {!longTerm.length && (
-        <p className="text-sm text-brand-sage mb-8">No long-term actions generated.</p>
+        <p className="text-sm text-brand-sage mb-6">No long-term actions generated.</p>
       )}
 
       <Hairline />

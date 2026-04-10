@@ -18,7 +18,7 @@ export function ValueBenefitsSection({
   economics: Economics;
   scores: Scores;
   meta: Meta;
-  narratives?: { ecosystemServices?: Narratives["ecosystemServices"]; methodology?: Narratives["methodology"] };
+  narratives?: Narratives["valueBenefits"];
 }) {
   const es = economics.ecosystemServices || {} as Record<string, number>;
   const services = [
@@ -35,9 +35,9 @@ export function ValueBenefitsSection({
     <section id="value-benefits">
       <SectionTitle title="Value & Benefits" />
 
-      {narratives?.ecosystemServices?.intro && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.ecosystemServices.intro}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
@@ -80,14 +80,14 @@ export function ValueBenefitsSection({
           ])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-8">Scenario NPV data not yet computed.</p>
+        <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
       )}
 
       <Hairline />
 
       {/* 7.4 Value Composition Breakdown */}
       <SubsectionHeader id="7.4" title="Value Composition Breakdown" sources={["Computed"]} />
-      <div className="space-y-3 mb-8">
+      <div className="space-y-3 mb-6">
         {services.filter((s) => s.value > 0).map((s) => (
           <div key={s.name} className="flex items-center gap-4">
             <div className="w-24 text-sm font-bold text-brand-forest">{s.name}</div>
@@ -133,13 +133,7 @@ export function ValueBenefitsSection({
 
       {/* 7.6 Valuation Methodology */}
       <SubsectionHeader id="7.6" title="Valuation Methodology" sources={["AI"]} />
-      {narratives?.methodology?.text ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
-          {narratives.methodology.text}
-        </p>
-      ) : (
-        <p className="text-sm text-brand-sage mb-8">Methodology narrative not yet generated.</p>
-      )}
+      {/* Methodology text handled by static PlaceholderBox below */}
       <PlaceholderBox
         id="7.6"
         title="Valuation Methodology Detail"
@@ -171,10 +165,16 @@ export function ValueBenefitsSection({
           ]}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-8">Uncertainty data not available.</p>
+        <p className="text-sm text-brand-sage mb-6">Uncertainty data not available.</p>
       )}
 
-      <PullQuote text={narratives?.ecosystemServices?.pullQuote} />
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      )}
     </section>
   );
 }

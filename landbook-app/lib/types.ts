@@ -177,23 +177,22 @@ export interface ActionItem {
   impact?: string;
 }
 
+/** Canonical narrative shape — one slot per report section */
 export interface Narratives {
-  executiveSummary?: { intro?: string; pullQuote?: string };
-  ecosystemServices?: { intro?: string; pullQuote?: string };
-  scorecard?: { text?: string; pullQuote?: string };
-  terrain?: { description?: string; pullQuote?: string };
-  water?: { narrative?: string; pullQuote?: string };
-  climate?: { profile?: string };
-  biodiversity?: { intro?: string };
-  agriculture?: { potential?: string };
-  opportunities?: { comparison?: string };
-  risks?: { narrative?: string; recommendation?: string };
-  resilience?: { narrative?: string; recommendation?: string };
-  context?: { narrative?: string };
-  temporal?: { dynamics?: string };
-  compliance?: { framework?: string };
-  nextSteps?: { framing?: string };
-  methodology?: { text?: string; disclaimer?: string };
+  overview?: { intro?: string; callout?: string };
+  regionEcosystem?: { intro?: string; callout?: string };
+  landWater?: { intro?: string; callout?: string };
+  biodiversity?: { intro?: string; callout?: string };
+  climateSeasons?: { intro?: string; callout?: string };
+  valueBenefits?: { intro?: string; callout?: string };
+  landUse?: { intro?: string; callout?: string };
+  historyTrends?: { intro?: string; callout?: string };
+  risksResilience?: { intro?: string; callout?: string; recommendation?: string };
+  futureScenarios?: { intro?: string; callout?: string };
+  recommendations?: { intro?: string };
+  sourcesMethodology?: { intro?: string; disclaimer?: string };
+  /** Allow legacy v1 keys from old components still in the codebase */
+  [key: string]: Record<string, string | undefined> | undefined;
 }
 
 export interface Uncertainty {
@@ -277,21 +276,8 @@ export interface ReportDoc {
   cost: { inputTokens: number; outputTokens: number; model: string; estimatedUSD: number } | null;
 }
 
-/** Narrative slots matching the 14-section layout */
-export interface NarrativesV2 {
-  overview?: { summary?: string; pullQuote?: string };
-  regionEcosystem?: { narrative?: string };
-  landWater?: { narrative?: string; pullQuote?: string };
-  biodiversity?: { narrative?: string };
-  climateSeasons?: { narrative?: string };
-  valueBenefits?: { narrative?: string; methodology?: string };
-  landUse?: { narrative?: string };
-  historyTrends?: { narrative?: string };
-  risksResilience?: { narrative?: string; recommendation?: string };
-  futureScenarios?: { narrative?: string };
-  recommendations?: { framing?: string };
-  sourcesMethodology?: { text?: string; disclaimer?: string };
-}
+/** @deprecated Use Narratives instead — kept for ReportDoc backward compat */
+export type NarrativesV2 = Narratives;
 
 // ── Existing Types ────────────────────────────────────────
 

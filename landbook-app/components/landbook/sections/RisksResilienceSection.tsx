@@ -22,7 +22,7 @@ export function RisksResilienceSection({
   drought: RiskData;
   energy: Energy;
   trends: Trends;
-  narratives?: { risks?: Narratives["risks"]; resilience?: Narratives["resilience"] };
+  narratives?: Narratives["risksResilience"];
 }) {
   const sources = [
     { label: "Solar", data: energy.solar || {} },
@@ -36,27 +36,27 @@ export function RisksResilienceSection({
     <section id="risks-resilience">
       <SectionTitle title="Risks & Resilience" />
 
-      {narratives?.risks?.narrative && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
-          {narratives.risks.narrative}
+      {narratives?.intro && (
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+          {narratives.intro}
         </p>
       )}
 
       {/* 10.1 Risk Identification */}
       <SubsectionHeader id="10.1" title="Risk Identification" sources={["Pipeline"]} />
-      <div className="grid grid-cols-3 gap-12 mb-12">
+      <div className="grid grid-cols-3 gap-8 mb-8">
         <Gauge value={fire.riskScore} max={5} color="terracotta" label="Fire Risk" />
         <Gauge value={flood.riskScore} max={5} color="amber" label="Flood Risk" />
         <Gauge value={drought.riskScore} max={5} color="sage" label="Drought Risk" />
       </div>
-      <div className="flex justify-center gap-8 mb-8">
+      <div className="flex justify-center gap-6 mb-6">
         <RiskBadge level={fire.riskLevel} />
         <RiskBadge level={flood.riskLevel} />
         <RiskBadge level={drought.riskLevel} />
       </div>
 
       {fire.activeFires ? (
-        <div className="flex items-center gap-3 p-4 bg-brand-terracotta/10 mb-8">
+        <div className="flex items-center gap-3 p-4 bg-brand-terracotta/10 mb-6">
           <span className="material-symbols-outlined text-brand-terracotta" style={{ fontSize: 20 }}>
             local_fire_department
           </span>
@@ -133,7 +133,7 @@ export function RisksResilienceSection({
 
       {/* 10.3 Climate Risks */}
       <SubsectionHeader id="10.3" title="Climate Risks" sources={["Pipeline"]} />
-      <div className="grid grid-cols-2 gap-12 mb-8">
+      <div className="grid grid-cols-2 gap-8 mb-6">
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp Trend / Decade</div>
           <p className="text-[24px] font-black tracking-tighter text-brand-forest leading-none">
@@ -218,10 +218,12 @@ export function RisksResilienceSection({
 
       {/* 10.6 Resilience Capacity */}
       <SubsectionHeader id="10.6" title="Resilience Capacity" sources={["Computed"]} />
-      {narratives?.resilience?.narrative && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
-          {narratives.resilience.narrative}
-        </p>
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
       )}
       <PlaceholderBox
         id="10.6"
@@ -282,7 +284,7 @@ export function RisksResilienceSection({
 
       {/* 10.7 Energy Independence Potential */}
       <SubsectionHeader id="10.7" title="Energy Independence Potential" sources={["Pipeline"]} />
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6">
         <Gauge value={energy.independenceScore} max={10} color="forest" label="Energy Independence" />
       </div>
       <DataTable
@@ -297,8 +299,7 @@ export function RisksResilienceSection({
 
       {/* 10.8 Mitigation & Adaptation */}
       <SubsectionHeader id="10.8" title="Mitigation & Adaptation" sources={["AI"]} />
-      <RecommendationBox label="RISK MITIGATION" text={narratives?.risks?.recommendation} />
-      <RecommendationBox label="RESILIENCE STRATEGY" text={narratives?.resilience?.recommendation} />
+      <RecommendationBox label="MITIGATION & ADAPTATION" text={narratives?.recommendation} />
 
       {(fire.historical || []).length > 0 && (
         <>

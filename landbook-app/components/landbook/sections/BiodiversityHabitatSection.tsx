@@ -38,6 +38,7 @@ export function BiodiversityHabitatSection({
         </p>
       )}
 
+
       {/* 5.1 Land Cover Classification */}
       <SubsectionHeader id="5.1" title="Land Cover Classification" sources={["Pipeline"]} />
       <div className="mb-8">
@@ -107,6 +108,14 @@ export function BiodiversityHabitatSection({
               fmt(a.designation) || "Protected area classification",
             ])}
         />
+      )}
+
+      {narratives?.callout && (
+        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
+          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+            &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
       )}
 
       <Hairline />
