@@ -191,6 +191,7 @@ export interface Narratives {
     solarTip?: string;
     treeCoverDesc?: string;
   };
+  mapsLayers?: { intro?: string; callout?: string };
   landWater?: { intro?: string; callout?: string };
   biodiversity?: { intro?: string; callout?: string };
   climateSeasons?: { intro?: string; callout?: string };

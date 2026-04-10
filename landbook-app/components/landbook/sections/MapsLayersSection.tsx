@@ -1,118 +1,197 @@
-import type { Maps } from "@/lib/types";
-import { SectionTitle, SubsectionHeader, PlaceholderBox, Hairline } from "@/components/river";
+import type { Maps, Property } from "@/lib/types";
+import { SectionTitle } from "@/components/river";
 
-function MapCard({ title, src }: { title: string; src: string | null }) {
-  return (
-    <div className="border-[0.5px] border-brand-sage/30 overflow-hidden">
-      <div className="h-48 bg-brand-sage/10">
-        {src ? (
-          <img src={src} alt={title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-brand-sage text-sm">
-            Not available
-          </div>
-        )}
-      </div>
-      <div className="px-3 py-2">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
-          {title}
-        </span>
-      </div>
-    </div>
-  );
+const TECHNICAL_MAPS = [
+  {
+    title: "Satellite",
+    subtitle: "RGB Composite / 0.5m Res",
+    src: "/sample-maps/photo_2026-04-10_16-41-16.jpg",
+    filter: "opacity-90 saturate-[0.6] hue-rotate-[60deg]",
+  },
+  {
+    title: "Topography",
+    subtitle: "1m Contours / Hypsometric",
+    src: "/sample-maps/photo_2026-04-10_16-41-12.jpg",
+    filter: "opacity-90 sepia-[0.3] saturate-[0.5]",
+  },
+  {
+    title: "Soil",
+    subtitle: "Geological Profile / PH Levels",
+    src: "/sample-maps/photo_2026-04-10_16-40-51.jpg",
+    filter: "opacity-90 sepia-[0.5] saturate-[0.7] hue-rotate-[-30deg]",
+  },
+  {
+    title: "Aspect",
+    subtitle: "Solar Incidence / Slope Orientation",
+    src: "/sample-maps/photo_2026-04-10_11-35-55.jpg",
+    filter: "opacity-90 sepia-[0.4] saturate-[0.8] hue-rotate-[15deg]",
+  },
+  {
+    title: "Fire Risk",
+    subtitle: "Fuel Density / Historical Data",
+    src: "/sample-maps/photo_2026-04-10_16-41-01.jpg",
+    filter: "opacity-90 sepia-[0.2] saturate-[0.6] hue-rotate-[-15deg] brightness-90",
+  },
+  {
+    title: "Biodiversity",
+    subtitle: "Species Density / Habitat Quality",
+    src: "/sample-maps/photo_2026-04-10_16-41-04.jpg",
+    filter: "opacity-90 saturate-[0.5] hue-rotate-[80deg]",
+  },
+  {
+    title: "Watershed",
+    subtitle: "Drainage Basins / Water Flow",
+    src: "/sample-maps/photo_2026-04-10_16-41-08.jpg",
+    filter: "opacity-90 saturate-[0.6] hue-rotate-[180deg]",
+  },
+  {
+    title: "Connectivity",
+    subtitle: "Corridor Analysis / Fragment Linkage",
+    src: "/sample-maps/photo_2026-04-10_16-40-56.jpg",
+    filter: "opacity-90 saturate-[0.4] hue-rotate-[40deg]",
+  },
+  {
+    title: "Ecological Heritage",
+    subtitle: "Historical Biomes / Ancient Flora Registry",
+    src: "/sample-maps/photo_2026-04-10_11-21-54.jpg",
+    filter: "opacity-90 saturate-[0.5] hue-rotate-[100deg]",
+  },
+];
+
+interface MapsLayersSectionProps {
+  maps: Maps;
+  property: Property;
+  narratives?: { intro?: string; callout?: string };
 }
 
-export function MapsLayersSection({ maps }: { maps: Maps }) {
+export function MapsLayersSection({ maps, property, narratives }: MapsLayersSectionProps) {
   return (
     <section id="maps-layers">
       <SectionTitle title="Maps & Layers" />
 
-      {/* 3.1 Location Overview */}
-      <SubsectionHeader id="3.1" title="Location Overview" sources={["Pipeline"]} />
-      <MapCard title="Portugal National Context" src={maps.overview} />
+      {/* ── Zone A: Hero Map ──────────────────────────────────── */}
+      <div className="relative w-full h-[600px] bg-white border border-outline-variant/20 overflow-hidden mb-16">
+        {/* Background satellite image */}
+        <div className="absolute inset-0 opacity-40">
+          <img
+            className="w-full h-full object-cover"
+            src="/sample-maps/photo_2026-04-10_16-41-16.jpg"
+            alt="Regional satellite overview"
+          />
+        </div>
 
-      <Hairline />
+        {/* Distance ring overlays */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[200px] h-[200px] border border-brand-forest/20 rounded-full flex items-center justify-center">
+            <span className="text-[9px] text-brand-forest/40 font-bold uppercase tracking-widest -mt-44 font-body">
+              5KM
+            </span>
+          </div>
+          <div className="absolute w-[400px] h-[400px] border border-brand-forest/10 rounded-full flex items-center justify-center">
+            <span className="text-[9px] text-brand-forest/30 font-bold uppercase tracking-widest -mt-[380px] font-body">
+              10KM
+            </span>
+          </div>
+          <div className="absolute w-[600px] h-[600px] border border-brand-forest/5 rounded-full flex items-center justify-center">
+            <span className="text-[9px] text-brand-forest/20 font-bold uppercase tracking-widest -mt-[580px] font-body">
+              15KM
+            </span>
+          </div>
+        </div>
 
-      {/* 3.2 Bioregion Context */}
-      <SubsectionHeader id="3.2" title="Bioregion Context" sources={["Pipeline"]} />
-      <MapCard title="Regional Detail" src={maps.regional} />
+        {/* Property marker */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="w-4 h-4 bg-brand-forest rotate-45" />
+          <div className="absolute top-6 left-6 whitespace-nowrap bg-brand-forest text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest font-body">
+            {property.name}
+          </div>
+        </div>
 
-      <Hairline />
+        {/* Decorative zoom / layer controls */}
+        <div className="absolute top-6 right-6 flex flex-col gap-2">
+          <div className="bg-white/90 p-2 shadow-sm flex flex-col gap-2 border border-outline-variant/30">
+            <span className="material-symbols-outlined text-slate-700 text-lg">add</span>
+            <div className="h-[0.5px] w-full bg-slate-200" />
+            <span className="material-symbols-outlined text-slate-700 text-lg">remove</span>
+          </div>
+          <div className="bg-white/90 p-2 shadow-sm border border-outline-variant/30">
+            <span className="material-symbols-outlined text-slate-700 text-lg">layers</span>
+          </div>
+        </div>
 
-      {/* 3.3 Watershed Context — COMMENTED OUT: needs new map layer
-      <SubsectionHeader id="3.3" title="Watershed Context" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.3"
-        title="Mira River basin, drainage divides, flow paths"
-        status="NEW MAP LAYER"
-      />
-      <Hairline />
-      */}
-
-      {/* 3.4 Property Detail */}
-      <SubsectionHeader id="3.4" title="Property Detail (1:5,000)" sources={["Pipeline"]} />
-      <MapCard title="Property Detail" src={maps.detail} />
-
-      <Hairline />
-
-      {/* 3.5 Topography & Hydrology — BUILD: terrain data exists, map viz pending */}
-      <SubsectionHeader id="3.5" title="Topography & Hydrology" sources={["Pipeline"]} />
-      <p className="text-sm text-brand-sage mb-8">
-        Terrain data (elevation, slope, aspect) available from pipeline. Map visualization pending Mapbox layer integration.
-      </p>
-
-      <Hairline />
-
-      {/* 3.6 Solar Potential Analysis — COMMENTED OUT: needs map visualization
-      <SubsectionHeader id="3.6" title="Solar Potential Analysis" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.6"
-        title="Irradiance, optimal placement zones"
-        status="NEW MAP LAYER — SOLAR DATA PARTIAL IN PIPELINE"
-      />
-      <Hairline />
-      */}
-
-      {/* 3.7 Accessibility & Services — COMMENTED OUT: needs routing/isochrone API
-      <SubsectionHeader id="3.7" title="Accessibility & Services" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.7"
-        title="15-minute radius network (roads, suppliers, markets)"
-        status="NEW MAP LAYER — TIED TO SECTION 2.1"
-      />
-      <Hairline />
-      */}
-
-      {/* 3.8 Land Cover Change Detection — COMMENTED OUT: needs satellite time-series
-      <SubsectionHeader id="3.8" title="Land Cover Change Detection (2000-2024)" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.8"
-        title="Before/after satellite comparison"
-        status="NEW — NEED SATELLITE TIME-SERIES COMPARISON IMAGERY"
-      />
-      */}
-
-      <Hairline />
-
-      {/* 3.10 Layer Control — COMMENTED OUT: complex interactive UI feature
-      <SubsectionHeader id="3.10" title="Layer Control" sources={["NEW"]} />
-      <PlaceholderBox
-        id="3.10"
-        title="Toggle: ecology, risk, value, land use, infrastructure"
-        status="NEW INTERACTIVE UI ELEMENT"
-      />
-      */}
-
-      {/* Existing 4-map grid as reference */}
-      <Hairline />
-      <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
-        Current Map Portfolio
+        {/* Spatial legend */}
+        <div className="absolute bottom-6 left-6 bg-white/90 p-4 border border-outline-variant/30 max-w-xs">
+          <h5 className="text-[10px] font-bold uppercase tracking-widest text-brand-forest mb-2 font-body">
+            Spatial Legend
+          </h5>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-brand-forest/20 border border-brand-forest" />
+              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
+                Core Protection Area
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-1 bg-brand-forest" />
+              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
+                Regional Linkage Corridor
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-slate-800" />
+              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
+                Strategic Infrastructure Node
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <MapCard title="Satellite View" src={maps.satellite} />
-        <MapCard title="Overview" src={maps.overview} />
-        <MapCard title="Regional Context" src={maps.regional} />
-        <MapCard title="Property Detail" src={maps.detail} />
+
+      {/* ── Zone B: Spatial Context ───────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-12 gap-5 mb-20">
+        <div className="md:col-span-4">
+          <h3 className="text-brand-forest font-serif text-3xl mb-4 leading-tight">
+            Spatial<br />Context
+          </h3>
+          <div className="h-1 w-12 bg-brand-forest mb-6" />
+          <p className="text-brand-sage text-[10px] font-bold uppercase tracking-widest font-body">
+            {property.municipality ?? "Regional corridor"}
+          </p>
+        </div>
+        <div className="md:col-span-8">
+          <div className="space-y-6">
+            {narratives?.intro ? (
+              <p className="text-on-surface text-lg leading-relaxed font-body">
+                {narratives.intro}
+              </p>
+            ) : (
+              <p className="text-brand-sage text-sm italic font-body">
+                Spatial context narrative pending generation.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Zone C: 3×3 Technical Map Grid ────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
+        {TECHNICAL_MAPS.map((map) => (
+          <div key={map.title} className="group flex flex-col">
+            <div className="aspect-square bg-slate-100 mb-4 overflow-hidden">
+              <img
+                className={`w-full h-full object-cover group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 ${map.filter}`}
+                src={map.src}
+                alt={map.title}
+              />
+            </div>
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-brand-forest font-body">
+              {map.title}
+            </h4>
+            <p className="text-[9px] text-slate-500 mt-1 uppercase tracking-tight font-body">
+              {map.subtitle}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );
