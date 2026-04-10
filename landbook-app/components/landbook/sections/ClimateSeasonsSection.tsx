@@ -190,7 +190,7 @@ const SEASONS = [
     text: "text-[#F7F3EA]",
     indices: [8, 9, 10, 11],
   },
-] as const;
+];
 
 /* ── Main Component ──────────────────────────────────────────── */
 
