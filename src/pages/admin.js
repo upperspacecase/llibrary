@@ -19,7 +19,7 @@ const columns = {
         { key: '_date', label: 'Date', format: formatDate },
         { key: '_type', label: 'Type' },
         { key: '_expand', label: '', format: (_, row) => {
-            const id = row._id || row.id || '';
+            const id = row.id || row._id || '';
             if (!id) return '';
             return `__EXPAND__${id}`;
         }},
@@ -275,7 +275,7 @@ function renderTable() {
 
     empty.style.display = 'none';
     body.innerHTML = rows.map(row => {
-        const rowId = row._id || row.id || '';
+        const rowId = row.id || row._id || '';
         const cells = cols.map(c => {
             const raw = row[c.key];
             const val = c.format ? c.format(raw, row) : (raw ?? '-');
