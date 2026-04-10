@@ -230,18 +230,22 @@ export function ClimateSeasonsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           {/* Left: callout */}
           <div className="space-y-6">
-            {narratives?.callout && (
-              <div className="relative">
-                <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
+            <div className="relative">
+              <div className="border-l-[6px] border-brand-terracotta pl-8 py-4">
+                {narratives?.callout ? (
                   <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
                     &ldquo;{narratives.callout}&rdquo;
                   </blockquote>
-                  <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
-                    &mdash; Regional observation
-                  </p>
-                </div>
+                ) : (
+                  <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+                    &ldquo;Climate narrative pending &mdash; generate narratives to populate this callout with an AI-written regional observation.&rdquo;
+                  </blockquote>
+                )}
+                <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
+                  &mdash; Regional observation
+                </p>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Right: Growing Conditions */}
@@ -400,7 +404,7 @@ export function ClimateSeasonsSection({
         </div>
 
         {/* Narrative paragraphs — split intro on double-newline for two-column layout */}
-        {narratives?.intro && (() => {
+        {narratives?.intro ? (() => {
           const paragraphs = narratives.intro.split(/\n\n+/).filter(Boolean);
           return paragraphs.length > 1 ? (
             <div className="columns-1 md:columns-2 gap-12 space-y-6">
@@ -415,7 +419,16 @@ export function ClimateSeasonsSection({
               {paragraphs[0]}
             </p>
           );
-        })()}
+        })() : (
+          <div className="columns-1 md:columns-2 gap-12 space-y-6">
+            <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
+              Historical analysis of temperature and precipitation trends will appear here once narratives are generated. This section characterizes the climate zone, growing season implications, and energy potential from solar and wind resources.
+            </p>
+            <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
+              Elevation-driven microclimates and their management implications will be explored, including wind exposure variations, evapotranspiration gradients, and seasonal grazing or planting considerations specific to this property.
+            </p>
+          </div>
+        )}
       </section>
     </section>
   );
