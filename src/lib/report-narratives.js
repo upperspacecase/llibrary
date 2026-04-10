@@ -1,7 +1,7 @@
 /**
  * LandBook Report — AI Narrative Generation
- * Single batched Claude API call to generate all 16 narrative slots.
- * Narratives are cached in reportData.narratives to avoid re-generation.
+ * Single batched Claude API call to generate all narrative slots
+ * for the 12-section V2 report layout.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -12,12 +12,8 @@ function getClient() {
   return _anthropic;
 }
 
-/**
- * Generate all narrative text for a LandBook report.
- * @param {object} reportData - The canonical data shape (without narratives populated)
- * @returns {object} narratives object matching reportData.narratives shape
- */
-export async function generateNarratives(reportData) {
+/** @deprecated V1 narratives — kept only as a reference for key mapping. Do not call. */
+function _legacyGenerateNarratives(reportData) {
   const p = reportData.property || {};
   const scores = reportData.scores || {};
   const climate = reportData.climate || {};

@@ -540,7 +540,7 @@ function bindDetailPanelActions(container) {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ v2: true }),
+                        body: JSON.stringify({}),
                     });
                     result = await res.json().catch(() => ({}));
                     if (!res.ok) throw new Error(result.error || 'Narrative generation failed');

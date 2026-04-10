@@ -3,15 +3,13 @@
  *
  * Regenerate AI narratives without re-fetching any APIs.
  * Loads facts from the facts collection (or falls back to landbook.data),
- * calls Claude, and saves a new versioned report.
- *
- * Body: { v2?: boolean }  — defaults to true (14-section layout)
+ * calls Claude, and saves a new versioned report (12-section V2 layout).
  */
 
 import { getCollection } from '../../_db.js';
 import { getFacts, factsToReportData } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
-import { generateNarratives, generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
+import { generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
 import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 
 export default async function handler(req, res) {
@@ -21,7 +19,6 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
-  const { v2 = true } = req.body || {};
 
   try {
     // 1. Load data — prefer facts collection, fall back to blob
@@ -44,19 +41,11 @@ export default async function handler(req, res) {
     }
 
     // 2. Generate narratives
-    let narratives;
-    let usage = null;
     const model = 'claude-sonnet-4-20250514';
-
-    let narrativeError = null;
-    if (v2) {
-      const result = await generateNarrativesV2(data);
-      narratives = result.narratives;
-      usage = result.usage;
-      narrativeError = result.error || null;
-    } else {
-      narratives = await generateNarratives(data);
-    }
+    const result = await generateNarrativesV2(data);
+    const narratives = result.narratives;
+    const usage = result.usage;
+    const narrativeError = result.error || null;
 
     // 3. Save versioned report
     const cost = usage ? {
@@ -72,7 +61,7 @@ export default async function handler(req, res) {
       factSnapshotVersion: factDoc?.version || null,
       factsContentHash: factDoc?.contentHash || null,
       model,
-      promptVersion: v2 ? 'v2-14section' : 'v1-18section',
+      promptVersion: 'v2-14section',
       cost,
     });
 
