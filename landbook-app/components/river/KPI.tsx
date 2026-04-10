@@ -14,14 +14,14 @@ export function KPI({
 }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">
+      <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">
         {label}
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="text-3xl font-black tracking-tighter text-brand-forest">
+        <span className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
           {fmt(value)}
         </span>
-        {unit && <span className="text-sm text-brand-sage">{unit}</span>}
+        {unit && <span className="text-xl text-brand-sage ml-1">{unit}</span>}
       </div>
     </div>
   );
