@@ -31,7 +31,7 @@ function MetricRow({ icon, value, label, title, description, tip, placeholder }:
           {icon}
         </span>
         <div>
-          <span className="block text-[42px] font-black leading-none text-brand-forest">
+          <span className="block text-[43px] font-bold tracking-tighter leading-none text-brand-forest font-serif">
             {value}
           </span>
           <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-brand-charcoal mt-1">
@@ -60,13 +60,7 @@ function MetricRow({ icon, value, label, title, description, tip, placeholder }:
               {tip}
             </p>
           </div>
-        ) : (
-          <div className="border-l-4 border-brand-sage/20 pl-4 mt-3">
-            <p className="text-sm italic text-brand-sage/30 leading-relaxed">
-              Practical tip pending — generate narratives to populate.
-            </p>
-          </div>
-        )}
+        ) : null}
         {placeholder && (
           <p className="text-xs text-brand-sage mt-2 uppercase tracking-wider">
             Data not yet available

@@ -103,17 +103,9 @@ export function ValueBenefitsSection({
 
       {/* ── 7.3 Asset Stock Valuation ── */}
       <div className="mb-20">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">7.3</span>
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
-              Asset Stock Valuation
-            </h3>
-          </div>
-          <span className="border border-brand-forest text-brand-forest text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            Computed
-          </span>
-        </div>
+        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
+          Asset Stock Valuation
+        </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
           <div className="flex flex-col justify-center">
@@ -168,12 +160,6 @@ export function ValueBenefitsSection({
 
       {/* ── 7.5 Natural Capital Premium Estimates ── */}
       <div className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] font-bold text-brand-terracotta font-body">7.5</span>
-          <span className="bg-brand-terracotta/10 text-brand-terracotta text-[9px] font-bold px-2 py-0.5 tracking-widest uppercase">
-            Synthetic Estimate
-          </span>
-        </div>
         <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
           Natural Capital Premium Estimates
         </h3>
@@ -195,24 +181,10 @@ export function ValueBenefitsSection({
 
       {/* ── 7.6 Valuation Methodology ── */}
       <div className="mb-20">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">7.6</span>
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
-              Valuation Methodology
-            </h3>
-          </div>
-          <span className="bg-brand-forest text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            AI
-          </span>
-        </div>
+        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-8">
+          Valuation Methodology
+        </h3>
         <div className="p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20 space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[10px] font-bold text-brand-terracotta font-body">7.6</span>
-            <span className="bg-brand-terracotta/10 text-brand-terracotta text-[9px] font-bold px-2 py-0.5 tracking-widest uppercase">
-              Synthetic Estimate
-            </span>
-          </div>
           <h4 className="font-serif text-lg font-bold text-brand-forest">
             Valuation Methodology Detail
           </h4>
@@ -246,17 +218,9 @@ export function ValueBenefitsSection({
 
       {/* ── 7.7 Valuation Confidence & Sensitivity ── */}
       <div className="mb-20">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">7.7</span>
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
-              Valuation Confidence &amp; Sensitivity
-            </h3>
-          </div>
-          <span className="bg-brand-terracotta text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            New
-          </span>
-        </div>
+        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body mb-12">
+          Valuation Confidence &amp; Sensitivity
+        </h3>
 
         {meta.uncertainty ? (
           <div className="w-full font-body text-brand-forest">

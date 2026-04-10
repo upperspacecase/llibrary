@@ -150,6 +150,10 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
     "intro": "2 paragraphs, MAX 120 WORDS. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity.",
     "callout": "1 sentence about the return opportunity."
   },
+  "mapsLayers": {
+    "intro": "2 paragraphs, MAX 120 WORDS. Describe what the technical map layers reveal about this property's spatial character — terrain patterns, connectivity corridors, fire/flood exposure zones, and biodiversity hotspots visible across the nine map layers.",
+    "callout": "1 sentence highlighting the most significant spatial pattern or connectivity feature."
+  },
   "recommendations": {
     "intro": "2 paragraphs, MAX 100 WORDS. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden."
   },
@@ -210,6 +214,7 @@ const EMPTY_NARRATIVES_V2 = {
   historyTrends: { intro: '', callout: '' },
   risksResilience: { intro: '', callout: '', recommendation: '' },
   futureScenarios: { intro: '', callout: '' },
+  mapsLayers: { intro: '', callout: '' },
   recommendations: { intro: '' },
   sourcesMethodology: { intro: '', disclaimer: '' },
 };

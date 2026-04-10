@@ -165,8 +165,8 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
                 {narratives.intro}
               </p>
             ) : (
-              <p className="text-brand-sage text-sm italic font-body">
-                Spatial context narrative pending generation.
+              <p className="text-brand-sage/30 text-sm italic font-body">
+                Spatial context will appear here once narratives are generated.
               </p>
             )}
           </div>

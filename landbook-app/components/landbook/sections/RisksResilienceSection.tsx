@@ -53,10 +53,10 @@ export function RisksResilienceSection({
         <Gauge value={flood.riskScore} max={5} color="amber" label="Flood Risk" />
         <Gauge value={drought.riskScore} max={5} color="sage" label="Drought Risk" />
       </div>
-      <div className="flex justify-center gap-6 mb-6">
-        <RiskBadge level={fire.riskLevel} />
-        <RiskBadge level={flood.riskLevel} />
-        <RiskBadge level={drought.riskLevel} />
+      <div className="grid grid-cols-3 gap-8 mb-6">
+        <div className="text-center"><RiskBadge level={fire.riskLevel} /></div>
+        <div className="text-center"><RiskBadge level={flood.riskLevel} /></div>
+        <div className="text-center"><RiskBadge level={drought.riskLevel} /></div>
       </div>
 
       {fire.activeFires ? (

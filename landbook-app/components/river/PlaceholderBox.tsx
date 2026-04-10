@@ -22,9 +22,6 @@ export function PlaceholderBox({
         </span>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-black tracking-[0.2em] uppercase text-brand-terracotta">
-              {id}
-            </span>
             {synthetic && (
               <span className="text-[9px] font-black tracking-[0.15em] uppercase bg-brand-terracotta/15 text-brand-terracotta px-2 py-0.5">
                 SYNTHETIC ESTIMATE
