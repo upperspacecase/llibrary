@@ -6,7 +6,11 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 
-const anthropic = new Anthropic();
+let _anthropic;
+function getClient() {
+  if (!_anthropic) _anthropic = new Anthropic();
+  return _anthropic;
+}
 
 /**
  * Generate all narrative text for a LandBook report.
@@ -156,7 +160,7 @@ Generate a JSON object with these exact keys. Return ONLY valid JSON, no markdow
 }`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
@@ -336,7 +340,7 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
 }`;
 
   try {
-    const response = await anthropic.messages.create({
+    const response = await getClient().messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
