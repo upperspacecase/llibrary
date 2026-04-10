@@ -294,8 +294,15 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
     "callout": "1 aspirational sentence about this specific property and its potential."
   },
   "regionEcosystem": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Bioregional context — what the regional percentiles reveal. Protected area significance if any. How this property fits into the wider landscape.",
-    "callout": "1 sentence about the property's position relative to its neighbours."
+    "intro": "2 paragraphs, MAX 100 WORDS. Frame why bioregional context matters — comparing a property to its neighbours reveals hidden strengths and risks that raw numbers alone miss.",
+    "callout": "1 sentence about the property's position relative to its neighbours.",
+    "slopeDesc": "1-2 sentences, MAX 30 WORDS. What the slope grade means for access, erosion risk, and land use. Use the terrain.slope value.",
+    "slopeTip": "1 sentence, MAX 20 WORDS. A practical tip about the slope — terracing, drainage, machinery access. Omit key if not insightful.",
+    "waterDesc": "1-2 sentences, MAX 30 WORDS. Interpret the water security index — reliability of supply, drought resilience, irrigation potential.",
+    "waterTip": "1 sentence, MAX 20 WORDS. A practical insight about water on this property. Omit key if not insightful.",
+    "solarDesc": "1-2 sentences, MAX 30 WORDS. Interpret the solar score — what the exposure level means for energy generation or agriculture.",
+    "solarTip": "1 sentence, MAX 20 WORDS. A practical insight or trade-off about solar exposure. Omit key if not insightful.",
+    "treeCoverDesc": "1-2 sentences, MAX 30 WORDS. General statement about why tree cover matters for carbon, shade, and biodiversity — note that satellite canopy data is not yet available."
   },
   "landWater": {
     "intro": "2 paragraphs, MAX 150 WORDS. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
@@ -366,7 +373,7 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
 
 const EMPTY_NARRATIVES_V2 = {
   overview: { intro: '', callout: '' },
-  regionEcosystem: { intro: '', callout: '' },
+  regionEcosystem: { intro: '', callout: '', slopeDesc: '', slopeTip: '', waterDesc: '', waterTip: '', solarDesc: '', solarTip: '', treeCoverDesc: '' },
   landWater: { intro: '', callout: '' },
   biodiversity: { intro: '', callout: '' },
   climateSeasons: { intro: '', callout: '' },

@@ -180,7 +180,17 @@ export interface ActionItem {
 /** Canonical narrative shape — one slot per report section */
 export interface Narratives {
   overview?: { intro?: string; callout?: string };
-  regionEcosystem?: { intro?: string; callout?: string };
+  regionEcosystem?: {
+    intro?: string;
+    callout?: string;
+    slopeDesc?: string;
+    slopeTip?: string;
+    waterDesc?: string;
+    waterTip?: string;
+    solarDesc?: string;
+    solarTip?: string;
+    treeCoverDesc?: string;
+  };
   landWater?: { intro?: string; callout?: string };
   biodiversity?: { intro?: string; callout?: string };
   climateSeasons?: { intro?: string; callout?: string };
