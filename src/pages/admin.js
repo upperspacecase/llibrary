@@ -835,6 +835,8 @@ style.textContent = `
     .admin-table {
         border-collapse: collapse;
         font-size: 14px;
+        width: 100%;
+        table-layout: auto;
     }
     .admin-table th {
         text-align: left;
@@ -954,6 +956,9 @@ style.textContent = `
     .admin-detail-row td {
         padding: 0 !important;
         border-bottom: 2px solid var(--border);
+        max-width: none !important;
+        overflow: visible !important;
+        white-space: normal !important;
     }
     .detail-panel {
         background: #fafaf8;
@@ -983,6 +988,17 @@ style.textContent = `
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 16px;
+        min-width: 0;
+    }
+    @media (max-width: 900px) {
+        .detail-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    @media (max-width: 600px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
     }
     .detail-card {
         background: #fff;
