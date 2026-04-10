@@ -164,8 +164,7 @@ Generate a JSON object with these exact keys. Return ONLY valid JSON, no markdow
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
-      timeout: 90_000,
-    });
+    }, { timeout: 90_000 });
 
     const text = response.content[0]?.text || '{}';
     // Parse JSON — handle possible markdown fences
@@ -351,8 +350,7 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
-      timeout: 90_000,
-    });
+    }, { timeout: 90_000 });
 
     const text = response.content[0]?.text || '{}';
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```\s*$/, '').trim();
