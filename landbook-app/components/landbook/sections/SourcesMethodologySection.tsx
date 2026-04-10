@@ -34,9 +34,13 @@ export function SourcesMethodologySection({
     <section id="sources-methodology">
       <SectionTitle title="Sources & Methodology" />
 
-      {narratives?.intro && (
+      {narratives?.intro ? (
         <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
           {narratives.intro}
+        </p>
+      ) : (
+        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
+          SEEA-EA framework basis, scoring methodology, and data source context will appear here once narratives are generated.
         </p>
       )}
 

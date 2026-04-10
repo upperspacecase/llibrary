@@ -41,9 +41,13 @@ export function RecommendationsSection({
     <section id="recommendations">
       <SectionTitle title="Recommendations" />
 
-      {narratives?.intro && (
+      {narratives?.intro ? (
         <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
           {narratives.intro}
+        </p>
+      ) : (
+        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
+          Stewardship invitation, community context, and next-step framing will appear here once narratives are generated.
         </p>
       )}
 

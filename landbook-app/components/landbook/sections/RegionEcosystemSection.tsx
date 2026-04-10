@@ -45,15 +45,25 @@ function MetricRow({ icon, value, label, title, description, tip, placeholder }:
         <p className="text-[15px] font-bold text-brand-charcoal mb-1">
           {title}
         </p>
-        {description && (
+        {description ? (
           <p className="text-sm text-brand-charcoal/80 leading-relaxed max-w-[420px]">
             {description}
           </p>
+        ) : (
+          <p className="text-sm text-brand-sage/30 leading-relaxed max-w-[420px] italic">
+            Generate narratives to add contextual insight for this metric.
+          </p>
         )}
-        {tip && (
+        {tip ? (
           <div className="border-l-4 border-brand-terracotta pl-4 mt-3">
             <p className="text-sm italic text-brand-forest leading-relaxed">
               {tip}
+            </p>
+          </div>
+        ) : (
+          <div className="border-l-4 border-brand-sage/20 pl-4 mt-3">
+            <p className="text-sm italic text-brand-sage/30 leading-relaxed">
+              Practical tip pending — generate narratives to populate.
             </p>
           </div>
         )}
@@ -181,10 +191,16 @@ export function RegionEcosystemSection({
 
       {/* ── Callout ─────────────────────────────────────────── */}
 
-      {narratives?.callout && (
+      {narratives?.callout ? (
         <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-10">
           <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
             &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      ) : (
+        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-10">
+          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+            &ldquo;Bioregional context pending &mdash; generate narratives to populate this callout.&rdquo;
           </blockquote>
         </div>
       )}

@@ -30,9 +30,13 @@ export function LandWaterSection({
     <section id="land-water">
       <SectionTitle title="Land & Water" />
 
-      {narratives?.intro && (
+      {narratives?.intro ? (
         <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
           {narratives.intro}
+        </p>
+      ) : (
+        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
+          Terrain, geology, soil, and water resource analysis will appear here once narratives are generated.
         </p>
       )}
 
@@ -185,10 +189,16 @@ export function LandWaterSection({
         />
       </PlaceholderBox>
 
-      {narratives?.callout && (
+      {narratives?.callout ? (
         <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
           <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
             &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      ) : (
+        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
+          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+            &ldquo;Land &amp; water narrative pending &mdash; generate narratives to populate this callout.&rdquo;
           </blockquote>
         </div>
       )}

@@ -32,9 +32,13 @@ export function BiodiversityHabitatSection({
     <section id="biodiversity-habitat">
       <SectionTitle title="Biodiversity & Habitat" />
 
-      {narratives?.intro && (
+      {narratives?.intro ? (
         <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
           {narratives.intro}
+        </p>
+      ) : (
+        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-12 italic">
+          Species richness, conservation significance, and habitat context will appear here once narratives are generated.
         </p>
       )}
 
@@ -110,10 +114,16 @@ export function BiodiversityHabitatSection({
         />
       )}
 
-      {narratives?.callout && (
+      {narratives?.callout ? (
         <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
           <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
             &ldquo;{narratives.callout}&rdquo;
+          </blockquote>
+        </div>
+      ) : (
+        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
+          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+            &ldquo;Biodiversity narrative pending &mdash; generate narratives to populate this callout.&rdquo;
           </blockquote>
         </div>
       )}
