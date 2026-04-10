@@ -40,7 +40,7 @@ export function BiodiversityHabitatSection({
 
       {/* 5.1 Land Cover Classification */}
       <SubsectionHeader id="5.1" title="Land Cover Classification" sources={["Pipeline"]} />
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Land Cover</div>
         <div className="serif-title text-lg text-brand-forest">{fmt(agriculture.landCover)}</div>
       </div>
@@ -49,7 +49,7 @@ export function BiodiversityHabitatSection({
 
       {/* 5.2 Species Inventory */}
       <SubsectionHeader id="5.2" title="Species Inventory" sources={["Pipeline"]} />
-      <div className="grid grid-cols-4 gap-8 mb-8">
+      <div className="grid grid-cols-4 gap-12 mb-12">
         <KPI value={species.total} label="Total Species" />
         <KPI value={species.threatened} label="Threatened" />
         <KPI value={species.gbifTotal} label="GBIF Records" />
@@ -91,7 +91,7 @@ export function BiodiversityHabitatSection({
           rows={areas.map((a) => [a.name, fmt(a.type), fmt(a.designation)])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">No Natura 2000 data available.</p>
+        <p className="text-sm text-brand-sage mb-8">No Natura 2000 data available.</p>
       )}
       {/* 5.3 habitat codes derived from protected area types + land cover */}
       {areas.length > 0 && (
@@ -205,7 +205,7 @@ export function BiodiversityHabitatSection({
 
       {/* 5.7 Carbon Storage */}
       <SubsectionHeader id="5.7" title="Carbon Storage" sources={["Computed"]} />
-      <div className="grid grid-cols-2 gap-8 mb-6">
+      <div className="grid grid-cols-2 gap-12 mb-8">
         <KPI
           value={economics.carbonStock ? `${economics.carbonStock.toLocaleString()} tC` : null}
           label="Carbon Stock"

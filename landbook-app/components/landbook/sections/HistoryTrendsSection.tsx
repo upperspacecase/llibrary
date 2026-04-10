@@ -148,7 +148,7 @@ export function HistoryTrendsSection({
           rows={fire.historical.map((h) => [String(h.year), fmt(h.count)])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">No historical fire data available.</p>
+        <p className="text-sm text-brand-sage mb-8">No historical fire data available.</p>
       )}
       <PlaceholderBox
         id="9.5"
@@ -216,7 +216,7 @@ export function HistoryTrendsSection({
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
             Climate Trend Summary
           </div>
-          <div className="grid grid-cols-2 gap-8 mb-6">
+          <div className="grid grid-cols-2 gap-12 mb-8">
             <div className="text-center">
               <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp / Decade</div>
               <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none">

@@ -37,7 +37,7 @@ export function ClimateSeasonsSection({
 
       {/* 6.1 Climate Classification */}
       <SubsectionHeader id="6.1" title="Climate Classification" sources={["Pipeline"]} />
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Climate Zone</div>
         <div className="serif-title text-lg text-brand-forest">{climate.zone ?? "\u2014"}</div>
       </div>
@@ -47,7 +47,7 @@ export function ClimateSeasonsSection({
 
       {/* 6.2 Temperature Regime */}
       <SubsectionHeader id="6.2" title="Temperature Regime" sources={["Pipeline"]} />
-      <div className="grid grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-5 gap-8 mb-12">
         <KPI value={climate.annualMeanTemp != null ? climate.annualMeanTemp.toFixed(1) : null} unit={"\u00b0C"} label="Mean Temp" />
         <KPI value={climate.summerMean != null ? climate.summerMean.toFixed(1) : null} unit={"\u00b0C"} label="Summer" />
         <KPI value={climate.winterMean != null ? climate.winterMean.toFixed(1) : null} unit={"\u00b0C"} label="Winter" />
@@ -65,7 +65,7 @@ export function ClimateSeasonsSection({
           return { month: m, avgTemp: avgTemp.toFixed(1), gdd };
         });
         return (
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">
               Growing Degree Days (base 10 °C)
             </div>
@@ -178,7 +178,7 @@ export function ClimateSeasonsSection({
 
       {/* 6.6 Climate Trends */}
       <SubsectionHeader id="6.6" title="Climate Trends" sources={["Pipeline"]} />
-      <div className="grid grid-cols-2 gap-8 mb-6">
+      <div className="grid grid-cols-2 gap-12 mb-8">
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp Trend / Decade</div>
           <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none">

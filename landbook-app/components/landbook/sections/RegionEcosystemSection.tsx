@@ -31,7 +31,7 @@ export function RegionEcosystemSection({
       {/* 2.1 Neighbourhood */}
       <SubsectionHeader id="2.1" title="Neighbourhood (15-minute radius)" sources={["NEW"]} />
       {/* 2.1 BUILD — infrastructure POIs from Overpass. Data will come from pipeline enhancement. */}
-      <p className="text-sm text-brand-sage mb-6">
+      <p className="text-sm text-brand-sage mb-8">
         Neighbourhood infrastructure data will be populated via Overpass API radius query.
       </p>
 
@@ -39,7 +39,7 @@ export function RegionEcosystemSection({
 
       {/* 2.2 Bioregion */}
       <SubsectionHeader id="2.2" title="Bioregion" sources={["Pipeline", "AI"]} />
-      <div className="space-y-6 mb-6">
+      <div className="space-y-8 mb-8">
         {pctls.soil != null && (
           <PercentileCard
             icon="landscape"
@@ -114,7 +114,7 @@ export function RegionEcosystemSection({
           rows={areas.map((a) => [a.name, fmt(a.type), fmt(a.designation)])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">No protected area data available.</p>
+        <p className="text-sm text-brand-sage mb-8">No protected area data available.</p>
       )}
       {/* 2.4 Connectivity corridors — COMMENTED OUT: needs corridor/fragmentation analysis
       <PlaceholderBox

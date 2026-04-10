@@ -36,7 +36,7 @@ export function FutureScenariosSection({
 
       {/* 11.1 Scenario Framework */}
       <SubsectionHeader id="11.1" title="Scenario Framework" sources={["Computed"]} />
-      <div className="grid grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-3 gap-12 mb-12">
         <KPI
           value={rev.conservative != null ? `\u20ac${(rev.conservative as number).toLocaleString()}` : null}
           unit="/yr"
@@ -88,7 +88,7 @@ export function FutureScenariosSection({
           ])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">NPV scenario data not yet computed.</p>
+        <p className="text-sm text-brand-sage mb-8">NPV scenario data not yet computed.</p>
       )}
 
       <Hairline />
@@ -175,7 +175,7 @@ export function FutureScenariosSection({
 
       {/* 11.5 Revenue Opportunities */}
       <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
-      <div className="grid grid-cols-2 gap-8 mb-6">
+      <div className="grid grid-cols-2 gap-12 mb-8">
         <KPI
           value={economics.carbonStock ? `${economics.carbonStock.toLocaleString()} tC` : null}
           label="Carbon Stock"

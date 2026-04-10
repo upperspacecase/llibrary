@@ -51,7 +51,7 @@ export function SourcesMethodologySection({
 
       {/* 14.2 Source Health Dashboard */}
       <SubsectionHeader id="14.2" title="Source Health Dashboard" sources={["Pipeline"]} />
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">API Coverage</div>
         <div className="text-sm text-brand-forest font-bold">
           {okCount} succeeded, {failCount} failed of {statusEntries.length} sources
@@ -105,11 +105,11 @@ export function SourcesMethodologySection({
       {/* 14.4 Methodology Documentation */}
       <SubsectionHeader id="14.4" title="Methodology Documentation" sources={["AI"]} />
       {narratives?.text ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-6 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
           {narratives.text}
         </p>
       ) : (
-        <p className="text-sm text-brand-sage mb-6">Methodology documentation not yet generated.</p>
+        <p className="text-sm text-brand-sage mb-8">Methodology documentation not yet generated.</p>
       )}
       <PlaceholderBox
         id="14.4"
@@ -148,7 +148,7 @@ export function SourcesMethodologySection({
 
       {/* 14.6 Update Schedule */}
       <SubsectionHeader id="14.6" title="Update Schedule" sources={["Pipeline"]} />
-      <div className="grid grid-cols-2 gap-8 mb-6">
+      <div className="grid grid-cols-2 gap-12 mb-8">
         <KPI value={fmt(meta.generatedAt)} label="Generated" />
         <KPI value={fmt(meta.version)} label="Pipeline Version" />
       </div>

@@ -38,7 +38,7 @@ export function LandWaterSection({
 
       {/* 4.1 Terrain Analysis */}
       <SubsectionHeader id="4.1" title="Terrain Analysis" sources={["Pipeline"]} />
-      <div className="grid grid-cols-4 gap-8 mb-8">
+      <div className="grid grid-cols-4 gap-12 mb-12">
         <KPI value={terrain.elevation} unit="m" label="Elevation" />
         <KPI value={terrain.slope} unit="%" label="Slope" />
         <KPI value={terrain.aspect} label="Aspect" />
@@ -133,11 +133,11 @@ export function LandWaterSection({
       {/* 4.4 Water Resources Inventory */}
       <SubsectionHeader id="4.4" title="Water Resources Inventory" sources={["Pipeline"]} />
       {narratives?.water?.narrative && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-6 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
           {narratives.water.narrative}
         </p>
       )}
-      <div className="grid grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-3 gap-12 mb-12">
         <KPI value={water.springs} label="Springs" />
         <KPI value={water.wells} label="Wells" />
         <KPI value={water.waterways} label="Waterways" />
@@ -168,7 +168,7 @@ export function LandWaterSection({
 
       {/* 4.6 Water Security Assessment */}
       <SubsectionHeader id="4.6" title="Water Security Assessment" sources={["Computed"]} />
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-8">
         <Gauge value={water.securityIndex} max={10} color="forest" label="Water Security Index" />
       </div>
       <PlaceholderBox

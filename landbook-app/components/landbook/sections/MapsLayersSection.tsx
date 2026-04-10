@@ -57,7 +57,7 @@ export function MapsLayersSection({ maps }: { maps: Maps }) {
 
       {/* 3.5 Topography & Hydrology — BUILD: terrain data exists, map viz pending */}
       <SubsectionHeader id="3.5" title="Topography & Hydrology" sources={["Pipeline"]} />
-      <p className="text-sm text-brand-sage mb-6">
+      <p className="text-sm text-brand-sage mb-8">
         Terrain data (elevation, slope, aspect) available from pipeline. Map visualization pending Mapbox layer integration.
       </p>
 

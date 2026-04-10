@@ -80,14 +80,14 @@ export function ValueBenefitsSection({
           ])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
+        <p className="text-sm text-brand-sage mb-8">Scenario NPV data not yet computed.</p>
       )}
 
       <Hairline />
 
       {/* 7.4 Value Composition Breakdown */}
       <SubsectionHeader id="7.4" title="Value Composition Breakdown" sources={["Computed"]} />
-      <div className="space-y-3 mb-6">
+      <div className="space-y-3 mb-8">
         {services.filter((s) => s.value > 0).map((s) => (
           <div key={s.name} className="flex items-center gap-4">
             <div className="w-24 text-sm font-bold text-brand-forest">{s.name}</div>
@@ -134,11 +134,11 @@ export function ValueBenefitsSection({
       {/* 7.6 Valuation Methodology */}
       <SubsectionHeader id="7.6" title="Valuation Methodology" sources={["AI"]} />
       {narratives?.methodology?.text ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-6 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
           {narratives.methodology.text}
         </p>
       ) : (
-        <p className="text-sm text-brand-sage mb-6">Methodology narrative not yet generated.</p>
+        <p className="text-sm text-brand-sage mb-8">Methodology narrative not yet generated.</p>
       )}
       <PlaceholderBox
         id="7.6"
@@ -171,7 +171,7 @@ export function ValueBenefitsSection({
           ]}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">Uncertainty data not available.</p>
+        <p className="text-sm text-brand-sage mb-8">Uncertainty data not available.</p>
       )}
 
       <PullQuote text={narratives?.ecosystemServices?.pullQuote} />

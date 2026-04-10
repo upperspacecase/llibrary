@@ -36,7 +36,7 @@ export function LandUseSection({
 
       {/* 8.1 Current Use Mapping */}
       <SubsectionHeader id="8.1" title="Current Use Mapping" sources={["Pipeline"]} />
-      <div className="mb-6">
+      <div className="mb-8">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Land Cover</div>
         <div className="serif-title text-lg text-brand-forest">{fmt(agriculture.landCover)}</div>
       </div>
@@ -78,7 +78,7 @@ export function LandUseSection({
           />
         </>
       ) : (
-        <p className="text-sm text-brand-sage mb-6">No agricultural systems data available.</p>
+        <p className="text-sm text-brand-sage mb-8">No agricultural systems data available.</p>
       )}
 
       <Hairline />
@@ -86,7 +86,7 @@ export function LandUseSection({
       {/* 8.3 Infrastructure Inventory */}
       <SubsectionHeader id="8.3" title="Infrastructure Inventory" sources={["NEW"]} />
       {/* 8.3 BUILD — infrastructure from Overpass. Data will come from pipeline enhancement. */}
-      <p className="text-sm text-brand-sage mb-6">
+      <p className="text-sm text-brand-sage mb-8">
         Infrastructure inventory will be populated via Overpass API query for buildings, roads, and utilities.
       </p>
 
@@ -113,7 +113,7 @@ export function LandUseSection({
           ])}
         />
       ) : (
-        <div className="grid grid-cols-3 gap-8 mb-6">
+        <div className="grid grid-cols-3 gap-12 mb-8">
           <KPI
             value={economics.revenueScenarios?.conservative != null ? `\u20ac${economics.revenueScenarios.conservative.toLocaleString()}` : null}
             unit="/yr"
@@ -161,7 +161,7 @@ export function LandUseSection({
       {/* 8.7 Zoning & Constraints */}
       <SubsectionHeader id="8.7" title="Zoning & Constraints" sources={["Pipeline", "AI"]} />
       {narratives?.compliance?.framework && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-6 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8">
           {narratives.compliance.framework}
         </p>
       )}
@@ -175,7 +175,7 @@ export function LandUseSection({
           ])}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">No regulatory data available.</p>
+        <p className="text-sm text-brand-sage mb-8">No regulatory data available.</p>
       )}
       {/* 8.7 Easements — COMMENTED OUT: regulatory data exists but easements don't
       <PlaceholderBox
