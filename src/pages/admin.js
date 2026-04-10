@@ -7,19 +7,22 @@ let pipelineStatusIndex = {}; // 3-layer status per landbookId from server
 let activeTab = 'submissions';
 let pipelineResults = null;
 let pipelineTesting = false;
-/** Stores last pipeline run result per landbookId, survives re-renders */
-const lastPipelineRun = {};
+/** Tracks which submission rows are expanded */
+const expandedRows = new Set();
 
 // ---- Column configs per collection ----
 const columns = {
     submissions: [
         { key: '_who', label: 'Who', format: (_, row) => row.name || row.email || row.contact || '-' },
         { key: '_location', label: 'Location', format: (_, row) => row.address || row.postcode || '-' },
-        { key: '_report', label: 'Report', format: (_, row) => `__REPORT__${row._id || row.id || ''}` },
-        { key: '_pipeline', label: 'Pipeline', format: (_, row) => `__PIPELINE__${row._id || row.id || ''}` },
         { key: 'area', label: 'Area', format: v => v ? `${(v / 10000).toFixed(2)} ha` : '-' },
         { key: '_date', label: 'Date', format: formatDate },
         { key: '_type', label: 'Type' },
+        { key: '_expand', label: '', format: (_, row) => {
+            const id = row._id || row.id || '';
+            if (!id) return '';
+            return `__EXPAND__${id}`;
+        }},
     ],
     contributions: [
         { key: 'section', label: 'Section' },
@@ -54,6 +57,13 @@ function formatTimeAgo(isoStr) {
     const days = Math.floor(hrs / 24);
     if (days < 7) return `${days}d ago`;
     return `${Math.floor(days / 7)}w ago`;
+}
+
+function formatDateShort(isoStr) {
+    if (!isoStr) return '—';
+    const d = new Date(isoStr);
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' +
+           d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(v) {
@@ -265,6 +275,7 @@ function renderTable() {
 
     empty.style.display = 'none';
     body.innerHTML = rows.map(row => {
+        const rowId = row._id || row.id || '';
         const cells = cols.map(c => {
             const raw = row[c.key];
             const val = c.format ? c.format(raw, row) : (raw ?? '-');
@@ -278,49 +289,12 @@ function renderTable() {
                     return `<td class="admin-files-cell">${links}</td>`;
                 } catch { return `<td>-</td>`; }
             }
-            if (str.startsWith('__REPORT__')) {
-                const subId = str.slice(10);
-                if (!subId) return '<td class="admin-muted">—</td>';
-                if (row._type === 'landbook') {
-                    const hasData = !!row.data;
-                    const lbId = escapeHtml(subId);
-                    const hasRun = !!lastPipelineRun[subId];
-                    const toggleBtn = hasRun ? `<button class="admin-pr-toggle-btn" data-landbook-id="${lbId}" title="Show last pipeline results">Results</button>` : '';
-                    return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${lbId}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${lbId}" title="${hasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${hasData ? '↻ Refresh' : '▶ Run Pipeline'}</button>${toggleBtn}</td>`;
-                }
-                if (row._type !== 'submission') return '<td class="admin-muted">—</td>';
-                const subHasData = !!row.data;
-                const sId = escapeHtml(row.id || '');
-                const sHasRun = !!lastPipelineRun[row.id];
-                const sToggleBtn = sHasRun ? `<button class="admin-pr-toggle-btn" data-landbook-id="${sId}" title="Show last pipeline results">Results</button>` : '';
-                return `<td class="admin-report-cell"><button class="admin-landbook-v3-btn" data-landbook-id="${sId}" title="Open LandBook">LandBook</button><button class="admin-pipeline-run-btn" data-landbook-id="${sId}" title="${subHasData ? 'Re-run data pipeline' : 'Run data pipeline'}">${subHasData ? '↻ Refresh' : '▶ Run Pipeline'}</button>${sToggleBtn}</td>`;
+            if (str.startsWith('__EXPAND__')) {
+                const id = str.slice(10);
+                const isExpanded = expandedRows.has(id);
+                return `<td><button class="admin-expand-btn ${isExpanded ? 'expanded' : ''}" data-landbook-id="${escapeHtml(id)}" title="Expand">${isExpanded ? '▾' : '▸'}</button></td>`;
             }
-            if (str.startsWith('__PIPELINE__')) {
-                const lbId = str.slice(12);
-                if (!lbId) return '<td class="admin-muted">—</td>';
-                const ps = pipelineStatusIndex[lbId];
-                if (!ps) return '<td class="admin-muted pip-empty">—</td>';
-                const obs = ps.observations;
-                const fct = ps.facts;
-                const rep = ps.report;
-                const parts = [];
-                if (obs) {
-                    const cls = obs.failed > 0 ? 'pip-warn' : 'pip-ok';
-                    parts.push(`<span class="pip-chip ${cls}" title="${obs.ok} ok, ${obs.failed} failed">${obs.ok}/${obs.total} sources</span>`);
-                }
-                if (fct) {
-                    parts.push(`<span class="pip-chip pip-ok" title="Facts v${fct.version || '?'}, updated ${fct.updatedAt || '?'}">Facts ✓</span>`);
-                }
-                if (rep) {
-                    parts.push(`<span class="pip-chip pip-ok" title="Report v${rep.version}, ${rep.totalVersions} versions, ${rep.model || '?'}">Report v${rep.version}</span>`);
-                }
-                if (obs?.lastFetched) {
-                    const ago = formatTimeAgo(obs.lastFetched);
-                    parts.push(`<span class="pip-time" title="${obs.lastFetched}">${ago}</span>`);
-                }
-                return `<td class="pip-cell">${parts.join('')}</td>`;
-            }
-            if (str === '__REGION_ACTIONS__') {
+            if (str.startsWith('__REGION_ACTIONS__')) {
                 const name = escapeHtml(row.name);
                 const status = row.status;
                 if (status === 'approved') {
@@ -336,7 +310,15 @@ function renderTable() {
             }
             return `<td>${escapeHtml(str)}</td>`;
         }).join('');
-        return `<tr>${cells}</tr>`;
+
+        let html = `<tr class="admin-submission-row" data-row-id="${escapeHtml(rowId)}">${cells}</tr>`;
+
+        // If expanded, render the detail panel
+        if (expandedRows.has(rowId) && rowId) {
+            html += renderDetailPanel(rowId, row, cols.length);
+        }
+
+        return html;
     }).join('');
 
     // Bind download click handlers
@@ -346,89 +328,21 @@ function renderTable() {
         });
     });
 
-    // Bind landbook V3 (Next.js) click handlers
-    const LANDBOOK_V3_BASE = window.__LANDBOOK_V3_URL || 'https://landbook.landlibrary.co';
-    body.querySelectorAll('.admin-landbook-v3-btn').forEach(btn => {
+    // Bind expand toggle buttons
+    body.querySelectorAll('.admin-expand-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            window.open(`${LANDBOOK_V3_BASE}/${btn.dataset.landbookId}`, '_blank');
-        });
-    });
-
-    // Bind pipeline run button handlers
-    body.querySelectorAll('.admin-pipeline-run-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const landbookId = btn.dataset.landbookId;
-            const originalText = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = 'Running...';
-            btn.classList.add('running');
-
-            try {
-                const res = await fetch(`/api/landbooks/${landbookId}/refresh`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                });
-                const result = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    throw new Error(result.error || 'Pipeline failed');
-                }
-
-                // Store result so it survives re-renders
-                lastPipelineRun[landbookId] = { ok: true, result, time: new Date() };
-
-                btn.textContent = '↻ Refresh';
-                btn.classList.remove('running');
-                btn.disabled = false;
-
-                // Show results panel and render the toggle button
-                const row = btn.closest('tr');
-                showPipelineResults(row, result, landbookId);
-
-                // Reload data so the Pipeline status column updates
-                setTimeout(() => loadData(), 2000);
-            } catch (err) {
-                lastPipelineRun[landbookId] = { ok: false, error: err.message, time: new Date() };
-
-                btn.textContent = '✗ Failed';
-                btn.classList.remove('running');
-                btn.classList.add('failed');
-                btn.title = err.message;
-
-                const row = btn.closest('tr');
-                showPipelineError(row, err.message, landbookId);
-
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                    btn.classList.remove('failed');
-                    btn.disabled = false;
-                }, 3000);
-            }
-        });
-    });
-
-    // Bind toggle buttons for previously-run pipelines (survive re-renders)
-    body.querySelectorAll('.admin-pr-toggle-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const landbookId = btn.dataset.landbookId;
-            const row = btn.closest('tr');
-            const existing = row.nextElementSibling;
-            if (existing?.classList.contains('admin-pipeline-results-row')) {
-                existing.remove();
-                btn.textContent = 'Results';
-                return;
-            }
-            const cached = lastPipelineRun[landbookId];
-            if (!cached) return;
-            if (cached.ok) {
-                showPipelineResults(row, cached.result, landbookId);
-                btn.textContent = 'Hide';
+            const id = btn.dataset.landbookId;
+            if (expandedRows.has(id)) {
+                expandedRows.delete(id);
             } else {
-                showPipelineError(row, cached.error, landbookId);
-                btn.textContent = 'Hide';
+                expandedRows.add(id);
             }
+            renderTable();
         });
     });
+
+    // Bind detail panel action buttons
+    bindDetailPanelActions(body);
 
     // Bind region approve/reject handlers
     body.querySelectorAll('.admin-region-btn').forEach(btn => {
@@ -456,7 +370,214 @@ function renderTable() {
             }
         });
     });
+}
 
+// ---- Expandable Detail Panel ----
+
+function renderDetailPanel(landbookId, row, colSpan) {
+    const ps = pipelineStatusIndex[landbookId] || {};
+    const obs = ps.observations;
+    const fct = ps.facts;
+    const rep = ps.report;
+    const hasData = !!row.data;
+    const LANDBOOK_V3_BASE = window.__LANDBOOK_V3_URL || 'https://landbook.landlibrary.co';
+
+    // Data fetch status
+    let dataStatus = 'Never run';
+    let dataStatusCls = 'detail-status-none';
+    if (obs) {
+        const failCount = obs.failed || 0;
+        if (failCount > 0) {
+            dataStatus = `${obs.ok}/${obs.total} sources OK, ${failCount} failed`;
+            dataStatusCls = 'detail-status-warn';
+        } else {
+            dataStatus = `${obs.ok}/${obs.total} sources OK`;
+            dataStatusCls = 'detail-status-ok';
+        }
+    }
+    const dataTime = obs?.lastFetched ? formatDateShort(obs.lastFetched) : '—';
+
+    // Facts status
+    let factsStatus = 'Not generated';
+    let factsStatusCls = 'detail-status-none';
+    if (fct) {
+        factsStatus = `v${fct.version || '?'}`;
+        factsStatusCls = 'detail-status-ok';
+    }
+    const factsTime = fct?.updatedAt ? formatDateShort(fct.updatedAt) : '—';
+
+    // Narratives status
+    let narStatus = 'Not generated';
+    let narStatusCls = 'detail-status-none';
+    if (rep) {
+        narStatus = `v${rep.version}, ${rep.totalVersions} version${rep.totalVersions !== 1 ? 's' : ''}`;
+        narStatusCls = 'detail-status-ok';
+    }
+    const narTime = rep?.generatedAt ? formatDateShort(rep.generatedAt) : '—';
+    const narModel = rep?.model || '—';
+
+    return `<tr class="admin-detail-row"><td colspan="${colSpan}">
+        <div class="detail-panel">
+            <div class="detail-header">
+                <a href="${LANDBOOK_V3_BASE}/${escapeHtml(landbookId)}" target="_blank" class="detail-landbook-link">Open LandBook ↗</a>
+            </div>
+            <div class="detail-grid">
+                <!-- Fetch Data -->
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <span class="detail-card-title">Fetch Data</span>
+                        <span class="detail-card-badge ${dataStatusCls}">${escapeHtml(dataStatus)}</span>
+                    </div>
+                    <div class="detail-card-meta">
+                        <span class="detail-meta-label">Last run:</span>
+                        <span class="detail-meta-value">${dataTime}</span>
+                    </div>
+                    <p class="detail-card-desc">Pulls from 22+ APIs (climate, soil, species, water, risk, etc.) and saves raw observations + processed facts.</p>
+                    <button class="detail-action-btn" data-action="fetch-data" data-landbook-id="${escapeHtml(landbookId)}">
+                        ${hasData ? '↻ Re-fetch Data' : '▶ Fetch Data'}
+                    </button>
+                    <div class="detail-action-result" id="result-fetch-${escapeHtml(landbookId)}"></div>
+                </div>
+                <!-- Generate Narratives -->
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <span class="detail-card-title">Generate Narratives</span>
+                        <span class="detail-card-badge ${narStatusCls}">${escapeHtml(narStatus)}</span>
+                    </div>
+                    <div class="detail-card-meta">
+                        <span class="detail-meta-label">Last run:</span>
+                        <span class="detail-meta-value">${narTime}</span>
+                    </div>
+                    <div class="detail-card-meta">
+                        <span class="detail-meta-label">Model:</span>
+                        <span class="detail-meta-value">${escapeHtml(narModel)}</span>
+                    </div>
+                    <p class="detail-card-desc">Generates AI intro + callout text for each section using existing data. Does not re-fetch APIs.</p>
+                    <button class="detail-action-btn" data-action="generate-narratives" data-landbook-id="${escapeHtml(landbookId)}" ${!hasData && !fct ? 'disabled title="Fetch data first"' : ''}>
+                        ${rep ? '↻ Regenerate Narratives' : '▶ Generate Narratives'}
+                    </button>
+                    <div class="detail-action-result" id="result-nar-${escapeHtml(landbookId)}"></div>
+                </div>
+                <!-- Facts Summary -->
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <span class="detail-card-title">Facts</span>
+                        <span class="detail-card-badge ${factsStatusCls}">${escapeHtml(factsStatus)}</span>
+                    </div>
+                    <div class="detail-card-meta">
+                        <span class="detail-meta-label">Last updated:</span>
+                        <span class="detail-meta-value">${factsTime}</span>
+                    </div>
+                    <p class="detail-card-desc">Processed data layer. Automatically rebuilt when data is fetched.</p>
+                </div>
+            </div>
+        </div>
+    </td></tr>`;
+}
+
+function bindDetailPanelActions(container) {
+    container.querySelectorAll('.detail-action-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const action = btn.dataset.action;
+            const landbookId = btn.dataset.landbookId;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Running...';
+            btn.classList.add('running');
+
+            const resultEl = action === 'fetch-data'
+                ? document.getElementById(`result-fetch-${landbookId}`)
+                : document.getElementById(`result-nar-${landbookId}`);
+
+            if (resultEl) resultEl.innerHTML = '';
+
+            try {
+                let res, result;
+                if (action === 'fetch-data') {
+                    res = await fetch(`/api/landbooks/${landbookId}/refresh`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                    });
+                    result = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(result.error || 'Pipeline failed');
+
+                    // Show source summary
+                    if (resultEl) {
+                        const sources = result.sources || {};
+                        const keys = Object.keys(sources);
+                        const okCount = keys.filter(k => sources[k].ok).length;
+                        const failCount = keys.length - okCount;
+                        const layers = result.layers || {};
+
+                        let html = `<div class="detail-result-ok">✓ ${okCount}/${keys.length} sources fetched`;
+                        if (failCount) html += `, <span class="detail-result-warn">${failCount} failed</span>`;
+                        html += `</div>`;
+
+                        // Layer results
+                        const layerItems = [
+                            { name: 'Observations', l: layers.observations },
+                            { name: 'Facts', l: layers.facts },
+                            { name: 'Report', l: layers.report },
+                        ];
+                        html += '<div class="detail-result-layers">' + layerItems.map(li => {
+                            const ok = li.l?.ok;
+                            return `<span class="detail-result-layer ${ok ? 'ok' : 'fail'}">${li.name} ${ok ? '✓' : '✗'}</span>`;
+                        }).join('') + '</div>';
+
+                        // Narrative keys
+                        const narKeys = result.narrativeKeys || [];
+                        if (narKeys.length) {
+                            html += `<div class="detail-result-nar">${narKeys.length} narratives generated</div>`;
+                        }
+
+                        resultEl.innerHTML = html;
+                    }
+                } else if (action === 'generate-narratives') {
+                    res = await fetch(`/api/landbooks/${landbookId}/regenerate-narratives`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ v2: true }),
+                    });
+                    result = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(result.error || 'Narrative generation failed');
+
+                    if (resultEl) {
+                        const narKeys = result.narrativeKeys || [];
+                        let html = `<div class="detail-result-ok">✓ ${narKeys.length} narratives generated (v${result.version})</div>`;
+                        if (result.cost) {
+                            html += `<div class="detail-result-meta">${result.cost.inputTokens + result.cost.outputTokens} tokens · ~$${result.cost.estimatedUSD?.toFixed(4) || '?'}</div>`;
+                        }
+                        resultEl.innerHTML = html;
+                    }
+                }
+
+                btn.textContent = originalText.replace('▶', '↻').replace('Fetch Data', 'Re-fetch Data').replace('Generate', 'Regenerate');
+                btn.classList.remove('running');
+                btn.classList.add('done');
+                btn.disabled = false;
+
+                // Reload server data so status updates persist
+                setTimeout(() => loadData(), 1500);
+
+            } catch (err) {
+                btn.textContent = '✗ Failed';
+                btn.classList.remove('running');
+                btn.classList.add('failed');
+                btn.disabled = false;
+
+                if (resultEl) {
+                    resultEl.innerHTML = `<div class="detail-result-error">${escapeHtml(err.message)}</div>`;
+                }
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('failed');
+                }, 3000);
+            }
+        });
+    });
 }
 
 // ---- Data Pipeline ----
@@ -611,115 +732,6 @@ async function testSingleSource(sourceId) {
 }
 
 document.getElementById('test-all-btn').addEventListener('click', testAllSources);
-
-// ---- Pipeline Results Panel ----
-
-function showPipelineResults(row, result, landbookId) {
-    // Remove existing panel if open
-    const existing = row.nextElementSibling;
-    if (existing?.classList.contains('admin-pipeline-results-row')) {
-        existing.remove();
-    }
-    // Update toggle button text if it exists
-    const toggleBtn = row.querySelector('.admin-pr-toggle-btn');
-    if (toggleBtn) toggleBtn.textContent = 'Hide';
-    const sources = result.sources || {};
-    const layers = result.layers || {};
-    const scores = result.scores || {};
-    const meta = result.meta || {};
-
-    const sourceKeys = Object.keys(sources);
-    const okCount = sourceKeys.filter(k => sources[k].ok).length;
-    const failCount = sourceKeys.length - okCount;
-
-    // Build source chips
-    const sourceChips = sourceKeys.map(key => {
-        const s = sources[key];
-        const cls = s.ok ? 'pr-src-ok' : 'pr-src-fail';
-        const tip = s.ok ? key : `${key}: ${s.error}`;
-        return `<span class="${cls}" title="${escapeHtml(tip)}">${escapeHtml(key)}</span>`;
-    }).join('');
-
-    // Layer status
-    const layerItems = [
-        { name: 'Observations', data: layers.observations, detail: layers.observations?.ok ? `${layers.observations.count} saved` : layers.observations?.error },
-        { name: 'Facts', data: layers.facts, detail: layers.facts?.ok ? 'rebuilt' : layers.facts?.error },
-        { name: 'Report', data: layers.report, detail: layers.report?.ok ? `v${layers.report.version}` : layers.report?.error },
-    ];
-    const layerHtml = layerItems.map(l => {
-        const ok = l.data?.ok;
-        return `<span class="pr-layer ${ok ? 'pr-layer-ok' : 'pr-layer-fail'}">${l.name}: ${l.detail || (ok ? '✓' : '✗')}</span>`;
-    }).join('');
-
-    // Scores
-    const scoreHtml = scores.naturalCapital != null
-        ? `<span class="pr-score">NC ${scores.naturalCapital}</span>` +
-          `<span class="pr-score">C ${scores.carbon ?? '—'}</span>` +
-          `<span class="pr-score">B ${scores.biodiversity ?? '—'}</span>` +
-          `<span class="pr-score">W ${scores.water ?? '—'}</span>` +
-          `<span class="pr-score">S ${scores.soil ?? '—'}</span>`
-        : '<span class="pr-muted">No scores</span>';
-
-    // Narratives
-    const narKeys = result.narrativeKeys || [];
-    const narHtml = narKeys.length > 0
-        ? `<span class="pr-nar">${narKeys.length} narratives</span>`
-        : '<span class="pr-muted">No narratives</span>';
-
-    // Uncertainty
-    const unc = meta.uncertainty;
-    const uncHtml = unc ? `<span class="pr-unc">${unc.label} (${unc.completeness}% complete)</span>` : '';
-
-    const colSpan = row.children.length;
-    const panelRow = document.createElement('tr');
-    panelRow.className = 'admin-pipeline-results-row';
-    panelRow.innerHTML = `<td colspan="${colSpan}">
-        <div class="pr-panel">
-            <div class="pr-section">
-                <div class="pr-heading">Sources <span class="pr-count">${okCount}/${sourceKeys.length} ok${failCount ? `, ${failCount} failed` : ''}</span></div>
-                <div class="pr-chips">${sourceChips}</div>
-            </div>
-            <div class="pr-section">
-                <div class="pr-heading">Storage Layers</div>
-                <div class="pr-chips">${layerHtml}</div>
-            </div>
-            <div class="pr-section">
-                <div class="pr-heading">Scores</div>
-                <div class="pr-chips">${scoreHtml}</div>
-            </div>
-            <div class="pr-row-flex">
-                <div class="pr-section">
-                    <div class="pr-heading">Narratives</div>
-                    <div class="pr-chips">${narHtml}</div>
-                </div>
-                <div class="pr-section">
-                    <div class="pr-heading">Confidence</div>
-                    <div class="pr-chips">${uncHtml}</div>
-                </div>
-            </div>
-            <button class="pr-close" onclick="const r=this.closest('.admin-pipeline-results-row');const t=r.previousElementSibling?.querySelector('.admin-pr-toggle-btn');if(t)t.textContent='Results';r.remove()">Dismiss</button>
-        </div>
-    </td>`;
-    row.after(panelRow);
-}
-
-function showPipelineError(row, message, landbookId) {
-    const existing = row.nextElementSibling;
-    if (existing?.classList.contains('admin-pipeline-results-row')) {
-        existing.remove();
-    }
-    const colSpan = row.children.length;
-    const panelRow = document.createElement('tr');
-    panelRow.className = 'admin-pipeline-results-row';
-    panelRow.innerHTML = `<td colspan="${colSpan}">
-        <div class="pr-panel pr-panel-error">
-            <div class="pr-heading" style="color:var(--coral,#e74c3c)">Pipeline Failed</div>
-            <div class="pr-error-msg">${escapeHtml(message)}</div>
-            <button class="pr-close" onclick="const r=this.closest('.admin-pipeline-results-row');const t=r.previousElementSibling?.querySelector('.admin-pr-toggle-btn');if(t)t.textContent='Results';r.remove()">Dismiss</button>
-        </div>
-    </td>`;
-    row.after(panelRow);
-}
 
 function escapeHtml(s) {
     const div = document.createElement('div');
@@ -916,6 +928,202 @@ style.textContent = `
         color: #c0392b;
     }
 
+    /* Expand button */
+    .admin-expand-btn {
+        padding: 4px 10px;
+        font-size: 14px;
+        font-family: inherit;
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--muted);
+        transition: all 0.15s;
+        line-height: 1;
+    }
+    .admin-expand-btn:hover {
+        color: var(--black);
+        border-color: var(--black);
+    }
+    .admin-expand-btn.expanded {
+        color: var(--black);
+        background: var(--cream, #f5f0eb);
+    }
+
+    /* Detail panel (expandable row) */
+    .admin-detail-row td {
+        padding: 0 !important;
+        border-bottom: 2px solid var(--border);
+    }
+    .detail-panel {
+        background: #fafaf8;
+        border-left: 3px solid #2d6a4f;
+        padding: 20px 24px;
+    }
+    .detail-header {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 16px;
+    }
+    .detail-landbook-link {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1B3A2F;
+        text-decoration: none;
+        padding: 4px 12px;
+        border: 1px solid #1B3A2F;
+        border-radius: 4px;
+        transition: background 0.15s;
+    }
+    .detail-landbook-link:hover {
+        background: #1B3A2F;
+        color: #F5F1E8;
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+    }
+    .detail-card {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px;
+    }
+    .detail-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+        gap: 8px;
+    }
+    .detail-card-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--black);
+    }
+    .detail-card-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        font-size: 10px;
+        font-weight: 600;
+        border-radius: 10px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .detail-status-ok {
+        background: #d4edda;
+        color: #1b5e20;
+    }
+    .detail-status-warn {
+        background: #fff3cd;
+        color: #856404;
+    }
+    .detail-status-none {
+        background: #e9ecef;
+        color: #6c757d;
+    }
+    .detail-card-meta {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+    .detail-meta-label {
+        font-weight: 600;
+    }
+    .detail-meta-value {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 10px;
+    }
+    .detail-card-desc {
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.4;
+        margin: 8px 0 12px;
+    }
+    .detail-action-btn {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 600;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--black);
+        transition: all 0.15s;
+    }
+    .detail-action-btn:hover {
+        border-color: var(--black);
+    }
+    .detail-action-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    .detail-action-btn.running {
+        background: #fff3cd;
+        border-color: #856404;
+        color: #856404;
+    }
+    .detail-action-btn.done {
+        background: #d4edda;
+        border-color: #1b5e20;
+        color: #1b5e20;
+    }
+    .detail-action-btn.failed {
+        background: #fde8e8;
+        border-color: #c62828;
+        color: #c62828;
+    }
+    .detail-action-result {
+        margin-top: 8px;
+        font-size: 11px;
+    }
+    .detail-result-ok {
+        color: #1b5e20;
+        font-weight: 600;
+    }
+    .detail-result-warn {
+        color: #856404;
+    }
+    .detail-result-error {
+        color: #c62828;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 11px;
+    }
+    .detail-result-layers {
+        display: flex;
+        gap: 4px;
+        margin-top: 4px;
+    }
+    .detail-result-layer {
+        display: inline-block;
+        padding: 1px 6px;
+        font-size: 10px;
+        font-weight: 600;
+        border-radius: 3px;
+    }
+    .detail-result-layer.ok {
+        background: #d4edda;
+        color: #1b5e20;
+    }
+    .detail-result-layer.fail {
+        background: #fde8e8;
+        color: #c62828;
+    }
+    .detail-result-nar {
+        color: #7c3aed;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    .detail-result-meta {
+        color: var(--muted);
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 10px;
+        margin-top: 2px;
+    }
+
     /* Pipeline table */
     .admin-pipeline-table {
         width: 100%;
@@ -1101,218 +1309,6 @@ style.textContent = `
         cursor: default;
     }
 
-    /* Report generation controls */
-    .admin-report-cell {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-    }
-    .admin-version-select {
-        padding: 4px 8px;
-        font-size: 12px;
-        font-family: inherit;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        background: var(--white);
-        cursor: pointer;
-        max-width: 180px;
-    }
-    .admin-version-select:focus {
-        outline: none;
-        border-color: var(--black);
-    }
-    .admin-landbook-v3-btn {
-        padding: 4px 10px;
-        font-size: 12px;
-        font-family: inherit;
-        font-weight: 500;
-        background: #1B3A2F;
-        border: 1px solid #1B3A2F;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #F5F1E8;
-        transition: background 0.15s;
-        white-space: nowrap;
-    }
-    .admin-landbook-v3-btn:hover {
-        background: #274e3d;
-    }
-    .admin-pipeline-run-btn {
-        padding: 4px 10px;
-        font-size: 12px;
-        font-family: inherit;
-        font-weight: 500;
-        background: var(--white, #fff);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        cursor: pointer;
-        color: var(--muted);
-        transition: all 0.15s;
-        white-space: nowrap;
-    }
-    .admin-pipeline-run-btn:hover {
-        color: var(--black);
-        border-color: var(--black);
-    }
-    .admin-pipeline-run-btn:disabled {
-        opacity: 0.7;
-        cursor: default;
-    }
-    .admin-pipeline-run-btn.running {
-        background: #fff3cd;
-        border-color: #856404;
-        color: #856404;
-    }
-    .admin-pipeline-run-btn.done {
-        background: #d4edda;
-        border-color: #1b5e20;
-        color: #1b5e20;
-    }
-    .admin-pipeline-run-btn.failed {
-        background: #fde8e8;
-        border-color: #c62828;
-        color: #c62828;
-    }
-
-    /* Pipeline results panel (inline below row) */
-    .admin-pipeline-results-row td {
-        padding: 0 !important;
-        border-bottom: 2px solid var(--border);
-    }
-    .pr-panel {
-        background: #fafaf8;
-        border-left: 3px solid #2d6a4f;
-        padding: 16px 20px;
-        margin: 0;
-    }
-    .pr-panel-error {
-        border-left-color: var(--coral, #e74c3c);
-    }
-    .pr-section {
-        margin-bottom: 12px;
-    }
-    .pr-section:last-of-type {
-        margin-bottom: 8px;
-    }
-    .pr-heading {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--muted);
-        margin-bottom: 6px;
-    }
-    .pr-count {
-        font-weight: 400;
-        text-transform: none;
-        letter-spacing: 0;
-    }
-    .pr-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        align-items: center;
-    }
-    .pr-row-flex {
-        display: flex;
-        gap: 32px;
-    }
-    .pr-src-ok {
-        display: inline-block;
-        padding: 2px 7px;
-        font-size: 10px;
-        font-weight: 500;
-        font-family: 'SF Mono', 'Fira Code', monospace;
-        border-radius: 3px;
-        background: #d4edda;
-        color: #1b5e20;
-        white-space: nowrap;
-    }
-    .pr-src-fail {
-        display: inline-block;
-        padding: 2px 7px;
-        font-size: 10px;
-        font-weight: 500;
-        font-family: 'SF Mono', 'Fira Code', monospace;
-        border-radius: 3px;
-        background: #fde8e8;
-        color: #c62828;
-        white-space: nowrap;
-        cursor: help;
-    }
-    .pr-layer {
-        display: inline-block;
-        padding: 3px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        border-radius: 10px;
-        white-space: nowrap;
-    }
-    .pr-layer-ok {
-        background: #d4edda;
-        color: #1b5e20;
-    }
-    .pr-layer-fail {
-        background: #fde8e8;
-        color: #c62828;
-    }
-    .pr-score {
-        display: inline-block;
-        padding: 3px 8px;
-        font-size: 11px;
-        font-weight: 600;
-        font-family: 'SF Mono', 'Fira Code', monospace;
-        background: #e8f0fe;
-        color: #1a56db;
-        border-radius: 3px;
-        white-space: nowrap;
-    }
-    .pr-nar {
-        display: inline-block;
-        padding: 3px 10px;
-        font-size: 11px;
-        font-weight: 600;
-        background: #f3e8ff;
-        color: #7c3aed;
-        border-radius: 10px;
-    }
-    .pr-unc {
-        display: inline-block;
-        padding: 3px 10px;
-        font-size: 11px;
-        font-weight: 500;
-        background: var(--cream, #f5f0eb);
-        color: var(--muted);
-        border-radius: 10px;
-    }
-    .pr-muted {
-        font-size: 11px;
-        color: var(--muted);
-        font-style: italic;
-    }
-    .pr-error-msg {
-        font-size: 13px;
-        color: var(--coral, #e74c3c);
-        margin: 8px 0;
-        font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-    .pr-close {
-        margin-top: 8px;
-        padding: 3px 12px;
-        font-size: 11px;
-        font-family: inherit;
-        font-weight: 500;
-        background: none;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        cursor: pointer;
-        color: var(--muted);
-    }
-    .pr-close:hover {
-        color: var(--black);
-        border-color: var(--black);
-    }
     /* Pipeline status column */
     .pip-cell {
         display: flex;
@@ -1345,23 +1341,6 @@ style.textContent = `
     }
     .pip-empty {
         font-size: 11px;
-    }
-
-    .admin-pr-toggle-btn {
-        padding: 4px 10px;
-        font-size: 11px;
-        font-family: inherit;
-        font-weight: 500;
-        background: #e8f0fe;
-        border: 1px solid #c3d7f7;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #1a56db;
-        transition: all 0.15s;
-        white-space: nowrap;
-    }
-    .admin-pr-toggle-btn:hover {
-        background: #d0e3fc;
     }
 `;
 document.head.appendChild(style);
