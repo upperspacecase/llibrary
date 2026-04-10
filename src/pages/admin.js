@@ -525,10 +525,12 @@ function bindDetailPanelActions(container) {
                             return `<span class="detail-result-layer ${ok ? 'ok' : 'fail'}">${li.name} ${ok ? '✓' : '✗'}</span>`;
                         }).join('') + '</div>';
 
-                        // Narrative keys
+                        // Narrative keys + error
                         const narKeys = result.narrativeKeys || [];
-                        if (narKeys.length) {
-                            html += `<div class="detail-result-nar">${narKeys.length} narratives generated</div>`;
+                        if (result.narrativeError) {
+                            html += `<div class="detail-result-fail">⚠ Narratives failed: ${result.narrativeError}</div>`;
+                        } else if (narKeys.length) {
+                            html += `<div class="detail-result-nar">${narKeys.length} narrative sections generated</div>`;
                         }
 
                         resultEl.innerHTML = html;
@@ -545,7 +547,12 @@ function bindDetailPanelActions(container) {
 
                     if (resultEl) {
                         const narKeys = result.narrativeKeys || [];
-                        let html = `<div class="detail-result-ok">✓ ${narKeys.length} narratives generated (v${result.version})</div>`;
+                        let html;
+                        if (result.narrativeError) {
+                            html = `<div class="detail-result-fail">⚠ Narratives failed: ${result.narrativeError}</div>`;
+                        } else {
+                            html = `<div class="detail-result-ok">✓ ${narKeys.length} narrative sections generated (v${result.version})</div>`;
+                        }
                         if (result.cost) {
                             html += `<div class="detail-result-meta">${result.cost.inputTokens + result.cost.outputTokens} tokens · ~$${result.cost.estimatedUSD?.toFixed(4) || '?'}</div>`;
                         }
@@ -1103,10 +1110,11 @@ style.textContent = `
     .detail-result-warn {
         color: #856404;
     }
-    .detail-result-error {
+    .detail-result-error, .detail-result-fail {
         color: #c62828;
         font-family: 'SF Mono', 'Fira Code', monospace;
         font-size: 11px;
+        font-weight: 600;
     }
     .detail-result-layers {
         display: flex;

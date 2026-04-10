@@ -64,10 +64,16 @@ export default async function handler(req, res) {
     const data = processRawData(raw, submission, areaHa);
 
     // 5. Generate AI narratives (V2 — intro/callout per section)
+    let narrativeError = null;
     try {
       const result = await generateNarrativesV2(data);
       data.narratives = result.narratives;
+      if (result.error) {
+        narrativeError = result.error;
+        console.warn('[refresh] Narrative generation issue:', result.error);
+      }
     } catch (err) {
+      narrativeError = `Narrative generation failed: ${err.message}`;
       console.warn('[refresh] Narrative generation failed, continuing without:', err.message);
       data.narratives = {};
     }
@@ -134,6 +140,7 @@ export default async function handler(req, res) {
       sources: sourceResults,
       layers: layerResults,
       narrativeKeys: Object.keys(data.narratives || {}),
+      narrativeError: narrativeError || null,
       scores: data.scores ? {
         naturalCapital: data.scores.naturalCapital,
         carbon: data.scores.carbon,

@@ -358,15 +358,31 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```\s*$/, '').trim();
     const narratives = JSON.parse(cleaned);
 
+    // Validate that at least one slot has content
+    const hasContent = Object.values(narratives).some(section =>
+      section && typeof section === 'object' &&
+      Object.values(section).some(v => typeof v === 'string' && v.trim().length > 0)
+    );
+    if (!hasContent) {
+      console.error('[narratives-v2] Claude returned valid JSON but all slots are empty');
+      return {
+        narratives: EMPTY_NARRATIVES_V2,
+        usage: response.usage || null,
+        error: 'Claude returned empty narratives — model may have refused or returned unexpected format',
+      };
+    }
+
     return {
       narratives,
       usage: response.usage || null,
+      error: null,
     };
   } catch (error) {
     console.error('[narratives-v2] Claude API call failed:', error.message);
     return {
       narratives: EMPTY_NARRATIVES_V2,
       usage: null,
+      error: `Narrative generation failed: ${error.message}`,
     };
   }
 }

@@ -48,10 +48,12 @@ export default async function handler(req, res) {
     let usage = null;
     const model = 'claude-sonnet-4-20250514';
 
+    let narrativeError = null;
     if (v2) {
       const result = await generateNarrativesV2(data);
       narratives = result.narratives;
       usage = result.usage;
+      narrativeError = result.error || null;
     } else {
       narratives = await generateNarratives(data);
     }
@@ -98,6 +100,7 @@ export default async function handler(req, res) {
       ok: true,
       version: reportDoc.version,
       narrativeKeys: Object.keys(narratives),
+      narrativeError: narrativeError || null,
       narrativesStale: false,
       cost,
     });
