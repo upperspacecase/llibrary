@@ -15,7 +15,7 @@ export function HeroFigure({
       <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">
         {label}
       </div>
-      <p className="text-[43px] font-black tracking-tighter text-brand-forest leading-none">
+      <p className="text-[43px] font-black tracking-tighter text-brand-forest leading-none font-serif">
         {fmt(value)}
       </p>
     </div>

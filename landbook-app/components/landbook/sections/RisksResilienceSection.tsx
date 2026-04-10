@@ -136,7 +136,7 @@ export function RisksResilienceSection({
       <div className="grid grid-cols-2 gap-8 mb-6">
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp Trend / Decade</div>
-          <p className="text-[24px] font-black tracking-tighter text-brand-forest leading-none">
+          <p className="text-[24px] font-black tracking-tighter text-brand-forest leading-none font-serif">
             {trends.tempPerDecade != null
               ? `${trends.tempPerDecade > 0 ? "+" : ""}${trends.tempPerDecade.toFixed(2)}\u00b0C`
               : "\u2014"}
@@ -144,7 +144,7 @@ export function RisksResilienceSection({
         </div>
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Precip Trend / Decade</div>
-          <p className="text-[24px] font-black tracking-tighter text-brand-forest leading-none">
+          <p className="text-[24px] font-black tracking-tighter text-brand-forest leading-none font-serif">
             {trends.precipPerDecade != null
               ? `${trends.precipPerDecade > 0 ? "+" : ""}${trends.precipPerDecade.toFixed(1)} mm`
               : "\u2014"}

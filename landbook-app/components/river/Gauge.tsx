@@ -46,7 +46,7 @@ export function Gauge({
           />
         </svg>
         <div className="absolute bottom-0 w-full text-center">
-          <span className="text-lg font-bold text-brand-forest">{fmt(value)}</span>
+          <span className="text-lg font-bold text-brand-forest font-serif">{fmt(value)}</span>
         </div>
       </div>
       <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase mt-2">

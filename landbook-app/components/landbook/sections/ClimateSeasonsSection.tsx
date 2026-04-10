@@ -256,7 +256,7 @@ export function ClimateSeasonsSection({
               </h3>
               <div className="grid grid-cols-2 gap-x-8 gap-y-10">
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {growingDays ?? "\u2014"}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
@@ -264,7 +264,7 @@ export function ClimateSeasonsSection({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {climate.frostDays ?? "\u2014"}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
@@ -272,7 +272,7 @@ export function ClimateSeasonsSection({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {climate.annualRainfall != null ? (
                       <>
                         {Math.round(climate.annualRainfall)}
@@ -287,7 +287,7 @@ export function ClimateSeasonsSection({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {dryMonths ?? "\u2014"}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
@@ -295,7 +295,7 @@ export function ClimateSeasonsSection({
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {String(wind.level || "\u2014")}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
@@ -306,7 +306,7 @@ export function ClimateSeasonsSection({
                   )}
                 </div>
                 <div className="space-y-1">
-                  <div className="text-3xl font-bold text-brand-forest font-headline">
+                  <div className="text-3xl font-bold text-brand-forest font-serif">
                     {String(solar.level || "\u2014")}
                   </div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
@@ -346,11 +346,11 @@ export function ClimateSeasonsSection({
                     </span>
                     <span className="material-symbols-outlined">{s.icon}</span>
                   </div>
-                  <h4 className="font-headline italic text-xl mb-2">{s.tag}</h4>
+                  <h4 className="font-serif italic text-xl mb-2">{s.tag}</h4>
                   <p className="text-sm opacity-80 leading-snug">{s.description}</p>
                 </div>
                 <div className="mt-auto">
-                  <div className="font-bold font-headline text-sm">
+                  <div className="font-bold font-serif text-sm">
                     {seasonalRain != null ? `${seasonalRain}mm` : "\u2014"}
                   </div>
                   <div className="text-[9px] font-bold uppercase tracking-widest opacity-60">
@@ -370,7 +370,7 @@ export function ClimateSeasonsSection({
         </h3>
         <div className="grid grid-cols-2 gap-8 mb-12">
           <div className="space-y-1">
-            <div className="text-4xl font-bold text-brand-forest font-headline">
+            <div className="text-4xl font-bold text-brand-forest font-serif">
               {trends.tempPerDecade != null ? (
                 <>
                   {trends.tempPerDecade > 0 ? "+" : ""}
@@ -386,7 +386,7 @@ export function ClimateSeasonsSection({
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-4xl font-bold text-brand-forest font-headline">
+            <div className="text-4xl font-bold text-brand-forest font-serif">
               {trends.precipPerDecade != null ? (
                 <>
                   {trends.precipPerDecade > 0 ? "+" : ""}

@@ -23,7 +23,7 @@ export function PercentileCard({
       </div>
       <div>
         <div className="flex items-baseline gap-4 mb-2">
-          <span className="text-[30px] font-black text-brand-forest">
+          <span className="text-[30px] font-black text-brand-forest font-serif">
             {fmt(value)}
           </span>
           {suffix && (

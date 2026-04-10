@@ -47,7 +47,7 @@ export function Scorecard({
                 <div className="h-full bg-brand-forest" style={{ width: `${pct}%` }} />
               </div>
             </div>
-            <div className="w-12 text-right text-sm font-black text-brand-forest">
+            <div className="w-12 text-right text-sm font-black text-brand-forest font-serif">
               {dim.score}
             </div>
             <div
