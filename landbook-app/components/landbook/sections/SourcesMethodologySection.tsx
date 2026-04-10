@@ -35,7 +35,7 @@ export function SourcesMethodologySection({
       <SectionTitle title="Sources & Methodology" />
 
       {narratives?.text && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
           {narratives.text}
         </p>
       )}

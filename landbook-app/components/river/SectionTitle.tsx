@@ -1,8 +1,11 @@
 export function SectionTitle({ title }: { title: string }) {
   return (
-    <div className="mb-8">
-      <h1 className="serif-title text-[24px] text-brand-forest mb-4">{title}</h1>
-      <div className="hairline" />
-    </div>
+    <header className="mb-12">
+      <div className="border-b-[0.5pt] border-outline-variant pb-8">
+        <h1 className="font-serif text-5xl font-bold text-brand-forest tracking-tighter">
+          {title}
+        </h1>
+      </div>
+    </header>
   );
 }

@@ -31,7 +31,7 @@ export function LandWaterSection({
       <SectionTitle title="Land & Water" />
 
       {narratives?.terrain?.description && (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
           {narratives.terrain.description}
         </p>
       )}

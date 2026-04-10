@@ -5,7 +5,7 @@ export function YourKnowledgeSection() {
     <section id="your-knowledge">
       <SectionTitle title="Your Knowledge" />
 
-      <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
+      <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-12">
         This section is designed for your own data, memories, and observations to become
         part of the trusted document layer. All subsections below are user-contributed.
       </p>
