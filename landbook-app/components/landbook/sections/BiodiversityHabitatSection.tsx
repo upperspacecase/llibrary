@@ -10,12 +10,12 @@ function fmt(v: unknown): string {
 
 const TREEMAP_COLORS = [
   { bg: "bg-brand-forest", text: "text-white" },
-  { bg: "bg-brand-amber", text: "text-brand-forest" },
   { bg: "bg-brand-terracotta", text: "text-white" },
+  { bg: "bg-brand-amber", text: "text-brand-forest" },
   { bg: "bg-brand-sage", text: "text-white" },
   { bg: "bg-brand-charcoal", text: "text-white" },
-  { bg: "bg-brand-gray", text: "text-white" },
-  { bg: "bg-brand-earth", text: "text-white" },
+  { bg: "bg-brand-forest/70", text: "text-white" },
+  { bg: "bg-brand-terracotta/70", text: "text-white" },
   { bg: "bg-brand-sage/40", text: "text-brand-forest" },
 ];
 
@@ -278,7 +278,7 @@ export function BiodiversityHabitatSection({
         </section>
       )}
 
-      {/* 5.1 Land Cover Classification */}
+      {/* Land Cover Classification — commented out per request
       <SubsectionHeader id="5.1" title="Land Cover Classification" sources={["Pipeline"]} />
       <div className="mb-8">
         <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Land Cover</div>
@@ -286,8 +286,9 @@ export function BiodiversityHabitatSection({
       </div>
 
       <Hairline />
+      */}
 
-      {/* 5.2 Habitat Typology */}
+      {/* Habitat Typology */}
       <SubsectionHeader id="5.2" title="Habitat Typology" sources={["Pipeline"]} />
       {areas.length > 0 ? (
         <DataTable
@@ -304,7 +305,6 @@ export function BiodiversityHabitatSection({
       <section className="mb-20">
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">5.3</span>
             <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
               Ecological Resilience Assessment
             </h3>
@@ -375,7 +375,6 @@ export function BiodiversityHabitatSection({
       {/* 5.4 Habitat Restoration Potential — restyled shell over existing Conservation Assessment data */}
       <section className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] font-bold text-brand-terracotta font-body">5.4</span>
           <span className="bg-brand-terracotta/10 text-brand-terracotta text-[9px] font-bold px-2 py-0.5 tracking-widest uppercase">
             Restoration Uplift
           </span>
@@ -430,7 +429,6 @@ export function BiodiversityHabitatSection({
       <section className="mb-20">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">5.5</span>
             <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
               Audit Methodology
             </h3>
@@ -488,7 +486,6 @@ export function BiodiversityHabitatSection({
       <section className="mb-20">
         <div className="flex items-center justify-between mb-12">
           <div className="flex items-center gap-4">
-            <span className="text-[10px] font-bold text-brand-sage font-body">5.6</span>
             <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
               Indicator Confidence &amp; Sensitivity
             </h3>
