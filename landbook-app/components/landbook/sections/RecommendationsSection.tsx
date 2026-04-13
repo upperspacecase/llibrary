@@ -41,15 +41,24 @@ export function RecommendationsSection({
     <section id="recommendations">
       <SectionTitle title="Recommendations" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          Stewardship invitation, community context, and next-step framing will appear here once narratives are generated.
-        </p>
-      )}
+      {/* Body + disclaimer side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 items-start">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
+            Stewardship invitation, community context, and next-step framing will appear here once narratives are generated.
+          </p>
+        )}
+
+        <aside className="w-full border-l-[4px] border-landbook-sage py-4 pl-8 pr-4 bg-landbook-sage/5">
+          <p className="font-serif italic text-[13px] leading-relaxed text-landbook-forest/80">
+            Disclaimer: All recommendations based on remote assessment. Consult licensed professionals before major investments.
+          </p>
+        </aside>
+      </div>
 
       {/* Checkbox Lists */}
       <div className="space-y-14 flex-1">
@@ -124,12 +133,6 @@ export function RecommendationsSection({
           </PlaceholderBox>
         </section>
 
-        {/* Disclaimer */}
-        <aside className="w-full border-l-[4px] border-landbook-sage py-4 pl-8 pr-4 bg-landbook-sage/5">
-          <p className="font-serif italic text-[13px] leading-relaxed text-landbook-forest/80">
-            Disclaimer: All recommendations based on remote assessment and field verification. Consult licensed professionals before major investments. Data sources include IPMA, IGP, and LandBook proprietary analysis.
-          </p>
-        </aside>
       </div>
     </section>
   );
