@@ -123,7 +123,7 @@ export function RegionEcosystemSection({
       <SectionTitle title="Region & Ecosystem" />
 
       {/* Body + callout side-by-side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 items-start">
         {narratives?.intro ? (
           <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
             {narratives.intro}
