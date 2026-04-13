@@ -26,15 +26,71 @@ export function HistoryTrendsSection({
     <section id="history-trends">
       <SectionTitle title="History & Trends" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          Temperature and precipitation trends, their impact on long-term property value, and historical context will appear here once narratives are generated.
-        </p>
+      {/* Body + callout side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
+            Temperature and precipitation trends, their impact on long-term property value, and historical context will appear here once narratives are generated.
+          </p>
+        )}
+
+        {narratives?.callout ? (
+          <div className="border-l-[6px] border-brand-terracotta pl-6">
+            <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+              &ldquo;{narratives.callout}&rdquo;
+            </blockquote>
+          </div>
+        ) : (
+          <div className="border-l-[6px] border-brand-sage/20 pl-6">
+            <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+              &ldquo;Trends narrative pending &mdash; generate narratives to populate this callout.&rdquo;
+            </blockquote>
+          </div>
+        )}
+      </div>
+
+      {/* Climate Trend Summary — moved up to sit under body + callout */}
+      {(trends.tempPerDecade != null || trends.precipPerDecade != null) && (
+        <>
+          <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
+            Climate Trend Summary
+          </div>
+          <div className="grid grid-cols-2 gap-8 mb-6">
+            <div className="text-center">
+              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp / Decade</div>
+              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
+                {trends.tempPerDecade != null
+                  ? `${trends.tempPerDecade > 0 ? "+" : ""}${trends.tempPerDecade.toFixed(2)}\u00b0C`
+                  : "\u2014"}
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Precip / Decade</div>
+              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
+                {trends.precipPerDecade != null
+                  ? `${trends.precipPerDecade > 0 ? "+" : ""}${trends.precipPerDecade.toFixed(1)} mm`
+                  : "\u2014"}
+              </p>
+            </div>
+          </div>
+        </>
       )}
+
+      {fireDecades.length > 0 && (
+        <DataTable
+          headers={["Decade", "Fire-Prone Days"]}
+          rows={fireDecades.map((t) => [
+            fmt(t.decade || t.label),
+            fmt(t.avgDays || t.days || t.value),
+          ])}
+        />
+      )}
+
+      <Hairline />
 
       {/* 9.1 Land Cover Change */}
       <SubsectionHeader id="9.1" title="Land Cover Change (2000-2024)" sources={["NEW"]} />
@@ -142,20 +198,6 @@ export function HistoryTrendsSection({
         )}
       </PlaceholderBox>
 
-      {narratives?.callout ? (
-        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
-          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-            &ldquo;{narratives.callout}&rdquo;
-          </blockquote>
-        </div>
-      ) : (
-        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
-          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
-            &ldquo;Trends narrative pending &mdash; generate narratives to populate this callout.&rdquo;
-          </blockquote>
-        </div>
-      )}
-
       <Hairline />
 
       {/* 9.5 Disturbance Events */}
@@ -227,46 +269,6 @@ export function HistoryTrendsSection({
         </p>
       </PlaceholderBox>
 
-      {/* Climate trends metrics (existing data) */}
-      {(trends.tempPerDecade != null || trends.precipPerDecade != null) && (
-        <>
-          <Hairline />
-          <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
-            Climate Trend Summary
-          </div>
-          <div className="grid grid-cols-2 gap-8 mb-6">
-            <div className="text-center">
-              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp / Decade</div>
-              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
-                {trends.tempPerDecade != null
-                  ? `${trends.tempPerDecade > 0 ? "+" : ""}${trends.tempPerDecade.toFixed(2)}\u00b0C`
-                  : "\u2014"}
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Precip / Decade</div>
-              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
-                {trends.precipPerDecade != null
-                  ? `${trends.precipPerDecade > 0 ? "+" : ""}${trends.precipPerDecade.toFixed(1)} mm`
-                  : "\u2014"}
-              </p>
-            </div>
-          </div>
-        </>
-      )}
-
-      {fireDecades.length > 0 && (
-        <>
-          <Hairline />
-          <DataTable
-            headers={["Decade", "Fire-Prone Days"]}
-            rows={fireDecades.map((t) => [
-              fmt(t.decade || t.label),
-              fmt(t.avgDays || t.days || t.value),
-            ])}
-          />
-        </>
-      )}
     </section>
   );
 }
