@@ -118,33 +118,19 @@ export function OverviewSection({
   return (
     <section id="overview">
       {/* Block 1 — Header */}
-      <header className="mb-12">
-        <div className="border-b-[0.5pt] border-outline-variant pb-8">
-          <span className="text-[10px] font-bold tracking-[0.3em] text-brand-sage block mb-4 uppercase font-body">
-            Property Overview
-          </span>
-          <h1 className="font-serif text-5xl font-bold text-brand-forest tracking-tighter mb-4">
-            {property.name}
-          </h1>
-          <div className="flex items-center gap-6 text-brand-sage text-[11px] uppercase tracking-widest font-medium font-body">
-            <span>{property.address}</span>
-            {property.coords?.lat != null && (
-              <>
-                <div className="w-1 h-1 bg-brand-terracotta" />
-                <span>{formatCoord(property.coords.lat, property.coords.lng)}</span>
-              </>
-            )}
-          </div>
-        </div>
+      <header>
+        <h1 className="font-headline text-5xl font-bold text-brand-forest tracking-tighter mb-2">
+          {property.name}
+        </h1>
       </header>
 
       {/* Block 2 — Hero Image */}
-      <section className="mb-16">
-        <div className="relative h-[480px] w-full overflow-hidden border-[0.5pt] border-outline-variant">
+      <section className="mb-8">
+        <div className="relative h-[480px] w-full overflow-hidden">
           {maps.satellite ? (
             <img
               alt={property.name}
-              className="w-full h-full object-cover filter saturate-[0.85]"
+              className="w-full h-full object-contain"
               src={maps.satellite}
             />
           ) : (
@@ -152,11 +138,18 @@ export function OverviewSection({
               Satellite image not available
             </div>
           )}
+          {property.coords?.lat != null && (
+            <div className="absolute top-4 left-4 bg-brand-forest px-4 py-2 shadow-lg">
+              <p className="text-[11px] font-bold tracking-widest text-white font-body uppercase">
+                {formatCoord(property.coords.lat, property.coords.lng)}
+              </p>
+            </div>
+          )}
         </div>
       </section>
 
       {/* Block 3 — Editorial Narrative */}
-      <section className="mb-20">
+      <section className="mb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
           <div className="space-y-6">
             <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
@@ -182,10 +175,12 @@ export function OverviewSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-10">
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
             <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
-              Ecosystem Value
+              Ecosystem Value EUR /ha
             </span>
             <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
-              {formatCurrency(economics.totalValue)}
+              {economics.totalValue != null && property.area != null && property.area > 0
+                ? formatCurrency(economics.totalValue / property.area)
+                : "\u2014"}
             </p>
           </div>
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
@@ -290,7 +285,7 @@ export function OverviewSection({
         {/* Radar Chart */}
         <div className="w-full mb-8">
           <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body text-center">
-            Natural Capital Radar
+            Landbook Sources
           </h4>
           {(() => {
             const reg = scores.regional || {} as Record<string, number>;
@@ -396,28 +391,41 @@ export function OverviewSection({
         </div>
 
         {/* Sources & Confidence */}
-        <div className="hairline w-full max-w-[480px] my-4 opacity-50" />
-        <div className="w-full max-w-[480px] space-y-8 mt-8">
+        <div className="hairline w-full my-4 opacity-50" />
+        <div className="w-full space-y-8 mt-8">
           {(() => {
             const c = classifyDataSources(meta, { narratives: allNarratives });
-            const verifiedPct = Math.round((c.verified / c.total) * 100);
-            const computedPct = Math.round((c.computed / c.total) * 100);
-            const aiPct = Math.round((c.ai / c.total) * 100);
-            const unverifiedPct = 100 - verifiedPct - computedPct - aiPct;
+            const apiStatus = meta.apiStatus || {};
+            const apiKeys = Object.keys(apiStatus);
+            const totalApis = apiKeys.length;
+            const verifiedApis = apiKeys.filter((k) => apiStatus[k] === "ok").length;
+
+            const aggregatedFields = c.verified + c.computed + c.unverified;
+            const denom = aggregatedFields + c.ai;
+            const aggregatedPct = denom > 0 ? Math.round((aggregatedFields / denom) * 100) : 0;
+            const aiPct = 100 - aggregatedPct;
             const unc = meta.uncertainty;
 
             const segments = [
-              { label: "Verified", pct: verifiedPct, color: "bg-brand-forest", desc: "Ground-truth sensor data and property site visit." },
-              { label: "Computed", pct: computedPct, color: "bg-brand-sage", desc: "Algorithmically derived from verified API data." },
-              ...(c.ai > 0 ? [{ label: "AI-Generated", pct: aiPct, color: "bg-brand-sage/50", desc: "AI-generated narrative and analysis text." }] : []),
-              ...(c.unverified > 0 ? [{ label: "Unverified", pct: unverifiedPct, color: "bg-brand-sage/20", desc: "Data source unavailable or unconfirmed." }] : []),
+              {
+                label: "Aggregated",
+                pct: aggregatedPct,
+                color: "bg-brand-forest",
+                desc: `Verified API data from ${verifiedApis} of ${totalApis} sources.`,
+              },
+              {
+                label: "AI Inference",
+                pct: aiPct,
+                color: "bg-brand-sage",
+                desc: "AI-generated narrative synthesis across the aggregated layers.",
+              },
             ];
 
             return (
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
-                    Sources
+                    Updated Sources
                   </h4>
                   {unc && (
                     <span className="text-[10px] italic text-brand-forest font-body">
