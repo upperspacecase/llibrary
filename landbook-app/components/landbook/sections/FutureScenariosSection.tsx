@@ -62,16 +62,19 @@ export function FutureScenariosSection({
           value={rev.conservative != null ? `\u20ac${(rev.conservative as number).toLocaleString()}` : null}
           unit="/yr"
           label="Conservative"
+          size="sm"
         />
         <KPI
           value={rev.moderate != null ? `\u20ac${(rev.moderate as number).toLocaleString()}` : null}
           unit="/yr"
           label="Moderate"
+          size="sm"
         />
         <KPI
           value={rev.optimized != null ? `\u20ac${(rev.optimized as number).toLocaleString()}` : null}
           unit="/yr"
           label="Optimized"
+          size="sm"
         />
       </div>
       {scenarios.length > 0 && <StackedBar segments={scenarios} label="Revenue Scenario Comparison" />}
