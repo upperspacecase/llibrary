@@ -25,8 +25,8 @@
 export const NARRATIVE_SCHEMA = {
   overview: {
     intro: {
-      maxWords: 150,
-      prompt: "2-3 paragraphs. Position the property within its bioregion. Highlight 2-3 key strengths from the data. Frame the investment profile using actual valuation numbers.",
+      maxWords: 40,
+      prompt: "1 paragraph. Position the property within its bioregion and highlight the key investment strength from the data.",
     },
     callout: {
       maxWords: 20,
@@ -36,8 +36,8 @@ export const NARRATIVE_SCHEMA = {
 
   regionEcosystem: {
     intro: {
-      maxWords: 100,
-      prompt: "2 paragraphs. Frame why bioregional context matters — comparing a property to its neighbours reveals hidden strengths and risks that raw numbers alone miss.",
+      maxWords: 40,
+      prompt: "1 paragraph. Frame why bioregional context matters — neighbours reveal hidden strengths and risks raw numbers miss.",
     },
     callout: {
       maxWords: 20,
@@ -75,8 +75,8 @@ export const NARRATIVE_SCHEMA = {
 
   mapsLayers: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Describe what the technical map layers reveal about this property's spatial character — terrain patterns, connectivity corridors, fire/flood exposure zones, and biodiversity hotspots visible across the nine map layers.",
+      maxWords: 40,
+      prompt: "1 paragraph. What the map layers reveal about this property's spatial character and connectivity.",
     },
     callout: {
       maxWords: 20,
@@ -86,8 +86,8 @@ export const NARRATIVE_SCHEMA = {
 
   landWater: {
     intro: {
-      maxWords: 150,
-      prompt: "2 paragraphs. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
+      maxWords: 40,
+      prompt: "1 paragraph. Physical character of the land and water security at a glance — terrain, soil, drought resilience.",
     },
     callout: {
       maxWords: 20,
@@ -97,8 +97,8 @@ export const NARRATIVE_SCHEMA = {
 
   biodiversity: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Species richness in context. Notable findings from the data. Conservation significance and observation trends.",
+      maxWords: 40,
+      prompt: "1 paragraph. Species richness in context and most notable finding from the data.",
     },
     callout: {
       maxWords: 20,
@@ -108,8 +108,8 @@ export const NARRATIVE_SCHEMA = {
 
   climateSeasons: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Characterize the climate zone. Growing season implications. Energy potential from solar/wind resources.",
+      maxWords: 40,
+      prompt: "1 paragraph. Characterize the climate zone and its growing-season implications.",
     },
     callout: {
       maxWords: 20,
@@ -119,8 +119,8 @@ export const NARRATIVE_SCHEMA = {
 
   valueBenefits: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
+      maxWords: 40,
+      prompt: "1 paragraph. SEEA-EA valuation framework briefly, then the economic significance of ecosystem services here.",
     },
     callout: {
       maxWords: 20,
@@ -134,8 +134,8 @@ export const NARRATIVE_SCHEMA = {
 
   landUse: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Current land cover and what it supports. Production potential and suitable systems.",
+      maxWords: 40,
+      prompt: "1 paragraph. Current land cover and the production potential it supports.",
     },
     callout: {
       maxWords: 20,
@@ -145,8 +145,8 @@ export const NARRATIVE_SCHEMA = {
 
   historyTrends: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. What temperature and precipitation trends mean for this property. Projection caveats. How trends affect long-term value.",
+      maxWords: 40,
+      prompt: "1 paragraph. What temperature and precipitation trends mean for this property's long-term value.",
     },
     callout: {
       maxWords: 20,
@@ -156,8 +156,8 @@ export const NARRATIVE_SCHEMA = {
 
   risksResilience: {
     intro: {
-      maxWords: 150,
-      prompt: "2 paragraphs. How fire/flood/drought risks interact at this property. Energy independence potential. What the scores mean in practice.",
+      maxWords: 40,
+      prompt: "1 paragraph. How fire, flood, and drought risks interact with energy independence at this property.",
     },
     callout: {
       maxWords: 20,
@@ -171,8 +171,8 @@ export const NARRATIVE_SCHEMA = {
 
   futureScenarios: {
     intro: {
-      maxWords: 120,
-      prompt: "2 paragraphs. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity.",
+      maxWords: 40,
+      prompt: "1 paragraph. Compare revenue scenarios and flag the carbon credit opportunity.",
     },
     callout: {
       maxWords: 20,
@@ -182,15 +182,15 @@ export const NARRATIVE_SCHEMA = {
 
   recommendations: {
     intro: {
-      maxWords: 100,
-      prompt: "2 paragraphs. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden.",
+      maxWords: 40,
+      prompt: "1 paragraph. Invitation to stewardship — frame next steps as opportunity, not burden.",
     },
   },
 
   sourcesMethodology: {
     intro: {
-      maxWords: 120,
-      prompt: "1-2 paragraphs. SEEA-EA framework basis. How scores are computed. Data sources used. Conservative approach.",
+      maxWords: 40,
+      prompt: "1 paragraph. SEEA-EA framework basis, scoring approach, and data sources in brief.",
     },
     disclaimer: {
       maxWords: 50,
