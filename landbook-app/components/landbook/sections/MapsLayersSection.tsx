@@ -73,11 +73,11 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
       <div className="relative w-full h-[600px] bg-white border border-outline-variant/20 overflow-hidden mb-16">
         {/* Background — same satellite image as Overview hero */}
         <div className="absolute inset-0 opacity-40">
-          {maps.satellite ? (
+          {maps.overview ? (
             <img
               className="w-full h-full object-cover filter saturate-[0.85]"
-              src={maps.satellite}
-              alt={`${property.name} satellite overview`}
+              src={maps.overview}
+              alt={`${property.name} outdoors overview`}
             />
           ) : (
             <div className="w-full h-full bg-brand-sage/10" />
