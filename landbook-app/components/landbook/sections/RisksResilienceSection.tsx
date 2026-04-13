@@ -1,8 +1,40 @@
 import type { FireData, RiskData, Energy, Trends, Narratives } from "@/lib/types";
 import {
-  SectionTitle, Gauge, RiskBadge, Hairline, DataTable, RecommendationBox,
+  SectionTitle, RiskBadge, Hairline, DataTable, RecommendationBox,
   SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
+
+function RiskBar({
+  label,
+  value,
+  max,
+  barColor,
+}: {
+  label: string;
+  value: number | null | undefined;
+  max: number;
+  barColor: string;
+}) {
+  const v = value ?? 0;
+  return (
+    <div>
+      <div className="flex justify-between items-end mb-2">
+        <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+          {label}
+        </p>
+        <span className="text-xl font-bold font-serif text-brand-forest">
+          {value != null ? `${value}/${max}` : "\u2014"}
+        </span>
+      </div>
+      <div className="h-2 w-full bg-brand-sage/20">
+        <div
+          className={`h-full ${barColor}`}
+          style={{ width: `${Math.min((v / max) * 100, 100)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function fmt(v: unknown): string {
   if (v == null || v === "") return "\u2014";
@@ -36,22 +68,39 @@ export function RisksResilienceSection({
     <section id="risks-resilience">
       <SectionTitle title="Risks & Resilience" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          Fire, flood, and drought risk interaction, energy independence potential, and practical risk implications will appear here once narratives are generated.
-        </p>
-      )}
+      {/* Body + callout side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
+            Fire, flood, and drought risk interaction, energy independence potential, and practical risk implications will appear here once narratives are generated.
+          </p>
+        )}
+
+        {narratives?.callout ? (
+          <div className="border-l-[6px] border-brand-terracotta pl-6">
+            <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+              &ldquo;{narratives.callout}&rdquo;
+            </blockquote>
+          </div>
+        ) : (
+          <div className="border-l-[6px] border-brand-sage/20 pl-6">
+            <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+              &ldquo;Resilience narrative pending &mdash; generate narratives to populate this callout.&rdquo;
+            </blockquote>
+          </div>
+        )}
+      </div>
 
       {/* 10.1 Risk Identification */}
       <SubsectionHeader id="10.1" title="Risk Identification" sources={["Pipeline"]} />
       <div className="grid grid-cols-3 gap-8 mb-8">
-        <Gauge value={fire.riskScore} max={5} color="terracotta" label="Fire Risk" />
-        <Gauge value={flood.riskScore} max={5} color="amber" label="Flood Risk" />
-        <Gauge value={drought.riskScore} max={5} color="sage" label="Drought Risk" />
+        <RiskBar label="Fire Risk" value={fire.riskScore} max={5} barColor="bg-brand-terracotta" />
+        <RiskBar label="Flood Risk" value={flood.riskScore} max={5} barColor="bg-brand-amber" />
+        <RiskBar label="Drought Risk" value={drought.riskScore} max={5} barColor="bg-brand-sage" />
       </div>
       <div className="grid grid-cols-3 gap-8 mb-6">
         <div className="text-center"><RiskBadge level={fire.riskLevel} /></div>
@@ -222,19 +271,6 @@ export function RisksResilienceSection({
 
       {/* 10.6 Resilience Capacity */}
       <SubsectionHeader id="10.6" title="Resilience Capacity" sources={["Computed"]} />
-      {narratives?.callout ? (
-        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
-          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-            &ldquo;{narratives.callout}&rdquo;
-          </blockquote>
-        </div>
-      ) : (
-        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
-          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
-            &ldquo;Resilience narrative pending &mdash; generate narratives to populate this callout.&rdquo;
-          </blockquote>
-        </div>
-      )}
       <PlaceholderBox
         id="10.6"
         title="Resilience capacity metrics"
@@ -294,8 +330,13 @@ export function RisksResilienceSection({
 
       {/* 10.7 Energy Independence Potential */}
       <SubsectionHeader id="10.7" title="Energy Independence Potential" sources={["Pipeline"]} />
-      <div className="flex justify-center mb-6">
-        <Gauge value={energy.independenceScore} max={10} color="forest" label="Energy Independence" />
+      <div className="mb-8 max-w-[280px]">
+        <RiskBar
+          label="Energy Independence"
+          value={energy.independenceScore}
+          max={10}
+          barColor="bg-brand-forest"
+        />
       </div>
       <DataTable
         headers={["Energy Source", "Potential", "Detail"]}
