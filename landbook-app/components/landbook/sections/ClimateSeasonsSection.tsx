@@ -64,7 +64,7 @@ function ClimateChart({
     <section className="mb-12">
       <div className="relative p-0 flex flex-col justify-end h-[360px]">
         {/* Legend */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2 z-20">
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
           <div className="flex items-center gap-2">
             <div className="w-6 h-0.5 bg-[#D4A574]" />
             <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">High Temp</span>
@@ -241,9 +241,6 @@ export function ClimateSeasonsSection({
                     &ldquo;Climate narrative pending &mdash; generate narratives to populate this callout with an AI-written regional observation.&rdquo;
                   </blockquote>
                 )}
-                <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
-                  &mdash; Regional observation
-                </p>
               </div>
             </div>
           </div>
@@ -368,67 +365,69 @@ export function ClimateSeasonsSection({
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-10 font-body">
           CLIMATE TRENDS
         </h3>
-        <div className="grid grid-cols-2 gap-8 mb-12">
-          <div className="space-y-1">
-            <div className="text-4xl font-bold text-brand-forest font-serif">
-              {trends.tempPerDecade != null ? (
-                <>
-                  {trends.tempPerDecade > 0 ? "+" : ""}
-                  {trends.tempPerDecade.toFixed(2)}
-                  <span className="text-xl ml-1">&deg;C</span>
-                </>
-              ) : (
-                "\u2014"
-              )}
-            </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
-              Temp Trend / Decade
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+          {/* Left: narrative body */}
+          <div className="space-y-6">
+            {narratives?.intro ? (
+              narratives.intro
+                .split(/\n\n+/)
+                .filter(Boolean)
+                .map((p, i) => (
+                  <p
+                    key={i}
+                    className="text-[14px] leading-relaxed text-on-surface font-body text-justify"
+                  >
+                    {p}
+                  </p>
+                ))
+            ) : (
+              <>
+                <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
+                  Historical analysis of temperature and precipitation trends will appear here once narratives are generated. This section characterizes the climate zone, growing season implications, and energy potential from solar and wind resources.
+                </p>
+                <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
+                  Elevation-driven microclimates and their management implications will be explored, including wind exposure variations, evapotranspiration gradients, and seasonal grazing or planting considerations specific to this property.
+                </p>
+              </>
+            )}
           </div>
-          <div className="space-y-1">
-            <div className="text-4xl font-bold text-brand-forest font-serif">
-              {trends.precipPerDecade != null ? (
-                <>
-                  {trends.precipPerDecade > 0 ? "+" : ""}
-                  {trends.precipPerDecade.toFixed(1)}
-                  <span className="text-xl ml-1">mm</span>
-                </>
-              ) : (
-                "\u2014"
-              )}
+
+          {/* Right: hero figures */}
+          <div className="space-y-10">
+            <div className="space-y-2">
+              <div className="text-5xl font-bold text-brand-forest font-serif leading-none tracking-tighter">
+                {trends.tempPerDecade != null ? (
+                  <>
+                    {trends.tempPerDecade > 0 ? "+" : ""}
+                    {trends.tempPerDecade.toFixed(2)}
+                    <span className="text-2xl ml-1">&deg;C</span>
+                  </>
+                ) : (
+                  "\u2014"
+                )}
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
+                Temp Trend / Decade
+              </div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
-              Precip Trend / Decade
+            <div className="space-y-2">
+              <div className="text-5xl font-bold text-brand-forest font-serif leading-none tracking-tighter">
+                {trends.precipPerDecade != null ? (
+                  <>
+                    {trends.precipPerDecade > 0 ? "+" : ""}
+                    {trends.precipPerDecade.toFixed(1)}
+                    <span className="text-2xl ml-1">mm</span>
+                  </>
+                ) : (
+                  "\u2014"
+                )}
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-brand-sage">
+                Precip Trend / Decade
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Narrative paragraphs — split intro on double-newline for two-column layout */}
-        {narratives?.intro ? (() => {
-          const paragraphs = narratives.intro.split(/\n\n+/).filter(Boolean);
-          return paragraphs.length > 1 ? (
-            <div className="columns-1 md:columns-2 gap-12 space-y-6">
-              {paragraphs.map((p, i) => (
-                <p key={i} className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
-                  {p}
-                </p>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify max-w-prose">
-              {paragraphs[0]}
-            </p>
-          );
-        })() : (
-          <div className="columns-1 md:columns-2 gap-12 space-y-6">
-            <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
-              Historical analysis of temperature and precipitation trends will appear here once narratives are generated. This section characterizes the climate zone, growing season implications, and energy potential from solar and wind resources.
-            </p>
-            <p className="text-[14px] leading-relaxed text-brand-sage/30 font-body text-justify italic">
-              Elevation-driven microclimates and their management implications will be explored, including wind exposure variations, evapotranspiration gradients, and seasonal grazing or planting considerations specific to this property.
-            </p>
-          </div>
-        )}
       </section>
     </section>
   );
