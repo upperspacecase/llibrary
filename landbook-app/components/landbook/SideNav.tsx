@@ -2,6 +2,112 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const FEEDBACK_EMAIL = "hi@landlibrary.co";
+
+function FeedbackModal({
+  propertyName,
+  onClose,
+}: {
+  propertyName: string;
+  onClose: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const subjectLine = subject.trim() || `LandBook feedback — ${propertyName}`;
+    const lines = [
+      message.trim(),
+      "",
+      "—",
+      `Property: ${propertyName}`,
+      name && `From: ${name}`,
+      email && `Reply-to: ${email}`,
+    ].filter(Boolean);
+    const body = lines.join("\n");
+    window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${encodeURIComponent(subjectLine)}&body=${encodeURIComponent(body)}`;
+    onClose();
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-full max-w-md p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-serif text-xl text-brand-forest">Support &amp; Feedback</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-500 hover:text-brand-forest"
+            aria-label="Close"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p className="text-xs text-brand-sage mb-4">
+          Goes to <span className="font-mono">{FEEDBACK_EMAIL}</span>. Opens your mail client with the message pre-filled.
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-3 text-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name (optional)"
+              className="border border-brand-sage/40 px-3 py-2 focus:outline-none focus:border-brand-forest"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Reply-to email (optional)"
+              className="border border-brand-sage/40 px-3 py-2 focus:outline-none focus:border-brand-forest"
+            />
+          </div>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Subject"
+            className="w-full border border-brand-sage/40 px-3 py-2 focus:outline-none focus:border-brand-forest"
+          />
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="What would you like to share?"
+            required
+            rows={6}
+            className="w-full border border-brand-sage/40 px-3 py-2 focus:outline-none focus:border-brand-forest resize-none"
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-brand-forest"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm bg-brand-forest text-white hover:bg-brand-forest/90"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 const NAV_ITEMS = [
   { id: "overview", icon: "description", label: "Overview" },
   { id: "region-ecosystem", icon: "location_on", label: "Region & Ecosystem" },
@@ -21,6 +127,7 @@ const NAV_ITEMS = [
 
 export function SideNav({ propertyName }: { propertyName: string }) {
   const [activeId, setActiveId] = useState(NAV_ITEMS[0].id);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -98,17 +205,24 @@ export function SideNav({ propertyName }: { propertyName: string }) {
           })}
         </nav>
 
-        {/* Support */}
+        {/* Support & Feedback */}
         <div className="px-6 py-4 mt-auto">
-          <a
-            href="mailto:hi@landlibrary.co"
+          <button
+            type="button"
+            onClick={() => setFeedbackOpen(true)}
             className="flex items-center gap-2 text-gray-500 hover:text-brand-forest transition-colors"
           >
             <span className="material-symbols-outlined text-lg">mail</span>
-            Support
-          </a>
+            Support &amp; Feedback
+          </button>
         </div>
       </div>
+      {feedbackOpen && (
+        <FeedbackModal
+          propertyName={propertyName}
+          onClose={() => setFeedbackOpen(false)}
+        />
+      )}
     </aside>
   );
 }
