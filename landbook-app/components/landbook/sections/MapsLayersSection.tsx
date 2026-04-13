@@ -111,44 +111,6 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
           </div>
         </div>
 
-        {/* Decorative zoom / layer controls */}
-        <div className="absolute top-6 right-6 flex flex-col gap-2">
-          <div className="bg-white/90 p-2 shadow-sm flex flex-col gap-2 border border-outline-variant/30">
-            <span className="material-symbols-outlined text-slate-700 text-lg">add</span>
-            <div className="h-[0.5px] w-full bg-slate-200" />
-            <span className="material-symbols-outlined text-slate-700 text-lg">remove</span>
-          </div>
-          <div className="bg-white/90 p-2 shadow-sm border border-outline-variant/30">
-            <span className="material-symbols-outlined text-slate-700 text-lg">layers</span>
-          </div>
-        </div>
-
-        {/* Spatial legend */}
-        <div className="absolute bottom-6 left-6 bg-white/90 p-4 border border-outline-variant/30 max-w-xs">
-          <h5 className="text-[10px] font-bold uppercase tracking-widest text-brand-forest mb-2 font-body">
-            Spatial Legend
-          </h5>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-brand-forest/20 border border-brand-forest" />
-              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
-                Core Protection Area
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-1 bg-brand-forest" />
-              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
-                Regional Linkage Corridor
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-slate-800" />
-              <span className="text-[9px] text-slate-600 uppercase font-medium font-body">
-                Strategic Infrastructure Node
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── Zone B: Spatial Context ───────────────────────────── */}
