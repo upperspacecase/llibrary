@@ -28,15 +28,32 @@ export function FutureScenariosSection({
     <section id="future-scenarios">
       <SectionTitle title="Future Scenarios" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          Revenue scenario comparison, investment-return logic, and carbon credit opportunity will appear here once narratives are generated.
-        </p>
-      )}
+      {/* Body + callout side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
+            Revenue scenario comparison, investment-return logic, and carbon credit opportunity will appear here once narratives are generated.
+          </p>
+        )}
+
+        {narratives?.callout ? (
+          <div className="border-l-[6px] border-brand-terracotta pl-6">
+            <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+              &ldquo;{narratives.callout}&rdquo;
+            </blockquote>
+          </div>
+        ) : (
+          <div className="border-l-[6px] border-brand-sage/20 pl-6">
+            <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+              &ldquo;Scenario narrative pending &mdash; generate narratives to populate this callout.&rdquo;
+            </blockquote>
+          </div>
+        )}
+      </div>
 
       {/* 11.1 Scenario Framework */}
       <SubsectionHeader id="11.1" title="Scenario Framework" sources={["Computed"]} />
@@ -132,20 +149,6 @@ export function FutureScenariosSection({
           ]}
         />
       </PlaceholderBox>
-
-      {narratives?.callout ? (
-        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
-          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-            &ldquo;{narratives.callout}&rdquo;
-          </blockquote>
-        </div>
-      ) : (
-        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
-          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
-            &ldquo;Scenario narrative pending &mdash; generate narratives to populate this callout.&rdquo;
-          </blockquote>
-        </div>
-      )}
 
       <Hairline />
 
