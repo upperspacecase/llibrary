@@ -1,6 +1,6 @@
 import type { Species, Agriculture, Regional, Scores, Narratives } from "@/lib/types";
 import {
-  SectionTitle, KPI, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
+  SectionTitle, KPI, DataTable, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -106,7 +106,7 @@ export function BiodiversityHabitatSection({
             </p>
           )}
         </div>
-        <div className="border-l-4 border-brand-forest pl-6 py-2">
+        <div className="border-l-4 border-brand-terracotta pl-6 py-2">
           {narratives?.callout ? (
             <blockquote className="font-serif italic text-lg text-brand-forest leading-relaxed">
               &ldquo;{narratives.callout}&rdquo;
@@ -288,7 +288,7 @@ export function BiodiversityHabitatSection({
       <Hairline />
       */}
 
-      {/* Habitat Typology */}
+      {/* Habitat Typology — hidden until Natura 2000 data is wired in
       <SubsectionHeader id="5.2" title="Habitat Typology" sources={["Pipeline"]} />
       {areas.length > 0 ? (
         <DataTable
@@ -300,18 +300,14 @@ export function BiodiversityHabitatSection({
       )}
 
       <Hairline />
+      */}
 
       {/* 5.3 Ecological Resilience Assessment — restyled shell over existing Ecological Function data */}
       <section className="mb-20">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
-              Ecological Resilience Assessment
-            </h3>
-          </div>
-          <span className="border border-brand-forest text-brand-forest text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            Derived
-          </span>
+        <div className="mb-12">
+          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
+            Ecological Resilience Assessment
+          </h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
           <div className="flex flex-col justify-center">
@@ -374,11 +370,6 @@ export function BiodiversityHabitatSection({
 
       {/* 5.4 Habitat Restoration Potential — restyled shell over existing Conservation Assessment data */}
       <section className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="bg-brand-terracotta/10 text-brand-terracotta text-[9px] font-bold px-2 py-0.5 tracking-widest uppercase">
-            Restoration Uplift
-          </span>
-        </div>
         <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">Habitat Restoration Potential</h3>
         <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
           Conservation Assessment &mdash; derived from biodiversity score + protected area status
@@ -427,15 +418,10 @@ export function BiodiversityHabitatSection({
 
       {/* 5.5 Audit Methodology */}
       <section className="mb-20">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
-              Audit Methodology
-            </h3>
-          </div>
-          <span className="bg-brand-forest text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            Multi-Source
-          </span>
+        <div className="mb-8">
+          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
+            Audit Methodology
+          </h3>
         </div>
         <div className="p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20 space-y-4">
           <h4 className="font-serif text-lg font-bold text-brand-forest">Verification Frameworks</h4>
@@ -484,15 +470,10 @@ export function BiodiversityHabitatSection({
 
       {/* 5.6 Indicator Confidence & Sensitivity */}
       <section className="mb-20">
-        <div className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-4">
-            <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
-              Indicator Confidence &amp; Sensitivity
-            </h3>
-          </div>
-          <span className="bg-brand-terracotta text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase">
-            Partial
-          </span>
+        <div className="mb-12">
+          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
+            Indicator Confidence &amp; Sensitivity
+          </h3>
         </div>
         <PlaceholderBox
           id="5.6"
