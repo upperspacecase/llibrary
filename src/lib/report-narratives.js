@@ -131,7 +131,8 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
   },
   "valueBenefits": {
     "intro": "2 paragraphs, MAX 120 WORDS. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
-    "callout": "1 sentence capturing the economic significance."
+    "callout": "1 sentence capturing the economic significance.",
+    "assetCallout": "1 sentence about the 30-year NPV and what it represents as a long-term asset stock value."
   },
   "landUse": {
     "intro": "2 paragraphs, MAX 120 WORDS. Current land cover and what it supports. Production potential and suitable systems.",
@@ -209,7 +210,7 @@ const EMPTY_NARRATIVES_V2 = {
   landWater: { intro: '', callout: '' },
   biodiversity: { intro: '', callout: '' },
   climateSeasons: { intro: '', callout: '' },
-  valueBenefits: { intro: '', callout: '' },
+  valueBenefits: { intro: '', callout: '', assetCallout: '' },
   landUse: { intro: '', callout: '' },
   historyTrends: { intro: '', callout: '' },
   risksResilience: { intro: '', callout: '', recommendation: '' },
