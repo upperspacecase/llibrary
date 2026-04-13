@@ -397,10 +397,12 @@ export function OverviewSection({
             const totalApis = apiKeys.length;
             const verifiedApis = apiKeys.filter((k) => apiStatus[k] === "ok").length;
 
-            const aggregatedFields = c.verified + c.computed + c.unverified;
-            const denom = aggregatedFields + c.ai;
-            const aggregatedPct = denom > 0 ? Math.round((aggregatedFields / denom) * 100) : 0;
-            const aiPct = 100 - aggregatedPct;
+            const denom = c.verified + c.computed + c.unverified + c.ai;
+            const pct = (n: number) => (denom > 0 ? Math.round((n / denom) * 100) : 0);
+            const aggregatedPct = pct(c.verified);
+            const computedPct = pct(c.computed);
+            const syntheticPct = pct(c.unverified);
+            const aiPct = 100 - aggregatedPct - computedPct - syntheticPct;
             const unc = meta.uncertainty;
 
             const segments = [
@@ -411,9 +413,21 @@ export function OverviewSection({
                 desc: `Verified API data from ${verifiedApis} of ${totalApis} sources.`,
               },
               {
+                label: "Computed",
+                pct: computedPct,
+                color: "bg-brand-sage",
+                desc: "Algorithmically derived from verified API data.",
+              },
+              {
+                label: "Synthetic",
+                pct: syntheticPct,
+                color: "bg-brand-sage/50",
+                desc: "Modelled or interpolated values where direct data is unavailable.",
+              },
+              {
                 label: "AI Inference",
                 pct: aiPct,
-                color: "bg-brand-sage",
+                color: "bg-brand-sage/20",
                 desc: "AI-generated narrative synthesis across the aggregated layers.",
               },
             ];
