@@ -1,6 +1,6 @@
 import type { Economics, Scores, Narratives, Meta } from "@/lib/types";
 import {
-  SectionTitle, Hairline, DataTable, PullQuote,
+  SectionTitle, DataTable,
   SubsectionHeader, Treemap, KPI,
 } from "@/components/river";
 
@@ -37,7 +37,7 @@ export function ValueBenefitsSection({
     { name: "Water", value: water, color: "bg-brand-sage" },
     { name: "Regulating", value: regulation + carbon, color: "bg-brand-terracotta" },
     { name: "Soil", value: soil, color: "bg-brand-amber" },
-    { name: "Cultural", value: cultural, color: "bg-brand-charcoal" },
+    { name: "Cultural", value: cultural, color: "bg-brand-forest/70" },
   ];
 
   // Table: keep carbon separate with descriptive labels
@@ -57,7 +57,7 @@ export function ValueBenefitsSection({
       <div className="mb-20 grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
         <div>
           <span className="text-sm font-body text-brand-forest/70 mb-2 block">
-            Annual Natural Value
+            Annual Natural Capital
           </span>
           <h2 className="font-serif font-bold text-brand-forest leading-tight tracking-tighter text-5xl mb-8">
             {economics.totalValue != null
@@ -79,17 +79,13 @@ export function ValueBenefitsSection({
         )}
       </div>
 
-      {/* ── Composition of Services (Treemap) ── */}
+      {/* ── Value of Services (Treemap) ── */}
       <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body">
-        Composition of Services
+        Value of Services
       </h4>
       <Treemap segments={treemapSegments.filter((s) => s.value > 0)} />
 
-      {/* ── Annual Flow Breakdown ── */}
       <div className="mb-20">
-        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body">
-          Annual Flow Breakdown
-        </h3>
         <DataTable
           headers={["Service Class", "Value (\u20ac)"]}
           rows={tableServices
@@ -101,10 +97,10 @@ export function ValueBenefitsSection({
         />
       </div>
 
-      {/* ── 7.3 Asset Stock Valuation ── */}
+      {/* ── 7.3 Long Term Value ── */}
       <div className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
-          Asset Stock Valuation
+          Long Term Value
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
@@ -192,6 +188,9 @@ export function ValueBenefitsSection({
             label="Sequestration Rate"
           />
         </div>
+        <p className="text-[11px] text-brand-sage leading-relaxed italic font-body">
+          Valuations are updated quarterly based on regional biomass fluctuations and carbon market trends.
+        </p>
       </div>
 
       {/* ── 7.6 Valuation Methodology ── */}
@@ -331,15 +330,6 @@ export function ValueBenefitsSection({
         )}
       </div>
 
-      {/* ── Footer ── */}
-      <div className="flex flex-col items-center pb-10 mt-auto border-t-[0.5pt] border-brand-sage/50 pt-16">
-        <div className="h-[0.5px] w-full max-w-[480px] bg-brand-sage my-4 opacity-50" />
-        <div className="w-full max-w-[480px] space-y-4 mt-8 text-center">
-          <p className="text-[11px] text-brand-sage leading-relaxed italic font-body">
-            Valuations are updated quarterly based on regional biomass fluctuations and carbon market trends.
-          </p>
-        </div>
-      </div>
     </section>
   );
 }
