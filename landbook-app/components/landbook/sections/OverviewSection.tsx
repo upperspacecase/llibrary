@@ -161,9 +161,6 @@ export function OverviewSection({
               <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
                 &ldquo;{callout || `A ${property.area != null ? `${property.area.toFixed(1)} ha` : ""} natural capital assessment.`}&rdquo;
               </blockquote>
-              <p className="mt-4 text-xs font-bold tracking-widest text-brand-sage uppercase font-body">
-                &mdash; {intro ? "Executive Summary" : "Property Overview"}
-              </p>
             </div>
           </div>
         </div>
@@ -200,7 +197,7 @@ export function OverviewSection({
             </span>
             <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
               {formatScore(scores.biodiversity)}
-              <span className="text-xl ml-1">/10</span>
+              <span className="text-xl ml-1 text-brand-sage">/10</span>
             </p>
           </div>
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
@@ -209,7 +206,7 @@ export function OverviewSection({
             </span>
             <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
               {formatScore(scores.carbon)}
-              <span className="text-xl ml-1">/10</span>
+              <span className="text-xl ml-1 text-brand-sage">/10</span>
             </p>
           </div>
         </div>
