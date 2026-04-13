@@ -313,7 +313,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
         {/* Footer */}
         <div className="max-w-[800px] mx-auto pt-8 pb-4">
           <div className="flex justify-between text-[10px] text-brand-sage">
-            <span>LandBook &middot; Natural Capital Assessment</span>
+            <span>LandBook &mdash; Notes from the field.</span>
             <span>{data.property.name}</span>
           </div>
         </div>
