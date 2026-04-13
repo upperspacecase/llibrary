@@ -71,13 +71,17 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
 
       {/* ── Zone A: Hero Map ──────────────────────────────────── */}
       <div className="relative w-full h-[600px] bg-white border border-outline-variant/20 overflow-hidden mb-16">
-        {/* Background satellite image */}
+        {/* Background — same satellite image as Overview hero */}
         <div className="absolute inset-0 opacity-40">
-          <img
-            className="w-full h-full object-cover"
-            src="/sample-maps/photo_2026-04-10_16-41-16.jpg"
-            alt="Regional satellite overview"
-          />
+          {maps.satellite ? (
+            <img
+              className="w-full h-full object-cover filter saturate-[0.85]"
+              src={maps.satellite}
+              alt={`${property.name} satellite overview`}
+            />
+          ) : (
+            <div className="w-full h-full bg-brand-sage/10" />
+          )}
         </div>
 
         {/* Distance ring overlays */}
@@ -161,7 +165,7 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
         <div className="md:col-span-8">
           <div className="space-y-6">
             {narratives?.intro ? (
-              <p className="text-on-surface text-lg leading-relaxed font-body">
+              <p className="text-[14px] leading-relaxed text-on-surface font-body text-justify">
                 {narratives.intro}
               </p>
             ) : (
@@ -174,6 +178,17 @@ export function MapsLayersSection({ maps, property, narratives }: MapsLayersSect
       </div>
 
       {/* ── Zone C: 3×3 Technical Map Grid ────────────────────── */}
+      <div className="mb-8">
+        <h3 className="font-serif text-3xl text-brand-forest leading-tight mb-3">
+          Available Layers
+        </h3>
+        <div className="h-1 w-12 bg-brand-forest mb-5" />
+        <p className="text-[14px] leading-relaxed text-on-surface font-body max-w-[640px]">
+          The following maps and layers are available and can enhance the insights of
+          your landbook. Please submit what maps you already have access to and consider
+          hiring 3rd party providers to map your land.
+        </p>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-20">
         {TECHNICAL_MAPS.map((map) => (
           <div key={map.title} className="group flex flex-col">
