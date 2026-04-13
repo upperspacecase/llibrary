@@ -1,12 +1,28 @@
 import type { Terrain, Soil, Geology, Water, Climate, RiskData, Narratives } from "@/lib/types";
 import {
-  SectionTitle, KPI, Gauge, Hairline, PercentileCard, DataTable, RiskBadge,
-  PullQuote, SubsectionHeader, PlaceholderBox,
+  SectionTitle, KPI, Hairline, PercentileCard, DataTable, RiskBadge,
+  SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
   if (v == null || v === "") return "\u2014";
   return String(v);
+}
+
+const ASPECT_SHORTHAND: Record<string, string> = {
+  "north-facing": "N.",
+  "northeast-facing": "N.E.",
+  "east-facing": "E.",
+  "southeast-facing": "S.E.",
+  "south-facing": "S.",
+  "southwest-facing": "S.W.",
+  "west-facing": "W.",
+  "northwest-facing": "N.W.",
+};
+
+function aspectShort(value: string | null): string | null {
+  if (!value) return value;
+  return ASPECT_SHORTHAND[value.toLowerCase()] ?? value;
 }
 
 export function LandWaterSection({
@@ -30,22 +46,39 @@ export function LandWaterSection({
     <section id="land-water">
       <SectionTitle title="Land & Water" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          Terrain, geology, soil, and water resource analysis will appear here once narratives are generated.
-        </p>
-      )}
+      {/* Body + callout side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
+            Terrain, geology, soil, and water resource analysis will appear here once narratives are generated.
+          </p>
+        )}
+
+        {narratives?.callout ? (
+          <div className="border-l-[6px] border-brand-terracotta pl-6">
+            <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+              &ldquo;{narratives.callout}&rdquo;
+            </blockquote>
+          </div>
+        ) : (
+          <div className="border-l-[6px] border-brand-sage/20 pl-6">
+            <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+              &ldquo;Land &amp; water narrative pending &mdash; generate narratives to populate this callout.&rdquo;
+            </blockquote>
+          </div>
+        )}
+      </div>
 
       {/* 4.1 Terrain Analysis */}
       <SubsectionHeader id="4.1" title="Terrain Analysis" sources={["Pipeline"]} />
       <div className="grid grid-cols-4 gap-8 mb-8">
         <KPI value={terrain.elevation} unit="m" label="Elevation" />
         <KPI value={terrain.slope} unit="%" label="Slope" />
-        <KPI value={terrain.aspect} label="Aspect" />
+        <KPI value={aspectShort(terrain.aspect)} label="Aspect" />
         <KPI value={terrain.range} unit="m" label="Relief" />
       </div>
       {terrain.slope != null && (
@@ -168,8 +201,22 @@ export function LandWaterSection({
 
       {/* 4.6 Water Security Assessment */}
       <SubsectionHeader id="4.6" title="Water Security Assessment" sources={["Computed"]} />
-      <div className="flex justify-center mb-6">
-        <Gauge value={water.securityIndex} max={10} color="forest" label="Water Security Index" />
+      <div className="mb-8 max-w-[280px]">
+        <div className="flex justify-between items-end mb-2">
+          <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+            Water Security
+          </p>
+          <span className="text-xl font-bold font-serif text-brand-forest">
+            {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
+          </span>
+        </div>
+        <div className="h-2 w-full bg-brand-sage/20">
+          <div
+            className="h-full bg-brand-forest"
+            style={{ width: `${Math.min((water.securityIndex || 0) * 10, 100)}%` }}
+          />
+        </div>
+        <p className="text-[11px] text-brand-sage mt-3 italic font-body">Catchment Resilience</p>
       </div>
       <PlaceholderBox
         id="4.6"
@@ -188,20 +235,6 @@ export function LandWaterSection({
           ]}
         />
       </PlaceholderBox>
-
-      {narratives?.callout ? (
-        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-8">
-          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-            &ldquo;{narratives.callout}&rdquo;
-          </blockquote>
-        </div>
-      ) : (
-        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-8">
-          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
-            &ldquo;Land &amp; water narrative pending &mdash; generate narratives to populate this callout.&rdquo;
-          </blockquote>
-        </div>
-      )}
     </section>
   );
 }
