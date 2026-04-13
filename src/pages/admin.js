@@ -374,6 +374,58 @@ function renderTable() {
 
 // ---- Expandable Detail Panel ----
 
+// Per-source status list. Persistent — derived from server data on every render.
+function renderSourceList(obs) {
+    if (!obs || !Array.isArray(obs.sources) || obs.sources.length === 0) {
+        return '';
+    }
+    const rows = obs.sources.map(s => {
+        const ok = s.status === 'ok';
+        const cls = ok ? 'detail-source-ok' : 'detail-source-fail';
+        const icon = ok ? '✓' : '⚠';
+        const errText = !ok && s.error ? ` <span class="detail-source-err">${escapeHtml(s.error)}</span>` : '';
+        const group = s.group ? ` <span class="detail-source-group">${escapeHtml(s.group)}</span>` : '';
+        return `<li class="${cls}"><span class="detail-source-icon">${icon}</span><span class="detail-source-label">${escapeHtml(s.label)}</span>${group}${errText}</li>`;
+    }).join('');
+    return `
+        <details class="detail-breakdown">
+            <summary>Per-source breakdown (${obs.ok}/${obs.total})</summary>
+            <ul class="detail-source-list">${rows}</ul>
+        </details>`;
+}
+
+// Per-section narrative status with expand-to-preview.
+function renderNarrativeList(report) {
+    if (!report || !report.sections || Object.keys(report.sections).length === 0) {
+        return '';
+    }
+    const entries = Object.entries(report.sections);
+    let totalFilled = 0, totalSlots = 0;
+    const sections = entries.map(([key, sec]) => {
+        totalFilled += sec.filled;
+        totalSlots += sec.total;
+        const complete = sec.filled === sec.total && sec.total > 0;
+        const cls = complete ? 'detail-section-ok' : (sec.filled === 0 ? 'detail-section-empty' : 'detail-section-partial');
+        const icon = complete ? '✓' : (sec.filled === 0 ? '✗' : '⚠');
+        const slots = Object.entries(sec.slots).map(([slotKey, slot]) => {
+            if (!slot.filled) {
+                return `<div class="detail-slot detail-slot-empty"><span class="detail-slot-key">${escapeHtml(slotKey)}</span><span class="detail-slot-meta">empty</span></div>`;
+            }
+            return `<div class="detail-slot"><span class="detail-slot-key">${escapeHtml(slotKey)}</span><span class="detail-slot-meta">${slot.words}w</span><div class="detail-slot-text">${escapeHtml(slot.text)}</div></div>`;
+        }).join('');
+        return `
+            <details class="detail-section ${cls}">
+                <summary><span class="detail-section-icon">${icon}</span><span class="detail-section-key">${escapeHtml(key)}</span><span class="detail-section-count">${sec.filled}/${sec.total}</span></summary>
+                <div class="detail-section-body">${slots}</div>
+            </details>`;
+    }).join('');
+    return `
+        <details class="detail-breakdown" open>
+            <summary>Per-section breakdown (${totalFilled}/${totalSlots} slots filled)</summary>
+            <div class="detail-section-list">${sections}</div>
+        </details>`;
+}
+
 function renderDetailPanel(landbookId, row, colSpan) {
     const ps = pipelineStatusIndex[landbookId] || {};
     const obs = ps.observations;
@@ -437,6 +489,7 @@ function renderDetailPanel(landbookId, row, colSpan) {
                         ${hasData ? '↻ Re-fetch Data' : '▶ Fetch Data'}
                     </button>
                     <div class="detail-action-result" id="result-fetch-${escapeHtml(landbookId)}"></div>
+                    ${renderSourceList(obs)}
                 </div>
                 <!-- Generate Narratives -->
                 <div class="detail-card">
@@ -457,6 +510,7 @@ function renderDetailPanel(landbookId, row, colSpan) {
                         ${rep ? '↻ Regenerate Narratives' : '▶ Generate Narratives'}
                     </button>
                     <div class="detail-action-result" id="result-nar-${escapeHtml(landbookId)}"></div>
+                    ${renderNarrativeList(rep)}
                 </div>
                 <!-- Facts Summary -->
                 <div class="detail-card">
@@ -1140,6 +1194,144 @@ style.textContent = `
         color: #7c3aed;
         font-weight: 600;
         margin-top: 4px;
+    }
+    .detail-breakdown {
+        margin-top: 10px;
+        border-top: 1px solid var(--border);
+        padding-top: 8px;
+    }
+    .detail-breakdown > summary {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        padding: 4px 0;
+        list-style: none;
+        user-select: none;
+    }
+    .detail-breakdown > summary::-webkit-details-marker { display: none; }
+    .detail-breakdown > summary::before {
+        content: "▸ ";
+        display: inline-block;
+        transition: transform 0.15s;
+        color: var(--muted);
+    }
+    .detail-breakdown[open] > summary::before {
+        transform: rotate(90deg);
+    }
+    .detail-source-list {
+        list-style: none;
+        margin: 6px 0 0;
+        padding: 0;
+        font-size: 11px;
+    }
+    .detail-source-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        padding: 3px 0;
+        border-bottom: 1px dotted var(--border);
+        line-height: 1.4;
+    }
+    .detail-source-list li:last-child { border-bottom: none; }
+    .detail-source-icon {
+        font-weight: 600;
+        width: 12px;
+        flex-shrink: 0;
+    }
+    .detail-source-ok .detail-source-icon { color: #1b5e20; }
+    .detail-source-fail .detail-source-icon { color: #c62828; }
+    .detail-source-label {
+        font-weight: 500;
+        color: var(--black);
+    }
+    .detail-source-group {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        background: var(--cream);
+        padding: 1px 5px;
+        border-radius: 2px;
+    }
+    .detail-source-err {
+        color: #c62828;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 10px;
+        margin-left: auto;
+    }
+    .detail-section-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+    }
+    .detail-section {
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        background: #fff;
+    }
+    .detail-section > summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        font-size: 11px;
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+    }
+    .detail-section > summary::-webkit-details-marker { display: none; }
+    .detail-section-icon {
+        width: 14px;
+        text-align: center;
+        font-weight: 600;
+    }
+    .detail-section-ok .detail-section-icon { color: #1b5e20; }
+    .detail-section-partial .detail-section-icon { color: #b8860b; }
+    .detail-section-empty .detail-section-icon { color: #c62828; }
+    .detail-section-key {
+        font-weight: 600;
+        color: var(--black);
+        flex: 1;
+    }
+    .detail-section-count {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 10px;
+        color: var(--muted);
+    }
+    .detail-section-body {
+        padding: 4px 10px 10px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .detail-slot {
+        padding: 6px 0 0;
+    }
+    .detail-slot-key {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        font-size: 10px;
+        color: var(--muted);
+        margin-right: 6px;
+    }
+    .detail-slot-meta {
+        font-size: 10px;
+        color: var(--muted);
+    }
+    .detail-slot-text {
+        font-size: 12px;
+        color: var(--black);
+        margin-top: 2px;
+        line-height: 1.45;
+    }
+    .detail-slot-empty .detail-slot-key {
+        color: #c62828;
+    }
+    .detail-slot-empty .detail-slot-meta {
+        color: #c62828;
+        font-style: italic;
     }
     .detail-result-meta {
         color: var(--muted);

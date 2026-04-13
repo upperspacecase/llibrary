@@ -22,19 +22,15 @@ export default async function handler(req, res) {
             ),
             // 3-layer pipeline status (lightweight projections)
             getCollection('observations').then(c =>
-                c.aggregate([
-                    { $group: {
-                        _id: '$landbookId',
-                        total: { $sum: 1 },
-                        ok: { $sum: { $cond: [{ $eq: ['$status', 'ok'] }, 1, 0] } },
-                        failed: { $sum: { $cond: [{ $ne: ['$status', 'ok'] }, 1, 0] } },
-                        lastFetched: { $max: '$fetchedAt' },
-                    }},
-                ]).toArray()
+                c.find(
+                    {},
+                    { projection: { landbookId: 1, source: 1, status: 1, label: 1, group: 1, error: 1, fetchedAt: 1 } }
+                ).toArray()
             ).catch(() => []),
             getCollection('facts').then(c =>
                 c.find({}, { projection: { landbookId: 1, version: 1, updatedAt: 1 } }).toArray()
             ).catch(() => []),
+            // Latest report per landbook with full narratives so admin can preview per-section content
             getCollection('reports').then(c =>
                 c.aggregate([
                     { $sort: { version: -1 } },
@@ -43,6 +39,7 @@ export default async function handler(req, res) {
                         latestVersion: { $first: '$version' },
                         generatedAt: { $first: '$generatedAt' },
                         model: { $first: '$model' },
+                        narratives: { $first: '$narratives' },
                         totalVersions: { $sum: 1 },
                     }},
                 ]).toArray()
@@ -52,8 +49,36 @@ export default async function handler(req, res) {
         // Build pipeline status index keyed by landbookId
         const pipelineStatus = {};
         for (const obs of observations) {
-            if (!pipelineStatus[obs._id]) pipelineStatus[obs._id] = {};
-            pipelineStatus[obs._id].observations = { total: obs.total, ok: obs.ok, failed: obs.failed, lastFetched: obs.lastFetched };
+            const id = obs.landbookId;
+            if (!id) continue;
+            if (!pipelineStatus[id]) pipelineStatus[id] = {};
+            if (!pipelineStatus[id].observations) {
+                pipelineStatus[id].observations = { total: 0, ok: 0, failed: 0, lastFetched: null, sources: [] };
+            }
+            const ob = pipelineStatus[id].observations;
+            ob.total++;
+            if (obs.status === 'ok') ob.ok++;
+            else ob.failed++;
+            if (obs.fetchedAt && (!ob.lastFetched || obs.fetchedAt > ob.lastFetched)) {
+                ob.lastFetched = obs.fetchedAt;
+            }
+            ob.sources.push({
+                source: obs.source,
+                status: obs.status,
+                label: obs.label || obs.source,
+                group: obs.group || null,
+                error: obs.error || null,
+                fetchedAt: obs.fetchedAt || null,
+            });
+        }
+        // Sort source list per landbook: failed first, then by label
+        for (const id of Object.keys(pipelineStatus)) {
+            if (pipelineStatus[id].observations?.sources) {
+                pipelineStatus[id].observations.sources.sort((a, b) => {
+                    if ((a.status === 'ok') !== (b.status === 'ok')) return a.status === 'ok' ? 1 : -1;
+                    return (a.label || '').localeCompare(b.label || '');
+                });
+            }
         }
         for (const fact of facts) {
             if (!pipelineStatus[fact.landbookId]) pipelineStatus[fact.landbookId] = {};
@@ -61,7 +86,33 @@ export default async function handler(req, res) {
         }
         for (const rep of reports) {
             if (!pipelineStatus[rep._id]) pipelineStatus[rep._id] = {};
-            pipelineStatus[rep._id].report = { version: rep.latestVersion, generatedAt: rep.generatedAt, model: rep.model, totalVersions: rep.totalVersions };
+            // Summarize per-section fill: filled slots / total slots + sample preview
+            const sections = {};
+            const narr = rep.narratives || {};
+            for (const [sectionKey, slots] of Object.entries(narr)) {
+                if (!slots || typeof slots !== 'object') continue;
+                const slotSummaries = {};
+                let filled = 0;
+                let total = 0;
+                for (const [slotKey, val] of Object.entries(slots)) {
+                    const isFilled = typeof val === 'string' && val.trim().length > 0;
+                    total++;
+                    if (isFilled) filled++;
+                    slotSummaries[slotKey] = {
+                        filled: isFilled,
+                        text: isFilled ? val : '',
+                        words: isFilled ? val.trim().split(/\s+/).length : 0,
+                    };
+                }
+                sections[sectionKey] = { filled, total, slots: slotSummaries };
+            }
+            pipelineStatus[rep._id].report = {
+                version: rep.latestVersion,
+                generatedAt: rep.generatedAt,
+                model: rep.model,
+                totalVersions: rep.totalVersions,
+                sections,
+            };
         }
 
         return res.status(200).json({
