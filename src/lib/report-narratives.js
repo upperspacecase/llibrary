@@ -1,10 +1,16 @@
 /**
  * LandBook Report — AI Narrative Generation
- * Single batched Claude API call to generate all narrative slots
- * for the 12-section V2 report layout.
+ * Single batched Claude API call to generate all narrative slots.
+ *
+ * Slot shape is defined in landbook-app/lib/narrative-schema.js — the single
+ * source of truth for the prompt schema, the empty fallback, and the TS types.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  buildPromptSchema,
+  buildEmptyNarratives,
+} from '../../landbook-app/lib/narrative-schema.js';
 
 let _anthropic;
 function getClient() {
@@ -12,11 +18,14 @@ function getClient() {
   return _anthropic;
 }
 
+const EMPTY_NARRATIVES_V2 = buildEmptyNarratives();
+const PROMPT_SCHEMA = buildPromptSchema();
+
 /**
- * Generate narrative text matching the 12-section report layout.
+ * Generate narrative text for the report.
  *
  * @param {object} reportData - The canonical ReportData shape
- * @returns {object} NarrativesV2 shape
+ * @returns {{ narratives: object, usage: object | null, error: string | null }}
  */
 export async function generateNarrativesV2(reportData) {
   const p = reportData.property || {};
@@ -45,9 +54,9 @@ Write in the style of a Financial Times property assessment — authoritative, s
 ${missingFields ? `UNAVAILABLE DATA: ${missingFields}. Write around gaps naturally — do not reference missing values.\n` : ''}
 FORMATTING RULES:
 - First word of each narrative should be a strong, concrete word (not "The" / "This" / "Located") for drop-cap styling.
-- pullQuote: a single sentence, no quotation marks.
+- callout: a single sentence, no quotation marks.
 - recommendation: 1-2 actionable sentences specific to this property.
-- STRICT WORD LIMITS: each slot has a max word count. Stay within it.
+- STRICT WORD LIMITS: each slot has a MAX word count. Stay within it.
 
 ─── PROPERTY DATA ───
 Name: ${p.name || '?'} | Location: ${p.address || '?'}
@@ -99,70 +108,7 @@ Protected areas: ${(regional.protectedAreas || []).map(a => a.name).join(', ') |
 
 Generate a JSON object with EXACTLY these keys. Return ONLY valid JSON — no markdown fences, no explanation.
 
-Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) and a "callout" (a single punchy sentence displayed as a styled blockquote — NOT a repeat of the intro, something that stands alone and adds emphasis).
-
-{
-  "overview": {
-    "intro": "2-3 paragraphs, MAX 150 WORDS. Position the property within its bioregion. Highlight 2-3 key strengths from the data. Frame the investment profile using actual valuation numbers.",
-    "callout": "1 aspirational sentence about this specific property and its potential."
-  },
-  "regionEcosystem": {
-    "intro": "2 paragraphs, MAX 100 WORDS. Frame why bioregional context matters — comparing a property to its neighbours reveals hidden strengths and risks that raw numbers alone miss.",
-    "callout": "1 sentence about the property's position relative to its neighbours.",
-    "slopeDesc": "1-2 sentences, MAX 30 WORDS. What the slope grade means for access, erosion risk, and land use. Use the terrain.slope value.",
-    "slopeTip": "1 sentence, MAX 20 WORDS. A practical tip about the slope — terracing, drainage, machinery access. Omit key if not insightful.",
-    "waterDesc": "1-2 sentences, MAX 30 WORDS. Interpret the water security index — reliability of supply, drought resilience, irrigation potential.",
-    "waterTip": "1 sentence, MAX 20 WORDS. A practical insight about water on this property. Omit key if not insightful.",
-    "solarDesc": "1-2 sentences, MAX 30 WORDS. Interpret the solar score — what the exposure level means for energy generation or agriculture.",
-    "solarTip": "1 sentence, MAX 20 WORDS. A practical insight or trade-off about solar exposure. Omit key if not insightful.",
-    "treeCoverDesc": "1-2 sentences, MAX 30 WORDS. General statement about why tree cover matters for carbon, shade, and biodiversity — note that satellite canopy data is not yet available."
-  },
-  "landWater": {
-    "intro": "2 paragraphs, MAX 150 WORDS. Physical character of the land — terrain, geology, soil quality. Then water security — features inventory, drought resilience, what the security index means.",
-    "callout": "1 sentence about the defining physical characteristic (the water network, the soil depth, etc)."
-  },
-  "biodiversity": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Species richness in context. Notable findings from the data. Conservation significance and observation trends.",
-    "callout": "1 sentence about the most notable biodiversity finding."
-  },
-  "climateSeasons": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Characterize the climate zone. Growing season implications. Energy potential from solar/wind resources.",
-    "callout": "1 sentence about the climate advantage or challenge."
-  },
-  "valueBenefits": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Explain the SEEA-EA valuation framework briefly. Frame the economic significance using actual service values.",
-    "callout": "1 sentence capturing the economic significance.",
-    "assetCallout": "1 sentence about the 30-year NPV and what it represents as a long-term asset stock value."
-  },
-  "landUse": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Current land cover and what it supports. Production potential and suitable systems.",
-    "callout": "1 sentence about the most promising land use opportunity."
-  },
-  "historyTrends": {
-    "intro": "2 paragraphs, MAX 120 WORDS. What temperature and precipitation trends mean for this property. Projection caveats. How trends affect long-term value.",
-    "callout": "1 sentence about the trajectory — improving, stable, or concerning."
-  },
-  "risksResilience": {
-    "intro": "2 paragraphs, MAX 150 WORDS. How fire/flood/drought risks interact at this property. Energy independence potential. What the scores mean in practice.",
-    "callout": "1 sentence about the overall risk profile.",
-    "recommendation": "1-2 sentences. Specific, actionable mitigation step grounded in this property's risk and energy data."
-  },
-  "futureScenarios": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Compare revenue scenarios (conservative/moderate/optimized). Investment-return logic. Carbon credit opportunity.",
-    "callout": "1 sentence about the return opportunity."
-  },
-  "mapsLayers": {
-    "intro": "2 paragraphs, MAX 120 WORDS. Describe what the technical map layers reveal about this property's spatial character — terrain patterns, connectivity corridors, fire/flood exposure zones, and biodiversity hotspots visible across the nine map layers.",
-    "callout": "1 sentence highlighting the most significant spatial pattern or connectivity feature."
-  },
-  "recommendations": {
-    "intro": "2 paragraphs, MAX 100 WORDS. Invitation to a stewardship relationship. Community context. Frame next steps as an opportunity, not a burden."
-  },
-  "sourcesMethodology": {
-    "intro": "1-2 paragraphs, MAX 120 WORDS. SEEA-EA framework basis. How scores are computed. Data sources used. Conservative approach.",
-    "disclaimer": "1 short paragraph, MAX 50 WORDS. For informational purposes only, consult qualified professionals for investment or management decisions."
-  }
-}`;
+${PROMPT_SCHEMA}`;
 
   try {
     const response = await getClient().messages.create({
@@ -203,19 +149,3 @@ Each section has an "intro" (editorial prose, 2-3 paragraphs setting context) an
     };
   }
 }
-
-const EMPTY_NARRATIVES_V2 = {
-  overview: { intro: '', callout: '' },
-  regionEcosystem: { intro: '', callout: '', slopeDesc: '', slopeTip: '', waterDesc: '', waterTip: '', solarDesc: '', solarTip: '', treeCoverDesc: '' },
-  landWater: { intro: '', callout: '' },
-  biodiversity: { intro: '', callout: '' },
-  climateSeasons: { intro: '', callout: '' },
-  valueBenefits: { intro: '', callout: '', assetCallout: '' },
-  landUse: { intro: '', callout: '' },
-  historyTrends: { intro: '', callout: '' },
-  risksResilience: { intro: '', callout: '', recommendation: '' },
-  futureScenarios: { intro: '', callout: '' },
-  mapsLayers: { intro: '', callout: '' },
-  recommendations: { intro: '' },
-  sourcesMethodology: { intro: '', disclaimer: '' },
-};

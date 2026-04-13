@@ -177,34 +177,24 @@ export interface ActionItem {
   impact?: string;
 }
 
-/** Canonical narrative shape — one slot per report section */
-export interface Narratives {
-  overview?: { intro?: string; callout?: string };
-  regionEcosystem?: {
-    intro?: string;
-    callout?: string;
-    slopeDesc?: string;
-    slopeTip?: string;
-    waterDesc?: string;
-    waterTip?: string;
-    solarDesc?: string;
-    solarTip?: string;
-    treeCoverDesc?: string;
+import { NARRATIVE_SCHEMA } from "./narrative-schema.js";
+
+/**
+ * Canonical narrative shape — one slot per report section.
+ * Derived from NARRATIVE_SCHEMA (the single source of truth).
+ * To add/remove slots, edit landbook-app/lib/narrative-schema.js.
+ *
+ * The index signature allows unused V1-era section components to keep
+ * compiling until they're deleted — real sections still get the precise
+ * slot keys via the mapped type above.
+ */
+export type Narratives = {
+  [K in keyof typeof NARRATIVE_SCHEMA]?: {
+    [S in keyof (typeof NARRATIVE_SCHEMA)[K]]?: string;
   };
-  mapsLayers?: { intro?: string; callout?: string };
-  landWater?: { intro?: string; callout?: string };
-  biodiversity?: { intro?: string; callout?: string };
-  climateSeasons?: { intro?: string; callout?: string };
-  valueBenefits?: { intro?: string; callout?: string; assetCallout?: string };
-  landUse?: { intro?: string; callout?: string };
-  historyTrends?: { intro?: string; callout?: string };
-  risksResilience?: { intro?: string; callout?: string; recommendation?: string };
-  futureScenarios?: { intro?: string; callout?: string };
-  recommendations?: { intro?: string };
-  sourcesMethodology?: { intro?: string; disclaimer?: string };
-  /** Allow legacy v1 keys from old components still in the codebase */
+} & {
   [key: string]: Record<string, string | undefined> | undefined;
-}
+};
 
 export interface Uncertainty {
   interval: number;
