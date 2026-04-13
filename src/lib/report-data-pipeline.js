@@ -552,6 +552,7 @@ export function processRawData(raw, submission, areaHa) {
     scientificName: s.scientificName,
     group: s.group,
     count: s.observationCount,
+    photoUrl: s.photoUrl ?? null,
   }));
 
   const gbifKingdoms = Object.entries(gbifSummary.kingdoms).map(([name, count]) => ({ name, count }))

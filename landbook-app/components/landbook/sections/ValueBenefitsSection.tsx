@@ -1,7 +1,7 @@
 import type { Economics, Scores, Narratives, Meta } from "@/lib/types";
 import {
   SectionTitle, Hairline, DataTable, PullQuote,
-  SubsectionHeader, Treemap,
+  SubsectionHeader, Treemap, KPI,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -177,6 +177,21 @@ export function ValueBenefitsSection({
             ]}
           />
         )}
+      </div>
+
+      {/* ── 7.5 Carbon Storage ── */}
+      <div className="mb-20">
+        <SubsectionHeader id="7.5" title="Carbon Storage" sources={["Computed"]} />
+        <div className="grid grid-cols-2 gap-12 mb-8">
+          <KPI
+            value={economics.carbonStock ? `${economics.carbonStock.toLocaleString()} tC` : null}
+            label="Carbon Stock"
+          />
+          <KPI
+            value={economics.carbonAnnualSeq ? `${economics.carbonAnnualSeq.toLocaleString()} tC/yr` : null}
+            label="Sequestration Rate"
+          />
+        </div>
       </div>
 
       {/* ── 7.6 Valuation Methodology ── */}

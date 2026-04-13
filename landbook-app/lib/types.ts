@@ -83,7 +83,7 @@ export interface Species {
   threatened: number | null;
   gbifTotal: number | null;
   groups: Array<{ name?: string; group?: string; count?: number; value?: number }>;
-  top10: Array<{ name: string; group: string; count: number }>;
+  top10: Array<{ name: string; group: string; count: number; photoUrl?: string | null }>;
   trends: { direction?: string };
 }
 
