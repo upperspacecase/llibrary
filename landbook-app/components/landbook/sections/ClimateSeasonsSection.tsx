@@ -62,23 +62,23 @@ function ClimateChart({
 
   return (
     <section className="mb-12">
-      <div className="relative p-0 flex flex-col justify-end h-[360px]">
-        {/* Legend */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-0.5 bg-[#D4A574]" />
-            <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">High Temp</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-0.5 border-t border-dashed border-[#D4A574]" />
-            <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">Low Temp</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 bg-[#8B9A7E]" />
-            <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">Rainfall</span>
-          </div>
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-0.5 bg-[#D4A574]" />
+          <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">High Temp</span>
         </div>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-0.5 border-t border-dashed border-[#D4A574]" />
+          <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">Low Temp</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-[#8B9A7E]" />
+          <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">Rainfall</span>
+        </div>
+      </div>
 
+      <div className="relative p-0 flex flex-col justify-end h-[360px]">
         <div className="relative flex-1">
           {/* Centered Dual Y-Axis */}
           <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 z-10 flex flex-col justify-between py-2 text-[8px] font-bold font-body pointer-events-none w-24">
