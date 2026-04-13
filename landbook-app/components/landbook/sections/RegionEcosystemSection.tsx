@@ -122,22 +122,34 @@ export function RegionEcosystemSection({
     <section id="region-ecosystem">
       <SectionTitle title="Region & Ecosystem" />
 
-      {/* Editorial heading */}
-      <h3 className="font-serif italic text-[28px] text-brand-forest leading-snug mb-4 max-w-[420px]">
-        Why bioregional context matters
-      </h3>
+      {/* Body + callout side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        {narratives?.intro ? (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            {narratives.intro}
+          </p>
+        ) : (
+          <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
+            Raw numbers are hard to interpret. We compare your parcel to the
+            bioregion&mdash;so you see what&rsquo;s typical, what&rsquo;s exceptional,
+            and what to do about it.
+          </p>
+        )}
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-10 max-w-[480px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-10 max-w-[480px]">
-          Raw numbers are hard to interpret. We compare your parcel to the
-          bioregion&mdash;so you see what&rsquo;s typical, what&rsquo;s exceptional,
-          and what to do about it.
-        </p>
-      )}
+        {narratives?.callout ? (
+          <div className="border-l-[6px] border-brand-terracotta pl-6">
+            <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
+              &ldquo;{narratives.callout}&rdquo;
+            </blockquote>
+          </div>
+        ) : (
+          <div className="border-l-[6px] border-brand-sage/20 pl-6">
+            <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
+              &ldquo;Bioregional context pending &mdash; generate narratives to populate this callout.&rdquo;
+            </blockquote>
+          </div>
+        )}
+      </div>
 
       {/* ── Metric rows ─────────────────────────────────────── */}
 
@@ -182,22 +194,6 @@ export function RegionEcosystemSection({
         description={narratives?.solarDesc}
         tip={narratives?.solarTip}
       />
-
-      {/* ── Callout ─────────────────────────────────────────── */}
-
-      {narratives?.callout ? (
-        <div className="border-l-[6px] border-brand-terracotta pl-8 py-4 my-10">
-          <blockquote className="text-brand-forest leading-tight text-2xl font-serif italic">
-            &ldquo;{narratives.callout}&rdquo;
-          </blockquote>
-        </div>
-      ) : (
-        <div className="border-l-[6px] border-brand-sage/20 pl-8 py-4 my-10">
-          <blockquote className="text-brand-sage/30 leading-tight text-2xl font-serif italic">
-            &ldquo;Bioregional context pending &mdash; generate narratives to populate this callout.&rdquo;
-          </blockquote>
-        </div>
-      )}
 
       <Hairline />
 
