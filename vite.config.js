@@ -15,10 +15,6 @@ export default defineConfig({
         create: resolve(__dirname, 'create.html'),
         preview: resolve(__dirname, 'preview.html'),
         admin: resolve(__dirname, 'admin.html'),
-        // Legacy pages
-        onboard: resolve(__dirname, 'onboard.html'),
-        passport: resolve(__dirname, 'passport.html'),
-        directory: resolve(__dirname, 'directory.html'),
         audit: resolve(__dirname, 'landbook-audit-working.html'),
       },
     },
