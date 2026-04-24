@@ -471,6 +471,7 @@ function renderDetailPanel(landbookId, row, colSpan) {
     return `<tr class="admin-detail-row"><td colspan="${colSpan}">
         <div class="detail-panel">
             <div class="detail-header">
+                <a href="${LANDBOOK_V3_BASE}/dashboard/${escapeHtml(landbookId)}" target="_blank" class="detail-landbook-link detail-dashboard-link">Open Dashboard ↗</a>
                 <a href="${LANDBOOK_V3_BASE}/${escapeHtml(landbookId)}" target="_blank" class="detail-landbook-link">Open LandBook ↗</a>
             </div>
             <div class="detail-grid">
@@ -1029,7 +1030,16 @@ style.textContent = `
     .detail-header {
         display: flex;
         justify-content: flex-end;
+        gap: 8px;
         margin-bottom: 16px;
+    }
+    .detail-dashboard-link {
+        color: #C4705A !important;
+        border-color: #C4705A !important;
+    }
+    .detail-dashboard-link:hover {
+        background: #C4705A !important;
+        color: #F5F1E8 !important;
     }
     .detail-landbook-link {
         font-size: 13px;
