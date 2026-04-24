@@ -16,10 +16,15 @@ export default async function handler(req, res) {
 
     try {
         const waitlistCol = await getCollection('waitlist');
-        const waitlist = await waitlistCol.countDocuments();
+        const submissionsCol = await getCollection('submissions');
+        const [waitlist, submissions] = await Promise.all([
+            waitlistCol.countDocuments(),
+            submissionsCol.countDocuments(),
+        ]);
 
         // LandLibrary has no user account system — no signups to report.
-        return res.status(200).json({ signups: null, waitlist });
+        // submissions = landbooks requested (every plot submitted = one request).
+        return res.status(200).json({ signups: null, waitlist, submissions });
     } catch (err) {
         console.error('Metrics error:', err);
         return res.status(500).json({ error: 'Server error' });
