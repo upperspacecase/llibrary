@@ -42,11 +42,14 @@ export default async function DashboardPage({
   if (!landbook) notFound();
 
   const name = landbook.data?.property?.name || landbook.address || "Property";
+  const rawCenter =
+    landbook.center && typeof landbook.center.lat === "number" && typeof landbook.center.lng === "number"
+      ? landbook.center
+      : landbook.data?.property?.coords;
   const center =
-    landbook.center ||
-    (landbook.data?.property?.coords
-      ? { lat: landbook.data.property.coords.lat, lng: landbook.data.property.coords.lng }
-      : null);
+    rawCenter && typeof rawCenter.lat === "number" && typeof rawCenter.lng === "number"
+      ? { lat: rawCenter.lat, lng: rawCenter.lng }
+      : null;
 
   if (!center) {
     return (
