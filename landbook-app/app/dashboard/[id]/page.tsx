@@ -42,8 +42,37 @@ export default async function DashboardPage({
   if (!landbook) notFound();
 
   const name = landbook.data?.property?.name || landbook.address || "Property";
-  const { lat, lng } = landbook.center;
-  const area = landbook.area;
+  const center =
+    landbook.center ||
+    (landbook.data?.property?.coords
+      ? { lat: landbook.data.property.coords.lat, lng: landbook.data.property.coords.lng }
+      : null);
+
+  if (!center) {
+    return (
+      <main className="min-h-screen bg-brand-cream flex items-center justify-center p-6">
+        <div className="bg-white border border-black/10 p-6 max-w-md text-center">
+          <h1 className="font-serif text-xl text-brand-charcoal mb-2">
+            Dashboard unavailable
+          </h1>
+          <p className="text-sm text-brand-charcoal/60">
+            This landbook has no boundary or coordinates recorded, so the
+            dashboard cannot be generated.
+          </p>
+          <a
+            href={`/${id}`}
+            className="inline-block mt-4 text-sm text-brand-forest underline"
+          >
+            View LandBook report instead
+          </a>
+        </div>
+      </main>
+    );
+  }
+
+  const { lat, lng } = center;
+  const area = landbook.area ?? 0;
+  const boundary = landbook.boundary ?? [];
 
   return (
     <main className="min-h-screen bg-brand-cream">
@@ -66,7 +95,7 @@ export default async function DashboardPage({
                 Area
               </dt>
               <dd className="font-serif text-xl text-brand-charcoal">
-                {area ? `${area.toFixed(2)} ha` : "—"}
+                {area ? `${Number(area).toFixed(2)} ha` : "—"}
               </dd>
             </div>
             <div>
@@ -88,8 +117,8 @@ export default async function DashboardPage({
       <div className="max-w-7xl mx-auto px-6 pb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
         <SensorMapPanel
           landbookId={id}
-          boundary={landbook.boundary}
-          center={landbook.center}
+          boundary={boundary}
+          center={center}
         />
         <WeatherPanel landbookId={id} lat={lat} lng={lng} />
         <SoilPanel landbookId={id} lat={lat} lng={lng} />
