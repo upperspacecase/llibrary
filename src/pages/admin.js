@@ -245,17 +245,96 @@ document.querySelector('.admin-tabs').addEventListener('click', e => {
 
     const tableView = document.getElementById('table-view');
     const pipelineView = document.getElementById('pipeline-view');
+    const runsView = document.getElementById('runs-view');
+
+    tableView.style.display = 'none';
+    pipelineView.style.display = 'none';
+    if (runsView) runsView.style.display = 'none';
 
     if (activeTab === 'pipeline') {
-        tableView.style.display = 'none';
         pipelineView.style.display = 'block';
         if (!pipelineResults) renderPipelineEmpty();
+    } else if (activeTab === 'runs') {
+        runsView.style.display = 'block';
+        loadRuns();
     } else {
         tableView.style.display = 'block';
-        pipelineView.style.display = 'none';
         renderTable();
     }
 });
+
+// ---- Pipeline runs ----
+async function loadRuns() {
+    const tbody = document.getElementById('runs-tbody');
+    const empty = document.getElementById('runs-empty-msg');
+    const summary = document.getElementById('runs-summary');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" class="admin-muted" style="text-align:center; padding:24px;">Loading…</td></tr>';
+
+    try {
+        const res = await fetch('/api/admin/pipeline-runs?limit=50');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const { runs } = await res.json();
+
+        if (!runs || runs.length === 0) {
+            tbody.innerHTML = '';
+            empty.style.display = 'block';
+            summary.textContent = '';
+            return;
+        }
+        empty.style.display = 'none';
+        const okCount = runs.filter(r => r.status === 'ok').length;
+        const partialCount = runs.filter(r => r.status === 'partial').length;
+        const failedCount = runs.filter(r => r.status === 'failed').length;
+        summary.textContent = `${runs.length} runs · ${okCount} ok · ${partialCount} partial · ${failedCount} failed`;
+
+        const fmt = (d) => d ? new Date(d).toLocaleString() : '—';
+        const fmtDur = (ms) => ms == null ? '—' : ms < 1000 ? `${ms}ms` : `${(ms/1000).toFixed(1)}s`;
+        const statusDot = (s) => {
+            const color = s === 'ok' ? '#16a34a' : s === 'partial' ? '#d97706' : s === 'failed' ? '#dc2626' : '#999';
+            return `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color};" title="${s}"></span>`;
+        };
+
+        tbody.innerHTML = runs.map(r => `
+            <tr data-runid="${r.runId}" style="cursor:pointer;">
+                <td>${statusDot(r.status)} ${r.status}</td>
+                <td>${fmt(r.startedAt)}</td>
+                <td>${fmtDur(r.durationMs)}</td>
+                <td style="font-family:monospace; font-size:11px;">${r.landbookId || '—'}</td>
+                <td>${r.trigger || '—'}</td>
+                <td>${r.totals?.ok ?? 0} / ${r.totals?.failed ?? 0}</td>
+                <td>${r.schemaValidation?.ok === false ? `${r.schemaValidation.issueCount} issues` : (r.schemaValidation?.ok ? 'ok' : '—')}</td>
+                <td style="font-family:monospace; font-size:11px;">${r.runId}</td>
+            </tr>
+        `).join('');
+
+        tbody.querySelectorAll('tr[data-runid]').forEach(tr => {
+            tr.addEventListener('click', () => loadRunDetail(tr.dataset.runid));
+        });
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="admin-muted" style="text-align:center; padding:24px; color:#dc2626;">Failed to load runs: ${err.message}</td></tr>`;
+    }
+}
+
+async function loadRunDetail(runId) {
+    const detail = document.getElementById('run-detail');
+    const title = document.getElementById('run-detail-title');
+    const body = document.getElementById('run-detail-body');
+    detail.style.display = 'block';
+    title.textContent = `Run ${runId}`;
+    body.textContent = 'Loading…';
+    try {
+        const res = await fetch(`/api/admin/pipeline-runs?runId=${encodeURIComponent(runId)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        body.textContent = JSON.stringify(data, null, 2);
+    } catch (err) {
+        body.textContent = `Failed: ${err.message}`;
+    }
+}
+
+const refreshBtn = document.getElementById('runs-refresh-btn');
+if (refreshBtn) refreshBtn.addEventListener('click', loadRuns);
 
 // ---- Table ----
 function renderTable() {

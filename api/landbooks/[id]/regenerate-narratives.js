@@ -11,6 +11,7 @@ import { getFacts, factsToReportData } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
 import { generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
 import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
+import { newRunId } from '../../../src/lib/pipeline-errors.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,6 +20,7 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
+  const runId = newRunId();
 
   try {
     // 1. Load data — prefer facts collection, fall back to blob
@@ -46,6 +48,8 @@ export default async function handler(req, res) {
     const narratives = result.narratives;
     const usage = result.usage;
     const narrativeError = result.error || null;
+    const narrativeStatus = result.status || 'ok';
+    const narrativeErrorCode = result.errorCode || null;
 
     // 3. Save versioned report
     const cost = usage ? {
@@ -63,6 +67,10 @@ export default async function handler(req, res) {
       model,
       promptVersion: 'v2-14section',
       cost,
+      runId,
+      narrativesStatus: narrativeStatus,
+      narrativesError,
+      narrativesErrorCode: narrativeErrorCode,
     });
 
     // 4. Also update the blob for backward compatibility
@@ -87,6 +95,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
+      runId,
       version: reportDoc.version,
       narrativeKeys: Object.keys(narratives),
       narrativeError: narrativeError || null,

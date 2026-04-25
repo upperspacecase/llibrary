@@ -4,10 +4,30 @@
  * https://open-meteo.com/en/docs
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
 const ARCHIVE_BASE = 'https://archive-api.open-meteo.com/v1/archive';
 const ELEVATION_BASE = 'https://api.open-meteo.com/v1/elevation';
 const CLIMATE_BASE = 'https://climate-api.open-meteo.com/v1/climate';
+
+// Open-Meteo archive (archive-api.open-meteo.com) shares a rate-limit bucket
+// across all requests from the same IP. Firing climate / climateTrends /
+// solarWind / getRegionalClimateAverages in parallel triggers 429s.
+// Serialise archive calls with a small spacer; forecast/elevation/climate
+// projection endpoints are on different buckets and don't go through this.
+// 1500ms matches the Overpass spacer; conservative against per-second
+// rate limits. 3 archive calls per landbook refresh = ~3s queue depth.
+const ARCHIVE_DELAY_MS = 1500;
+let _archiveQueue = Promise.resolve();
+
+function enqueueArchive(fn) {
+  const task = _archiveQueue.catch(() => {}).then(() => fn());
+  _archiveQueue = task
+    .catch(() => {})
+    .then(() => new Promise((r) => setTimeout(r, ARCHIVE_DELAY_MS)));
+  return task;
+}
 
 export async function getForecast(lat, lng, days = 7) {
   const params = new URLSearchParams({
@@ -31,7 +51,9 @@ export async function getForecast(lat, lng, days = 7) {
     timezone: 'auto',
     forecast_days: String(days),
   });
-  const res = await fetch(`${FORECAST_BASE}?${params}`);
+  const res = await fetchWithPolicy(`${FORECAST_BASE}?${params}`, {}, {
+    source: 'open-meteo-forecast', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Open-Meteo forecast error: ${res.status}`);
   return res.json();
 }
@@ -48,7 +70,9 @@ export async function getHistoricalWeather(lat, lng, startDate, endDate) {
     ].join(','),
     timezone: 'auto',
   });
-  const res = await fetch(`${ARCHIVE_BASE}?${params}`);
+  const res = await enqueueArchive(() => fetchWithPolicy(`${ARCHIVE_BASE}?${params}`, {}, {
+    source: 'open-meteo-archive', timeoutMs: 30000, accept: 'application/json',
+  }));
   if (!res.ok) throw new Error(`Open-Meteo archive error: ${res.status}`);
   return res.json();
 }
@@ -67,7 +91,9 @@ export async function getClimateAverages(lat, lng) {
     ].join(','),
     timezone: 'auto',
   });
-  const res = await fetch(`${ARCHIVE_BASE}?${params}`);
+  const res = await enqueueArchive(() => fetchWithPolicy(`${ARCHIVE_BASE}?${params}`, {}, {
+    source: 'open-meteo-climate', timeoutMs: 20000, accept: 'application/json',
+  }));
   if (!res.ok) throw new Error(`Open-Meteo climate error: ${res.status}`);
   const data = await res.json();
 
@@ -149,7 +175,9 @@ export async function getClimateProjections(lat, lng) {
     daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum',
     timezone: 'auto',
   });
-  const res = await fetch(`${CLIMATE_BASE}?${params}`);
+  const res = await fetchWithPolicy(`${CLIMATE_BASE}?${params}`, {}, {
+    source: 'open-meteo-projections', timeoutMs: 30000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Open-Meteo climate projection error: ${res.status}`);
   const data = await res.json();
 
@@ -250,7 +278,9 @@ export async function getSolarWind(lat, lng) {
     daily: 'shortwave_radiation_sum,wind_speed_10m_mean,wind_speed_10m_max',
     timezone: 'auto',
   });
-  const res = await fetch(`${ARCHIVE_BASE}?${params}`);
+  const res = await enqueueArchive(() => fetchWithPolicy(`${ARCHIVE_BASE}?${params}`, {}, {
+    source: 'open-meteo-solar-wind', timeoutMs: 20000, accept: 'application/json',
+  }));
   if (!res.ok) throw new Error(`Open-Meteo solar/wind error: ${res.status}`);
   const data = await res.json();
   const daily = data.daily || {};
@@ -266,7 +296,9 @@ export async function getSolarWind(lat, lng) {
 }
 
 export async function getElevation(lat, lng) {
-  const res = await fetch(`${ELEVATION_BASE}?latitude=${lat}&longitude=${lng}`);
+  const res = await fetchWithPolicy(`${ELEVATION_BASE}?latitude=${lat}&longitude=${lng}`, {}, {
+    source: 'open-meteo-elevation', timeoutMs: 5000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Open-Meteo elevation error: ${res.status}`);
   const data = await res.json();
   return data.elevation ? data.elevation[0] : null;

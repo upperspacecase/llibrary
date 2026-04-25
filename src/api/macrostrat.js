@@ -4,6 +4,8 @@
  * https://macrostrat.org/api/v2/
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://macrostrat.org/api/v2';
 
 /**
@@ -13,7 +15,9 @@ const BASE = 'https://macrostrat.org/api/v2';
  * @param {number} lng
  */
 export async function getGeology(lat, lng) {
-    const res = await fetch(`${BASE}/geologic_units/map?lat=${lat}&lng=${lng}&response=long`);
+    const res = await fetchWithPolicy(`${BASE}/geologic_units/map?lat=${lat}&lng=${lng}&response=long`, {}, {
+      source: 'macrostrat-geology', timeoutMs: 8000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`Macrostrat error: ${res.status}`);
     return res.json();
 }

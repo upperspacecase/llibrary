@@ -7,6 +7,8 @@
  * for small area queries. For production, register for a MAP_KEY.
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
 
 /**
@@ -17,7 +19,10 @@ const BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
  * @returns {Promise<Object[]>} Array of fire detections
  */
 export async function getActiveFires(bbox, days = 2) {
-    const key = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIRMS_KEY) || '';
+    const key =
+      process.env.VITE_FIRMS_KEY ||
+      (typeof import.meta !== 'undefined' && import.meta.env?.VITE_FIRMS_KEY) ||
+      '';
     if (!key) {
         throw new Error('NASA FIRMS: No API key (VITE_FIRMS_KEY)');
     }
@@ -25,7 +30,9 @@ export async function getActiveFires(bbox, days = 2) {
     const [south, west, north, east] = bbox;
     const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/VIIRS_SNPP_NRT/${west},${south},${east},${north}/${days}`;
 
-    const res = await fetch(url);
+    const res = await fetchWithPolicy(url, {}, {
+        source: 'nasa-firms', timeoutMs: 12000, accept: 'text/csv',
+    });
     if (!res.ok) {
         throw new Error(`NASA FIRMS HTTP ${res.status}`);
     }

@@ -4,6 +4,8 @@
  * https://wiki.openstreetmap.org/wiki/Overpass_API
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://overpass-api.de/api/interpreter';
 
 // Serial queue — Overpass rate-limits per-IP, so parallel calls trigger 429s.
@@ -24,21 +26,19 @@ function enqueue(fn) {
 
 export async function query(overpassQL) {
   return enqueue(async () => {
-    const res = await fetch(BASE, {
+    // fetchWithPolicy handles 429 (Retry-After-aware) and 5xx retries internally.
+    // We pass an explicit Accept: application/json — overpass-api.de tightened
+    // its content negotiation in 2026 and rejects requests without it (406).
+    const res = await fetchWithPolicy(BASE, {
       method: 'POST',
       body: `data=${encodeURIComponent(overpassQL)}`,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    }, {
+      source: 'overpass',
+      timeoutMs: 30000,
+      accept: 'application/json',
+      retries: 3,
     });
-    if (res.status === 429) {
-      await new Promise(r => setTimeout(r, 5000));
-      const retry = await fetch(BASE, {
-        method: 'POST',
-        body: `data=${encodeURIComponent(overpassQL)}`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      });
-      if (!retry.ok) throw new Error(`Overpass error: ${retry.status}`);
-      return retry.json();
-    }
     if (!res.ok) throw new Error(`Overpass error: ${res.status}`);
     return res.json();
   });

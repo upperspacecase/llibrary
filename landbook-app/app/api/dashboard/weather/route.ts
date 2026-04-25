@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listSensorsForLandbook, latestReadingsForSensor } from "@/lib/sensors";
 import { cv, empty, fromSensorReading, latestReadingByMetric } from "@/lib/confidence";
+import { getFactsDoc, factsFreshness } from "@/lib/facts-source";
 import type { ConfidenceValue } from "@/lib/dashboard-types";
 
 export const dynamic = "force-dynamic";
@@ -16,18 +17,24 @@ interface WeatherPanelData {
   monthlyPrecip: { month: number; value: number }[];
 }
 
+const unwrap = (field: unknown): unknown => {
+  if (field && typeof field === "object" && "value" in (field as Record<string, unknown>)) {
+    return (field as Record<string, unknown>).value;
+  }
+  return field ?? null;
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const landbookId = searchParams.get("landbookId");
-  const lat = parseFloat(searchParams.get("lat") || "");
-  const lng = parseFloat(searchParams.get("lng") || "");
-  if (!landbookId || Number.isNaN(lat) || Number.isNaN(lng)) {
-    return NextResponse.json(
-      { ok: false, error: "landbookId, lat, lng required" },
-      { status: 400 }
-    );
+  if (!landbookId) {
+    return NextResponse.json({ ok: false, error: "landbookId required" }, { status: 400 });
   }
 
+  const doc = await getFactsDoc(landbookId);
+  const freshness = factsFreshness(doc);
+
+  // Sensor layer (parallel — kept until sensor-as-source migration)
   const sensors = await listSensorsForLandbook(landbookId);
   const weatherSensors = sensors.filter((s) => s.type === "weather");
   const latestByMetric: Record<string, ReturnType<typeof latestReadingByMetric>> = {};
@@ -39,148 +46,69 @@ export async function GET(request: Request) {
     }
   }
 
-  let current: Record<string, unknown> | null = null;
-  let monthlyTemp: number[] = [];
-  let monthlyPrecip: number[] = [];
-  let annualTemp: number | null = null;
-  let annualRain: number | null = null;
-  let errored = false;
+  // Canonical: facts.climate
+  const climate = doc?.climate ? (doc.climate as Record<string, unknown>) : null;
+  const annualMeanTemp = climate ? (unwrap(climate.annualMeanTemp) as number | null) : null;
+  const annualRainfall = climate ? (unwrap(climate.annualRainfall) as number | null) : null;
+  const monthlyAvgHigh = (climate ? (unwrap(climate.monthlyAvgHigh) as (number | null)[] | null) : null) || [];
+  const monthlyAvgLow = (climate ? (unwrap(climate.monthlyAvgLow) as (number | null)[] | null) : null) || [];
+  const monthlyPrecip = (climate ? (unwrap(climate.monthlyPrecip) as (number | null)[] | null) : null) || [];
 
-  try {
-    const currentRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`,
-      { next: { revalidate: 300 } }
-    );
-    if (currentRes.ok) {
-      const j = await currentRes.json();
-      current = j.current;
-    } else {
-      errored = true;
-    }
-  } catch {
-    errored = true;
-  }
+  const monthlyMeanTemp = monthlyAvgHigh.map((hi, i) => {
+    const lo = monthlyAvgLow[i];
+    if (typeof hi !== "number" || typeof lo !== "number") return { month: i, value: 0 };
+    return { month: i, value: (hi + lo) / 2 };
+  });
 
-  try {
-    const endYear = new Date().getFullYear() - 1;
-    const startYear = endYear - 29;
-    const archiveRes = await fetch(
-      `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${startYear}-01-01&end_date=${endYear}-12-31&daily=temperature_2m_mean,precipitation_sum&timezone=auto`,
-      { next: { revalidate: 86400 } }
-    );
-    if (archiveRes.ok) {
-      const j = await archiveRes.json();
-      const daily = j.daily;
-      if (daily?.time && daily.temperature_2m_mean && daily.precipitation_sum) {
-        const sums = Array.from({ length: 12 }, () => ({ t: 0, p: 0, n: 0 }));
-        for (let i = 0; i < daily.time.length; i++) {
-          const m = new Date(daily.time[i]).getMonth();
-          const t = daily.temperature_2m_mean[i];
-          const p = daily.precipitation_sum[i];
-          if (typeof t === "number" && typeof p === "number") {
-            sums[m].t += t;
-            sums[m].p += p;
-            sums[m].n += 1;
-          }
-        }
-        monthlyTemp = sums.map((s) => (s.n ? s.t / s.n : 0));
-        const yearly: Record<string, { t: number; p: number; n: number }> = {};
-        for (let i = 0; i < daily.time.length; i++) {
-          const y = daily.time[i].slice(0, 4);
-          if (!yearly[y]) yearly[y] = { t: 0, p: 0, n: 0 };
-          const t = daily.temperature_2m_mean[i];
-          const p = daily.precipitation_sum[i];
-          if (typeof t === "number" && typeof p === "number") {
-            yearly[y].t += t;
-            yearly[y].p += p;
-            yearly[y].n += 1;
-          }
-        }
-        const years = Object.values(yearly).filter((y) => y.n > 300);
-        if (years.length) {
-          annualTemp =
-            years.reduce((sum, y) => sum + y.t / y.n, 0) / years.length;
-          annualRain =
-            years.reduce((sum, y) => sum + y.p, 0) / years.length;
-        }
-        const daysPerMonth = [31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        monthlyPrecip = sums.map(
-          (s, i) => (s.n ? (s.p / s.n) * daysPerMonth[i] : 0)
-        );
-      }
-    } else {
-      errored = true;
-    }
-  } catch {
-    errored = true;
-  }
+  const archiveDetail = "Pipeline canonical (Open-Meteo 30-yr)";
 
-  const archiveDetail = "Open-Meteo 30-yr archive";
+  // Sensors give us "now"; canonical gives us pipeline-time forecast snapshot.
+  // For current, prefer sensor → fall back to first forecast day if available.
+  const forecast = (climate ? (unwrap(climate.forecast) as Array<Record<string, unknown>> | null) : null) || [];
+  const today = forecast[0] || null;
+  const todayHigh = today ? (today.high as number | null) : null;
+  const todayPrecip = today ? (today.precip as number | null) : null;
+  const todayWind = today ? (today.wind as number | null) : null;
 
   const data: WeatherPanelData = {
     temperature: fromSensorReading(
       latestByMetric.temperature,
-      current && typeof current.temperature_2m === "number"
-        ? cv(
-            current.temperature_2m as number,
-            0.4,
-            "Open-Meteo",
-            { sourceDetail: "current forecast", unit: "°C" }
-          )
-        : errored
-          ? empty("Open-Meteo", "unavailable")
-          : null
+      typeof todayHigh === "number"
+        ? cv(todayHigh, 0.4, "Pipeline canonical", { sourceDetail: "today's forecast high", unit: "°C" })
+        : empty("Pipeline canonical", "no forecast on file")
     ),
-    humidity: fromSensorReading(
-      latestByMetric.humidity,
-      current && typeof current.relative_humidity_2m === "number"
-        ? cv(
-            current.relative_humidity_2m as number,
-            0.4,
-            "Open-Meteo",
-            { sourceDetail: "current forecast", unit: "%" }
-          )
-        : null
-    ),
+    humidity: fromSensorReading(latestByMetric.humidity, null),
     windSpeed: fromSensorReading(
       latestByMetric.wind_speed,
-      current && typeof current.wind_speed_10m === "number"
-        ? cv(
-            current.wind_speed_10m as number,
-            0.4,
-            "Open-Meteo",
-            { sourceDetail: "current forecast", unit: "km/h" }
-          )
+      typeof todayWind === "number"
+        ? cv(todayWind, 0.4, "Pipeline canonical", { sourceDetail: "today's max wind", unit: "km/h" })
         : null
     ),
     precipitation: fromSensorReading(
       latestByMetric.precipitation,
-      current && typeof current.precipitation === "number"
-        ? cv(
-            current.precipitation as number,
-            0.4,
-            "Open-Meteo",
-            { sourceDetail: "current forecast", unit: "mm" }
-          )
+      typeof todayPrecip === "number"
+        ? cv(todayPrecip, 0.4, "Pipeline canonical", { sourceDetail: "today's precip", unit: "mm" })
         : null
     ),
     annualMeanTemp:
-      annualTemp !== null
-        ? cv(Number(annualTemp.toFixed(1)), 0.4, "Open-Meteo", {
+      typeof annualMeanTemp === "number"
+        ? cv(Number(annualMeanTemp.toFixed(1)), 0.4, "Pipeline canonical", {
             sourceDetail: archiveDetail,
             unit: "°C",
+            timestamp: freshness.updatedAt || undefined,
           })
-        : empty("Open-Meteo archive", "no historical data"),
+        : empty("Pipeline canonical", "no historical data"),
     annualRainfall:
-      annualRain !== null
-        ? cv(Math.round(annualRain), 0.4, "Open-Meteo", {
+      typeof annualRainfall === "number"
+        ? cv(Math.round(annualRainfall), 0.4, "Pipeline canonical", {
             sourceDetail: archiveDetail,
             unit: "mm",
+            timestamp: freshness.updatedAt || undefined,
           })
-        : empty("Open-Meteo archive", "no historical data"),
-    monthlyMeanTemp: monthlyTemp.map((value, month) => ({ month, value })),
-    monthlyPrecip: monthlyPrecip.map((value, month) => ({ month, value })),
+        : empty("Pipeline canonical", "no historical data"),
+    monthlyMeanTemp,
+    monthlyPrecip: monthlyPrecip.map((p, i) => ({ month: i, value: typeof p === "number" ? p : 0 })),
   };
 
-  return NextResponse.json({ ok: true, data });
+  return NextResponse.json({ ok: true, data, freshness });
 }

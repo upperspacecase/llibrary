@@ -4,6 +4,8 @@
  * https://open-meteo.com/en/docs/flood-api
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://flood-api.open-meteo.com/v1/flood';
 
 /**
@@ -21,7 +23,9 @@ export async function getFloodForecast(lat, lng, forecastDays = 30) {
         forecast_days: String(forecastDays),
     });
 
-    const res = await fetch(`${BASE}?${params}`);
+    const res = await fetchWithPolicy(`${BASE}?${params}`, {}, {
+        source: 'open-meteo-flood', timeoutMs: 8000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`Flood API error: ${res.status}`);
     return res.json();
 }
@@ -38,7 +42,9 @@ export async function getFloodForecastWithHistory(lat, lng) {
         forecast_days: '30',
     });
 
-    const res = await fetch(`${BASE}?${params}`);
+    const res = await fetchWithPolicy(`${BASE}?${params}`, {}, {
+        source: 'open-meteo-flood', timeoutMs: 8000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`Flood API error: ${res.status}`);
     return res.json();
 }

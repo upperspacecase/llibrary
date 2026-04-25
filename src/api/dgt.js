@@ -5,6 +5,8 @@
  * https://ogcapi.dgterritorio.gov.pt/
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const OGC_BASE = 'https://ogcapi.dgterritorio.gov.pt';
 
 /**
@@ -20,8 +22,10 @@ export async function getAdminUnit(lat, lng) {
     const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
 
     try {
-        const res = await fetch(
-            `${OGC_BASE}/collections/freguesias/items?bbox=${bbox}&limit=1&f=json`
+        const res = await fetchWithPolicy(
+            `${OGC_BASE}/collections/freguesias/items?bbox=${bbox}&limit=1&f=json`,
+            {},
+            { source: 'dgt-freguesias', timeoutMs: 8000, accept: 'application/json' }
         );
         if (!res.ok) throw new Error(`DGT CAOP error: ${res.status}`);
         const data = await res.json();
@@ -46,8 +50,10 @@ export async function getAdminUnit(lat, lng) {
     try {
         const delta2 = 0.01;
         const bbox2 = `${lng - delta2},${lat - delta2},${lng + delta2},${lat + delta2}`;
-        const res = await fetch(
-            `${OGC_BASE}/collections/municipios/items?bbox=${bbox2}&limit=1&f=json`
+        const res = await fetchWithPolicy(
+            `${OGC_BASE}/collections/municipios/items?bbox=${bbox2}&limit=1&f=json`,
+            {},
+            { source: 'dgt-municipios', timeoutMs: 8000, accept: 'application/json' }
         );
         if (!res.ok) throw new Error(`DGT municipality HTTP ${res.status}`);
         const data = await res.json();
@@ -76,7 +82,9 @@ export async function getAdminUnit(lat, lng) {
  * Get available DGT collections.
  */
 export async function getCollections() {
-    const res = await fetch(`${OGC_BASE}/collections?f=json`);
+    const res = await fetchWithPolicy(`${OGC_BASE}/collections?f=json`, {}, {
+        source: 'dgt-collections', timeoutMs: 8000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`DGT collections error: ${res.status}`);
     return res.json();
 }

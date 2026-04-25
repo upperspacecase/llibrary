@@ -44,6 +44,10 @@ export async function saveReport(landbookId, report) {
     model: report.model || null,
     promptVersion: report.promptVersion || null,
     cost: report.cost || null,
+    runId: report.runId || null,
+    narrativesStatus: report.narrativesStatus || (report.narratives && Object.keys(report.narratives).length > 0 ? 'ok' : 'empty'),
+    narrativesError: report.narrativesError || null,
+    narrativesErrorCode: report.narrativesErrorCode || null,
   };
 
   await c.insertOne(doc);

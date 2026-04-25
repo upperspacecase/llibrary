@@ -25,9 +25,10 @@ async function col() {
  * Upsert a single observation.
  * @param {string} landbookId
  * @param {string} source - key from SOURCE_REGISTRY (e.g. "soilProps")
- * @param {{ ok: boolean, data?: any, error?: string }} result - from safe() wrapper
+ * @param {{ ok: boolean, data?: any, error?: string, code?: string, durationMs?: number }} result
+ * @param {{ runId?: string }} [ctx]  Lineage context (runId is the pipeline run that produced this observation).
  */
-export async function saveObservation(landbookId, source, result) {
+export async function saveObservation(landbookId, source, result, ctx = {}) {
   const meta = SOURCE_REGISTRY[source] || {};
   const c = await col();
   await c.updateOne(
@@ -40,6 +41,9 @@ export async function saveObservation(landbookId, source, result) {
         status: result.ok ? 'ok' : 'error',
         raw: result.ok ? result.data : null,
         error: result.ok ? null : (result.error || 'unknown'),
+        errorCode: result.ok ? null : (result.code || null),
+        durationMs: result.durationMs ?? null,
+        runId: ctx.runId || null,
         confidence: result.ok ? 'high' : 'missing',
         ttl: meta.ttl || 86400,
         group: meta.group || null,
@@ -53,9 +57,10 @@ export async function saveObservation(landbookId, source, result) {
 /**
  * Save all observations from a fetchAllData results object in bulk.
  * @param {string} landbookId
- * @param {Object} results - keyed by source name, values are { ok, data, error }
+ * @param {Object} results - keyed by source name, values are { ok, data, error, code, durationMs }
+ * @param {{ runId?: string }} [ctx]
  */
-export async function saveAllObservations(landbookId, results) {
+export async function saveAllObservations(landbookId, results, ctx = {}) {
   const c = await col();
   const ops = Object.entries(results).map(([source, result]) => {
     const meta = SOURCE_REGISTRY[source] || {};
@@ -70,6 +75,9 @@ export async function saveAllObservations(landbookId, results) {
             status: result.ok ? 'ok' : 'error',
             raw: result.ok ? result.data : null,
             error: result.ok ? null : (result.error || 'unknown'),
+            errorCode: result.ok ? null : (result.code || null),
+            durationMs: result.durationMs ?? null,
+            runId: ctx.runId || null,
             confidence: result.ok ? 'high' : 'missing',
             ttl: meta.ttl || 86400,
             group: meta.group || null,

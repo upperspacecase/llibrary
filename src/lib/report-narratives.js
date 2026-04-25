@@ -14,8 +14,22 @@ import {
 
 let _anthropic;
 function getClient() {
-  if (!_anthropic) _anthropic = new Anthropic();
+  // maxRetries=4 lets the SDK retry transient failures (429, 5xx, timeouts)
+  // on top of our 90s per-attempt timeout. Sonnet sometimes 529s under load.
+  if (!_anthropic) _anthropic = new Anthropic({ maxRetries: 4 });
   return _anthropic;
+}
+
+function classifyNarrativeError(err) {
+  const msg = err?.message || String(err);
+  const status = err?.status;
+  if (status === 429) return { code: 'RATE_LIMITED', message: msg };
+  if (status === 529) return { code: 'OVERLOADED', message: msg };
+  if (status === 401 || status === 403) return { code: 'KEY_MISSING', message: msg };
+  if (err?.name === 'AbortError' || /timeout|aborted/i.test(msg)) return { code: 'TIMEOUT', message: msg };
+  if (err instanceof SyntaxError || /JSON|unexpected token/i.test(msg)) return { code: 'PARSE_FAILED', message: msg };
+  if (status >= 500) return { code: 'API_ERROR', message: msg };
+  return { code: 'API_ERROR', message: msg };
 }
 
 const EMPTY_NARRATIVES_V2 = buildEmptyNarratives();
@@ -25,7 +39,13 @@ const PROMPT_SCHEMA = buildPromptSchema();
  * Generate narrative text for the report.
  *
  * @param {object} reportData - The canonical ReportData shape
- * @returns {{ narratives: object, usage: object | null, error: string | null }}
+ * @returns {{
+ *   narratives: object,
+ *   usage: object | null,
+ *   error: string | null,
+ *   status: 'ok' | 'failed' | 'empty',
+ *   errorCode: string | null,
+ * }}
  */
 export async function generateNarrativesV2(reportData) {
   const p = reportData.property || {};
@@ -119,7 +139,20 @@ ${PROMPT_SCHEMA}`;
 
     const text = response.content[0]?.text || '{}';
     const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```\s*$/, '').trim();
-    const narratives = JSON.parse(cleaned);
+    let narratives;
+    try {
+      narratives = JSON.parse(cleaned);
+    } catch (parseErr) {
+      const { code, message } = classifyNarrativeError(parseErr);
+      console.error('[narratives-v2] response was not valid JSON:', message);
+      return {
+        narratives: EMPTY_NARRATIVES_V2,
+        usage: response.usage || null,
+        error: `Narrative parse failed: ${message}`,
+        status: 'failed',
+        errorCode: code,
+      };
+    }
 
     // Validate that at least one slot has content
     const hasContent = Object.values(narratives).some(section =>
@@ -132,6 +165,8 @@ ${PROMPT_SCHEMA}`;
         narratives: EMPTY_NARRATIVES_V2,
         usage: response.usage || null,
         error: 'Claude returned empty narratives — model may have refused or returned unexpected format',
+        status: 'empty',
+        errorCode: 'EMPTY_RESPONSE',
       };
     }
 
@@ -139,13 +174,18 @@ ${PROMPT_SCHEMA}`;
       narratives,
       usage: response.usage || null,
       error: null,
+      status: 'ok',
+      errorCode: null,
     };
   } catch (error) {
-    console.error('[narratives-v2] Claude API call failed:', error.message);
+    const { code, message } = classifyNarrativeError(error);
+    console.error(`[narratives-v2] Claude API call failed [${code}]:`, message);
     return {
       narratives: EMPTY_NARRATIVES_V2,
       usage: null,
-      error: `Narrative generation failed: ${error.message}`,
+      error: `Narrative generation failed: ${message}`,
+      status: 'failed',
+      errorCode: code,
     };
   }
 }

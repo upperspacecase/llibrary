@@ -11,6 +11,8 @@ import { saveAllObservations } from '../../../src/lib/observation-store.js';
 import { saveFacts, reportDataToFacts } from '../../../src/lib/fact-store.js';
 import { saveReport } from '../../../src/lib/report-store.js';
 import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
+import { newRunId } from '../../../src/lib/pipeline-errors.js';
+import { createRun, finalizeRun } from '../../../src/lib/pipeline-runs.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,6 +21,7 @@ export default async function handler(req, res) {
   }
 
   const { id } = req.query;
+  const runId = newRunId();
 
   try {
     // 1. Load the landbook (or fall back to submissions)
@@ -51,7 +54,8 @@ export default async function handler(req, res) {
     const areaHa = areaM2 > 10000 ? areaM2 / 10000 : areaM2; // handle both m² and ha
 
     // 3. Run the data pipeline
-    const raw = await fetchAllData(lat, lng, boundary, areaHa);
+    await createRun({ runId, landbookId: id, trigger: 'refresh' });
+    const raw = await fetchAllData(lat, lng, boundary, areaHa, { runId, landbookId: id });
 
     // 4. Normalize into canonical shape
     const submission = {
@@ -61,19 +65,25 @@ export default async function handler(req, res) {
       boundary,
     };
 
-    const data = processRawData(raw, submission, areaHa);
+    const data = processRawData(raw, submission, areaHa, { runId, landbookId: id });
 
     // 5. Generate AI narratives (V2 — intro/callout per section)
     let narrativeError = null;
+    let narrativeStatus = 'ok';
+    let narrativeErrorCode = null;
     try {
       const result = await generateNarrativesV2(data);
       data.narratives = result.narratives;
+      narrativeStatus = result.status || 'ok';
+      narrativeErrorCode = result.errorCode || null;
       if (result.error) {
         narrativeError = result.error;
         console.warn('[refresh] Narrative generation issue:', result.error);
       }
     } catch (err) {
       narrativeError = `Narrative generation failed: ${err.message}`;
+      narrativeStatus = 'failed';
+      narrativeErrorCode = 'API_ERROR';
       console.warn('[refresh] Narrative generation failed, continuing without:', err.message);
       data.narratives = {};
     }
@@ -93,7 +103,7 @@ export default async function handler(req, res) {
     // 7. Dual-write to 3-layer collections
     const layerResults = { observations: null, facts: null, report: null };
     try {
-      await saveAllObservations(id, raw);
+      await saveAllObservations(id, raw, { runId });
       const obsCount = Object.keys(raw).length;
       layerResults.observations = { ok: true, count: obsCount };
     } catch (err) {
@@ -102,7 +112,7 @@ export default async function handler(req, res) {
     }
     let factsContentHash = null;
     try {
-      const factResult = await saveFacts(id, reportDataToFacts(data));
+      const factResult = await saveFacts(id, reportDataToFacts(data), { runId, hashSource: data, schemaVersion: 1 });
       factsContentHash = factResult.contentHash;
       layerResults.facts = { ok: true };
     } catch (err) {
@@ -115,6 +125,10 @@ export default async function handler(req, res) {
         scores: data.scores || {},
         factsContentHash,
         model: 'claude-sonnet-4-20250514',
+        runId,
+        narrativesStatus: narrativeStatus,
+        narrativesError,
+        narrativesErrorCode: narrativeErrorCode,
       });
       layerResults.report = { ok: true, version: reportDoc.version };
     } catch (err) {
@@ -132,11 +146,22 @@ export default async function handler(req, res) {
     // Build per-source summary for admin feedback
     const sourceResults = {};
     for (const [key, result] of Object.entries(raw)) {
-      sourceResults[key] = { ok: result.ok, error: result.ok ? null : result.error };
+      sourceResults[key] = { ok: result.ok, error: result.ok ? null : result.error, code: result.code || null };
     }
+
+    // Finalise the run summary (best-effort; never blocks).
+    await finalizeRun(runId, {
+      results: raw,
+      layerResults,
+      factsContentHash,
+      schemaValidation: data.meta?.validation || null,
+      narrativesError: narrativeError,
+      reportVersion: layerResults.report?.version || null,
+    });
 
     return res.status(200).json({
       ok: true,
+      runId,
       sources: sourceResults,
       layers: layerResults,
       narrativeKeys: Object.keys(data.narratives || {}),

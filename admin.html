@@ -48,6 +48,7 @@
         <button class="admin-tab" data-tab="resources">Resources</button>
         <button class="admin-tab" data-tab="regions">Regions</button>
         <button class="admin-tab" data-tab="pipeline">Data Pipeline</button>
+        <button class="admin-tab" data-tab="runs">Pipeline Runs</button>
       </div>
 
       <div class="admin-table-wrap" id="table-view">
@@ -56,6 +57,35 @@
           <tbody id="table-body"></tbody>
         </table>
         <p id="empty-msg" class="admin-muted" style="display:none; text-align:center; padding:40px 0;">No records yet.</p>
+      </div>
+
+      <div id="runs-view" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <span id="runs-summary" class="admin-muted"></span>
+          <button id="runs-refresh-btn" class="admin-btn" style="width:auto; padding:8px 20px; font-size:13px;">Refresh</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table" id="runs-table">
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Started</th>
+                <th>Duration</th>
+                <th>Landbook</th>
+                <th>Trigger</th>
+                <th>OK / Failed</th>
+                <th>Schema</th>
+                <th>Run ID</th>
+              </tr>
+            </thead>
+            <tbody id="runs-tbody"></tbody>
+          </table>
+          <p id="runs-empty-msg" class="admin-muted" style="display:none; text-align:center; padding:40px 0;">No runs recorded yet — trigger a refresh to create one.</p>
+        </div>
+        <div id="run-detail" style="margin-top:32px; display:none;">
+          <h3 style="margin-bottom:12px;" id="run-detail-title"></h3>
+          <pre id="run-detail-body" style="background:#f8f8f5; padding:16px; border:1px solid var(--border); border-radius:var(--radius); font-size:12px; overflow-x:auto; max-height:560px;"></pre>
+        </div>
       </div>
 
       <div id="pipeline-view" style="display:none;">

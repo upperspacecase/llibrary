@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listSensorsForLandbook, latestReadingsForSensor } from "@/lib/sensors";
 import { cv, empty } from "@/lib/confidence";
+import { getFactsDoc, factsFreshness } from "@/lib/facts-source";
 import type { ConfidenceValue } from "@/lib/dashboard-types";
 
 export const dynamic = "force-dynamic";
@@ -29,17 +30,22 @@ interface SpeciesPanelData {
   audioEvents: ConfidenceValue<AudioEvent[]> | null;
 }
 
+const unwrap = (field: unknown): unknown => {
+  if (field && typeof field === "object" && "value" in (field as Record<string, unknown>)) {
+    return (field as Record<string, unknown>).value;
+  }
+  return field ?? null;
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const landbookId = searchParams.get("landbookId");
-  const lat = parseFloat(searchParams.get("lat") || "");
-  const lng = parseFloat(searchParams.get("lng") || "");
-  if (!landbookId || Number.isNaN(lat) || Number.isNaN(lng)) {
-    return NextResponse.json(
-      { ok: false, error: "landbookId, lat, lng required" },
-      { status: 400 }
-    );
+  if (!landbookId) {
+    return NextResponse.json({ ok: false, error: "landbookId required" }, { status: 400 });
   }
+
+  const doc = await getFactsDoc(landbookId);
+  const freshness = factsFreshness(doc);
 
   const sensors = await listSensorsForLandbook(landbookId);
   const audioSensors = sensors.filter((s) => s.type === "audio");
@@ -57,75 +63,49 @@ export async function GET(request: Request) {
     }
   }
 
-  const radius = 5;
-  const inatUrl = `https://api.inaturalist.org/v1/observations?lat=${lat}&lng=${lng}&radius=${radius}&quality_grade=research&per_page=200&order=desc&order_by=observed_on`;
+  const species = doc?.species ? (doc.species as Record<string, unknown>) : null;
+  const total = species ? (unwrap(species.total) as number | null) : null;
+  const top10 = (species ? (unwrap(species.top10) as Array<Record<string, unknown>> | null) : null) || [];
+  const groups = (species ? (unwrap(species.groups) as Array<Record<string, unknown>> | null) : null) || [];
 
-  let topSpecies: SpeciesEntry[] = [];
-  let observationCount = 0;
-  let speciesCount = 0;
+  const topSpecies: SpeciesEntry[] = top10.map((s) => ({
+    name: (s.scientificName as string) || (s.name as string) || "Unknown",
+    commonName: (s.name as string) || null,
+    taxonId: typeof s.id === "number" ? (s.id as number) : null,
+    count: typeof s.count === "number" ? (s.count as number) : 0,
+    iconicGroup: typeof s.group === "string" ? (s.group as string) : null,
+  }));
+
   const iconic: Record<string, number> = {};
-  let errored = false;
-
-  try {
-    const res = await fetch(inatUrl, { next: { revalidate: 3600 } });
-    if (res.ok) {
-      const j = await res.json();
-      observationCount = j.total_results ?? j.results?.length ?? 0;
-      const byTaxon: Map<number, SpeciesEntry> = new Map();
-      for (const obs of j.results || []) {
-        const taxon = obs.taxon;
-        if (!taxon) continue;
-        const id = taxon.id;
-        const existing = byTaxon.get(id);
-        if (existing) {
-          existing.count += 1;
-        } else {
-          byTaxon.set(id, {
-            name: taxon.name,
-            commonName: taxon.preferred_common_name || null,
-            taxonId: id,
-            count: 1,
-            iconicGroup: taxon.iconic_taxon_name || null,
-          });
-        }
-        if (taxon.iconic_taxon_name) {
-          iconic[taxon.iconic_taxon_name] =
-            (iconic[taxon.iconic_taxon_name] || 0) + 1;
-        }
-      }
-      speciesCount = byTaxon.size;
-      topSpecies = Array.from(byTaxon.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
-    } else {
-      errored = true;
+  for (const g of groups) {
+    if (typeof g.name === "string" && typeof g.count === "number") {
+      iconic[g.name] = g.count;
     }
-  } catch {
-    errored = true;
   }
+  const speciesCount = topSpecies.length || groups.length;
+
+  const detail = "Pipeline canonical (iNaturalist)";
+  const ts = freshness.updatedAt || undefined;
 
   const data: SpeciesPanelData = {
-    observationCount: errored
-      ? empty("iNaturalist", "unavailable")
-      : cv(observationCount, 1.0, "iNaturalist", {
-          sourceDetail: `research-grade within ${radius}km`,
-        }),
-    speciesCount: errored
-      ? null
-      : cv(speciesCount, 1.0, "iNaturalist", {
-          sourceDetail: "unique taxa observed",
-        }),
+    observationCount:
+      typeof total === "number"
+        ? cv(total, 1.0, "Pipeline canonical", { sourceDetail: detail, timestamp: ts })
+        : empty("Pipeline canonical", doc ? "no species count" : "no facts on file"),
+    speciesCount: cv(speciesCount, 1.0, "Pipeline canonical", {
+      sourceDetail: "unique taxa from canonical",
+      timestamp: ts,
+    }),
     topSpecies:
       topSpecies.length > 0
-        ? cv(topSpecies, 1.0, "iNaturalist", {
-            sourceDetail: "research-grade observations",
-          })
-        : errored
-          ? null
-          : cv([], 1.0, "iNaturalist", { sourceDetail: "no observations yet" }),
+        ? cv(topSpecies, 1.0, "Pipeline canonical", { sourceDetail: detail, timestamp: ts })
+        : doc
+          ? cv([], 1.0, "Pipeline canonical", { sourceDetail: "no top species", timestamp: ts })
+          : null,
     iconicBreakdown: Object.keys(iconic).length
-      ? cv(iconic, 1.0, "iNaturalist", {
-          sourceDetail: "observations grouped by iconic taxon",
+      ? cv(iconic, 1.0, "Pipeline canonical", {
+          sourceDetail: "observations by iconic taxon",
+          timestamp: ts,
         })
       : null,
     audioEvents: audioEvents.length
@@ -135,5 +115,5 @@ export async function GET(request: Request) {
       : null,
   };
 
-  return NextResponse.json({ ok: true, data });
+  return NextResponse.json({ ok: true, data, freshness });
 }

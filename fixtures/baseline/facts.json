@@ -1,0 +1,1008 @@
+{
+  "property": {
+    "name": "Phase 0 Baseline (Vinhais)",
+    "address": "Vinhais, Bragança, Portugal",
+    "coords": {
+      "lat": 41.9,
+      "lng": -6.92
+    },
+    "area": 5,
+    "boundary": [
+      [
+        41.89899,
+        -6.92136
+      ],
+      [
+        41.90101,
+        -6.92136
+      ],
+      [
+        41.90101,
+        -6.91864
+      ],
+      [
+        41.89899,
+        -6.91864
+      ]
+    ],
+    "municipality": "Vinhais",
+    "parish": "União das freguesias de Soeira, Fresulfe e Mofreita"
+  },
+  "scores": {
+    "naturalCapital": 6.5,
+    "carbon": 50,
+    "biodiversity": 63,
+    "water": 81,
+    "soil": 60,
+    "pollination": 53,
+    "dimensions": [
+      {
+        "label": "Carbon Storage",
+        "score": 50,
+        "avg": 64,
+        "key": "carbon"
+      },
+      {
+        "label": "Biodiversity",
+        "score": 63,
+        "avg": 52,
+        "key": "biodiversity"
+      },
+      {
+        "label": "Water Regulation",
+        "score": 81,
+        "avg": 68,
+        "key": "water"
+      },
+      {
+        "label": "Soil Health",
+        "score": 60,
+        "avg": 58,
+        "key": "soil"
+      },
+      {
+        "label": "Pollination",
+        "score": 53,
+        "avg": 45,
+        "key": "pollination"
+      }
+    ],
+    "regional": {
+      "carbon": 64,
+      "biodiversity": 52,
+      "water": 68,
+      "soil": 58,
+      "pollination": 45
+    }
+  },
+  "climate": {
+    "annualMeanTemp": 11.8,
+    "summerMean": 19.5,
+    "winterMean": 5,
+    "annualRainfall": 1117,
+    "frostDays": 0,
+    "growingSeason": 6,
+    "zone": "Oceanic",
+    "monthlyAvgHigh": [
+      7.9,
+      9.5,
+      12.4,
+      14.6,
+      18.3,
+      23.1,
+      26.5,
+      26.7,
+      22.6,
+      17,
+      11,
+      8.4
+    ],
+    "monthlyAvgLow": [
+      0.9,
+      1.2,
+      2.9,
+      4.8,
+      7.8,
+      11.8,
+      14.2,
+      14.5,
+      11.9,
+      8.6,
+      3.9,
+      1.8
+    ],
+    "monthlyPrecip": [
+      139,
+      91,
+      112,
+      105,
+      80,
+      48,
+      23,
+      24,
+      62,
+      157,
+      134,
+      142
+    ],
+    "forecast": [
+      {
+        "date": "2026-04-25",
+        "high": 23,
+        "low": 9.1,
+        "precip": 0,
+        "wind": 12.5,
+        "weatherCode": 3,
+        "uvIndex": 6.95
+      },
+      {
+        "date": "2026-04-26",
+        "high": 23.4,
+        "low": 11.9,
+        "precip": 1.5,
+        "wind": 16.3,
+        "weatherCode": 95,
+        "uvIndex": 7.1
+      },
+      {
+        "date": "2026-04-27",
+        "high": 24.1,
+        "low": 12.1,
+        "precip": 1.4,
+        "wind": 12.4,
+        "weatherCode": 95,
+        "uvIndex": 7.1
+      },
+      {
+        "date": "2026-04-28",
+        "high": 20.4,
+        "low": 12.2,
+        "precip": 5,
+        "wind": 12.8,
+        "weatherCode": 3,
+        "uvIndex": 6.7
+      },
+      {
+        "date": "2026-04-29",
+        "high": 19.9,
+        "low": 10.5,
+        "precip": 0.2,
+        "wind": 15.3,
+        "weatherCode": 3,
+        "uvIndex": 7.45
+      },
+      {
+        "date": "2026-04-30",
+        "high": 18.3,
+        "low": 11.4,
+        "precip": 4.8,
+        "wind": 14.3,
+        "weatherCode": 80,
+        "uvIndex": 7.15
+      },
+      {
+        "date": "2026-05-01",
+        "high": 19.6,
+        "low": 9.8,
+        "precip": 0.1,
+        "wind": 13.9,
+        "weatherCode": 80,
+        "uvIndex": 6.2
+      }
+    ],
+    "ipmaForecast": [
+      {
+        "precipitaProb": "31.0",
+        "tMin": "10.6",
+        "tMax": "25.2",
+        "predWindDir": "E",
+        "idWeatherType": 2,
+        "classWindSpeed": 1,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-04-25",
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "65.0",
+        "tMin": "12.2",
+        "tMax": "25.4",
+        "predWindDir": "NE",
+        "idWeatherType": 20,
+        "classWindSpeed": 2,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-04-26",
+        "classPrecInt": 3,
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "40.0",
+        "tMin": "11.8",
+        "tMax": "26.3",
+        "predWindDir": "NE",
+        "idWeatherType": 7,
+        "classWindSpeed": 2,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-04-27",
+        "classPrecInt": 1,
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "51.0",
+        "tMin": "13.5",
+        "tMax": "24.9",
+        "predWindDir": "E",
+        "idWeatherType": 6,
+        "classWindSpeed": 1,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-04-28",
+        "classPrecInt": 2,
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "63.0",
+        "tMin": "11.3",
+        "tMax": "22.9",
+        "predWindDir": "S",
+        "idWeatherType": 6,
+        "classWindSpeed": 1,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-04-29",
+        "classPrecInt": 2,
+        "latitude": "41.8076"
+      }
+    ],
+    "frostDates": {
+      "lastFrost": null,
+      "firstFrost": null
+    }
+  },
+  "terrain": {
+    "elevation": 805,
+    "slope": 20.7,
+    "aspect": "North-facing",
+    "profile": [
+      819,
+      773,
+      823,
+      834,
+      789,
+      832,
+      768,
+      815,
+      793
+    ],
+    "min": 768,
+    "max": 834,
+    "range": 66
+  },
+  "soil": {
+    "ph": null,
+    "organicCarbon": null,
+    "clay": null,
+    "sand": null,
+    "silt": null,
+    "nitrogen": null,
+    "cec": null,
+    "bulkDensity": null,
+    "classification": null,
+    "texture": "Unknown"
+  },
+  "geology": {
+    "lithology": "Major:{phyllite}, Minor{quartzite,greenschist,meta-sediment group}",
+    "environment": "Unknown",
+    "period": "Early Devonian",
+    "age": "Silurian – Early Devonian"
+  },
+  "water": {
+    "springs": 0,
+    "wells": 0,
+    "waterways": 12,
+    "waterBodies": 2,
+    "features": [
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 486
+      },
+      {
+        "kind": "stream",
+        "name": null,
+        "distanceM": 486
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 499
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 559
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 613
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 690
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 692
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 772
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 821
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 848
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 853
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 889
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 941
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 985
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 990
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1014
+      },
+      {
+        "kind": "stream",
+        "name": null,
+        "distanceM": 1014
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1017
+      },
+      {
+        "kind": "stream",
+        "name": null,
+        "distanceM": 1017
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1031
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1048
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1053
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1053
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1053
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1056
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1057
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1061
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1062
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1062
+      },
+      {
+        "kind": "water",
+        "name": null,
+        "distanceM": 1064
+      }
+    ],
+    "nearestDistanceM": 486,
+    "securityIndex": 10,
+    "floodDischarge": "0.8",
+    "floodRisk": "Normal"
+  },
+  "species": {
+    "total": 1368,
+    "groups": [
+      {
+        "name": "Insecta",
+        "count": 241
+      },
+      {
+        "name": "Plantae",
+        "count": 164
+      },
+      {
+        "name": "Aves",
+        "count": 45
+      },
+      {
+        "name": "Arachnida",
+        "count": 10
+      },
+      {
+        "name": "Fungi",
+        "count": 9
+      },
+      {
+        "name": "Mammalia",
+        "count": 9
+      },
+      {
+        "name": "Amphibia",
+        "count": 8
+      },
+      {
+        "name": "Reptilia",
+        "count": 7
+      },
+      {
+        "name": "Animalia",
+        "count": 5
+      },
+      {
+        "name": "Mollusca",
+        "count": 2
+      }
+    ],
+    "top10": [
+      {
+        "name": "Mossy Rose Gall Wasp",
+        "scientificName": "Diplolepis rosae",
+        "group": "Insecta",
+        "count": 67,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/96391086/square.jpg"
+      },
+      {
+        "name": "Andricus quercustozae",
+        "scientificName": "Andricus quercustozae",
+        "group": "Insecta",
+        "count": 59,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/344099133/square.jpg"
+      },
+      {
+        "name": "Silver-studded Blue",
+        "scientificName": "Plebejus argus",
+        "group": "Insecta",
+        "count": 38,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/247677773/square.jpeg"
+      },
+      {
+        "name": "Oak Artichoke Gall Wasp",
+        "scientificName": "Andricus foecundatrix",
+        "group": "Insecta",
+        "count": 32,
+        "photoUrl": "https://static.inaturalist.org/photos/46960523/square.jpeg"
+      },
+      {
+        "name": "Iberian marbled white",
+        "scientificName": "Melanargia lachesis",
+        "group": "Insecta",
+        "count": 27,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/1939330/square.jpg"
+      },
+      {
+        "name": "Iberian Frog",
+        "scientificName": "Rana iberica",
+        "group": "Amphibia",
+        "count": 26,
+        "photoUrl": "https://static.inaturalist.org/photos/35199606/square.jpg"
+      },
+      {
+        "name": "Pyrenean Oak",
+        "scientificName": "Quercus pyrenaica",
+        "group": "Plantae",
+        "count": 25,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/92255266/square.jpeg"
+      },
+      {
+        "name": "Genista tridentata",
+        "scientificName": "Genista tridentata",
+        "group": "Plantae",
+        "count": 25,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/607705856/square.jpg"
+      },
+      {
+        "name": "Gatekeeper",
+        "scientificName": "Pyronia tithonus",
+        "group": "Insecta",
+        "count": 24,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/508718/square.jpg"
+      },
+      {
+        "name": "Iberian Green Frog",
+        "scientificName": "Pelophylax perezi",
+        "group": "Amphibia",
+        "count": 23,
+        "photoUrl": "https://inaturalist-open-data.s3.amazonaws.com/photos/133887517/square.jpeg"
+      }
+    ],
+    "threatened": 87,
+    "gbifTotal": 75318,
+    "gbifKingdoms": [
+      {
+        "name": "Animalia",
+        "count": 185
+      },
+      {
+        "name": "Plantae",
+        "count": 106
+      },
+      {
+        "name": "Fungi",
+        "count": 9
+      }
+    ],
+    "trends": {
+      "direction": "Increasing",
+      "windows": [
+        {
+          "label": "2011-2016",
+          "count": 455
+        },
+        {
+          "label": "2016-2021",
+          "count": 636
+        },
+        {
+          "label": "2021-2026",
+          "count": 1121
+        }
+      ]
+    }
+  },
+  "fire": {
+    "riskScore": 1,
+    "riskLevel": "Moderate",
+    "activeFires": 0,
+    "historical": [],
+    "peakYear": null,
+    "seasonal": []
+  },
+  "flood": {
+    "riskScore": 0,
+    "riskLevel": "Very Low"
+  },
+  "drought": {
+    "riskScore": 3,
+    "riskLevel": "Severe"
+  },
+  "energy": {
+    "solar": {
+      "level": "High",
+      "detail": "79/100 (latitude estimate)",
+      "score": 79
+    },
+    "wind": {
+      "level": "Moderate",
+      "detail": "46/100 (elevation estimate)",
+      "score": 46
+    },
+    "microHydro": {
+      "level": "High",
+      "detail": "100/100 potential",
+      "score": 100
+    },
+    "biomass": {
+      "level": "Moderate",
+      "detail": "67/100 potential",
+      "score": 67
+    },
+    "independenceScore": 74
+  },
+  "economics": {
+    "valuePerHa": 920,
+    "totalValue": 4600,
+    "ecosystemServices": {
+      "total": 4600,
+      "water": 175,
+      "food": 1550,
+      "carbon": 5,
+      "regulation": 1395,
+      "soil": 350,
+      "cultural": 1125,
+      "services": [
+        {
+          "name": "Water Provisioning",
+          "value": 175,
+          "beneficiaries": "Property, downstream users"
+        },
+        {
+          "name": "Food & Fiber",
+          "value": 1550,
+          "beneficiaries": "Markets, processors"
+        },
+        {
+          "name": "Carbon/Climate Regulation",
+          "value": 5,
+          "beneficiaries": "Global climate"
+        },
+        {
+          "name": "Water Regulation",
+          "value": 1395,
+          "beneficiaries": "Watershed, aquifer"
+        },
+        {
+          "name": "Soil Protection",
+          "value": 350,
+          "beneficiaries": "Future productivity"
+        },
+        {
+          "name": "Recreation/Cultural",
+          "value": 1125,
+          "beneficiaries": "Visitors, future stewards"
+        }
+      ]
+    },
+    "npv": {
+      "thirtyYear": 90000,
+      "scenarios": [
+        {
+          "name": "Business as Usual",
+          "npv": 90000,
+          "assumptions": "Current management; 0.00°C/decade trend applied",
+          "riskLevel": "Medium"
+        },
+        {
+          "name": "Climate Resilience",
+          "npv": 90000,
+          "assumptions": "Water efficiency + fire protection offset half of projected climate impact",
+          "riskLevel": "Medium"
+        },
+        {
+          "name": "Conservation",
+          "npv": 97200,
+          "assumptions": "Resilience measures + ecosystem service market premium (+8%)",
+          "riskLevel": "Medium"
+        },
+        {
+          "name": "Intensification",
+          "npv": 94500,
+          "assumptions": "Short-term yield optimization; amplified climate exposure",
+          "riskLevel": "Medium-High"
+        }
+      ],
+      "methodology": {
+        "tempTrend": 0,
+        "precipTrend": 0,
+        "climateDecline": 0,
+        "note": "Multipliers derived from observed 50-year climate trends (Open-Meteo ERA5 archive)"
+      }
+    },
+    "revenueScenarios": {
+      "conservative": 720,
+      "moderate": 1340,
+      "optimized": 2200,
+      "details": [
+        {
+          "scenario": "Conservative",
+          "systems": "Rain-fed Cereals",
+          "annual": 720,
+          "investment": "Minimal"
+        },
+        {
+          "scenario": "Moderate",
+          "systems": "Rain-fed Cereals (improved)",
+          "annual": 1340,
+          "investment": "€3,000-5,000"
+        },
+        {
+          "scenario": "Optimized",
+          "systems": "Rain-fed Cereals (all optimized)",
+          "annual": 2200,
+          "investment": "€10,000-16,000"
+        }
+      ]
+    },
+    "carbonStock": 0,
+    "carbonAnnualSeq": 13,
+    "carbonCreditValue": 845,
+    "carbonSeqRate": 2.5,
+    "carbonPriceEur": 65,
+    "carbonPriceDate": "2026-Q1"
+  },
+  "agriculture": {
+    "landCover": "Land principally occupied by agriculture, with significant areas of natural vegetation",
+    "systems": [
+      {
+        "name": "Rain-fed Cereals",
+        "suitability": "Moderate",
+        "description": "Adequate rainfall for rain-fed grain production"
+      }
+    ]
+  },
+  "maps": {
+    "satellite": null,
+    "overview": null,
+    "regional": null,
+    "detail": null
+  },
+  "regional": {
+    "protectedAreas": [],
+    "percentiles": {
+      "soil": 50,
+      "carbon": 50,
+      "biodiversity": 56,
+      "overall": 52
+    },
+    "averages": {
+      "soil": 60,
+      "carbon": 50,
+      "biodiversity": 56
+    },
+    "sampleCount": 8
+  },
+  "trends": {
+    "tempPerDecade": null,
+    "precipPerDecade": null,
+    "fireProneByDecade": [],
+    "yearly": [],
+    "bioWindows": [
+      {
+        "label": "2011-2016",
+        "d1": "2011-01-01",
+        "d2": "2016-12-31"
+      },
+      {
+        "label": "2016-2021",
+        "d1": "2016-01-01",
+        "d2": "2021-12-31"
+      },
+      {
+        "label": "2021-2026",
+        "d1": "2021-01-01",
+        "d2": "2026-12-31"
+      }
+    ],
+    "gbifWindows": [
+      {
+        "label": "2006-2010",
+        "yearStart": 2006,
+        "yearEnd": 2010
+      },
+      {
+        "label": "2011-2015",
+        "yearStart": 2011,
+        "yearEnd": 2015
+      },
+      {
+        "label": "2016-2020",
+        "yearStart": 2016,
+        "yearEnd": 2020
+      },
+      {
+        "label": "2021-2025",
+        "yearStart": 2021,
+        "yearEnd": 2025
+      },
+      {
+        "label": "2026-2026",
+        "yearStart": 2026,
+        "yearEnd": 2026
+      }
+    ]
+  },
+  "compliance": {
+    "items": [
+      {
+        "name": "PDM (Plano Director Municipal)",
+        "description": "Municipal master plan — zoning, building, land-use rules",
+        "authority": "Câmara Municipal",
+        "status": "Check required"
+      },
+      {
+        "name": "RAN (Reserva Agrícola Nacional)",
+        "description": "National agricultural reserve — restricts non-agricultural use of quality farmland",
+        "authority": "DGADR",
+        "status": "Check required"
+      },
+      {
+        "name": "REN (Reserva Ecológica Nacional)",
+        "description": "National ecological reserve — protects sensitive ecological areas",
+        "authority": "CCDR",
+        "status": "Check required"
+      },
+      {
+        "name": "Natura 2000",
+        "description": "EU habitat and bird protection network",
+        "authority": "ICNF",
+        "status": "Not applicable",
+        "notes": "No Natura 2000 sites detected within property boundary"
+      },
+      {
+        "name": "RJUE (Regime Jurídico da Urbanização e Edificação)",
+        "description": "Building and urbanization legal framework",
+        "authority": "Câmara Municipal",
+        "status": "Check required"
+      },
+      {
+        "name": "Water Resources Law (Lei da Água)",
+        "description": "Riparian buffer zones, water abstraction permits",
+        "authority": "APA",
+        "status": "Check required"
+      },
+      {
+        "name": "Forest Fire Prevention (DFCI)",
+        "description": "Fuel management, firebreak maintenance requirements",
+        "authority": "ICNF / Câmara Municipal",
+        "status": "Check required"
+      },
+      {
+        "name": "EU CAP (Common Agricultural Policy)",
+        "description": "Subsidy eligibility, cross-compliance, eco-schemes",
+        "authority": "IFAP",
+        "status": "Check required"
+      }
+    ],
+    "timeline": [
+      {
+        "action": "Verify PDM zoning classification",
+        "deadline": "Before any development",
+        "priority": "High"
+      },
+      {
+        "action": "Check RAN/REN status at CCDR",
+        "deadline": "Before land use changes",
+        "priority": "High"
+      },
+      {
+        "action": "Register with IFAP for CAP subsidies",
+        "deadline": "Annual application cycle",
+        "priority": "Medium"
+      },
+      {
+        "action": "Submit DFCI fuel management plan",
+        "deadline": "Before fire season (May)",
+        "priority": "High"
+      },
+      {
+        "action": "Apply for water abstraction license if needed",
+        "deadline": "Before installation",
+        "priority": "Medium"
+      }
+    ],
+    "countryCode": "PT"
+  },
+  "actions": {
+    "immediate": [
+      {
+        "action": "Walk the property boundaries — verify fence lines, access points, and water features",
+        "category": "Assessment",
+        "priority": "Medium",
+        "impact": "Ground-truths satellite and API data"
+      }
+    ],
+    "shortTerm": [
+      {
+        "action": "Commission a hydrogeological survey to identify groundwater potential",
+        "category": "Water Security",
+        "priority": "Medium",
+        "impact": "Identifies viable water extraction points"
+      },
+      {
+        "action": "Install erosion control measures on steep slopes — terracing, swales, or cover crops",
+        "category": "Land Management",
+        "priority": "High",
+        "impact": "Prevents topsoil loss and sedimentation"
+      }
+    ],
+    "longTerm": [
+      {
+        "action": "Develop a carbon sequestration plan — explore voluntary carbon market registration",
+        "category": "Carbon",
+        "priority": "Medium",
+        "impact": "Unlocks carbon credit revenue stream"
+      }
+    ]
+  },
+  "narratives": {},
+  "meta": {
+    "generatedAt": "2026-04-25T05:41:13.055Z",
+    "version": "2.0.0",
+    "apiStatus": {
+      "elevation": "ok",
+      "forecast": "ok",
+      "climate": "ok",
+      "climateTrends": "Open-Meteo archive error: 429",
+      "soilProps": "ok",
+      "soilClass": "ok",
+      "geology": "ok",
+      "species": "ok",
+      "threatened": "ok",
+      "gbif": "ok",
+      "flood": "ok",
+      "water": "ok",
+      "infrastructure": "ok",
+      "protectedAreas": "ok",
+      "activeFires": "skipped",
+      "historicalFires": "skipped",
+      "riskScores": "ok",
+      "admin": "ok",
+      "ipmaLocation": "ok",
+      "terrainProfile": "ok",
+      "landCover": "ok",
+      "nominatim": "ok",
+      "solarWind": "Open-Meteo solar/wind error: 429",
+      "pollen": "skipped",
+      "regionalBaseline": "ok",
+      "speciesWindow0": "ok",
+      "speciesWindow1": "ok",
+      "speciesWindow2": "ok",
+      "ipmaForecast": "ok"
+    },
+    "missingFields": [
+      "climateTrends",
+      "activeFires",
+      "historicalFires",
+      "solarWind",
+      "pollen"
+    ],
+    "uncertainty": {
+      "interval": 17,
+      "confidence": 95,
+      "label": "±17% at 95% CI",
+      "completeness": 78,
+      "apisOk": 7,
+      "apisTotal": 9
+    },
+    "validation": {
+      "ok": true,
+      "issueCount": 0,
+      "firstIssues": []
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { listSensorsForLandbook, latestReadingsForSensor } from "@/lib/sensors";
 import { cv, empty, fromSensorReading, latestReadingByMetric } from "@/lib/confidence";
+import { getFactsDoc, factsFreshness } from "@/lib/facts-source";
 import type { ConfidenceValue } from "@/lib/dashboard-types";
 
 export const dynamic = "force-dynamic";
@@ -16,26 +17,31 @@ interface SoilPanelData {
   cec: ConfidenceValue | null;
 }
 
-const SOILGRIDS_PROPS = [
-  { key: "phh2o", depth: "0-5cm", field: "ph", unit: "pH", scale: 0.1 },
-  { key: "soc", depth: "0-5cm", field: "organicCarbon", unit: "g/kg", scale: 0.1 },
-  { key: "clay", depth: "0-5cm", field: "clay", unit: "%", scale: 0.1 },
-  { key: "sand", depth: "0-5cm", field: "sand", unit: "%", scale: 0.1 },
-  { key: "nitrogen", depth: "0-5cm", field: "nitrogen", unit: "cg/kg", scale: 0.01 },
-  { key: "cec", depth: "0-5cm", field: "cec", unit: "mmol(c)/kg", scale: 0.1 },
-] as const;
+const unwrap = (field: unknown): unknown => {
+  if (field && typeof field === "object" && "value" in (field as Record<string, unknown>)) {
+    return (field as Record<string, unknown>).value;
+  }
+  return field ?? null;
+};
+
+const numFromAny = (v: unknown): number | null => {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = parseFloat(v);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const landbookId = searchParams.get("landbookId");
-  const lat = parseFloat(searchParams.get("lat") || "");
-  const lng = parseFloat(searchParams.get("lng") || "");
-  if (!landbookId || Number.isNaN(lat) || Number.isNaN(lng)) {
-    return NextResponse.json(
-      { ok: false, error: "landbookId, lat, lng required" },
-      { status: 400 }
-    );
+  if (!landbookId) {
+    return NextResponse.json({ ok: false, error: "landbookId required" }, { status: 400 });
   }
+
+  const doc = await getFactsDoc(landbookId);
+  const freshness = factsFreshness(doc);
 
   const sensors = await listSensorsForLandbook(landbookId);
   const soilSensors = sensors.filter((s) => s.type === "soil");
@@ -48,81 +54,50 @@ export async function GET(request: Request) {
     }
   }
 
-  const propsQuery = SOILGRIDS_PROPS.map((p) => `property=${p.key}`).join("&");
-  const soilGridsUrl = `https://rest.isric.org/soilgrids/v2.0/properties/query?lon=${lng}&lat=${lat}&${propsQuery}&depth=0-5cm&value=mean`;
+  const soil = doc?.soil ? (doc.soil as Record<string, unknown>) : null;
+  const ph = soil ? numFromAny(unwrap(soil.ph)) : null;
+  const organicCarbon = soil ? numFromAny(unwrap(soil.organicCarbon)) : null;
+  const clay = soil ? numFromAny(unwrap(soil.clay)) : null;
+  const sand = soil ? numFromAny(unwrap(soil.sand)) : null;
+  const nitrogen = soil ? numFromAny(unwrap(soil.nitrogen)) : null;
+  const cec = soil ? numFromAny(unwrap(soil.cec)) : null;
 
-  const soilGrids: Record<string, number | null> = {};
-  let errored = false;
-  try {
-    const res = await fetch(soilGridsUrl, { next: { revalidate: 86400 } });
-    if (res.ok) {
-      const j = await res.json();
-      const layers = j?.properties?.layers || [];
-      for (const prop of SOILGRIDS_PROPS) {
-        const layer = layers.find((l: { name: string }) => l.name === prop.key);
-        const mean = layer?.depths?.[0]?.values?.mean;
-        soilGrids[prop.field] =
-          typeof mean === "number" ? mean * prop.scale : null;
-      }
-    } else {
-      errored = true;
-    }
-  } catch {
-    errored = true;
-  }
+  const detail = "Pipeline canonical (SoilGrids 0-5cm)";
+  const ts = freshness.updatedAt || undefined;
 
   const data: SoilPanelData = {
     moisture: fromSensorReading(
       sensorReadings.soil_moisture,
-      empty("SoilGrids", "no moisture layer at this point")
+      empty("Pipeline canonical", "no moisture layer in canonical")
     ),
     temperature: fromSensorReading(sensorReadings.soil_temperature, null),
     ph: fromSensorReading(
       sensorReadings.soil_ph,
-      soilGrids.ph !== null && soilGrids.ph !== undefined
-        ? cv(Number(soilGrids.ph.toFixed(1)), 0.4, "SoilGrids", {
-            sourceDetail: "250m model, 0-5cm",
-          })
-        : errored
-          ? empty("SoilGrids", "unavailable")
-          : null
+      ph != null
+        ? cv(Number(ph.toFixed(1)), 0.4, "Pipeline canonical", { sourceDetail: detail, timestamp: ts })
+        : empty("Pipeline canonical", "no pH on file")
     ),
     organicCarbon:
-      soilGrids.organicCarbon !== null && soilGrids.organicCarbon !== undefined
-        ? cv(Number(soilGrids.organicCarbon.toFixed(1)), 0.4, "SoilGrids", {
-            sourceDetail: "0-5cm mean",
-            unit: "g/kg",
-          })
-        : empty("SoilGrids", errored ? "unavailable" : "no data"),
+      organicCarbon != null
+        ? cv(Number(organicCarbon.toFixed(1)), 0.4, "Pipeline canonical", { sourceDetail: detail, unit: "g/kg", timestamp: ts })
+        : empty("Pipeline canonical", "no organic carbon on file"),
     clay:
-      soilGrids.clay !== null && soilGrids.clay !== undefined
-        ? cv(Number(soilGrids.clay.toFixed(1)), 0.4, "SoilGrids", {
-            sourceDetail: "0-5cm mean",
-            unit: "%",
-          })
+      clay != null
+        ? cv(Number(clay.toFixed(1)), 0.4, "Pipeline canonical", { sourceDetail: detail, unit: "%", timestamp: ts })
         : null,
     sand:
-      soilGrids.sand !== null && soilGrids.sand !== undefined
-        ? cv(Number(soilGrids.sand.toFixed(1)), 0.4, "SoilGrids", {
-            sourceDetail: "0-5cm mean",
-            unit: "%",
-          })
+      sand != null
+        ? cv(Number(sand.toFixed(1)), 0.4, "Pipeline canonical", { sourceDetail: detail, unit: "%", timestamp: ts })
         : null,
     nitrogen:
-      soilGrids.nitrogen !== null && soilGrids.nitrogen !== undefined
-        ? cv(Number(soilGrids.nitrogen.toFixed(2)), 0.4, "SoilGrids", {
-            sourceDetail: "0-5cm mean",
-            unit: "cg/kg",
-          })
+      nitrogen != null
+        ? cv(Number(nitrogen.toFixed(2)), 0.4, "Pipeline canonical", { sourceDetail: detail, unit: "g/kg", timestamp: ts })
         : null,
     cec:
-      soilGrids.cec !== null && soilGrids.cec !== undefined
-        ? cv(Number(soilGrids.cec.toFixed(1)), 0.4, "SoilGrids", {
-            sourceDetail: "0-5cm mean",
-            unit: "mmol(c)/kg",
-          })
+      cec != null
+        ? cv(Number(cec.toFixed(1)), 0.4, "Pipeline canonical", { sourceDetail: detail, unit: "cmol/kg", timestamp: ts })
         : null,
   };
 
-  return NextResponse.json({ ok: true, data });
+  return NextResponse.json({ ok: true, data, freshness });
 }

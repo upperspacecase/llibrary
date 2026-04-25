@@ -4,6 +4,8 @@
  * https://api.ipma.pt/
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://api.ipma.pt/open-data';
 
 // Global IDs for Odemira-area forecast locations
@@ -17,7 +19,9 @@ const LOCATION_IDS = {
  * @param {number} globalIdLocal - IPMA location ID (default: Odemira)
  */
 export async function getForecast(globalIdLocal = LOCATION_IDS.ODEMIRA) {
-    const res = await fetch(`${BASE}/forecast/meteorology/cities/daily/${globalIdLocal}.json`);
+    const res = await fetchWithPolicy(`${BASE}/forecast/meteorology/cities/daily/${globalIdLocal}.json`, {}, {
+        source: 'ipma-forecast', timeoutMs: 5000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`IPMA forecast error: ${res.status}`);
     const data = await res.json();
     return data.data || [];
@@ -27,27 +31,26 @@ export async function getForecast(globalIdLocal = LOCATION_IDS.ODEMIRA) {
  * Get current weather observations from all stations.
  */
 export async function getStationObservations() {
-    const res = await fetch(`${BASE}/observation/meteorology/stations/observations.json`);
+    const res = await fetchWithPolicy(`${BASE}/observation/meteorology/stations/observations.json`, {}, {
+        source: 'ipma-stations', timeoutMs: 8000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`IPMA observations error: ${res.status}`);
     return res.json();
 }
 
-/**
- * Get PDSI drought index for a district.
- * @param {number} districtId - IPMA district ID
- */
-export async function getDroughtIndex(districtId = 2) {
-    // District 2 = Beja (covers Odemira area)
-    const res = await fetch(`${BASE}/observation/climate/mpdsi/${districtId}/`);
-    if (!res.ok) throw new Error(`IPMA drought error: ${res.status}`);
-    return res.json();
-}
+// getDroughtIndex() removed 2026-04-25: the IPMA endpoint
+// /observation/climate/mpdsi/{districtId}/ returns 404 (retired upstream).
+// Drought signal now comes from Open-Meteo derivation in src/api/risk-scores.js.
+// If IPMA publishes a replacement, restore here. The interpretDrought() helper
+// below is still useful for any caller that has a PDSI value from elsewhere.
 
 /**
  * Get list of forecast locations to find the nearest to coordinates.
  */
 export async function getForecastLocations() {
-    const res = await fetch(`${BASE}/forecast/meteorology/cities/daily/hp-daily-forecast-day0.json`);
+    const res = await fetchWithPolicy(`${BASE}/forecast/meteorology/cities/daily/hp-daily-forecast-day0.json`, {}, {
+        source: 'ipma-locations', timeoutMs: 5000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`IPMA locations error: ${res.status}`);
     return res.json();
 }

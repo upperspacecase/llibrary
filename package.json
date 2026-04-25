@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "generate-report": "node scripts/generate-report.js"
+    "generate-report": "node scripts/generate-report.js",
+    "baseline:capture": "node scripts/capture-baseline.mjs",
+    "baseline:check": "node scripts/check-baseline.mjs",
+    "verify:errors": "node scripts/verify-pipeline-errors.mjs"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",
@@ -21,6 +24,7 @@
     "handlebars": "^4.7.9",
     "mapbox-gl": "^3.19.0",
     "mongodb": "^7.1.0",
-    "resend": "^6.10.0"
+    "resend": "^6.10.0",
+    "zod": "^4.3.6"
   }
 }

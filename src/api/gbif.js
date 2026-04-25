@@ -4,6 +4,8 @@
  * https://www.gbif.org/developer/occurrence
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://api.gbif.org/v1';
 
 export async function getSpeciesOccurrences(lat, lng, radiusKm = 15, options = {}) {
@@ -19,7 +21,9 @@ export async function getSpeciesOccurrences(lat, lng, radiusKm = 15, options = {
   if (options.year) params.set('year', String(options.year));
   if (options.basisOfRecord) params.set('basisOfRecord', options.basisOfRecord);
 
-  const res = await fetch(`${BASE}/occurrence/search?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/occurrence/search?${params}`, {}, {
+    source: 'gbif-occurrences', timeoutMs: 12000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`GBIF error: ${res.status}`);
   return res.json();
 }
@@ -35,20 +39,26 @@ export async function getSpeciesInArea(bbox, options = {}) {
     facetLimit: '500',
   });
 
-  const res = await fetch(`${BASE}/occurrence/search?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/occurrence/search?${params}`, {}, {
+    source: 'gbif-area-search', timeoutMs: 15000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`GBIF area search error: ${res.status}`);
   return res.json();
 }
 
 export async function getSpeciesDetail(speciesKey) {
-  const res = await fetch(`${BASE}/species/${speciesKey}`);
+  const res = await fetchWithPolicy(`${BASE}/species/${speciesKey}`, {}, {
+    source: 'gbif-species', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`GBIF species error: ${res.status}`);
   return res.json();
 }
 
 export async function searchSpecies(name) {
   const params = new URLSearchParams({ q: name, limit: '20' });
-  const res = await fetch(`${BASE}/species/search?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/species/search?${params}`, {}, {
+    source: 'gbif-search', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`GBIF search error: ${res.status}`);
   return res.json();
 }

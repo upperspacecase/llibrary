@@ -5,6 +5,8 @@
  * https://www.isric.org/explore/soilgrids/faq-soilgrids
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const WMS_BASE = 'https://maps.isric.org/mapserv';
 
 const SOIL_LAYERS = [
@@ -43,7 +45,9 @@ async function getFeatureInfo(lat, lng, mapName, layerName) {
     X: '0',
     Y: '0',
   });
-  const res = await fetch(`${WMS_BASE}?${params}`);
+  const res = await fetchWithPolicy(`${WMS_BASE}?${params}`, {}, {
+    source: 'soilgrids-wms', timeoutMs: 12000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`SoilGrids WMS error: ${res.status}`);
   return res.json();
 }

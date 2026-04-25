@@ -4,6 +4,8 @@
  * https://api.inaturalist.org/v1/docs/
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://api.inaturalist.org/v1';
 
 export async function getObservations(lat, lng, radiusKm = 15, options = {}) {
@@ -25,7 +27,9 @@ export async function getObservations(lat, lng, radiusKm = 15, options = {}) {
   if (options.endemic) params.set('endemic', 'true');
   if (options.introduced) params.set('introduced', 'true');
 
-  const res = await fetch(`${BASE}/observations?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/observations?${params}`, {}, {
+    source: 'inaturalist-observations', timeoutMs: 10000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`iNaturalist observations error: ${res.status}`);
   return res.json();
 }
@@ -44,7 +48,9 @@ export async function getSpeciesCounts(lat, lng, radiusKm = 15, options = {}) {
   if (options.d1) params.set('d1', options.d1);
   if (options.d2) params.set('d2', options.d2);
 
-  const res = await fetch(`${BASE}/observations/species_counts?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/observations/species_counts?${params}`, {}, {
+    source: 'inaturalist-species-counts', timeoutMs: 10000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`iNaturalist species counts error: ${res.status}`);
   return res.json();
 }
@@ -54,7 +60,9 @@ export async function getThreatenedSpecies(lat, lng, radiusKm = 25) {
 }
 
 export async function getTaxonDetail(taxonId) {
-  const res = await fetch(`${BASE}/taxa/${taxonId}?locale=en`);
+  const res = await fetchWithPolicy(`${BASE}/taxa/${taxonId}?locale=en`, {}, {
+    source: 'inaturalist-taxon', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`iNaturalist taxon error: ${res.status}`);
   return res.json();
 }
@@ -65,7 +73,9 @@ export async function getPlaces(lat, lng) {
     longitude: String(lng),
     per_page: '10',
   });
-  const res = await fetch(`${BASE}/places/nearby?${params}`);
+  const res = await fetchWithPolicy(`${BASE}/places/nearby?${params}`, {}, {
+    source: 'inaturalist-places', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`iNaturalist places error: ${res.status}`);
   return res.json();
 }

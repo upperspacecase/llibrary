@@ -70,16 +70,57 @@ import {
   computeBioScore,
 } from './report-scores.js';
 
+import {
+  classifyError,
+  newRunId,
+  writePipelineError,
+} from './pipeline-errors.js';
+
+import { fetchWithPolicy } from './fetch-policy.js';
+
+import { validateReportData } from './report-data-schema.js';
+
+import { missingEnv } from './source-registry.js';
+
+import { snapshotSensors } from './sensor-source.js';
+
 // ── Helpers ────────────────────────────────────────────────
 
-/** Wrap an async call so one failure never crashes the pipeline */
-async function safe(label, fn) {
+// Run context — set once at the start of fetchAllData, read by withStage so
+// every error gets tagged with the same runId without threading it through
+// every callsite. Phase 3 will surface this at the orchestrator boundary.
+let _currentRunCtx = null;
+
+/**
+ * Run a stage (typically a single source fetch) with structured failure capture.
+ * Returns { ok: true, data, durationMs } | { ok: false, error, code, durationMs }.
+ *
+ * On failure, writes a row to pipeline_errors (best-effort — no-op if Mongo
+ * is unavailable) and logs a warning. The pipeline never throws past this
+ * boundary; callers branch on .ok.
+ */
+async function withStage(label, fn) {
+  const t0 = Date.now();
   try {
     const data = await fn();
-    return { ok: true, data };
+    return { ok: true, data, durationMs: Date.now() - t0 };
   } catch (error) {
-    console.warn(`[pipeline] ${label} failed:`, error.message);
-    return { ok: false, error: error.message };
+    const durationMs = Date.now() - t0;
+    const code = classifyError(error);
+    const message = error?.message || String(error);
+    console.warn(`[pipeline] ${label} failed [${code}]:`, message);
+    if (_currentRunCtx) {
+      writePipelineError({
+        runId: _currentRunCtx.runId,
+        landbookId: _currentRunCtx.landbookId ?? null,
+        source: label,
+        stage: 'fetch',
+        code,
+        message,
+        durationMs,
+      }).catch(() => {});
+    }
+    return { ok: false, error: message, code, durationMs };
   }
 }
 
@@ -115,6 +156,18 @@ function linearTrend(xValues, yValues) {
   return { slope, perDecade: slope * 10, rSquared, intercept };
 }
 
+/** Great-circle distance between two lat/lng points, in metres. */
+function haversineMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const toRad = (x) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 /** Score 0-100 to human label */
 function scoreToLabel(score) {
   if (score >= 80) return 'Extreme';
@@ -140,9 +193,28 @@ function classifyClimateZone(meanTemp, annualRainfall, lat) {
 
 /**
  * Call all APIs in parallel with fault isolation.
- * Each slot returns { ok: true, data } or { ok: false, error }.
+ * Each slot returns { ok: true, data, durationMs } or
+ * { ok: false, error, code, durationMs }.
+ *
+ * @param {number} lat
+ * @param {number} lng
+ * @param {Array<[number, number]>} boundary
+ * @param {number} areaHa
+ * @param {{ runId?: string, landbookId?: string | null }} [options]
  */
-export async function fetchAllData(lat, lng, boundary, areaHa) {
+export async function fetchAllData(lat, lng, boundary, areaHa, options = {}) {
+  const runId = options.runId || newRunId();
+  const landbookId = options.landbookId ?? null;
+  _currentRunCtx = { runId, landbookId };
+
+  try {
+    return await _fetchAllDataInner(lat, lng, boundary, areaHa);
+  } finally {
+    _currentRunCtx = null;
+  }
+}
+
+async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
   const bbox = getBbox(boundary);
   const center = [lat, lng];
 
@@ -185,8 +257,37 @@ export async function fetchAllData(lat, lng, boundary, areaHa) {
     ]),
   ];
 
+  // Sensor snapshots — only enqueued when a landbookId is in scope (the
+  // sensor collection is per-landbook). Skip outside that context (e.g.
+  // baseline capture script) so we don't pollute observations with empty rows.
+  const landbookIdInCtx = _currentRunCtx?.landbookId;
+  if (landbookIdInCtx) {
+    entries.push(
+      ['sensorWeather', () => snapshotSensors(landbookIdInCtx, 'weather')],
+      ['sensorWater',   () => snapshotSensors(landbookIdInCtx, 'water')],
+      ['sensorSoil',    () => snapshotSensors(landbookIdInCtx, 'soil')],
+      ['sensorAudio',   () => snapshotSensors(landbookIdInCtx, 'audio')],
+    );
+  }
+
+  // Pre-filter sources whose required env is missing. Sets a clean
+  // "skipped" result without calling the fetcher (so pipeline_errors
+  // doesn't fill up with KEY_MISSING noise on every run).
   const settled = await Promise.all(
-    entries.map(([label, fn]) => safe(label, fn))
+    entries.map(async ([label, fn]) => {
+      const missing = missingEnv(label);
+      if (missing.length > 0) {
+        return {
+          ok: false,
+          skipped: true,
+          status: 'skipped',
+          code: 'KEY_MISSING',
+          error: `${missing.join(', ')} not set`,
+          durationMs: 0,
+        };
+      }
+      return withStage(label, fn);
+    })
   );
 
   entries.forEach(([label], i) => {
@@ -197,12 +298,12 @@ export async function fetchAllData(lat, lng, boundary, areaHa) {
   if (results.ipmaLocation.ok && results.ipmaLocation.data) {
     const locId = results.ipmaLocation.data.globalIdLocal;
     if (locId) {
-      results.ipmaForecast = await safe('ipmaForecast', () => getIPMAForecast(locId));
+      results.ipmaForecast = await withStage('ipmaForecast', () => getIPMAForecast(locId));
     } else {
-      results.ipmaForecast = { ok: false, error: 'No IPMA location ID' };
+      results.ipmaForecast = { ok: false, error: 'No IPMA location ID', code: 'MISSING_REQUIRED' };
     }
   } else {
-    results.ipmaForecast = { ok: false, error: 'IPMA location lookup failed' };
+    results.ipmaForecast = { ok: false, error: 'IPMA location lookup failed', code: 'FETCH_FAILED' };
   }
 
   return results;
@@ -224,7 +325,11 @@ export async function getMultiPointElevation(boundary, center) {
 
   const lats = points.map(p => p[0]).join(',');
   const lngs = points.map(p => p[1]).join(',');
-  const res = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`);
+  const res = await fetchWithPolicy(
+    `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`,
+    {},
+    { source: 'open-meteo-elevation', timeoutMs: 8000, accept: 'application/json' }
+  );
   if (!res.ok) throw new Error(`Elevation API error: ${res.status}`);
   const data = await res.json();
   if (!data?.elevation) throw new Error('No elevation data');
@@ -277,7 +382,7 @@ export async function getLandCoverAtPoint(lat, lng) {
   const d = 0.0005;
   const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
   const url = `https://image.discomap.eea.europa.eu/arcgis/services/Corine/CLC2018_WM/MapServer/WMSServer?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&LAYERS=12&QUERY_LAYERS=12&BBOX=${bbox}&WIDTH=2&HEIGHT=2&X=1&Y=1&SRS=EPSG:4326&INFO_FORMAT=application/json`;
-  const res = await fetch(url);
+  const res = await fetchWithPolicy(url, {}, { source: 'corine-landcover', timeoutMs: 8000 });
   if (!res.ok) throw new Error(`Land cover HTTP ${res.status}`);
   const text = await res.text();
   const codeMatch = text.match(/CODE_18="(\d+)"/);
@@ -333,14 +438,17 @@ function computeGBIFWindows() {
  * @param {Object} raw - Output from fetchAllData
  * @param {Object} submission - User submission with name, address, coords, boundary, areaHa
  * @param {number} areaHa - Property area in hectares
+ * @param {{ runId?: string, landbookId?: string | null }} [options]
  */
-export function processRawData(raw, submission, areaHa) {
+export function processRawData(raw, submission, areaHa, options = {}) {
   const missingFields = [];
   const apiStatus = {};
 
   // Track API statuses
   for (const [key, result] of Object.entries(raw)) {
-    apiStatus[key] = result.ok ? 'ok' : result.error;
+    if (result.ok) apiStatus[key] = 'ok';
+    else if (result.skipped || result.status === 'skipped') apiStatus[key] = 'skipped';
+    else apiStatus[key] = result.error || 'error';
     if (!result.ok) missingFields.push(key);
   }
 
@@ -479,12 +587,22 @@ export function processRawData(raw, submission, areaHa) {
   let soilClassParsed = null;
   try { soilClassParsed = soilClassRaw ? parseSoilClassification(soilClassRaw) : null; } catch (e) { console.warn('[pipeline] parseSoilClassification failed:', e.message); }
 
-  const clayPct = soilParsed ? parseFloat(soilParsed.clay) : null;
-  const sandPct = soilParsed ? parseFloat(soilParsed.sand) : null;
-  const siltPct = (clayPct != null && sandPct != null) ? (100 - clayPct - sandPct) : (soilParsed ? parseFloat(soilParsed.silt) : null);
+  // toNum: parseFloat that returns null for non-finite results.
+  // parseFloat(null) → NaN, which JSON-serialises to null but trips canonical
+  // schema validation in-memory. Always go through toNum on parsed soil values.
+  const toNum = (v) => {
+    if (v == null) return null;
+    const n = typeof v === 'number' ? v : parseFloat(v);
+    return Number.isFinite(n) ? n : null;
+  };
+  const clayPct = toNum(soilParsed?.clay);
+  const sandPct = toNum(soilParsed?.sand);
+  const siltPct = (clayPct != null && sandPct != null)
+    ? (100 - clayPct - sandPct)
+    : toNum(soilParsed?.silt);
 
   const soil = {
-    ph: soilParsed ? parseFloat(soilParsed.ph) : null,
+    ph: toNum(soilParsed?.ph),
     organicCarbon: soilParsed?.organicCarbon ?? null,
     clay: clayPct,
     sand: sandPct,
@@ -512,6 +630,7 @@ export function processRawData(raw, submission, areaHa) {
   // ── Water ─────────────────────────────────────────────
   const waterRaw = raw.water?.ok ? raw.water.data : null;
   let springs = 0, wells = 0, waterways = 0, waterBodies = 0;
+  let waterFeatures = [];
 
   if (waterRaw) {
     const nodes = extractNodes(waterRaw);
@@ -520,6 +639,37 @@ export function processRawData(raw, submission, areaHa) {
     wells = nodes.filter(n => n.tags?.man_made === 'water_well').length;
     waterways = ways.filter(w => w.tags?.waterway).length;
     waterBodies = ways.filter(w => w.tags?.natural === 'water').length;
+
+    // Per-feature list with distance from property centre. Used by the
+    // dashboard water panel; capped to 30 entries to bound fact-doc size.
+    const featureFromTags = (tags = {}) => {
+      if (tags.natural === 'spring') return 'spring';
+      if (tags.man_made === 'water_well') return 'well';
+      if (tags.waterway) return tags.waterway;
+      if (tags.natural === 'water') return tags.water || 'water_body';
+      return 'water';
+    };
+    const allFeatures = [];
+    for (const n of nodes) {
+      if (typeof n.lat !== 'number' || typeof n.lon !== 'number') continue;
+      allFeatures.push({
+        kind: featureFromTags(n.tags),
+        name: n.tags?.name || null,
+        distanceM: Math.round(haversineMeters(lat, lng, n.lat, n.lon)),
+      });
+    }
+    for (const w of ways) {
+      const coord = w.coords?.[0];
+      if (!coord || typeof coord[0] !== 'number' || typeof coord[1] !== 'number') continue;
+      allFeatures.push({
+        kind: featureFromTags(w.tags),
+        name: w.tags?.name || null,
+        distanceM: Math.round(haversineMeters(lat, lng, coord[0], coord[1])),
+      });
+    }
+    waterFeatures = allFeatures
+      .sort((a, b) => a.distanceM - b.distanceM)
+      .slice(0, 30);
   }
 
   const floodRaw = raw.flood?.ok ? raw.flood.data : null;
@@ -529,6 +679,8 @@ export function processRawData(raw, submission, areaHa) {
 
   const water = {
     springs, wells, waterways, waterBodies,
+    features: waterFeatures,
+    nearestDistanceM: waterFeatures[0]?.distanceM ?? null,
     securityIndex: Math.round(waterSecurityIndex * 10) / 10,
     floodDischarge: floodAnalysis?.current ?? null,
     floodRisk: floodAnalysis?.level ?? 'Unknown',
@@ -728,7 +880,7 @@ export function processRawData(raw, submission, areaHa) {
     ecosystemServices: svcKeyed,
     npv: npvObj,
     revenueScenarios: revKeyed,
-    carbonStock: allScores.carbonStockTotal ?? 0,
+    carbonStock: Number.isFinite(allScores.carbonStockTotal) ? allScores.carbonStockTotal : 0,
     carbonAnnualSeq,
     carbonCreditValue,
     carbonSeqRate: seqRate,
@@ -784,6 +936,7 @@ export function processRawData(raw, submission, areaHa) {
     tempPerDecade: trendsData.tempPerDecade,
     precipPerDecade: trendsData.precipPerDecade,
     fireProneByDecade: trendsData.fireProneByDecade,
+    yearly: trendsData.yearly,
     bioWindows: computeBioWindows(lat, lng),
     gbifWindows: computeGBIFWindows(),
   };
@@ -795,7 +948,7 @@ export function processRawData(raw, submission, areaHa) {
   // ── Actions ───────────────────────────────────────────
   const actions = deriveActions(riskProfile, scores, water, fire, soil, terrain, areaHa);
 
-  return {
+  const reportData = {
     property,
     scores,
     climate,
@@ -824,6 +977,38 @@ export function processRawData(raw, submission, areaHa) {
       uncertainty: computeUncertainty(apiStatus),
     },
   };
+
+  // ── Canonical schema validation ────────────────────────
+  // Non-blocking: drift is recorded but the report still ships. Phase 4's
+  // admin page surfaces these issues; downstream consumers can read
+  // meta.validation to decide whether to render a "data-quality" banner.
+  const validation = validateReportData(reportData);
+  reportData.meta.validation = {
+    ok: validation.ok,
+    issueCount: validation.issues.length,
+    firstIssues: validation.issues.slice(0, 5),
+  };
+  if (!validation.ok) {
+    console.warn(
+      `[pipeline] reportData schema drift: ${validation.issues.length} issues`,
+      validation.issues.slice(0, 3)
+    );
+    const runId = options.runId || _currentRunCtx?.runId || null;
+    const landbookId = options.landbookId ?? _currentRunCtx?.landbookId ?? null;
+    if (runId) {
+      writePipelineError({
+        runId,
+        landbookId,
+        source: 'reportData',
+        stage: 'validate',
+        code: 'SCHEMA_DRIFT',
+        message: `${validation.issues.length} validation issues; first: ${validation.issues[0]?.path} ${validation.issues[0]?.message}`,
+        details: validation.issues.slice(0, 20),
+      }).catch(() => {});
+    }
+  }
+
+  return reportData;
 }
 
 // ── NPV scenario builder ─────────────────────────────────
@@ -914,8 +1099,8 @@ export async function fetchRegionalBaseline(lat, lng) {
   const sampleScores = await Promise.all(points.map(async ([sLat, sLng]) => {
     try {
       const [soilRes, speciesRes] = await Promise.all([
-        safe('soil', () => getSoilProperties(sLat, sLng)),
-        safe('species', () => getSpeciesCounts(sLat, sLng, 10)),
+        withStage('regionalBaseline:soil', () => getSoilProperties(sLat, sLng)),
+        withStage('regionalBaseline:species', () => getSpeciesCounts(sLat, sLng, 10)),
       ]);
 
       const soilScore = computeSoilScore(soilRes.ok ? soilRes.data : null).score;
@@ -1046,6 +1231,7 @@ function computeTrends(raw) {
     tempPerDecade: null,
     precipPerDecade: null,
     fireProneByDecade: [],
+    yearly: [],
   };
 
   const trendsRaw = raw.climateTrends?.ok ? raw.climateTrends.data : null;
@@ -1091,6 +1277,14 @@ function computeTrends(raw) {
     decade,
     avgDays: Math.round(vals.reduce((a, b) => a + b, 0) / vals.length * 10) / 10,
   }));
+
+  // Per-year mean temp + total precip — preserved for the dashboard's
+  // historic panel which renders the actual time series, not just the trend.
+  result.yearly = years.map((y, i) => ({
+    year: Number(y),
+    meanTemp: annualTemps[i],
+    precip: annualPrecip[i],
+  })).filter(y => Number.isFinite(y.year));
 
   return result;
 }

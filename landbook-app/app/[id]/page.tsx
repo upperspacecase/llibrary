@@ -4,6 +4,7 @@ import type { Landbook, ReportData } from "@/lib/types";
 
 import { SideNav } from "@/components/landbook/SideNav";
 import { CoverSection } from "@/components/landbook/CoverSection";
+import { RegenerateButton } from "@/components/landbook/RegenerateButton";
 import {
   OverviewSection,
   RegionEcosystemSection,
@@ -175,12 +176,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
                   Data has been updated since narratives were last generated.
                 </p>
               </div>
-              <a
-                href={`/api/landbooks/${id}/regenerate-narratives`}
-                className="text-xs font-medium text-amber-700 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded transition-colors"
-              >
-                Regenerate
-              </a>
+              <RegenerateButton landbookId={id} />
             </div>
           </div>
         )}

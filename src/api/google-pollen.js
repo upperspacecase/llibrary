@@ -4,6 +4,8 @@
  * https://developers.google.com/maps/documentation/pollen
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://pollen.googleapis.com/v1/forecast:lookup';
 
 /**
@@ -20,7 +22,9 @@ export async function getPollenIndex(lat, lng, days = 5) {
   if (!key) throw new Error('GOOGLE_API_KEY not set');
 
   const url = `${BASE}?key=${key}&location.latitude=${lat}&location.longitude=${lng}&days=${days}`;
-  const res = await fetch(url);
+  const res = await fetchWithPolicy(url, {}, {
+    source: 'google-pollen', timeoutMs: 8000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Google Pollen API error: ${res.status}`);
   const data = await res.json();
 

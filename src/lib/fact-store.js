@@ -39,13 +39,61 @@ function unwrap(field) {
 
 // ── CRUD ──────────────────────────────────────────────────
 
-export async function saveFacts(landbookId, facts) {
+/**
+ * Stringify with recursively sorted keys so equal objects always hash the same.
+ * Plain JSON.stringify(obj, replacerArray) only filters keys, doesn't sort —
+ * and as a replacer array it filters at every level which is rarely what you want.
+ */
+function stableJson(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return '[' + value.map(stableJson).join(',') + ']';
+  const keys = Object.keys(value).sort();
+  return '{' + keys.map(k => JSON.stringify(k) + ':' + stableJson(value[k])).join(',') + '}';
+}
+
+/**
+ * Build the canonical hash input. Strips fields that change every run
+ * even when the underlying data is identical (timestamps, run-scoped metadata).
+ */
+function buildHashInput(source, schemaVersion) {
+  if (!source || typeof source !== 'object') return { schemaVersion, source: null };
+  const cloned = JSON.parse(JSON.stringify(source));
+  if (cloned.meta) {
+    delete cloned.meta.generatedAt;
+    // meta.validation reflects the parse outcome of THIS hash input itself —
+    // including it would create a feedback loop where adding/removing schema
+    // issues changes the hash, which is correct, but firstIssues contains the
+    // human messages that may shift wording without semantic change. Keep
+    // ok+issueCount; drop the message text.
+    if (cloned.meta.validation) {
+      cloned.meta.validation = {
+        ok: cloned.meta.validation.ok,
+        issueCount: cloned.meta.validation.issueCount,
+      };
+    }
+  }
+  return { schemaVersion, source: cloned };
+}
+
+/**
+ * @param {string} landbookId
+ * @param {Object} facts - the wrapped fact ontology (output of reportDataToFacts)
+ * @param {{
+ *   runId?: string,
+ *   schemaVersion?: number,
+ *   hashSource?: object,  // unwrapped reportData to hash. Falls back to facts when omitted.
+ * }} [ctx]
+ */
+export async function saveFacts(landbookId, facts, ctx = {}) {
   const c = await col();
 
-  // Compute content hash from fact values (excluding meta fields)
-  const { landbookId: _lid, updatedAt: _u, version: _v, contentHash: _h, _id: _m, ...values } = facts;
+  const schemaVersion = ctx.schemaVersion || 1;
+  // Prefer hashing the unwrapped canonical content, not the wrap envelope.
+  // If the caller didn't supply hashSource, fall back to the wrapped facts —
+  // suboptimal but stable (and matches the pre-Phase-5 surface).
+  const hashInput = buildHashInput(ctx.hashSource || facts, schemaVersion);
   const contentHash = createHash('sha256')
-    .update(JSON.stringify(values, Object.keys(values).sort()))
+    .update(stableJson(hashInput))
     .digest('hex')
     .slice(0, 16);
 
@@ -56,6 +104,8 @@ export async function saveFacts(landbookId, facts) {
         ...facts,
         landbookId,
         contentHash,
+        runId: ctx.runId || null,
+        schemaVersion,
         updatedAt: new Date().toISOString(),
       },
       $inc: { version: 1 },
@@ -121,6 +171,8 @@ export function reportDataToFacts(data) {
       wells: wrap(data.water?.wells, 'count', 'water'),
       waterways: wrap(data.water?.waterways, 'count', 'water'),
       waterBodies: wrap(data.water?.waterBodies, 'count', 'water'),
+      features: wrap(data.water?.features, null, 'water'),
+      nearestDistanceM: wrap(data.water?.nearestDistanceM, 'm', 'water'),
       floodDischarge: wrap(data.water?.floodDischarge, 'm³/s', 'flood'),
       floodRisk: wrap(data.water?.floodRisk, null, 'flood'),
     },
@@ -198,6 +250,7 @@ export function reportDataToFacts(data) {
       tempPerDecade: wrap(data.trends?.tempPerDecade, '°C/decade', 'climateTrends'),
       precipPerDecade: wrap(data.trends?.precipPerDecade, 'mm/decade', 'climateTrends'),
       fireProneByDecade: wrap(data.trends?.fireProneByDecade, null, 'climateTrends'),
+      yearly: wrap(data.trends?.yearly, null, 'climateTrends'),
     },
     compliance: {
       items: wrap(data.compliance?.items),
@@ -265,6 +318,8 @@ export function factsToReportData(facts) {
       wells: unwrap(facts.water?.wells),
       waterways: unwrap(facts.water?.waterways),
       waterBodies: unwrap(facts.water?.waterBodies),
+      features: unwrap(facts.water?.features) || [],
+      nearestDistanceM: unwrap(facts.water?.nearestDistanceM),
       floodDischarge: unwrap(facts.water?.floodDischarge),
       floodRisk: unwrap(facts.water?.floodRisk),
     },
@@ -342,6 +397,7 @@ export function factsToReportData(facts) {
       tempPerDecade: unwrap(facts.trends?.tempPerDecade),
       precipPerDecade: unwrap(facts.trends?.precipPerDecade),
       fireProneByDecade: unwrap(facts.trends?.fireProneByDecade) || [],
+      yearly: unwrap(facts.trends?.yearly) || [],
     },
     compliance: {
       items: unwrap(facts.compliance?.items) || [],

@@ -5,6 +5,8 @@
  * Erosion is kept static (not yet backed by a live API).
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const FORECAST_BASE = 'https://api.open-meteo.com/v1/forecast';
 
 /**
@@ -24,7 +26,9 @@ export async function fetchRiskScores(lat, lng) {
         timezone: 'auto',
     });
 
-    const res = await fetch(`${FORECAST_BASE}?${params}`);
+    const res = await fetchWithPolicy(`${FORECAST_BASE}?${params}`, {}, {
+        source: 'open-meteo-risk', timeoutMs: 15000, accept: 'application/json',
+    });
     if (!res.ok) throw new Error(`Open-Meteo error: ${res.status}`);
     const data = await res.json();
 

@@ -4,6 +4,8 @@
  * https://nominatim.org/release-docs/develop/api/
  */
 
+import { fetchWithPolicy } from '../lib/fetch-policy.js';
+
 const BASE = 'https://nominatim.openstreetmap.org';
 const HEADERS = { 'User-Agent': 'Libraries/1.0 (bioregional-wiki)' };
 
@@ -17,7 +19,9 @@ export async function geocode(query, options = {}) {
   if (options.viewbox) params.set('viewbox', options.viewbox);
   if (options.bounded) params.set('bounded', '1');
 
-  const res = await fetch(`${BASE}/search?${params}`, { headers: HEADERS });
+  const res = await fetchWithPolicy(`${BASE}/search?${params}`, { headers: HEADERS }, {
+    source: 'nominatim-search', timeoutMs: 5000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Nominatim error: ${res.status}`);
   return res.json();
 }
@@ -29,7 +33,9 @@ export async function reverseGeocode(lat, lng) {
     lon: String(lng),
     zoom: '16',
   });
-  const res = await fetch(`${BASE}/reverse?${params}`, { headers: HEADERS });
+  const res = await fetchWithPolicy(`${BASE}/reverse?${params}`, { headers: HEADERS }, {
+    source: 'nominatim-reverse', timeoutMs: 5000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Nominatim reverse error: ${res.status}`);
   return res.json();
 }
@@ -41,7 +47,9 @@ export async function lookupOsmId(osmType, osmId) {
     osm_ids: `${prefix}${osmId}`,
     polygon_geojson: '1',
   });
-  const res = await fetch(`${BASE}/lookup?${params}`, { headers: HEADERS });
+  const res = await fetchWithPolicy(`${BASE}/lookup?${params}`, { headers: HEADERS }, {
+    source: 'nominatim-lookup', timeoutMs: 5000, accept: 'application/json',
+  });
   if (!res.ok) throw new Error(`Nominatim lookup error: ${res.status}`);
   return res.json();
 }
