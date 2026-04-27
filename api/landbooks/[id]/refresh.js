@@ -127,7 +127,7 @@ export default async function handler(req, res) {
         model: 'claude-sonnet-4-20250514',
         runId,
         narrativesStatus: narrativeStatus,
-        narrativesError,
+        narrativesError: narrativeError,
         narrativesErrorCode: narrativeErrorCode,
       });
       layerResults.report = { ok: true, version: reportDoc.version };

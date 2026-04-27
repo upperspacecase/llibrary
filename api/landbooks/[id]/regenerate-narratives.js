@@ -69,7 +69,7 @@ export default async function handler(req, res) {
       cost,
       runId,
       narrativesStatus: narrativeStatus,
-      narrativesError,
+      narrativesError: narrativeError,
       narrativesErrorCode: narrativeErrorCode,
     });
 

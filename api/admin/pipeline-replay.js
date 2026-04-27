@@ -78,7 +78,7 @@ export default async function handler(req, res) {
         model: 'claude-sonnet-4-20250514',
         promptVersion: 'v2-14section',
         runId: newId,
-        narrativesError,
+        narrativesError: narrativeError,
       });
 
       await updateLandbookStatus(landbookId).catch(() => {});
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
         results: {},
         layerResults: { report: { ok: true, version: reportDoc.version } },
         factsContentHash: factDoc.contentHash,
-        narrativesError,
+        narrativesError: narrativeError,
         reportVersion: reportDoc.version,
       });
 
@@ -97,7 +97,7 @@ export default async function handler(req, res) {
         replayedFrom: sourceRunId,
         fromStage: 'narratives',
         version: reportDoc.version,
-        narrativesError,
+        narrativesError: narrativeError,
       });
     }
 
@@ -151,7 +151,7 @@ export default async function handler(req, res) {
       model: 'claude-sonnet-4-20250514',
       promptVersion: 'v2-14section',
       runId: newId,
-      narrativesError,
+      narrativesError: narrativeError,
     });
 
     await updateLandbookStatus(landbookId).catch(() => {});
@@ -165,7 +165,7 @@ export default async function handler(req, res) {
       },
       factsContentHash: factResult.contentHash,
       schemaValidation: data.meta?.validation || null,
-      narrativesError,
+      narrativesError: narrativeError,
       reportVersion: reportDoc.version,
     });
 
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
       sourceCount: observations.length,
       version: reportDoc.version,
       schemaValidation: data.meta?.validation || null,
-      narrativesError,
+      narrativesError: narrativeError,
     });
   } catch (err) {
     console.error('[admin/pipeline-replay]', err);
