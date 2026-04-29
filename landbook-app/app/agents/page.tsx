@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getCollection } from "@/lib/db";
 import type { Landbook, ReportData } from "@/lib/types";
 import { CoverSection } from "@/components/landbook/CoverSection";
@@ -116,6 +117,15 @@ async function getReportDataFromLayers(
 function HeroCopy() {
   return (
     <div>
+      <Image
+        src="/landbook-logo.png"
+        alt="LandBook"
+        width={2000}
+        height={600}
+        priority
+        className="mb-12 h-10 w-auto"
+      />
+
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-charcoal">
         For Rural Agents
       </p>
@@ -140,7 +150,7 @@ function HeroCopy() {
       <div className="mt-10">
         <a
           href={CREATE_URL}
-          className="inline-flex items-center justify-center rounded-full border border-brand-charcoal px-8 py-4 text-sm font-semibold uppercase tracking-[0.15em] text-brand-charcoal transition hover:bg-brand-charcoal hover:text-brand-cream"
+          className="inline-flex items-center justify-center rounded-full border border-brand-charcoal bg-brand-charcoal px-8 py-4 text-sm font-semibold uppercase tracking-[0.15em] text-brand-cream transition hover:bg-transparent hover:text-brand-charcoal"
         >
           Get your first LandBook
         </a>
