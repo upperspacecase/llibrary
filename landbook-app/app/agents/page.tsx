@@ -164,12 +164,13 @@ export default async function AgentsPage() {
   return (
     <main className="min-h-screen bg-brand-cream">
       <div className="mx-auto max-w-[1600px] px-6 py-16 lg:px-12 lg:py-24">
-        <div className="grid gap-16 2xl:grid-cols-[400px_minmax(900px,1fr)]">
-          <div className="2xl:sticky 2xl:top-24 2xl:self-start">
+        <div className="grid gap-12 min-[1400px]:grid-cols-[380px_minmax(900px,1fr)] min-[1400px]:gap-16">
+          <div className="min-[1400px]:sticky min-[1400px]:top-24 min-[1400px]:self-start">
             <HeroCopy />
           </div>
 
-          <div>
+          <div className="rounded-lg border border-brand-sage/30 bg-brand-cream shadow-xl min-[1400px]:max-h-[calc(100vh-8rem)] min-[1400px]:overflow-y-auto">
+            <div className="p-6 sm:p-10 lg:p-12">
             {data ? (
               <>
                 <div className="max-w-[800px] mx-auto shadow-2xl bg-white mb-12">
@@ -317,10 +318,11 @@ export default async function AgentsPage() {
                 </div>
               </>
             ) : (
-              <div className="flex h-[600px] items-center justify-center rounded-sm border border-dashed border-brand-sage/60 bg-white/40 text-sm text-brand-sage">
+              <div className="flex h-[600px] items-center justify-center text-sm text-brand-sage">
                 Sample LandBook unavailable.
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
