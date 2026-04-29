@@ -172,18 +172,18 @@ export default async function AgentsPage() {
   const n = data?.narratives || {};
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-brand-cream">
+    <main className="min-h-screen overflow-x-clip bg-brand-cream">
       <div className="mx-auto max-w-[1600px] px-4 py-10 sm:px-6 sm:py-16 lg:px-12 lg:py-24">
         <div className="grid gap-10 sm:gap-12 min-[1400px]:grid-cols-[380px_minmax(900px,1fr)] min-[1400px]:gap-16">
           <div className="min-[1400px]:sticky min-[1400px]:top-24 min-[1400px]:self-start">
             <HeroCopy />
           </div>
 
-          <div className="rounded-lg border border-brand-sage/30 bg-brand-cream shadow-xl min-[1400px]:max-h-[calc(100vh-8rem)] min-[1400px]:overflow-y-auto">
+          <div className="rounded-lg border border-brand-sage/30 bg-brand-cream shadow-xl max-h-[70vh] overflow-x-hidden overflow-y-auto min-[1400px]:max-h-[calc(100vh-8rem)]">
             <div className="p-4 sm:p-8 lg:p-12">
             {data ? (
               <>
-                <div className="max-w-[800px] mx-auto shadow-2xl bg-white mb-8 sm:mb-12">
+                <div className="max-w-[800px] mx-auto shadow-2xl bg-white mb-8 sm:mb-12 overflow-hidden">
                   <CoverSection
                     property={data.property}
                     maps={data.maps}
@@ -193,7 +193,7 @@ export default async function AgentsPage() {
                 </div>
 
                 <div className="max-w-[800px] mx-auto space-y-8 sm:space-y-12">
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <OverviewSection
                       property={data.property}
                       scores={data.scores}
@@ -207,7 +207,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <RegionEcosystemSection
                       regional={data.regional}
                       terrain={data.terrain}
@@ -217,7 +217,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <MapsLayersSection
                       maps={data.maps}
                       property={data.property}
@@ -225,7 +225,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <LandWaterSection
                       terrain={data.terrain}
                       soil={data.soil}
@@ -237,7 +237,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <BiodiversityHabitatSection
                       species={data.species}
                       agriculture={data.agriculture}
@@ -247,7 +247,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <ClimateSeasonsSection
                       climate={data.climate}
                       energy={data.energy}
@@ -256,7 +256,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <ValueBenefitsSection
                       economics={data.economics}
                       scores={data.scores}
@@ -265,7 +265,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <LandUseSection
                       agriculture={data.agriculture}
                       compliance={data.compliance}
@@ -274,7 +274,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <HistoryTrendsSection
                       trends={data.trends}
                       economics={data.economics}
@@ -283,7 +283,7 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <RisksResilienceSection
                       fire={data.fire}
                       flood={data.flood}
@@ -294,25 +294,25 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <FutureScenariosSection
                       economics={data.economics}
                       narratives={n.futureScenarios}
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <RecommendationsSection
                       actions={data.actions}
                       narratives={n.recommendations}
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <YourKnowledgeSection />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16">
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <SourcesMethodologySection
                       meta={data.meta}
                       narratives={n.sourcesMethodology}
