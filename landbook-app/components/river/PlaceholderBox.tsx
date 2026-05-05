@@ -41,10 +41,13 @@ export function PlaceholderBox({
   children?: React.ReactNode;
 }) {
   const styles = variant ? VARIANT_STYLES[variant] : null;
-  const borderColor = styles?.border ?? "border-brand-sage/40";
+  const isAiInsight = variant === "plausible" || variant === "mixed";
+  const borderClass = isAiInsight
+    ? ""
+    : `border-l-[3px] ${styles?.border ?? "border-brand-sage/40"}`;
 
   return (
-    <div className={`border-l-[3px] ${borderColor} pl-8 pr-4 py-3 mb-8`}>
+    <div className={`${borderClass} pl-8 pr-4 py-3 mb-8`}>
       {styles && (
         <span
           className={`inline-block text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 mb-5 ${styles.tagBg} ${styles.tagText}`}
