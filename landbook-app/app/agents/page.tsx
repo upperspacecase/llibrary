@@ -267,7 +267,6 @@ export default async function AgentsPage() {
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <HistoryTrendsSection
                       trends={data.trends}
-                      economics={data.economics}
                       fire={data.fire}
                       narratives={n.historyTrends}
                     />
