@@ -147,6 +147,9 @@ function ClimateChart({
       <p className="text-[11px] text-brand-sage mt-6 italic font-body text-center">
         Monthly rainfall (mm) and temperature patterns (&deg;C) &mdash; 30-year climate averages
       </p>
+      <p className="text-[10px] text-brand-sage mt-2 italic font-body text-center">
+        Source: Open-Meteo Climate Averages (ERA5, 30-year normals).
+      </p>
     </section>
   );
 }
@@ -314,6 +317,9 @@ export function ClimateSeasonsSection({
                   )}
                 </div>
               </div>
+              <p className="text-[10px] text-brand-sage mt-6 italic font-body">
+                Sources: Open-Meteo Climate Averages (growing days, frost days, rainfall, dry months); Open-Meteo Solar/Wind (solar &amp; wind potential).
+              </p>
             </div>
           </div>
         </div>
@@ -358,6 +364,9 @@ export function ClimateSeasonsSection({
             );
           })}
         </div>
+        <p className="text-[10px] text-brand-sage mt-4 italic font-body">
+          Source: Open-Meteo Climate Averages (monthly precipitation aggregated by season).
+        </p>
       </section>
 
       {/* ── Climate Trends ─────────────────────────────────── */}
@@ -426,6 +435,9 @@ export function ClimateSeasonsSection({
                 Precip Trend / Decade
               </div>
             </div>
+            <p className="text-[10px] text-brand-sage italic font-body">
+              Source: Open-Meteo 50-year Archive (linear regression on annual temperature &amp; precipitation).
+            </p>
           </div>
         </div>
       </section>
