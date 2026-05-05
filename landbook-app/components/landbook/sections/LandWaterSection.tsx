@@ -1,4 +1,4 @@
-import type { Terrain, Soil, Geology, Water, Climate, RiskData, Narratives } from "@/lib/types";
+import type { Terrain, Geology, Water, Climate, RiskData, Narratives } from "@/lib/types";
 import {
   SectionTitle, KPI, Hairline, PercentileCard, DataTable, RiskBadge,
   SubsectionHeader, PlaceholderBox,
@@ -27,7 +27,6 @@ function aspectShort(value: string | null): string | null {
 
 export function LandWaterSection({
   terrain,
-  soil,
   geology,
   water,
   climate,
@@ -35,7 +34,6 @@ export function LandWaterSection({
   narratives,
 }: {
   terrain: Terrain;
-  soil: Soil;
   geology: Geology;
   water: Water;
   climate: Climate;
@@ -54,7 +52,7 @@ export function LandWaterSection({
           </p>
         ) : (
           <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
-            Terrain, geology, soil, and water resource analysis will appear here once narratives are generated.
+            Terrain, geology, and water resource analysis will appear here once narratives are generated.
           </p>
         )}
 
@@ -117,53 +115,6 @@ export function LandWaterSection({
         status="NEW — SEISMIC DATA NOT IN PIPELINE"
       />
       */}
-
-      <Hairline />
-
-      {/* 4.3 Soil Characterization */}
-      <SubsectionHeader id="4.3" title="Soil Characterization" sources={["Pipeline"]} />
-      <DataTable
-        headers={["Soil Property", "Value"]}
-        rows={[
-          ["Classification", fmt(soil.classification)],
-          ["pH", soil.ph != null ? soil.ph.toFixed(1) : "\u2014"],
-          ["Organic Carbon", soil.organicCarbon != null ? `${soil.organicCarbon} g/kg` : "\u2014"],
-          ["Clay / Sand / Silt", `${fmt(soil.clay != null ? `${soil.clay}%` : null)} / ${fmt(soil.sand != null ? `${soil.sand}%` : null)} / ${fmt(soil.silt != null ? `${soil.silt}%` : null)}`],
-          ["Nitrogen", fmt(soil.nitrogen)],
-          ["CEC", fmt(soil.cec)],
-          ["Bulk Density", fmt(soil.bulkDensity)],
-        ]}
-      />
-      <PlaceholderBox
-        id="4.3"
-        title="Agricultural Capability Classification"
-        status="DERIVED FROM SOIL TEXTURE + PH + SLOPE"
-        synthetic
-      >
-        {(() => {
-          const slopeClass = terrain.slope != null
-            ? terrain.slope < 5 ? "I\u2013II" : terrain.slope < 15 ? "III\u2013IV" : terrain.slope < 30 ? "V\u2013VI" : "VII\u2013VIII"
-            : null;
-          const phClass = soil.ph != null
-            ? soil.ph >= 5.5 && soil.ph <= 7.5 ? "Optimal" : soil.ph >= 4.5 ? "Marginal" : "Limiting"
-            : null;
-          const ocClass = soil.organicCarbon != null
-            ? soil.organicCarbon > 20 ? "High fertility" : soil.organicCarbon > 10 ? "Moderate" : "Low \u2014 amendment needed"
-            : null;
-          return (
-            <DataTable
-              headers={["Factor", "Value", "Class"]}
-              rows={[
-                ["Slope", terrain.slope != null ? `${terrain.slope}%` : "\u2014", slopeClass ?? "\u2014"],
-                ["Soil pH", soil.ph != null ? soil.ph.toFixed(1) : "\u2014", phClass ?? "\u2014"],
-                ["Organic Carbon", soil.organicCarbon != null ? `${soil.organicCarbon} g/kg` : "\u2014", ocClass ?? "\u2014"],
-                ["Texture", soil.clay != null ? `Clay ${soil.clay}% / Sand ${soil.sand}%` : "\u2014",
-                  soil.clay != null ? (soil.clay > 40 ? "Heavy" : soil.clay > 25 ? "Medium" : "Light") : "\u2014"],
-              ]}
-            />
-          );
-        })()}
-      </PlaceholderBox>
 
       <Hairline />
 

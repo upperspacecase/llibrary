@@ -235,7 +235,6 @@ export default async function AgentsPage() {
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <LandWaterSection
                       terrain={data.terrain}
-                      soil={data.soil}
                       geology={data.geology}
                       water={data.water}
                       climate={data.climate}
