@@ -10,13 +10,13 @@ const VARIANT_STYLES: Record<Variant, {
     border: "border-brand-sage",
     tagBg: "bg-brand-sage/15",
     tagText: "text-brand-sage",
-    label: "PLAUSIBLE",
+    label: "AI INSIGHT",
   },
   mixed: {
     border: "border-brand-terracotta",
-    tagBg: "bg-brand-terracotta/15",
-    tagText: "text-brand-terracotta",
-    label: "MIXED",
+    tagBg: "bg-brand-sage/15",
+    tagText: "text-brand-sage",
+    label: "AI INSIGHT",
   },
   fake: {
     border: "border-red-700",
