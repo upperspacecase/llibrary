@@ -132,7 +132,7 @@ function FireProneDecadesChart({
 
         <div className="flex justify-between px-10 text-[10px] font-bold text-brand-sage uppercase tracking-widest mt-4">
           {decades.map((d) => (
-            <span key={d.label}>{d.label}</span>
+            <span key={d.label}>{d.label.replace(/s$/, "")}</span>
           ))}
         </div>
       </div>
@@ -178,15 +178,18 @@ export function RisksResilienceSection({
   const waterSecurity = Math.max(1, 10 - droughtScore * 2);
   const avgRisk = ((fire.riskScore ?? 3) + (flood.riskScore ?? 3) + (drought.riskScore ?? 3)) / 3;
   const ecosystemBuffers = Math.max(1, Math.round(10 - avgRisk * 1.5));
-  const eScore = energy.independenceScore ?? 3;
+  // independenceScore is 0–100 from the pipeline; convert to 0–10 for display
+  const energyScore10 =
+    energy.independenceScore != null ? Math.round(energy.independenceScore / 10) : null;
+  const eScore = energyScore10 ?? 3;
   const trendPenalty = trends.tempPerDecade != null && trends.tempPerDecade > 0.3 ? 2 : 0;
   const adaptiveCapacity = Math.max(1, Math.round(eScore - trendPenalty));
 
   const energyAssessment =
-    energy.independenceScore != null
-      ? energy.independenceScore >= 7
+    energyScore10 != null
+      ? energyScore10 >= 7
         ? "Strong — multiple renewable sources"
-        : energy.independenceScore >= 4
+        : energyScore10 >= 4
           ? "Moderate — some off-grid potential"
           : "Low — grid-dependent"
       : undefined;
@@ -271,6 +274,8 @@ export function RisksResilienceSection({
           />
         );
       })()}
+
+      <Hairline />
 
       <PlaceholderBox
         id="10.1"
@@ -409,7 +414,7 @@ export function RisksResilienceSection({
           />
           <RiskBar
             label="Energy Independence"
-            value={energy.independenceScore}
+            value={energyScore10}
             max={10}
             barColor="bg-brand-forest"
             assessment={energyAssessment}
