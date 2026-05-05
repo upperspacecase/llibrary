@@ -33,6 +33,21 @@ export function SourcesMethodologySection({
         </p>
       )}
 
+      {/* 14.7 Important Disclaimers */}
+      <SubsectionHeader id="14.7" title="Important Disclaimers" sources={["AI", "Static"]} />
+      {narratives?.disclaimer ? (
+        <p className="text-[12px] italic text-brand-sage">{narratives.disclaimer}</p>
+      ) : (
+        <p className="text-[12px] italic text-brand-sage">
+          This assessment represents conditions at time of documentation.
+          Land characteristics evolve; verify critical details before decisions.
+          Scale approximations apply. Professional verification recommended for
+          legal, financial, or planning purposes.
+        </p>
+      )}
+
+      <Hairline />
+
       {/* 14.1 Data Source Inventory */}
       <SubsectionHeader id="14.1" title="Data Source Inventory" sources={["Pipeline"]} />
       <DataTable
@@ -68,21 +83,6 @@ export function SourcesMethodologySection({
           Verified = direct API data; Synthetic = algorithmically derived from verified inputs; Missing = no data source available.
         </p>
       </PlaceholderBox>
-
-      <Hairline />
-
-      {/* 14.7 Important Disclaimers */}
-      <SubsectionHeader id="14.7" title="Important Disclaimers" sources={["AI", "Static"]} />
-      {narratives?.disclaimer ? (
-        <p className="text-[12px] italic text-brand-sage">{narratives.disclaimer}</p>
-      ) : (
-        <p className="text-[12px] italic text-brand-sage">
-          This assessment represents conditions at time of documentation.
-          Land characteristics evolve; verify critical details before decisions.
-          Scale approximations apply. Professional verification recommended for
-          legal, financial, or planning purposes.
-        </p>
-      )}
 
     </section>
   );
