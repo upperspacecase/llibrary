@@ -1,41 +1,32 @@
 type Variant = "plausible" | "mixed" | "fake";
 
 const VARIANT_STYLES: Record<Variant, {
-  bg: string;
+  border: string;
   tagBg: string;
   tagText: string;
-  icon: string;
-  iconColor: string;
   label: string;
 }> = {
   plausible: {
-    bg: "bg-green-50",
-    tagBg: "bg-green-700/15",
-    tagText: "text-green-800",
-    icon: "verified",
-    iconColor: "text-green-700",
+    border: "border-brand-sage",
+    tagBg: "bg-brand-sage/15",
+    tagText: "text-brand-sage",
     label: "PLAUSIBLE",
   },
   mixed: {
-    bg: "bg-[#FFFBEB]",
-    tagBg: "bg-amber-600/15",
-    tagText: "text-amber-800",
-    icon: "science",
-    iconColor: "text-amber-700",
+    border: "border-brand-terracotta",
+    tagBg: "bg-brand-terracotta/15",
+    tagText: "text-brand-terracotta",
     label: "MIXED",
   },
   fake: {
-    bg: "bg-red-50",
+    border: "border-red-700",
     tagBg: "bg-red-700/15",
     tagText: "text-red-800",
-    icon: "error",
-    iconColor: "text-red-700",
     label: "FAKE DATA",
   },
 };
 
 export function PlaceholderBox({
-  id,
   title,
   status,
   variant,
@@ -50,39 +41,29 @@ export function PlaceholderBox({
   children?: React.ReactNode;
 }) {
   const styles = variant ? VARIANT_STYLES[variant] : null;
-  const bg = styles?.bg ?? "bg-[#FFFBEB]";
-  const icon = styles?.icon ?? "construction";
-  const iconColor = styles?.iconColor ?? "text-brand-terracotta";
+  const borderColor = styles?.border ?? "border-brand-sage/40";
 
   return (
-    <div className={`${bg} p-5 mb-6`}>
-      <div className="flex items-start gap-3">
+    <div className={`border-l-[3px] ${borderColor} pl-8 pr-4 py-3 mb-8`}>
+      {styles && (
         <span
-          className={`material-symbols-outlined shrink-0 ${iconColor}`}
-          style={{ fontSize: 18 }}
+          className={`inline-block text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 mb-5 ${styles.tagBg} ${styles.tagText}`}
         >
-          {icon}
+          {styles.label}
         </span>
-        <div className="flex-1">
-          {styles && (
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-[9px] font-black tracking-[0.15em] uppercase px-2 py-0.5 ${styles.tagBg} ${styles.tagText}`}>
-                {styles.label}
-              </span>
-            </div>
-          )}
-          <div className="text-sm font-bold text-brand-forest mb-1">{title}</div>
-          <div className="text-[11px] text-brand-terracotta/80 uppercase tracking-wide font-bold">
-            {status}
-          </div>
-          {variant === "mixed" && note && (
-            <div className="text-[11px] text-amber-900 italic mt-2 leading-snug">
-              {note}
-            </div>
-          )}
-          {children && <div className="mt-4">{children}</div>}
-        </div>
+      )}
+      <h3 className="font-serif text-2xl font-bold text-brand-forest mb-2 leading-tight">
+        {title}
+      </h3>
+      <div className="text-[10px] text-brand-sage uppercase tracking-[0.15em] font-bold mb-6">
+        {status}
       </div>
+      {variant === "mixed" && note && (
+        <p className="text-[12px] text-brand-charcoal/80 italic mb-6 leading-snug max-w-prose">
+          {note}
+        </p>
+      )}
+      {children && <div>{children}</div>}
     </div>
   );
 }
