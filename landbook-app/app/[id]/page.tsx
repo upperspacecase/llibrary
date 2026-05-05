@@ -186,6 +186,9 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               economics={data.economics}
               water={data.water}
               fire={data.fire}
+              flood={data.flood}
+              drought={data.drought}
+              energy={data.energy}
               maps={data.maps}
               meta={data.meta}
               allNarratives={data.narratives}

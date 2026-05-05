@@ -1,4 +1,4 @@
-import type { Property, Scores, Economics, Water, FireData, Maps, Meta, Narratives, ReportData } from "@/lib/types";
+import type { Property, Scores, Economics, Water, FireData, RiskData, Energy, Maps, Meta, Narratives, ReportData } from "@/lib/types";
 import { Hairline } from "@/components/river";
 
 /**
@@ -97,6 +97,9 @@ export function OverviewSection({
   economics,
   water,
   fire,
+  flood,
+  drought,
+  energy,
   maps,
   meta,
   allNarratives,
@@ -107,6 +110,9 @@ export function OverviewSection({
   economics: Economics;
   water: Water;
   fire: FireData;
+  flood: RiskData;
+  drought: RiskData;
+  energy: Energy;
   maps: Maps;
   meta: Meta;
   allNarratives: Narratives;
@@ -169,44 +175,59 @@ export function OverviewSection({
       {/* Block 4 — Key Metrics */}
       <section className="mb-20">
         <Hairline />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-10">
-          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
-            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
-              Ecosystem Value EUR /ha
-            </span>
-            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
-              {economics.totalValue != null && property.area != null && property.area > 0
-                ? formatCurrency(economics.totalValue / property.area)
-                : "\u2014"}
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-10">
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
             <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
               Total Area
             </span>
-            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
               {property.area != null ? property.area.toFixed(1) : "\u2014"}
-              <span className="text-xl ml-1">ha</span>
+              <span className="text-base ml-1">ha</span>
+            </p>
+          </div>
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Annual Natural Capital
+            </span>
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {formatCurrency(economics.totalValue)}
+            </p>
+          </div>
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Long-Term Value
+            </span>
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {formatCurrency(economics.npv?.thirtyYear)}
             </p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 mt-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mt-10">
+          <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
+            <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
+              Water Security
+            </span>
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
+              <span className="text-base ml-1 text-brand-sage">/10</span>
+            </p>
+          </div>
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
             <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
               Biodiversity Score
             </span>
-            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
               {formatScore(scores.biodiversity)}
-              <span className="text-xl ml-1 text-brand-sage">/10</span>
+              <span className="text-base ml-1 text-brand-sage">/10</span>
             </p>
           </div>
           <div className="flex justify-between items-baseline border-b border-outline-variant pb-4">
             <span className="text-[10px] font-bold tracking-[0.2em] text-brand-sage uppercase font-body">
-              Carbon Score
+              Energy Independence
             </span>
-            <p className="text-[43px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
-              {formatScore(scores.carbon)}
-              <span className="text-xl ml-1 text-brand-sage">/10</span>
+            <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
+              {energy.independenceScore != null ? energy.independenceScore.toFixed(1) : "\u2014"}
+              <span className="text-base ml-1 text-brand-sage">/10</span>
             </p>
           </div>
         </div>
@@ -218,44 +239,6 @@ export function OverviewSection({
           Performance Indicators
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {/* Natural Capital */}
-          <div>
-            <div className="flex justify-between items-end mb-2">
-              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
-                Natural Capital Score
-              </p>
-              <span className="text-xl font-bold font-serif text-brand-forest">
-                {scores.naturalCapital != null ? (scores.naturalCapital / 10).toFixed(1) : "\u2014"}
-              </span>
-            </div>
-            <div className="h-2 w-full bg-brand-sage/20">
-              <div
-                className="h-full bg-brand-forest"
-                style={{ width: `${Math.min(scores.naturalCapital || 0, 100)}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Property Composite</p>
-          </div>
-
-          {/* Water Security */}
-          <div>
-            <div className="flex justify-between items-end mb-2">
-              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
-                Water Security
-              </p>
-              <span className="text-xl font-bold font-serif text-brand-forest">
-                {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
-              </span>
-            </div>
-            <div className="h-2 w-full bg-brand-sage/20">
-              <div
-                className="h-full bg-brand-forest"
-                style={{ width: `${Math.min((water.securityIndex || 0) * 10, 100)}%` }}
-              />
-            </div>
-            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Catchment Resilience</p>
-          </div>
-
           {/* Fire Risk */}
           <div>
             <div className="flex justify-between items-end mb-2">
@@ -268,11 +251,46 @@ export function OverviewSection({
             </div>
             <div className="h-2 w-full bg-brand-sage/20">
               <div
-                className="h-full bg-brand-forest"
+                className="h-full bg-brand-terracotta"
                 style={{ width: `${Math.min((fire.riskScore || 0) * 20, 100)}%` }}
               />
             </div>
-            <p className="text-[11px] text-brand-sage mt-3 italic font-body">Landscape Vulnerability</p>
+          </div>
+
+          {/* Flood Risk */}
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+                Flood Risk
+              </p>
+              <span className="text-xl font-bold font-serif text-brand-forest">
+                {flood.riskScore != null ? `${flood.riskScore}/5` : "\u2014"}
+              </span>
+            </div>
+            <div className="h-2 w-full bg-brand-sage/20">
+              <div
+                className="h-full bg-brand-amber"
+                style={{ width: `${Math.min((flood.riskScore || 0) * 20, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Drought Risk */}
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
+                Drought Risk
+              </p>
+              <span className="text-xl font-bold font-serif text-brand-forest">
+                {drought.riskScore != null ? `${drought.riskScore}/5` : "\u2014"}
+              </span>
+            </div>
+            <div className="h-2 w-full bg-brand-sage/20">
+              <div
+                className="h-full bg-brand-sage"
+                style={{ width: `${Math.min((drought.riskScore || 0) * 20, 100)}%` }}
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -282,7 +300,7 @@ export function OverviewSection({
         {/* Radar Chart */}
         <div className="w-full mb-8">
           <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body text-center">
-            Landbook Sources
+            Regional Comparison
           </h4>
           {(() => {
             const reg = scores.regional || {} as Record<string, number>;
@@ -394,7 +412,6 @@ export function OverviewSection({
             const c = classifyDataSources(meta, { narratives: allNarratives });
             const apiStatus = meta.apiStatus || {};
             const apiKeys = Object.keys(apiStatus);
-            const totalApis = apiKeys.length;
             const verifiedApis = apiKeys.filter((k) => apiStatus[k] === "ok").length;
 
             const denom = c.verified + c.computed + c.unverified + c.ai;
@@ -410,7 +427,7 @@ export function OverviewSection({
                 label: "Aggregated",
                 pct: aggregatedPct,
                 color: "bg-brand-forest",
-                desc: `Verified API data from ${verifiedApis} of ${totalApis} sources.`,
+                desc: `Verified API data from ${verifiedApis} sources.`,
               },
               {
                 label: "Computed",
@@ -436,7 +453,7 @@ export function OverviewSection({
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
-                    Updated Sources
+                    Landbook Sources
                   </h4>
                   {unc && (
                     <span className="text-[10px] italic text-brand-forest font-body">

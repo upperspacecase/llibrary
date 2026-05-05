@@ -1179,7 +1179,7 @@ function computeUncertainty(apiStatus) {
 
 /**
  * Generate Mapbox static map URLs at 4 zoom levels with GeoJSON boundary overlay.
- * Boundary overlay color: #1B4332 (deep forest green).
+ * Boundary overlay color: #D4A574 (brand-amber).
  */
 export function buildMapUrls(boundary, center) {
   const token = typeof process !== 'undefined' ? process.env?.VITE_MAPBOX_TOKEN : null;
@@ -1187,7 +1187,7 @@ export function buildMapUrls(boundary, center) {
     return { satellite: null, overview: null, regional: null, detail: null };
   }
 
-  const STROKE = '#1B4332';
+  const STROKE = '#D4A574';
   const coords = boundary.map(p => [p[1], p[0]]); // [lng, lat]
   if (coords.length > 0) coords.push(coords[0]); // close polygon
 
