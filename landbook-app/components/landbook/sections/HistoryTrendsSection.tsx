@@ -229,47 +229,6 @@ export function HistoryTrendsSection({
         </p>
       </PlaceholderBox>
 
-      <Hairline />
-
-      {/* 9.6 Socio-Economic Trajectory */}
-      <SubsectionHeader id="9.6" title="Socio-Economic Trajectory" sources={["NEW"]} />
-      <PlaceholderBox
-        id="9.6"
-        title="Population & labor context"
-        status="DERIVED FROM MUNICIPALITY CONTEXT"
-        variant="fake"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          Rural interior municipalities in southern Europe have experienced sustained population decline of 1-3% per decade since the 1980s,
-          driven by urban migration and aging demographics. Agricultural labor availability is typically constrained,
-          with remaining workforce concentrated in seasonal activities (cork harvest, olive picking).
-        </p>
-        <p className="text-xs text-brand-sage">
-          Land ownership patterns favor consolidation by absentee owners and institutional investors, with increasing interest from regenerative agriculture ventures.
-        </p>
-      </PlaceholderBox>
-
-      <Hairline />
-
-      {/* 9.7 Historical Land Management */}
-      <SubsectionHeader id="9.7" title="Historical Land Management" sources={["NEW"]} />
-      <PlaceholderBox
-        id="9.7"
-        title="Traditional land management practices"
-        status="DERIVED FROM LAND COVER + AGRICULTURE SYSTEMS"
-        variant="fake"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          Traditional management in Mediterranean agro-silvo-pastoral systems includes rotational grazing,
-          cork oak stripping on 9-year cycles, olive grove maintenance with minimal tillage,
-          and controlled understory clearing (roças) for fire prevention.
-        </p>
-        <p className="text-xs text-brand-sage">
-          Abandonment of traditional practices since the 1990s has increased fuel loads and wildfire risk across southern European landscapes.
-          Reviving these practices is a core strategy in EU Common Agricultural Policy (CAP) eco-scheme incentives.
-        </p>
-      </PlaceholderBox>
-
     </section>
   );
 }

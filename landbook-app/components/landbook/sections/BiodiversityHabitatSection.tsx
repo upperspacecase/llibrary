@@ -441,31 +441,6 @@ export function BiodiversityHabitatSection({
             </p>
           </div>
         </div>
-        <PlaceholderBox
-          id="5.5"
-          title="Planned Verification Protocols"
-          status="NOT YET INTEGRATED INTO PIPELINE"
-          variant="fake"
-        >
-          <div className="space-y-4 text-xs leading-relaxed text-on-surface">
-            <p>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">E-DNA Protocol:</strong>
-              Soil and water sampling for genetic traces of presence (NatureMetrics Standard).
-            </p>
-            <p>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Acoustic Monitoring:</strong>
-              24-hour bioacoustic analysis for avian and bat activity levels.
-            </p>
-            <p>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Remote Sensing:</strong>
-              Sentinel-2 LIDAR for canopy height and biomass density estimation.
-            </p>
-            <p>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Field Surveys:</strong>
-              Systematic quadrat sampling across the three primary habitat zones.
-            </p>
-          </div>
-        </PlaceholderBox>
       </section>
 
       {/* 5.6 Indicator Confidence & Sensitivity */}
