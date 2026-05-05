@@ -604,6 +604,20 @@ function renderDetailPanel(landbookId, row, colSpan) {
                     </div>
                     <p class="detail-card-desc">Processed data layer. Automatically rebuilt when data is fetched.</p>
                 </div>
+                <!-- PDF Export -->
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <span class="detail-card-title">PDF Export</span>
+                    </div>
+                    <p class="detail-card-desc">Renders the public LandBook page as A4 PDF and stores a new version in the database. Download fetches the latest version.</p>
+                    <button class="detail-action-btn" data-action="generate-pdf" data-landbook-id="${escapeHtml(landbookId)}">
+                        ▶ Generate PDF
+                    </button>
+                    <button class="detail-action-btn" data-action="download-pdf" data-landbook-id="${escapeHtml(landbookId)}" style="margin-top:6px;">
+                        ⤓ Download Latest
+                    </button>
+                    <div class="detail-action-result" id="result-pdf-${escapeHtml(landbookId)}"></div>
+                </div>
             </div>
         </div>
     </td></tr>`;
@@ -619,9 +633,13 @@ function bindDetailPanelActions(container) {
             btn.textContent = 'Running...';
             btn.classList.add('running');
 
-            const resultEl = action === 'fetch-data'
-                ? document.getElementById(`result-fetch-${landbookId}`)
-                : document.getElementById(`result-nar-${landbookId}`);
+            const resultElIdByAction = {
+                'fetch-data': `result-fetch-${landbookId}`,
+                'generate-narratives': `result-nar-${landbookId}`,
+                'generate-pdf': `result-pdf-${landbookId}`,
+                'download-pdf': `result-pdf-${landbookId}`,
+            };
+            const resultEl = document.getElementById(resultElIdByAction[action]);
 
             if (resultEl) resultEl.innerHTML = '';
 
@@ -692,6 +710,51 @@ function bindDetailPanelActions(container) {
                         }
                         resultEl.innerHTML = html;
                     }
+                } else if (action === 'generate-pdf') {
+                    btn.textContent = 'Rendering... (~30s)';
+                    res = await fetch(`/api/landbooks/${landbookId}/generate-pdf`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                    });
+                    result = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(result.error || 'PDF generation failed');
+
+                    if (resultEl) {
+                        const sizeMb = (result.sizeBytes / (1024 * 1024)).toFixed(1);
+                        resultEl.innerHTML = `<div class="detail-result-ok">✓ Generated v${result.version} · ${sizeMb} MB</div>`;
+                    }
+                } else if (action === 'download-pdf') {
+                    res = await fetch(`/api/landbooks/${landbookId}/pdf`, {
+                        method: 'GET',
+                        credentials: 'include',
+                    });
+                    if (res.status === 404) {
+                        if (resultEl) resultEl.innerHTML = `<div class="detail-result-fail">No PDF yet — click Generate PDF first.</div>`;
+                        btn.textContent = originalText;
+                        btn.classList.remove('running');
+                        btn.disabled = false;
+                        return;
+                    }
+                    if (!res.ok) throw new Error('Download failed');
+
+                    const blob = await res.blob();
+                    const cd = res.headers.get('Content-Disposition') || '';
+                    const filename = cd.match(/filename="([^"]+)"/)?.[1] || `landbook-${landbookId}.pdf`;
+                    const objectUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = objectUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(objectUrl);
+
+                    if (resultEl) resultEl.innerHTML = `<div class="detail-result-ok">✓ Downloaded ${filename}</div>`;
+                    btn.textContent = originalText;
+                    btn.classList.remove('running');
+                    btn.disabled = false;
+                    return;
                 }
 
                 btn.textContent = originalText.replace('▶', '↻').replace('Fetch Data', 'Re-fetch Data').replace('Generate', 'Regenerate');

@@ -1,0 +1,12 @@
+{
+  "name": "landbook-pdf-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.10.4"
+  }
+}
