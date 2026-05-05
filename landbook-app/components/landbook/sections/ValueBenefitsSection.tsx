@@ -39,6 +39,7 @@ export function ValueBenefitsSection({
   const regulation = es.regulation || 0;
   const soil = es.soil || 0;
   const cultural = es.cultural || 0;
+  const total = es.total || (water + food + carbon + regulation + soil + cultural);
 
   // Treemap: fold carbon into regulating (5 blocks)
   const treemapSegments = [
