@@ -6,17 +6,13 @@ import { CoverSection } from "@/components/landbook/CoverSection";
 import {
   OverviewSection,
   RegionEcosystemSection,
-  MapsLayersSection,
   LandWaterSection,
   BiodiversityHabitatSection,
   ClimateSeasonsSection,
   ValueBenefitsSection,
-  LandUseSection,
   HistoryTrendsSection,
   RisksResilienceSection,
   FutureScenariosSection,
-  RecommendationsSection,
-  YourKnowledgeSection,
   SourcesMethodologySection,
 } from "@/components/landbook/sections";
 import { PricingSection } from "@/components/agents/PricingSection";
@@ -219,14 +215,6 @@ export default async function AgentsPage() {
                   </div>
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <MapsLayersSection
-                      maps={data.maps}
-                      property={data.property}
-                      narratives={n.mapsLayers}
-                    />
-                  </div>
-
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <LandWaterSection
                       terrain={data.terrain}
                       soil={data.soil}
@@ -267,15 +255,6 @@ export default async function AgentsPage() {
                   </div>
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <LandUseSection
-                      agriculture={data.agriculture}
-                      compliance={data.compliance}
-                      economics={data.economics}
-                      narratives={n.landUse}
-                    />
-                  </div>
-
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <HistoryTrendsSection
                       trends={data.trends}
                       economics={data.economics}
@@ -302,15 +281,13 @@ export default async function AgentsPage() {
                     />
                   </div>
 
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <RecommendationsSection
-                      actions={data.actions}
-                      narratives={n.recommendations}
-                    />
-                  </div>
-
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <YourKnowledgeSection />
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden text-center">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-sage">
+                      Sample preview
+                    </p>
+                    <p className="serif-title mt-4 text-xl text-brand-forest sm:text-2xl">
+                      Additional sections available in the full LandBook.
+                    </p>
                   </div>
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">

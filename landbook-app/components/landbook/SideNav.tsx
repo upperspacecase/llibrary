@@ -154,17 +154,13 @@ function FeedbackModal({
 const NAV_ITEMS = [
   { id: "overview", icon: "description", label: "Overview" },
   { id: "region-ecosystem", icon: "location_on", label: "Region & Ecosystem" },
-  { id: "maps-layers", icon: "map", label: "Maps & Layers" },
   { id: "land-water", icon: "terrain", label: "Land & Water" },
   { id: "biodiversity-habitat", icon: "forest", label: "Biodiversity & Habitat" },
   { id: "climate-seasons", icon: "thermostat", label: "Climate & Seasons" },
   { id: "value-benefits", icon: "eco", label: "Value & Benefits" },
-  { id: "land-use", icon: "agriculture", label: "Land Use" },
   { id: "history-trends", icon: "trending_up", label: "History & Trends" },
   { id: "risks-resilience", icon: "shield", label: "Risks & Resilience" },
   { id: "future-scenarios", icon: "lightbulb", label: "Future Scenarios" },
-  { id: "recommendations", icon: "checklist", label: "Recommendations" },
-  { id: "your-knowledge", icon: "school", label: "Your Knowledge" },
   { id: "sources-methodology", icon: "science", label: "Sources & Methodology" },
 ];
 

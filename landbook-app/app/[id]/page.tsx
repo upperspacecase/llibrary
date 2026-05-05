@@ -8,17 +8,13 @@ import { RegenerateButton } from "@/components/landbook/RegenerateButton";
 import {
   OverviewSection,
   RegionEcosystemSection,
-  MapsLayersSection,
   LandWaterSection,
   BiodiversityHabitatSection,
   ClimateSeasonsSection,
   ValueBenefitsSection,
-  LandUseSection,
   HistoryTrendsSection,
   RisksResilienceSection,
   FutureScenariosSection,
-  RecommendationsSection,
-  YourKnowledgeSection,
   SourcesMethodologySection,
 } from "@/components/landbook/sections";
 
@@ -208,10 +204,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <MapsLayersSection maps={data.maps} property={data.property} narratives={n.mapsLayers} />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <LandWaterSection
               terrain={data.terrain}
               soil={data.soil}
@@ -252,15 +244,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <LandUseSection
-              agriculture={data.agriculture}
-              compliance={data.compliance}
-              economics={data.economics}
-              narratives={n.landUse}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <HistoryTrendsSection
               trends={data.trends}
               economics={data.economics}
@@ -285,17 +268,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               economics={data.economics}
               narratives={n.futureScenarios}
             />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <RecommendationsSection
-              actions={data.actions}
-              narratives={n.recommendations}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <YourKnowledgeSection />
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
