@@ -1,7 +1,7 @@
-import type { Economics, Scores, Narratives, Meta } from "@/lib/types";
+import type { Economics, Scores, Narratives, Meta, Property } from "@/lib/types";
 import {
   SectionTitle, DataTable,
-  SubsectionHeader, Treemap, KPI,
+  SubsectionHeader, Treemap, KPI, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -10,11 +10,13 @@ function fmt(v: unknown): string {
 }
 
 export function ValueBenefitsSection({
+  property,
   economics,
   scores,
   meta,
   narratives,
 }: {
+  property: Property;
   economics: Economics;
   scores: Scores;
   meta: Meta;
@@ -40,16 +42,6 @@ export function ValueBenefitsSection({
     { name: "Cultural", value: cultural, color: "bg-brand-forest/70" },
   ];
 
-  // Table: one row per underlying service, mirroring the treemap groupings
-  const tableServices = [
-    { name: "Food", value: food },
-    { name: "Water", value: water },
-    { name: "Carbon storage", value: carbon },
-    { name: "Water regulation", value: regulation },
-    { name: "Soil", value: soil },
-    { name: "Recreation", value: cultural },
-  ];
-
   return (
     <section id="value-benefits">
       <SectionTitle title="Value & Benefits" />
@@ -70,6 +62,11 @@ export function ValueBenefitsSection({
               {narratives.intro}
             </p>
           )}
+          {property.area > 0 && economics.totalValue != null && economics.valuePerHa != null && (
+            <p className="text-[11px] text-brand-sage italic font-body mt-3">
+              €{economics.totalValue.toLocaleString()} ÷ {property.area.toFixed(2)} ha = €{economics.valuePerHa.toLocaleString()}/ha
+            </p>
+          )}
         </div>
         {narratives?.callout && (
           <div className="border-l-4 border-brand-terracotta pl-6 py-2">
@@ -81,21 +78,11 @@ export function ValueBenefitsSection({
       </div>
 
       {/* ── Value of Services (Treemap) ── */}
-      <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body">
-        Value of Services
-      </h4>
-      <Treemap segments={treemapSegments.filter((s) => s.value > 0)} />
-
       <div className="mb-20">
-        <DataTable
-          headers={["Service Class", "Value (€)"]}
-          rows={tableServices
-            .filter((s) => s.value > 0)
-            .map((s) => [
-              s.name,
-              s.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            ])}
-        />
+        <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body">
+          Value of Services
+        </h4>
+        <Treemap segments={treemapSegments.filter((s) => s.value > 0)} />
       </div>
 
       {/* ── Natural Capital Premium Estimates ── */}
@@ -176,6 +163,44 @@ export function ValueBenefitsSection({
         )}
       </div>
 
+      {/* ── Scenario Assumptions ── */}
+      <div className="mb-20">
+        <SubsectionHeader id="7.4" title="Scenario Assumptions" sources={["NEW"]} />
+        <PlaceholderBox
+          id="7.4"
+          title="Scenario assumptions"
+          status="DERIVED FROM revenue scenarios, NPV data, carbon values"
+          synthetic
+        >
+          <DataTable
+            headers={["Assumption", "Conservative", "Moderate", "Optimized"]}
+            rows={[
+              [
+                "Annual revenue growth",
+                "0–1%",
+                "2–3%",
+                "4–6%",
+              ],
+              [
+                "Carbon price (€/tCO₂)",
+                economics.carbonCreditValue && economics.carbonStock
+                  ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)) * 0.7)}`
+                  : "€25",
+                economics.carbonCreditValue && economics.carbonStock
+                  ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)))}`
+                  : "€35",
+                economics.carbonCreditValue && economics.carbonStock
+                  ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)) * 1.4)}`
+                  : "€50",
+              ],
+              ["Discount rate", "8%", "6%", "4%"],
+              ["Management intensity", "Minimal", "Moderate", "High"],
+              ["Climate risk adjustment", "None", "Partial hedge", "Full adaptation"],
+            ]}
+          />
+        </PlaceholderBox>
+      </div>
+
       {/* ── 7.5 Carbon Storage ── */}
       <div className="mb-20">
         <SubsectionHeader id="7.5" title="Carbon Storage" sources={["Computed"]} />
@@ -232,13 +257,13 @@ export function ValueBenefitsSection({
       </div>
 
       {/* ── 7.7 Valuation Confidence & Sensitivity ── */}
+      {meta.uncertainty && (
       <div className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body mb-12">
           Valuation Confidence &amp; Sensitivity
         </h3>
 
-        {meta.uncertainty ? (
-          <div className="w-full font-body text-brand-forest">
+        <div className="w-full font-body text-brand-forest">
             {/* Header Row */}
             <div className="grid grid-cols-12 border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">
               <div className="col-span-4">Indicator</div>
@@ -325,11 +350,9 @@ export function ValueBenefitsSection({
                     : "High"}
               </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-sm text-brand-sage mb-6">Uncertainty data not available.</p>
-        )}
+        </div>
       </div>
+      )}
 
     </section>
   );

@@ -117,44 +117,6 @@ export function FutureScenariosSection({
 
       <Hairline />
 
-      {/* 11.3 Scenario Assumptions */}
-      <SubsectionHeader id="11.3" title="Scenario Assumptions" sources={["NEW"]} />
-      <PlaceholderBox
-        id="11.3"
-        title="Scenario assumptions"
-        status="DERIVED FROM revenue scenarios, NPV data, carbon values"
-        synthetic
-      >
-        <DataTable
-          headers={["Assumption", "Conservative", "Moderate", "Optimized"]}
-          rows={[
-            [
-              "Annual revenue growth",
-              "0–1%",
-              "2–3%",
-              "4–6%",
-            ],
-            [
-              "Carbon price (€/tCO₂)",
-              economics.carbonCreditValue && economics.carbonStock
-                ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)) * 0.7)}`
-                : "€25",
-              economics.carbonCreditValue && economics.carbonStock
-                ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)))}`
-                : "€35",
-              economics.carbonCreditValue && economics.carbonStock
-                ? `€${Math.round((economics.carbonCreditValue / Math.max(1, economics.carbonStock * 0.05)) * 1.4)}`
-                : "€50",
-            ],
-            ["Discount rate", "8%", "6%", "4%"],
-            ["Management intensity", "Minimal", "Moderate", "High"],
-            ["Climate risk adjustment", "None", "Partial hedge", "Full adaptation"],
-          ]}
-        />
-      </PlaceholderBox>
-
-      <Hairline />
-
       {/* 11.4 Pathway Details */}
       <SubsectionHeader id="11.4" title="Pathway Details" sources={["NEW"]} />
       <PlaceholderBox

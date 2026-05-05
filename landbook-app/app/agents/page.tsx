@@ -209,6 +209,7 @@ export default async function AgentsPage() {
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <ValueBenefitsSection
+                      property={data.property}
                       economics={data.economics}
                       scores={data.scores}
                       meta={data.meta}
