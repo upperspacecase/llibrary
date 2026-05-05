@@ -115,7 +115,7 @@ export function FutureScenariosSection({
   narratives?: Narratives["futureScenarios"];
 }) {
   const rev = economics.revenueScenarios || {} as Record<string, unknown>;
-  const details = (rev.details as Array<{ name?: string; label?: string; value?: number; estimate?: number }>) || [];
+  const details = (rev.details as Array<{ scenario?: string; systems?: string; annual?: number; investment?: string }>) || [];
   const npvScenarios = economics.npv?.scenarios || [];
   const cons = (rev.conservative as number) || 0;
   const mod = (rev.moderate as number) || 0;
@@ -268,10 +268,12 @@ export function FutureScenariosSection({
       <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
       {details.length > 0 && (
         <DataTable
-          headers={["Revenue Stream", "Estimate"]}
+          headers={["Scenario", "Systems", "Annual Revenue", "Investment"]}
           rows={details.map((item) => [
-            fmt(item.name || item.label),
-            `\u20ac${(item.value || item.estimate || 0).toLocaleString()}`,
+            fmt(item.scenario),
+            fmt(item.systems),
+            `\u20ac${(item.annual ?? 0).toLocaleString()}`,
+            fmt(item.investment),
           ])}
         />
       )}
