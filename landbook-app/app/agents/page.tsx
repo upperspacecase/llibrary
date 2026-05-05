@@ -205,6 +205,22 @@ export default async function AgentsPage() {
                   </div>
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
+                    <ValueBenefitsSection
+                      economics={data.economics}
+                      scores={data.scores}
+                      meta={data.meta}
+                      narratives={n.valueBenefits}
+                    />
+                  </div>
+
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
+                    <FutureScenariosSection
+                      economics={data.economics}
+                      narratives={n.futureScenarios}
+                    />
+                  </div>
+
+                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <RegionEcosystemSection
                       regional={data.regional}
                       terrain={data.terrain}
@@ -246,15 +262,6 @@ export default async function AgentsPage() {
                   </div>
 
                   <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <ValueBenefitsSection
-                      economics={data.economics}
-                      scores={data.scores}
-                      meta={data.meta}
-                      narratives={n.valueBenefits}
-                    />
-                  </div>
-
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
                     <HistoryTrendsSection
                       trends={data.trends}
                       economics={data.economics}
@@ -271,13 +278,6 @@ export default async function AgentsPage() {
                       energy={data.energy}
                       trends={data.trends}
                       narratives={n.risksResilience}
-                    />
-                  </div>
-
-                  <div className="shadow-2xl bg-white p-6 sm:p-10 lg:p-16 overflow-hidden">
-                    <FutureScenariosSection
-                      economics={data.economics}
-                      narratives={n.futureScenarios}
                     />
                   </div>
 

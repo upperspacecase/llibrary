@@ -194,6 +194,22 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <ValueBenefitsSection
+              economics={data.economics}
+              scores={data.scores}
+              meta={data.meta}
+              narratives={n.valueBenefits}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
+            <FutureScenariosSection
+              economics={data.economics}
+              narratives={n.futureScenarios}
+            />
+          </div>
+
+          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <RegionEcosystemSection
               regional={data.regional}
               terrain={data.terrain}
@@ -235,15 +251,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <ValueBenefitsSection
-              economics={data.economics}
-              scores={data.scores}
-              meta={data.meta}
-              narratives={n.valueBenefits}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <HistoryTrendsSection
               trends={data.trends}
               economics={data.economics}
@@ -260,13 +267,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               energy={data.energy}
               trends={data.trends}
               narratives={n.risksResilience}
-            />
-          </div>
-
-          <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
-            <FutureScenariosSection
-              economics={data.economics}
-              narratives={n.futureScenarios}
             />
           </div>
 
