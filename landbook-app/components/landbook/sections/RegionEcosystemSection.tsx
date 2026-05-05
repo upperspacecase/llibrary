@@ -1,14 +1,5 @@
-import type { Regional, Terrain, Water, Energy, Narratives } from "@/lib/types";
-import {
-  SectionTitle, Hairline, DataTable, SubsectionHeader,
-} from "@/components/river";
-
-/* ── helpers ──────────────────────────────────────────────── */
-
-function fmt(v: unknown): string {
-  if (v == null || v === "") return "\u2014";
-  return String(v);
-}
+import type { Terrain, Water, Energy, Narratives } from "@/lib/types";
+import { SectionTitle, Hairline } from "@/components/river";
 
 /* ── MetricRow ────────────────────────────────────────────── */
 
@@ -74,20 +65,16 @@ function MetricRow({ icon, value, label, title, description, tip, placeholder }:
 /* ── Section ──────────────────────────────────────────────── */
 
 export function RegionEcosystemSection({
-  regional,
   terrain,
   water,
   energy,
   narratives,
 }: {
-  regional: Regional;
   terrain: Terrain;
   water: Water;
   energy: Energy;
   narratives?: Narratives["regionEcosystem"];
 }) {
-  const areas = regional.protectedAreas || [];
-
   /* Derive display values from raw data */
   const slope = terrain.slope;
   const waterIdx = water.securityIndex;
@@ -194,19 +181,6 @@ export function RegionEcosystemSection({
         description={narratives?.solarDesc}
         tip={narratives?.solarTip}
       />
-
-      <Hairline />
-
-      {/* ── 2.4 Ecological Networks ─────────────────────────── */}
-      <SubsectionHeader id="2.4" title="Ecological Networks" sources={["Pipeline"]} />
-      {areas.length > 0 ? (
-        <DataTable
-          headers={["Protected Area", "Type", "Designation"]}
-          rows={areas.map((a) => [a.name, fmt(a.type), fmt(a.designation)])}
-        />
-      ) : (
-        <p className="text-sm text-brand-sage mb-6">No protected area data available.</p>
-      )}
     </section>
   );
 }

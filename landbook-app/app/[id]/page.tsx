@@ -214,7 +214,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
 
           <div className="shadow-2xl bg-white p-16 print:shadow-none print:p-8">
             <RegionEcosystemSection
-              regional={data.regional}
               terrain={data.terrain}
               water={data.water}
               energy={data.energy}
