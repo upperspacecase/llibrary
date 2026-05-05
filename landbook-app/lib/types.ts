@@ -129,13 +129,50 @@ export interface RevenueScenarios {
   details?: Array<{ name?: string; label?: string; value?: number; estimate?: number }>;
 }
 
+export interface Premium {
+  id: string;
+  name: string;
+  description?: string | null;
+  source?: string | null;
+  basis?: "per-hectare" | "benefit-cost-ratio" | string | null;
+  confidence?: "high" | "medium" | "lower" | string | null;
+  valueComposition?: string | null;
+  annualLow?: number | null;
+  annualMid?: number | null;
+  annualHigh?: number | null;
+  thirtyYearNpvLow?: number | null;
+  thirtyYearNpvMid?: number | null;
+  thirtyYearNpvHigh?: number | null;
+  benefitCostRatio?: number | null;
+}
+
+export interface PremiumMethodology {
+  source?: string;
+  benefitTransferNote?: string;
+  discountRate?: number;
+  discountSource?: string;
+  horizonYears?: number;
+  annuityFactor?: number;
+  formula?: string;
+}
+
 export interface Economics {
   valuePerHa: number | null;
   totalValue: number | null;
   ecosystemServices: EcosystemServices;
+  premiums?: Premium[];
+  premiumMethodology?: PremiumMethodology;
   npv: {
     thirtyYear: number | null;
-    scenarios: Array<{ name: string; npv: number; riskLevel?: string }>;
+    scenarios: Array<{
+      name: string;
+      npv: number;
+      riskLevel?: string;
+      intervention?: string | null;
+      uplift30yr?: number | null;
+      annualUplift?: number | null;
+      assumptions?: string | null;
+    }>;
   };
   revenueScenarios: RevenueScenarios;
   carbonStock: number | null;

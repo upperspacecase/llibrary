@@ -39,7 +39,6 @@ export function ValueBenefitsSection({
   const regulation = es.regulation || 0;
   const soil = es.soil || 0;
   const cultural = es.cultural || 0;
-  const total = es.total || (water + food + carbon + regulation + soil + cultural);
 
   // Treemap: fold carbon into regulating (5 blocks)
   const treemapSegments = [
@@ -119,20 +118,124 @@ export function ValueBenefitsSection({
           Natural Capital Premium Estimates
         </h3>
         <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
-          Derived from Ecosystem Service Values
+          TEEB DE 2018 Benefit Transfer · Per-Hectare Annual Uplift
         </p>
-        {total > 0 && (
-          <DataTable
-            headers={["Intervention", "Estimated Uplift", "Annual Value"]}
-            rows={[
-              ["Active Stewardship", "+15–25%", `€${Math.round(total * 0.2).toLocaleString()}`],
-              ["Ecological Restoration", "+20–40%", `€${Math.round(total * 0.3).toLocaleString()}`],
-              ["Organic / FSC Certification", "+10–20%", `€${Math.round(total * 0.15).toLocaleString()}`],
-              ["Agritourism / Branding", "+5–15%", `€${Math.round(total * 0.1).toLocaleString()}`],
-            ]}
-          />
+
+        {economics.premiums && economics.premiums.length > 0 ? (
+          <>
+            <DataTable
+              headers={["Intervention", "Annual €/ha (low–high)", "Annual Uplift", "30-Yr NPV Uplift", "Source"]}
+              rows={economics.premiums.map((p) => {
+                if (p.basis === "per-hectare" && p.annualMid != null) {
+                  const lowHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.low;
+                  const highHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.high;
+                  return [
+                    p.name,
+                    lowHa != null && highHa != null
+                      ? `€${lowHa.toLocaleString()}–${highHa.toLocaleString()}`
+                      : "—",
+                    `€${(p.annualMid ?? 0).toLocaleString()}/yr`,
+                    `€${(p.thirtyYearNpvMid ?? 0).toLocaleString()}`,
+                    p.source ?? "—",
+                  ];
+                }
+                return [
+                  p.name,
+                  p.benefitCostRatio ? `${p.benefitCostRatio}:1 BCR` : "—",
+                  "qualitative",
+                  "qualitative",
+                  p.source ?? "—",
+                ];
+              })}
+            />
+
+            {/* Notes for BCR-only rows */}
+            {economics.premiums.some((p) => p.basis === "benefit-cost-ratio") && (
+              <div className="mt-6 space-y-2">
+                {economics.premiums
+                  .filter((p) => p.basis === "benefit-cost-ratio")
+                  .map((p) => (
+                    <p key={p.id} className="text-[11px] text-brand-sage italic font-body leading-relaxed">
+                      <strong className="text-brand-forest not-italic">{p.name}:</strong>{" "}
+                      {p.valueComposition}
+                    </p>
+                  ))}
+              </div>
+            )}
+
+            {/* Confidence note for any "lower" confidence rows */}
+            {economics.premiums.some((p) => p.confidence === "lower") && (
+              <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
+                Lower-confidence rows derive from aggregate national values rather than per-site case studies; treat as indicative.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="text-sm text-brand-sage italic">
+            No directly applicable TEEB DE case studies match this property&rsquo;s dominant biome.
+            Site-specific valuation required.
+          </p>
         )}
       </div>
+
+      {/* ── Calculation Explanation ── */}
+      {economics.premiumMethodology && (
+        <div className="mb-20 p-8 bg-white border-[0.5px] border-brand-sage/30">
+          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-6">
+            How These Numbers Are Calculated
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs leading-relaxed text-brand-charcoal font-body">
+            <div className="space-y-3">
+              <p>
+                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Source:</strong>
+                {economics.premiumMethodology.source}
+              </p>
+              <p>
+                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Discount rate:</strong>
+                {((economics.premiumMethodology.discountRate ?? 0.035) * 100).toFixed(1)}%
+                {" — "}{economics.premiumMethodology.discountSource}
+              </p>
+              <p>
+                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Horizon:</strong>
+                {economics.premiumMethodology.horizonYears ?? 30} years
+              </p>
+              <p>
+                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Annuity factor:</strong>
+                {(economics.premiumMethodology.annuityFactor ?? 18.392).toFixed(3)}
+              </p>
+            </div>
+            <div className="space-y-3">
+              <p className="font-mono text-[11px] bg-[#FAF7F2] p-3 border-l-2 border-brand-terracotta">
+                {economics.premiumMethodology.formula}
+              </p>
+              <p className="text-[11px] italic text-brand-sage">
+                {economics.premiumMethodology.benefitTransferNote}
+              </p>
+            </div>
+          </div>
+
+          {/* Worked example for first quantitative premium, if any */}
+          {economics.premiums?.some((p) => p.basis === "per-hectare" && p.annualMid != null) && (() => {
+            const ex = economics.premiums!.find((p) => p.basis === "per-hectare" && p.annualMid != null)!;
+            const exHa = (ex as { annualPerHa?: { mid: number } }).annualPerHa?.mid ?? 0;
+            const af = economics.premiumMethodology?.annuityFactor ?? 18.392;
+            const eligibleHa = ex.annualMid && exHa ? Math.round((ex.annualMid / exHa) * 100) / 100 : property.area;
+            return (
+              <div className="mt-6 pt-6 border-t border-brand-sage/20 text-xs font-body text-brand-charcoal">
+                <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-2">
+                  Worked Example — {ex.name}
+                </p>
+                <p className="font-mono text-[11px]">
+                  {eligibleHa} ha × €{exHa}/ha/yr = €{(ex.annualMid ?? 0).toLocaleString()}/yr annual uplift
+                </p>
+                <p className="font-mono text-[11px]">
+                  €{(ex.annualMid ?? 0).toLocaleString()}/yr × {af.toFixed(2)} = €{(ex.thirtyYearNpvMid ?? 0).toLocaleString()} 30-year NPV uplift
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {/* ── Long Term Value ── */}
       <div className="mb-20">
@@ -171,6 +274,7 @@ export function ValueBenefitsSection({
               <tr className="border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">
                 <th className="pb-4">Scenario</th>
                 <th className="pb-4">30-Year NPV</th>
+                <th className="pb-4">Uplift vs Baseline</th>
                 <th className="pb-4 text-right">Risk Level</th>
               </tr>
             </thead>
@@ -181,6 +285,11 @@ export function ValueBenefitsSection({
                   <td className="py-6 text-brand-charcoal text-base">
                     {s.npv != null ? `€${s.npv.toLocaleString()}` : "—"}
                   </td>
+                  <td className="py-6 text-brand-charcoal text-sm">
+                    {s.uplift30yr != null && s.uplift30yr > 0
+                      ? `+€${s.uplift30yr.toLocaleString()}`
+                      : s.intervention === null ? "—" : ""}
+                  </td>
                   <td className="py-6 text-right font-medium text-brand-forest">{fmt(s.riskLevel)}</td>
                 </tr>
               ))}
@@ -189,6 +298,11 @@ export function ValueBenefitsSection({
         ) : (
           <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
         )}
+
+        <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
+          Each &ldquo;+&rdquo; scenario applies a single TEEB DE intervention&rsquo;s mid-range uplift to the baseline.
+          See Premium Estimates above for per-intervention values and How These Numbers Are Calculated for the formula.
+        </p>
       </div>
 
       {/* ── Scenario Assumptions ── */}

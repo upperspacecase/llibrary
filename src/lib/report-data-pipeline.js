@@ -64,6 +64,8 @@ import { reverseGeocode } from '../api/nominatim.js';
 import {
   computeAllScores,
   computeEcosystemServices,
+  computeNaturalCapitalPremiums,
+  PREMIUM_METHODOLOGY,
   computeRevenueScenarios,
   computeRiskProfile,
   computeSoilScore,
@@ -885,9 +887,16 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     services: svcArray, // keep full array too
   };
 
-  // NPV from computeEcosystemServices; scenarios adjusted by climate trends
+  // Natural Capital Premium Estimates (TEEB DE 2018 benefit transfer)
+  const premiums = computeNaturalCapitalPremiums(
+    areaHa,
+    ecosystemServices.biomeGroup,
+    ecosystemServices.waterFeatures ?? 0,
+  );
+
+  // NPV from computeEcosystemServices; scenarios derived from premiums + climate risk
   const npvValue = ecosystemServices.npv ?? 0;
-  const npvObj = buildNPVScenarios(npvValue, trendsData);
+  const npvObj = buildNPVScenarios(npvValue, trendsData, premiums);
 
   // Transform revenueScenarios array into keyed object for template
   const revArr = revenueScenarios || [];
@@ -902,6 +911,8 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     valuePerHa: svcKeyed.total ? Math.round(svcKeyed.total / areaHa) : null,
     totalValue: svcKeyed.total ?? null,
     ecosystemServices: svcKeyed,
+    premiums,
+    premiumMethodology: PREMIUM_METHODOLOGY,
     npv: npvObj,
     revenueScenarios: revKeyed,
     carbonStock: Number.isFinite(allScores.carbonStockTotal) ? allScores.carbonStockTotal : 0,
@@ -1038,64 +1049,73 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
 // ── NPV scenario builder ─────────────────────────────────
 
 /**
- * Build 4 NPV scenarios adjusted by observed climate trends.
+ * Build NPV scenarios derived from baseline ES value + TEEB DE intervention premiums.
  *
  * Methodology:
- * - "Business as Usual": applies observed temp/precip trends over 30 years.
- *   Warming reduces water regulation; drying reduces water provisioning.
- *   Each +1°C/decade → -3% ecosystem service delivery.
- *   Each -50mm precip/decade → -2% water-dependent services.
- * - "Climate Resilience": assumes mitigation investments offset half the decline.
- * - "Conservation": adds ecosystem service market premium (+8%) on top of resilience.
- * - "Optimization": short-term yield boost (+5%) but amplified climate risk (-2x trend penalty).
+ * - Baseline: 30-yr NPV of current ecosystem service flow at 3.5% discount.
+ * - One scenario per applicable TEEB DE intervention: Baseline + intervention's
+ *   30-yr NPV uplift (mid-range estimate). Premiums with annual €/ha values
+ *   carry through quantitatively; BCR-only premiums appear as qualitative rows.
+ * - Combined Stewardship: Baseline + sum of all per-hectare premium uplifts.
+ *
+ * Climate trends (observed temp/precip) inform scenario riskLevel text but no
+ * longer adjust NPV directly — uplift figures come from sourced TEEB DE data,
+ * not invented decline multipliers.
  */
-function buildNPVScenarios(npvValue, trendsData) {
-  const tempTrend = trendsData?.tempPerDecade || 0; // °C per decade
-  const precipTrend = trendsData?.precipPerDecade || 0; // mm per decade
+function buildNPVScenarios(npvValue, trendsData, premiums) {
+  const tempTrend = trendsData?.tempPerDecade || 0;
+  const precipTrend = trendsData?.precipPerDecade || 0;
+  const climatePressure = Math.abs(tempTrend) * 3 * 0.03 + (precipTrend < 0 ? Math.abs(precipTrend) / 50 * 0.02 * 3 : 0);
+  const baseRisk = climatePressure > 0.15 ? 'High' : climatePressure > 0.05 ? 'Medium' : 'Low';
 
-  // Over 30 years (3 decades): cumulative impact
-  const tempImpact = Math.abs(tempTrend) * 3 * 0.03; // 3% per °C per decade × 3 decades
-  const precipImpact = precipTrend < 0 ? Math.abs(precipTrend) / 50 * 0.02 * 3 : 0; // 2% per 50mm decline × 3 decades
-  const climateDecline = Math.min(0.35, tempImpact + precipImpact); // cap at 35%
+  const trendNote = `Observed climate trend: ${tempTrend >= 0 ? '+' : ''}${tempTrend.toFixed(2)}°C/decade, ${precipTrend >= 0 ? '+' : ''}${Math.round(precipTrend)}mm/decade precipitation.`;
 
-  const bauMultiplier = Math.max(0.55, 1 - climateDecline);
-  const resilienceMultiplier = Math.max(0.75, 1 - climateDecline * 0.5);
-  const conservationMultiplier = resilienceMultiplier * 1.08;
-  const intensificationMultiplier = Math.max(0.5, 1.05 - climateDecline * 2);
+  const scenarios = [
+    {
+      name: 'Baseline',
+      npv: npvValue,
+      intervention: null,
+      assumptions: `Current land cover and management held constant. ${trendNote}`,
+      riskLevel: baseRisk,
+    },
+  ];
+
+  const quantitativePremiums = (premiums || []).filter((p) => p.basis === 'per-hectare' && p.thirtyYearNpvMid != null);
+
+  for (const p of quantitativePremiums) {
+    scenarios.push({
+      name: `+ ${p.name}`,
+      npv: Math.round(npvValue + p.thirtyYearNpvMid),
+      intervention: p.id,
+      uplift30yr: p.thirtyYearNpvMid,
+      annualUplift: p.annualMid,
+      assumptions: `Baseline plus mid-range uplift from ${p.name}. Source: ${p.source}.`,
+      riskLevel: p.confidence === 'lower' ? 'Medium-High' : 'Medium',
+    });
+  }
+
+  if (quantitativePremiums.length > 1) {
+    const sumHigh30yr = quantitativePremiums.reduce((s, p) => s + (p.thirtyYearNpvHigh || 0), 0);
+    const sumHighAnnual = quantitativePremiums.reduce((s, p) => s + (p.annualHigh || 0), 0);
+    scenarios.push({
+      name: 'Combined Stewardship Programme',
+      npv: Math.round(npvValue + sumHigh30yr),
+      intervention: 'all',
+      uplift30yr: sumHigh30yr,
+      annualUplift: sumHighAnnual,
+      assumptions: 'All applicable TEEB-DE-aligned interventions implemented at upper-bound rates. Higher delivery risk.',
+      riskLevel: 'Higher (delivery)',
+    });
+  }
 
   return {
     thirtyYear: npvValue,
-    scenarios: [
-      {
-        name: 'Business as Usual',
-        npv: Math.round(npvValue * bauMultiplier),
-        assumptions: `Current management; ${tempTrend > 0 ? '+' : ''}${tempTrend.toFixed(2)}°C/decade trend applied`,
-        riskLevel: climateDecline > 0.15 ? 'High' : 'Medium',
-      },
-      {
-        name: 'Climate Resilience',
-        npv: Math.round(npvValue * resilienceMultiplier),
-        assumptions: 'Water efficiency + fire protection offset half of projected climate impact',
-        riskLevel: 'Medium',
-      },
-      {
-        name: 'Conservation',
-        npv: Math.round(npvValue * conservationMultiplier),
-        assumptions: 'Resilience measures + ecosystem service market premium (+8%)',
-        riskLevel: 'Medium',
-      },
-      {
-        name: 'Optimization',
-        npv: Math.round(npvValue * intensificationMultiplier),
-        assumptions: 'Short-term yield optimization; amplified climate exposure',
-        riskLevel: climateDecline > 0.1 ? 'High' : 'Medium-High',
-      },
-    ],
+    scenarios,
     methodology: {
       tempTrend,
       precipTrend,
-      climateDecline: Math.round(climateDecline * 100),
-      note: 'Multipliers derived from observed 50-year climate trends (Open-Meteo ERA5 archive)',
+      climatePressure: Math.round(climatePressure * 100),
+      note: 'Scenarios = baseline NPV + TEEB DE 2018 intervention uplifts at 3.5% discount rate. Climate trend reflected in scenario risk level only.',
     },
   };
 }

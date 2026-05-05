@@ -238,8 +238,122 @@ export function computeEcosystemServices(areaHa, apiResults) {
   }
   npv = Math.round(npv / 1000) * 1000;
 
-  return { services, total, npv, biomeGroup, source: 'de Groot et al. 2012 (TEEB), adjusted 2024 EUR' };
+  return { services, total, npv, biomeGroup, waterFeatures, source: 'de Groot et al. 2012 (TEEB), adjusted 2024 EUR' };
 }
+
+// ---------------------------------------------------------------------------
+// Natural Capital Premium Estimates (TEEB DE 2018 benefit transfer)
+// Source: Naturkapital Deutschland — TEEB DE (2018), "The Value of Nature
+// for Economy and Society", Helmholtz Centre for Environmental Research.
+// Per-hectare values from German case studies, applied to property scale
+// as benefit transfer under SEEA-EA.
+// ---------------------------------------------------------------------------
+
+const ANNUITY_FACTOR_30Y_3_5PCT = 18.392; // (1 - 1.035^-30) / 0.035
+
+const TEEB_DE_INTERVENTIONS = [
+  {
+    id: 'grassland-conservation',
+    name: 'Grassland Conservation',
+    description: 'Avoid plough-up of HNV grassland; preserves soil carbon, water regulation, biodiversity.',
+    sourcePage: 'TEEB DE 2018, p.42–43',
+    annualPerHa: { low: 440, mid: 1720, high: 3000 },
+    valueComposition: 'Climate action 700–2,240 + provisioning 370–600 + groundwater 40–120 + nature conservation 300–1,000 €/ha/yr',
+    confidence: 'high',
+    applicableBiomes: ['grassland'],
+  },
+  {
+    id: 'multifunctional-forest',
+    name: 'Multifunctional Forest Stewardship',
+    description: 'Manage forest for non-timber public goods (biodiversity, recreation, carbon) alongside silviculture.',
+    sourcePage: 'TEEB DE 2018, p.54 (forest case study, aggregate values)',
+    annualPerHa: { low: 200, mid: 350, high: 500 },
+    valueComposition: 'Aggregate German totals (carbon €267m + biodiversity ~€2.25bn + recreation €1.9bn) ÷ ~11.5m ha forest area',
+    confidence: 'lower',
+    applicableBiomes: ['forest', 'agroforestry'],
+  },
+  {
+    id: 'river-buffer-zones',
+    name: 'River Bank Buffer Zones',
+    description: 'Strict ban on farming and fertilisers along watercourses; nutrient retention, habitat, erosion control.',
+    sourcePage: 'TEEB DE 2018, p.48 (Lower Saxony case study)',
+    benefitCostRatio: 1.8,
+    valueComposition: '20-yr NPV €767m benefit vs €894m agricultural cost; multifunctional BCR 1.8:1. Original study used 2% discount rate.',
+    confidence: 'medium',
+    requiresWaterFeatures: true,
+  },
+  {
+    id: 'floodplain-restoration',
+    name: 'Floodplain Restoration',
+    description: 'Dike relocation and floodplain renaturation; flood defence + water quality + biodiversity.',
+    sourcePage: 'TEEB DE 2018, p.37 (Elbe case study)',
+    benefitCostRatio: 3.0,
+    valueComposition: 'Multifunctional NPV ~€1.18bn vs ~€407m project costs; BCR 3:1.',
+    confidence: 'medium',
+    applicableBiomes: ['wetland'],
+  },
+];
+
+/**
+ * Build TEEB-DE-aligned natural-capital premium estimates for the property.
+ *
+ * Each premium represents an annual €/ha uplift from a specific intervention,
+ * sourced from TEEB DE 2018 case studies. Values are applied to property area
+ * as benefit transfer (SEEA-EA convention) and converted to 30-year NPV using
+ * the HM Treasury Green Book 3.5% social discount rate.
+ *
+ * Returns only interventions whose applicability rules match the property's
+ * dominant biome and water-feature presence.
+ */
+export function computeNaturalCapitalPremiums(areaHa, biomeGroup, waterFeatures) {
+  const applicable = TEEB_DE_INTERVENTIONS.filter((it) => {
+    if (it.applicableBiomes && !it.applicableBiomes.includes(biomeGroup)) return false;
+    if (it.requiresWaterFeatures && !(waterFeatures > 0)) return false;
+    return true;
+  });
+
+  return applicable.map((it) => {
+    const row = {
+      id: it.id,
+      name: it.name,
+      description: it.description,
+      source: it.sourcePage,
+      valueComposition: it.valueComposition,
+      confidence: it.confidence,
+    };
+
+    if (it.annualPerHa) {
+      row.basis = 'per-hectare';
+      row.annualPerHa = it.annualPerHa;
+      row.annualLow = Math.round(areaHa * it.annualPerHa.low);
+      row.annualMid = Math.round(areaHa * it.annualPerHa.mid);
+      row.annualHigh = Math.round(areaHa * it.annualPerHa.high);
+      row.thirtyYearNpvLow = Math.round(row.annualLow * ANNUITY_FACTOR_30Y_3_5PCT);
+      row.thirtyYearNpvMid = Math.round(row.annualMid * ANNUITY_FACTOR_30Y_3_5PCT);
+      row.thirtyYearNpvHigh = Math.round(row.annualHigh * ANNUITY_FACTOR_30Y_3_5PCT);
+    } else if (it.benefitCostRatio) {
+      row.basis = 'benefit-cost-ratio';
+      row.benefitCostRatio = it.benefitCostRatio;
+      row.annualLow = null;
+      row.annualMid = null;
+      row.annualHigh = null;
+      row.thirtyYearNpvLow = null;
+      row.thirtyYearNpvMid = null;
+      row.thirtyYearNpvHigh = null;
+    }
+    return row;
+  });
+}
+
+export const PREMIUM_METHODOLOGY = {
+  source: 'Naturkapital Deutschland — TEEB DE (2018): The Value of Nature for Economy and Society. Helmholtz Centre for Environmental Research — UFZ, Leipzig.',
+  benefitTransferNote: 'Per-hectare values from German case studies are applied to Mediterranean Portugal as benefit transfer (SEEA-EA convention). Results are indicative; site-specific valuation would refine them.',
+  discountRate: 0.035,
+  discountSource: 'HM Treasury Green Book social discount rate',
+  horizonYears: 30,
+  annuityFactor: ANNUITY_FACTOR_30Y_3_5PCT,
+  formula: '30-yr NPV uplift = annual €/ha × eligible ha × annuity factor; annuity factor = Σ (1.035)⁻ᵗ for t=1..30 ≈ 18.39',
+};
 
 // ---------------------------------------------------------------------------
 // Revenue Scenarios — keyed by agriculture system type

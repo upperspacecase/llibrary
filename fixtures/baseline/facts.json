@@ -26,13 +26,13 @@
       ]
     ],
     "municipality": "Vinhais",
-    "parish": "União das freguesias de Soeira, Fresulfe e Mofreita"
+    "parish": null
   },
   "scores": {
-    "naturalCapital": 6.5,
+    "naturalCapital": 6.4,
     "carbon": 50,
     "biodiversity": 63,
-    "water": 81,
+    "water": 86,
     "soil": 60,
     "pollination": 53,
     "dimensions": [
@@ -50,7 +50,7 @@
       },
       {
         "label": "Water Regulation",
-        "score": 81,
+        "score": 86,
         "avg": 68,
         "key": "water"
       },
@@ -127,126 +127,125 @@
     ],
     "forecast": [
       {
-        "date": "2026-04-25",
-        "high": 23,
-        "low": 9.1,
+        "date": "2026-05-05",
+        "high": 13.6,
+        "low": 6,
+        "precip": 0.9,
+        "wind": 18.5,
+        "weatherCode": 3,
+        "uvIndex": 7.3
+      },
+      {
+        "date": "2026-05-06",
+        "high": 15.7,
+        "low": 4.1,
         "precip": 0,
-        "wind": 12.5,
+        "wind": 8.9,
         "weatherCode": 3,
-        "uvIndex": 6.95
+        "uvIndex": 7.4
       },
       {
-        "date": "2026-04-26",
-        "high": 23.4,
-        "low": 11.9,
-        "precip": 1.5,
-        "wind": 16.3,
-        "weatherCode": 95,
-        "uvIndex": 7.1
-      },
-      {
-        "date": "2026-04-27",
-        "high": 24.1,
-        "low": 12.1,
-        "precip": 1.4,
-        "wind": 12.4,
-        "weatherCode": 95,
-        "uvIndex": 7.1
-      },
-      {
-        "date": "2026-04-28",
-        "high": 20.4,
-        "low": 12.2,
-        "precip": 5,
-        "wind": 12.8,
-        "weatherCode": 3,
-        "uvIndex": 6.7
-      },
-      {
-        "date": "2026-04-29",
-        "high": 19.9,
-        "low": 10.5,
-        "precip": 0.2,
-        "wind": 15.3,
-        "weatherCode": 3,
-        "uvIndex": 7.45
-      },
-      {
-        "date": "2026-04-30",
-        "high": 18.3,
-        "low": 11.4,
-        "precip": 4.8,
-        "wind": 14.3,
+        "date": "2026-05-07",
+        "high": 16.8,
+        "low": 7.4,
+        "precip": 0.6,
+        "wind": 15,
         "weatherCode": 80,
-        "uvIndex": 7.15
+        "uvIndex": 7.5
       },
       {
-        "date": "2026-05-01",
-        "high": 19.6,
-        "low": 9.8,
-        "precip": 0.1,
-        "wind": 13.9,
+        "date": "2026-05-08",
+        "high": 13.5,
+        "low": 7.2,
+        "precip": 6.4,
+        "wind": 14.9,
         "weatherCode": 80,
-        "uvIndex": 6.2
+        "uvIndex": 6.35
+      },
+      {
+        "date": "2026-05-09",
+        "high": 11.9,
+        "low": 8.1,
+        "precip": 15.27,
+        "wind": 22.3,
+        "weatherCode": 95,
+        "uvIndex": 2.7
+      },
+      {
+        "date": "2026-05-10",
+        "high": 11.3,
+        "low": 8.5,
+        "precip": 10.77,
+        "wind": 15.4,
+        "weatherCode": 95,
+        "uvIndex": 3.45
+      },
+      {
+        "date": "2026-05-11",
+        "high": 11.1,
+        "low": 8.4,
+        "precip": 5.6,
+        "wind": 18.4,
+        "weatherCode": 80,
+        "uvIndex": 3.85
       }
     ],
     "ipmaForecast": [
       {
-        "precipitaProb": "31.0",
-        "tMin": "10.6",
-        "tMax": "25.2",
-        "predWindDir": "E",
-        "idWeatherType": 2,
-        "classWindSpeed": 1,
-        "longitude": "-6.7606",
-        "forecastDate": "2026-04-25",
-        "latitude": "41.8076"
-      },
-      {
-        "precipitaProb": "65.0",
-        "tMin": "12.2",
-        "tMax": "25.4",
-        "predWindDir": "NE",
-        "idWeatherType": 20,
-        "classWindSpeed": 2,
-        "longitude": "-6.7606",
-        "forecastDate": "2026-04-26",
-        "classPrecInt": 3,
-        "latitude": "41.8076"
-      },
-      {
-        "precipitaProb": "40.0",
-        "tMin": "11.8",
-        "tMax": "26.3",
-        "predWindDir": "NE",
+        "precipitaProb": "49.0",
+        "tMin": "4.2",
+        "tMax": "17.0",
+        "predWindDir": "W",
         "idWeatherType": 7,
         "classWindSpeed": 2,
         "longitude": "-6.7606",
-        "forecastDate": "2026-04-27",
+        "forecastDate": "2026-05-05",
         "classPrecInt": 1,
         "latitude": "41.8076"
       },
       {
-        "precipitaProb": "51.0",
-        "tMin": "13.5",
-        "tMax": "24.9",
-        "predWindDir": "E",
-        "idWeatherType": 6,
+        "precipitaProb": "0.0",
+        "tMin": "3.2",
+        "tMax": "16.9",
+        "predWindDir": "S",
+        "idWeatherType": 3,
         "classWindSpeed": 1,
         "longitude": "-6.7606",
-        "forecastDate": "2026-04-28",
-        "classPrecInt": 2,
+        "forecastDate": "2026-05-06",
         "latitude": "41.8076"
       },
       {
-        "precipitaProb": "63.0",
-        "tMin": "11.3",
-        "tMax": "22.9",
+        "precipitaProb": "45.0",
+        "tMin": "7.0",
+        "tMax": "20.0",
+        "predWindDir": "SW",
+        "idWeatherType": 3,
+        "classWindSpeed": 2,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-05-07",
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "92.0",
+        "tMin": "8.8",
+        "tMax": "16.7",
+        "predWindDir": "S",
+        "idWeatherType": 10,
+        "classWindSpeed": 2,
+        "longitude": "-6.7606",
+        "forecastDate": "2026-05-08",
+        "classPrecInt": 1,
+        "latitude": "41.8076"
+      },
+      {
+        "precipitaProb": "100.0",
+        "tMin": "7.5",
+        "tMax": "16.8",
         "predWindDir": "S",
         "idWeatherType": 6,
-        "classWindSpeed": 1,
+        "classWindSpeed": 2,
         "longitude": "-6.7606",
-        "forecastDate": "2026-04-29",
+        "forecastDate": "2026-05-09",
         "classPrecInt": 2,
         "latitude": "41.8076"
       }
@@ -452,19 +451,19 @@
     ],
     "nearestDistanceM": 486,
     "securityIndex": 10,
-    "floodDischarge": "0.8",
-    "floodRisk": "Normal"
+    "floodDischarge": "0.5",
+    "floodRisk": "Low Flow"
   },
   "species": {
-    "total": 1368,
+    "total": 1369,
     "groups": [
       {
         "name": "Insecta",
-        "count": 241
+        "count": 240
       },
       {
         "name": "Plantae",
-        "count": 164
+        "count": 166
       },
       {
         "name": "Aves",
@@ -492,7 +491,7 @@
       },
       {
         "name": "Animalia",
-        "count": 5
+        "count": 4
       },
       {
         "name": "Mollusca",
@@ -572,19 +571,19 @@
       }
     ],
     "threatened": 87,
-    "gbifTotal": 75318,
+    "gbifTotal": 75995,
     "gbifKingdoms": [
       {
         "name": "Animalia",
-        "count": 185
+        "count": 166
       },
       {
         "name": "Plantae",
-        "count": 106
+        "count": 124
       },
       {
         "name": "Fungi",
-        "count": 9
+        "count": 10
       }
     ],
     "trends": {
@@ -596,11 +595,11 @@
         },
         {
           "label": "2016-2021",
-          "count": 636
+          "count": 637
         },
         {
           "label": "2021-2026",
-          "count": 1121
+          "count": 1122
         }
       ]
     }
@@ -614,12 +613,12 @@
     "seasonal": []
   },
   "flood": {
-    "riskScore": 0,
-    "riskLevel": "Very Low"
+    "riskScore": 3,
+    "riskLevel": "High"
   },
   "drought": {
-    "riskScore": 3,
-    "riskLevel": "Severe"
+    "riskScore": 2,
+    "riskLevel": "High"
   },
   "energy": {
     "solar": {
@@ -688,39 +687,78 @@
         }
       ]
     },
+    "premiums": [
+      {
+        "id": "multifunctional-forest",
+        "name": "Multifunctional Forest Stewardship",
+        "description": "Manage forest for non-timber public goods (biodiversity, recreation, carbon) alongside silviculture.",
+        "source": "TEEB DE 2018, p.54 (forest case study, aggregate values)",
+        "valueComposition": "Aggregate German totals (carbon €267m + biodiversity ~€2.25bn + recreation €1.9bn) ÷ ~11.5m ha forest area",
+        "confidence": "lower",
+        "basis": "per-hectare",
+        "annualPerHa": {
+          "low": 200,
+          "mid": 350,
+          "high": 500
+        },
+        "annualLow": 1000,
+        "annualMid": 1750,
+        "annualHigh": 2500,
+        "thirtyYearNpvLow": 18392,
+        "thirtyYearNpvMid": 32186,
+        "thirtyYearNpvHigh": 45980
+      },
+      {
+        "id": "river-buffer-zones",
+        "name": "River Bank Buffer Zones",
+        "description": "Strict ban on farming and fertilisers along watercourses; nutrient retention, habitat, erosion control.",
+        "source": "TEEB DE 2018, p.48 (Lower Saxony case study)",
+        "valueComposition": "20-yr NPV €767m benefit vs €894m agricultural cost; multifunctional BCR 1.8:1. Original study used 2% discount rate.",
+        "confidence": "medium",
+        "basis": "benefit-cost-ratio",
+        "benefitCostRatio": 1.8,
+        "annualLow": null,
+        "annualMid": null,
+        "annualHigh": null,
+        "thirtyYearNpvLow": null,
+        "thirtyYearNpvMid": null,
+        "thirtyYearNpvHigh": null
+      }
+    ],
+    "premiumMethodology": {
+      "source": "Naturkapital Deutschland — TEEB DE (2018): The Value of Nature for Economy and Society. Helmholtz Centre for Environmental Research — UFZ, Leipzig.",
+      "benefitTransferNote": "Per-hectare values from German case studies are applied to Mediterranean Portugal as benefit transfer (SEEA-EA convention). Results are indicative; site-specific valuation would refine them.",
+      "discountRate": 0.035,
+      "discountSource": "HM Treasury Green Book social discount rate",
+      "horizonYears": 30,
+      "annuityFactor": 18.392,
+      "formula": "30-yr NPV uplift = annual €/ha × eligible ha × annuity factor; annuity factor = Σ (1.035)⁻ᵗ for t=1..30 ≈ 18.39"
+    },
     "npv": {
-      "thirtyYear": 90000,
+      "thirtyYear": 85000,
       "scenarios": [
         {
-          "name": "Business as Usual",
-          "npv": 90000,
-          "assumptions": "Current management; 0.00°C/decade trend applied",
+          "name": "Baseline",
+          "npv": 85000,
+          "intervention": null,
+          "assumptions": "Current land cover and management held constant. Observed climate trend: +0.40°C/decade, -43mm/decade precipitation.",
           "riskLevel": "Medium"
         },
         {
-          "name": "Climate Resilience",
-          "npv": 90000,
-          "assumptions": "Water efficiency + fire protection offset half of projected climate impact",
-          "riskLevel": "Medium"
-        },
-        {
-          "name": "Conservation",
-          "npv": 97200,
-          "assumptions": "Resilience measures + ecosystem service market premium (+8%)",
-          "riskLevel": "Medium"
-        },
-        {
-          "name": "Optimization",
-          "npv": 94500,
-          "assumptions": "Short-term yield optimization; amplified climate exposure",
+          "name": "+ Multifunctional Forest Stewardship",
+          "npv": 117186,
+          "intervention": "multifunctional-forest",
+          "uplift30yr": 32186,
+          "annualUplift": 1750,
+          "assumptions": "Baseline plus mid-range uplift from Multifunctional Forest Stewardship. Source: TEEB DE 2018, p.54 (forest case study, aggregate values).",
           "riskLevel": "Medium-High"
         }
       ],
       "methodology": {
-        "tempTrend": 0,
-        "precipTrend": 0,
-        "climateDecline": 0,
-        "note": "Multipliers derived from observed 50-year climate trends (Open-Meteo ERA5 archive)"
+        "tempTrend": 0.4,
+        "precipTrend": -43,
+        "climatePressure": 9,
+        "note": "Scenarios = baseline NPV + TEEB DE 2018 intervention uplifts at 3.5% discount rate. Climate trend reflected in scenario risk level only."
       }
     },
     "revenueScenarios": {
@@ -787,10 +825,286 @@
     "sampleCount": 8
   },
   "trends": {
-    "tempPerDecade": null,
-    "precipPerDecade": null,
-    "fireProneByDecade": [],
-    "yearly": [],
+    "tempPerDecade": 0.4,
+    "precipPerDecade": -43,
+    "fireProneByDecade": [
+      {
+        "decade": "1970s",
+        "avgDays": 2.5
+      },
+      {
+        "decade": "1980s",
+        "avgDays": 8.9
+      },
+      {
+        "decade": "1990s",
+        "avgDays": 11.2
+      },
+      {
+        "decade": "2000s",
+        "avgDays": 10.8
+      },
+      {
+        "decade": "2010s",
+        "avgDays": 15.1
+      },
+      {
+        "decade": "2020s",
+        "avgDays": 21.5
+      }
+    ],
+    "yearly": [
+      {
+        "year": 1976,
+        "meanTemp": 10.76,
+        "precip": 1096
+      },
+      {
+        "year": 1977,
+        "meanTemp": 9.76,
+        "precip": 1445
+      },
+      {
+        "year": 1978,
+        "meanTemp": 8.35,
+        "precip": 1431
+      },
+      {
+        "year": 1979,
+        "meanTemp": 10.61,
+        "precip": 1445
+      },
+      {
+        "year": 1980,
+        "meanTemp": 10.74,
+        "precip": 876
+      },
+      {
+        "year": 1981,
+        "meanTemp": 11.42,
+        "precip": 1127
+      },
+      {
+        "year": 1982,
+        "meanTemp": 11.2,
+        "precip": 914
+      },
+      {
+        "year": 1983,
+        "meanTemp": 10.97,
+        "precip": 1202
+      },
+      {
+        "year": 1984,
+        "meanTemp": 10.47,
+        "precip": 1327
+      },
+      {
+        "year": 1985,
+        "meanTemp": 11.21,
+        "precip": 1331
+      },
+      {
+        "year": 1986,
+        "meanTemp": 10.85,
+        "precip": 947
+      },
+      {
+        "year": 1987,
+        "meanTemp": 11.69,
+        "precip": 1284
+      },
+      {
+        "year": 1988,
+        "meanTemp": 10.96,
+        "precip": 1167
+      },
+      {
+        "year": 1989,
+        "meanTemp": 12.28,
+        "precip": 1255
+      },
+      {
+        "year": 1990,
+        "meanTemp": 11.87,
+        "precip": 946
+      },
+      {
+        "year": 1991,
+        "meanTemp": 11.33,
+        "precip": 982
+      },
+      {
+        "year": 1992,
+        "meanTemp": 11.13,
+        "precip": 894
+      },
+      {
+        "year": 1993,
+        "meanTemp": 10.41,
+        "precip": 1058
+      },
+      {
+        "year": 1994,
+        "meanTemp": 11.47,
+        "precip": 1204
+      },
+      {
+        "year": 1995,
+        "meanTemp": 12.26,
+        "precip": 1360
+      },
+      {
+        "year": 1996,
+        "meanTemp": 11.12,
+        "precip": 1332
+      },
+      {
+        "year": 1997,
+        "meanTemp": 12.02,
+        "precip": 1317
+      },
+      {
+        "year": 1998,
+        "meanTemp": 11.6,
+        "precip": 975
+      },
+      {
+        "year": 1999,
+        "meanTemp": 11.06,
+        "precip": 1191
+      },
+      {
+        "year": 2000,
+        "meanTemp": 11.11,
+        "precip": 1503
+      },
+      {
+        "year": 2001,
+        "meanTemp": 11.22,
+        "precip": 1505
+      },
+      {
+        "year": 2002,
+        "meanTemp": 11.33,
+        "precip": 1306
+      },
+      {
+        "year": 2003,
+        "meanTemp": 11.76,
+        "precip": 1224
+      },
+      {
+        "year": 2004,
+        "meanTemp": 11.28,
+        "precip": 905
+      },
+      {
+        "year": 2005,
+        "meanTemp": 11.69,
+        "precip": 781
+      },
+      {
+        "year": 2006,
+        "meanTemp": 12.13,
+        "precip": 1392
+      },
+      {
+        "year": 2007,
+        "meanTemp": 10.96,
+        "precip": 860
+      },
+      {
+        "year": 2008,
+        "meanTemp": 10.76,
+        "precip": 955
+      },
+      {
+        "year": 2009,
+        "meanTemp": 11.75,
+        "precip": 1334
+      },
+      {
+        "year": 2010,
+        "meanTemp": 11.1,
+        "precip": 1393
+      },
+      {
+        "year": 2011,
+        "meanTemp": 12.23,
+        "precip": 1004
+      },
+      {
+        "year": 2012,
+        "meanTemp": 11.36,
+        "precip": 896
+      },
+      {
+        "year": 2013,
+        "meanTemp": 11.29,
+        "precip": 1288
+      },
+      {
+        "year": 2014,
+        "meanTemp": 11.63,
+        "precip": 1530
+      },
+      {
+        "year": 2015,
+        "meanTemp": 12.12,
+        "precip": 1014
+      },
+      {
+        "year": 2016,
+        "meanTemp": 12.06,
+        "precip": 1296
+      },
+      {
+        "year": 2017,
+        "meanTemp": 12.96,
+        "precip": 680
+      },
+      {
+        "year": 2018,
+        "meanTemp": 11.87,
+        "precip": 1065
+      },
+      {
+        "year": 2019,
+        "meanTemp": 12,
+        "precip": 1045
+      },
+      {
+        "year": 2020,
+        "meanTemp": 12.55,
+        "precip": 921
+      },
+      {
+        "year": 2021,
+        "meanTemp": 12.02,
+        "precip": 843
+      },
+      {
+        "year": 2022,
+        "meanTemp": 13.37,
+        "precip": 862
+      },
+      {
+        "year": 2023,
+        "meanTemp": 12.5,
+        "precip": 1107
+      },
+      {
+        "year": 2024,
+        "meanTemp": 12.41,
+        "precip": 948
+      },
+      {
+        "year": 2025,
+        "meanTemp": 12.76,
+        "precip": 1056
+      }
+    ],
     "bioWindows": [
       {
         "label": "2011-2016",
@@ -951,13 +1265,13 @@
   },
   "narratives": {},
   "meta": {
-    "generatedAt": "2026-04-25T05:41:13.055Z",
+    "generatedAt": "2026-05-05T08:21:26.907Z",
     "version": "2.0.0",
     "apiStatus": {
       "elevation": "ok",
       "forecast": "ok",
       "climate": "ok",
-      "climateTrends": "Open-Meteo archive error: 429",
+      "climateTrends": "ok",
       "soilProps": "ok",
       "soilClass": "ok",
       "geology": "ok",
@@ -985,7 +1299,6 @@
       "ipmaForecast": "ok"
     },
     "missingFields": [
-      "climateTrends",
       "activeFires",
       "historicalFires",
       "solarWind",

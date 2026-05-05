@@ -216,6 +216,26 @@ const NPVScenarioSchema = z.object({
   npv: numNullable,
   assumptions: strNullable,
   riskLevel: strNullable,
+  intervention: strNullable.optional(),
+  uplift30yr: numNullable.optional(),
+  annualUplift: numNullable.optional(),
+}).passthrough();
+
+const PremiumSchema = z.object({
+  id: str,
+  name: str,
+  description: strNullable.optional(),
+  source: strNullable.optional(),
+  basis: strNullable.optional(),
+  confidence: strNullable.optional(),
+  valueComposition: strNullable.optional(),
+  annualLow: numNullable.optional(),
+  annualMid: numNullable.optional(),
+  annualHigh: numNullable.optional(),
+  thirtyYearNpvLow: numNullable.optional(),
+  thirtyYearNpvMid: numNullable.optional(),
+  thirtyYearNpvHigh: numNullable.optional(),
+  benefitCostRatio: numNullable.optional(),
 }).passthrough();
 
 const RevenueDetailSchema = z.object({
@@ -232,6 +252,8 @@ const EconomicsSchema = z.object({
     total: numNullable,
     services: z.array(EcosystemServiceSchema).default([]),
   }).passthrough(),
+  premiums: z.array(PremiumSchema).default([]).optional(),
+  premiumMethodology: z.object({}).passthrough().optional(),
   npv: z.object({
     thirtyYear: numNullable,
     scenarios: z.array(NPVScenarioSchema).default([]),
