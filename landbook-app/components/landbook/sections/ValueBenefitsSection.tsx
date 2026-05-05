@@ -136,7 +136,7 @@ export function ValueBenefitsSection({
                 : "—"}
             </h2>
             <p className="text-xs mt-4 leading-relaxed text-brand-forest/70 font-body max-w-xs">
-              Present value of all future ecosystem services discounted at 3.5% over a 30-year horizon.
+              What 30 years of Annual Natural Capital is worth today, after discounting future years at 3.5%.
             </p>
           </div>
           {narratives?.assetCallout && (

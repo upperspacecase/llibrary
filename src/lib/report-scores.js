@@ -230,8 +230,8 @@ export function computeEcosystemServices(areaHa, apiResults) {
 
   const total = services.reduce((sum, s) => sum + s.value, 0);
 
-  // 30-year NPV at 3% discount rate
-  const discountRate = 0.03;
+  // 30-year NPV at 3.5% discount rate (HM Treasury Green Book social discount rate)
+  const discountRate = 0.035;
   let npv = 0;
   for (let y = 1; y <= 30; y++) {
     npv += total / Math.pow(1 + discountRate, y);
