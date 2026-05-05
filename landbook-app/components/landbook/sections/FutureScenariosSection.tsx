@@ -1,11 +1,110 @@
 import type { Economics, Narratives } from "@/lib/types";
 import {
-  SectionTitle, KPI, StackedBar, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
+  SectionTitle, KPI, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
   if (v == null || v === "") return "\u2014";
   return String(v);
+}
+
+const SCENARIO_COLORS: Record<string, string> = {
+  "Business as Usual": "#2C2C2C",
+  Conservative: "#8B9A7E",
+  Moderate: "#D4A574",
+  Optimized: "#1B3A2F",
+};
+
+function RevenueTrajectoryChart({
+  series,
+  years = 30,
+}: {
+  series: Array<{ name: string; annual: number }>;
+  years?: number;
+}) {
+  const W = 720;
+  const H = 280;
+  const padL = 56;
+  const padR = 16;
+  const padT = 16;
+  const padB = 36;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  const maxY = Math.max(...series.map((s) => s.annual * years), 1);
+  const niceMax = Math.ceil(maxY / 10000) * 10000 || maxY;
+  const yTicks = 4;
+  const xTicks = 6;
+
+  const xAt = (yr: number) => padL + (yr / years) * innerW;
+  const yAt = (val: number) => padT + innerH - (val / niceMax) * innerH;
+
+  return (
+    <div>
+      <div className="flex justify-between items-end mb-4">
+        <h4 className="text-[10px] font-bold tracking-widest text-brand-forest uppercase">
+          Revenue Scenario Comparison
+        </h4>
+        <p className="text-[10px] text-brand-sage uppercase tracking-widest">
+          30-Year Cumulative Revenue
+        </p>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+        {Array.from({ length: yTicks + 1 }, (_, i) => {
+          const v = (niceMax / yTicks) * i;
+          const y = yAt(v);
+          return (
+            <g key={`y${i}`}>
+              <line x1={padL} x2={W - padR} y1={y} y2={y} stroke="#E5E0D3" strokeWidth={1} />
+              <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={10} fill="#8B9A7E">
+                {`\u20ac${Math.round(v).toLocaleString()}`}
+              </text>
+            </g>
+          );
+        })}
+        {Array.from({ length: xTicks + 1 }, (_, i) => {
+          const yr = (years / xTicks) * i;
+          const x = xAt(yr);
+          return (
+            <text key={`x${i}`} x={x} y={H - padB + 16} textAnchor="middle" fontSize={10} fill="#8B9A7E">
+              Yr {Math.round(yr)}
+            </text>
+          );
+        })}
+        <line x1={padL} x2={padL} y1={padT} y2={padT + innerH} stroke="#8B9A7E" strokeWidth={1} />
+        <line x1={padL} x2={W - padR} y1={padT + innerH} y2={padT + innerH} stroke="#8B9A7E" strokeWidth={1} />
+        {series.map((s) => {
+          const stroke = SCENARIO_COLORS[s.name] || "#8B9A7E";
+          const x1 = xAt(0);
+          const y1 = yAt(0);
+          const x2 = xAt(years);
+          const y2 = yAt(s.annual * years);
+          return (
+            <g key={s.name}>
+              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={stroke} strokeWidth={2} />
+              <circle cx={x2} cy={y2} r={3} fill={stroke} />
+            </g>
+          );
+        })}
+      </svg>
+      <div className="flex flex-wrap gap-6 mt-3">
+        {series.map((s) => (
+          <div key={s.name} className="flex items-center gap-2">
+            <div className="w-3 h-[2px]" style={{ background: SCENARIO_COLORS[s.name] || "#8B9A7E" }} />
+            <span className="text-[10px] font-bold text-brand-forest tracking-wide">
+              {`${s.name} \u00b7 \u20ac${(s.annual * years).toLocaleString()} over ${years}y`}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="text-[11px] leading-relaxed text-brand-sage mt-4 max-w-2xl">
+        Each line plots cumulative undiscounted revenue under steady annual delivery
+        (annual revenue \u00d7 years) over a {years}-year horizon. Slope reflects the
+        annual rate of each scenario; endpoints show total revenue captured. Discounted
+        present value is shown separately in 11.2.
+      </p>
+    </div>
+  );
 }
 
 export function FutureScenariosSection({
@@ -17,12 +116,17 @@ export function FutureScenariosSection({
 }) {
   const rev = economics.revenueScenarios || {} as Record<string, unknown>;
   const details = (rev.details as Array<{ name?: string; label?: string; value?: number; estimate?: number }>) || [];
-  const scenarios = [
-    { name: "Conservative", value: rev.conservative as number || 0 },
-    { name: "Moderate", value: rev.moderate as number || 0 },
-    { name: "Optimized", value: rev.optimized as number || 0 },
-  ].filter((s) => s.value > 0);
   const npvScenarios = economics.npv?.scenarios || [];
+  const cons = (rev.conservative as number) || 0;
+  const mod = (rev.moderate as number) || 0;
+  const opt = (rev.optimized as number) || 0;
+  const bau = Math.round(cons * 0.5);
+  const trajectorySeries = [
+    { name: "Business as Usual", annual: bau },
+    { name: "Conservative", annual: cons },
+    { name: "Moderate", annual: mod },
+    { name: "Optimized", annual: opt },
+  ].filter((s) => s.annual > 0);
 
   return (
     <section id="future-scenarios">
@@ -77,14 +181,17 @@ export function FutureScenariosSection({
           size="sm"
         />
       </div>
-      {scenarios.length > 0 && <StackedBar segments={scenarios} label="Revenue Scenario Comparison" />}
+      {trajectorySeries.length > 0 && (
+        <div className="mb-6">
+          <RevenueTrajectoryChart series={trajectorySeries} />
+        </div>
+      )}
       {(() => {
-        const bau = Math.round(((rev.conservative as number) || 0) * 0.5);
         const allScenarios = [
           { name: "Business as Usual", value: bau, description: "No new investment; current trajectory maintained" },
-          { name: "Conservative", value: (rev.conservative as number) || 0, description: "Low-risk improvements with minimal capital" },
-          { name: "Moderate", value: (rev.moderate as number) || 0, description: "Balanced investment across diversified streams" },
-          { name: "Optimized", value: (rev.optimized as number) || 0, description: "Full potential with significant upfront investment" },
+          { name: "Conservative", value: cons, description: "Low-risk improvements with minimal capital" },
+          { name: "Moderate", value: mod, description: "Balanced investment across diversified streams" },
+          { name: "Optimized", value: opt, description: "Full potential with significant upfront investment" },
         ].filter((s) => s.value > 0);
         return allScenarios.length > 0 ? (
           <DataTable
@@ -126,9 +233,6 @@ export function FutureScenariosSection({
         synthetic
       >
         {(() => {
-          const cons = (rev.conservative as number) || 0;
-          const mod = (rev.moderate as number) || 0;
-          const opt = (rev.optimized as number) || 0;
           return (
             <DataTable
               headers={["Phase", "Timeline", "Est. Investment", "Target Scenario"]}
@@ -193,9 +297,6 @@ export function FutureScenariosSection({
         synthetic
       >
         {(() => {
-          const cons = (rev.conservative as number) || 0;
-          const mod = (rev.moderate as number) || 0;
-          const opt = (rev.optimized as number) || 0;
           const spread = opt - cons;
           const spreadPct = cons > 0 ? Math.round((spread / cons) * 100) : 0;
           const downside = Math.round(cons * 0.5);

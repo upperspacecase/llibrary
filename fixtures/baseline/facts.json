@@ -710,7 +710,7 @@
           "riskLevel": "Medium"
         },
         {
-          "name": "Intensification",
+          "name": "Optimization",
           "npv": 94500,
           "assumptions": "Short-term yield optimization; amplified climate exposure",
           "riskLevel": "Medium-High"

@@ -1023,7 +1023,7 @@ export function processRawData(raw, submission, areaHa, options = {}) {
  *   Each -50mm precip/decade → -2% water-dependent services.
  * - "Climate Resilience": assumes mitigation investments offset half the decline.
  * - "Conservation": adds ecosystem service market premium (+8%) on top of resilience.
- * - "Intensification": short-term yield boost (+5%) but amplified climate risk (-2x trend penalty).
+ * - "Optimization": short-term yield boost (+5%) but amplified climate risk (-2x trend penalty).
  */
 function buildNPVScenarios(npvValue, trendsData) {
   const tempTrend = trendsData?.tempPerDecade || 0; // °C per decade
@@ -1061,7 +1061,7 @@ function buildNPVScenarios(npvValue, trendsData) {
         riskLevel: 'Medium',
       },
       {
-        name: 'Intensification',
+        name: 'Optimization',
         npv: Math.round(npvValue * intensificationMultiplier),
         assumptions: 'Short-term yield optimization; amplified climate exposure',
         riskLevel: climateDecline > 0.1 ? 'High' : 'Medium-High',
