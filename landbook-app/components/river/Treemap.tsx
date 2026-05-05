@@ -41,7 +41,10 @@ export function Treemap({ segments }: { segments: TreemapSegment[] }) {
           <span className="text-[10px] font-bold text-white uppercase tracking-wider">
             {topRow[0].name}
           </span>
-          <span className="text-xl font-bold text-white">{pct(topRow[0].value)}%</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold text-white">{pct(topRow[0].value)}%</span>
+            <span className="text-sm font-semibold text-white/85">(&euro;{topRow[0].value.toLocaleString()})</span>
+          </div>
         </div>
         {topRow.length > 1 && (
           <div className="flex-1 flex flex-col gap-1">
@@ -53,7 +56,10 @@ export function Treemap({ segments }: { segments: TreemapSegment[] }) {
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">
                   {topRow[1].name}
                 </span>
-                <span className="text-xl font-bold text-white">{pct(topRow[1].value)}%</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-bold text-white">{pct(topRow[1].value)}%</span>
+                  <span className="text-sm font-semibold text-white/85">(&euro;{topRow[1].value.toLocaleString()})</span>
+                </div>
               </div>
             )}
             {topRow[2] && (
@@ -64,7 +70,10 @@ export function Treemap({ segments }: { segments: TreemapSegment[] }) {
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider">
                   {topRow[2].name}
                 </span>
-                <span className="text-lg font-bold text-white">{pct(topRow[2].value)}%</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg font-bold text-white">{pct(topRow[2].value)}%</span>
+                  <span className="text-sm font-semibold text-white/85">(&euro;{topRow[2].value.toLocaleString()})</span>
+                </div>
               </div>
             )}
           </div>
@@ -82,7 +91,10 @@ export function Treemap({ segments }: { segments: TreemapSegment[] }) {
               <span className="text-[10px] font-bold text-white uppercase tracking-wider">
                 {seg.name}
               </span>
-              <span className="text-lg font-bold text-white">{pct(seg.value)}%</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold text-white">{pct(seg.value)}%</span>
+                <span className="text-xs font-semibold text-white/85">(&euro;{seg.value.toLocaleString()})</span>
+              </div>
             </div>
           ))}
         </div>

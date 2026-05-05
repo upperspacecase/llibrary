@@ -5,7 +5,7 @@ import {
 } from "@/components/river";
 
 function fmt(v: unknown): string {
-  if (v == null || v === "") return "\u2014";
+  if (v == null || v === "") return "—";
   return String(v);
 }
 
@@ -40,13 +40,14 @@ export function ValueBenefitsSection({
     { name: "Cultural", value: cultural, color: "bg-brand-forest/70" },
   ];
 
-  // Table: keep carbon separate with descriptive labels
+  // Table: one row per underlying service, mirroring the treemap groupings
   const tableServices = [
-    { name: "Provisioning: Timber", value: food },
-    { name: "Regulating: Carbon", value: carbon },
-    { name: "Supporting: Soil Health", value: soil },
-    { name: "Provisioning: Water", value: water },
-    { name: "Other Services", value: regulation + cultural },
+    { name: "Food", value: food },
+    { name: "Water", value: water },
+    { name: "Carbon storage", value: carbon },
+    { name: "Water regulation", value: regulation },
+    { name: "Soil", value: soil },
+    { name: "Recreation", value: cultural },
   ];
 
   return (
@@ -61,8 +62,8 @@ export function ValueBenefitsSection({
           </span>
           <h2 className="font-serif font-bold text-brand-forest leading-tight tracking-tighter text-5xl mb-8">
             {economics.totalValue != null
-              ? `\u20ac${economics.totalValue.toLocaleString()}`
-              : "\u2014"}
+              ? `€${economics.totalValue.toLocaleString()}`
+              : "—"}
           </h2>
           {narratives?.intro && (
             <p className="text-sm leading-relaxed text-brand-forest/80 font-body max-w-2xl">
@@ -87,7 +88,7 @@ export function ValueBenefitsSection({
 
       <div className="mb-20">
         <DataTable
-          headers={["Service Class", "Value (\u20ac)"]}
+          headers={["Service Class", "Value (€)"]}
           rows={tableServices
             .filter((s) => s.value > 0)
             .map((s) => [
@@ -97,7 +98,28 @@ export function ValueBenefitsSection({
         />
       </div>
 
-      {/* ── 7.3 Long Term Value ── */}
+      {/* ── Natural Capital Premium Estimates ── */}
+      <div className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
+        <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
+          Natural Capital Premium Estimates
+        </h3>
+        <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
+          Derived from Ecosystem Service Values
+        </p>
+        {total > 0 && (
+          <DataTable
+            headers={["Intervention", "Estimated Uplift", "Annual Value"]}
+            rows={[
+              ["Active Stewardship", "+15–25%", `€${Math.round(total * 0.2).toLocaleString()}`],
+              ["Ecological Restoration", "+20–40%", `€${Math.round(total * 0.3).toLocaleString()}`],
+              ["Organic / FSC Certification", "+10–20%", `€${Math.round(total * 0.15).toLocaleString()}`],
+              ["Agritourism / Branding", "+5–15%", `€${Math.round(total * 0.1).toLocaleString()}`],
+            ]}
+          />
+        )}
+      </div>
+
+      {/* ── Long Term Value ── */}
       <div className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
           Long Term Value
@@ -110,8 +132,8 @@ export function ValueBenefitsSection({
             </span>
             <h2 className="font-serif font-bold text-brand-forest leading-tight tracking-tighter text-4xl lg:text-[2.6rem]">
               {economics.npv.thirtyYear != null
-                ? `\u20ac${economics.npv.thirtyYear.toLocaleString()}`
-                : "\u2014"}
+                ? `€${economics.npv.thirtyYear.toLocaleString()}`
+                : "—"}
             </h2>
             <p className="text-xs mt-4 leading-relaxed text-brand-forest/70 font-body max-w-xs">
               Present value of all future ecosystem services discounted at 3.5% over a 30-year horizon.
@@ -142,7 +164,7 @@ export function ValueBenefitsSection({
                 <tr key={s.name}>
                   <td className="py-6 font-bold text-brand-forest text-base">{fmt(s.name)}</td>
                   <td className="py-6 text-brand-charcoal text-base">
-                    {s.npv != null ? `\u20ac${s.npv.toLocaleString()}` : "\u2014"}
+                    {s.npv != null ? `€${s.npv.toLocaleString()}` : "—"}
                   </td>
                   <td className="py-6 text-right font-medium text-brand-forest">{fmt(s.riskLevel)}</td>
                 </tr>
@@ -151,27 +173,6 @@ export function ValueBenefitsSection({
           </table>
         ) : (
           <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
-        )}
-      </div>
-
-      {/* ── 7.5 Natural Capital Premium Estimates ── */}
-      <div className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
-        <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
-          Natural Capital Premium Estimates
-        </h3>
-        <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
-          Derived from Ecosystem Service Values
-        </p>
-        {total > 0 && (
-          <DataTable
-            headers={["Intervention", "Estimated Uplift", "Annual Value"]}
-            rows={[
-              ["Active Stewardship", "+15\u201325%", `\u20ac${Math.round(total * 0.2).toLocaleString()}`],
-              ["Ecological Restoration", "+20\u201340%", `\u20ac${Math.round(total * 0.3).toLocaleString()}`],
-              ["Organic / FSC Certification", "+10\u201320%", `\u20ac${Math.round(total * 0.15).toLocaleString()}`],
-              ["Agritourism / Branding", "+5\u201315%", `\u20ac${Math.round(total * 0.1).toLocaleString()}`],
-            ]}
-          />
         )}
       </div>
 
