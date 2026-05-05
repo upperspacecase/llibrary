@@ -454,8 +454,8 @@ export function BiodiversityHabitatSection({
           id="5.6"
           title="Indicator Confidence"
           status="PARTIALLY DERIVED FROM OBSERVATION COUNTS; PER-INDICATOR CONFIDENCE NOT YET COMPUTED"
-          variant="mixed"
-          note="Insect and bird confidence come from real iNaturalist/GBIF observation counts, with a +40 baseline offset capped at 95%. The Rare Botanical row has no data source — placeholder."
+          variant="plausible"
+          note="Insect and bird confidence come from real iNaturalist/GBIF observation counts, with a +40 baseline offset capped at 95%."
         >
           <div className="w-full font-body text-brand-forest">
             <div className="grid grid-cols-12 border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">
@@ -477,26 +477,8 @@ export function BiodiversityHabitatSection({
               sensitivity="Medium"
               source="derived"
             />
-            <IndicatorRow
-              name="Rare Botanical Species"
-              confidenceLabel="Synthetic"
-              confidencePct={null}
-              sensitivity="Very High"
-              source="synthetic"
-            />
           </div>
         </PlaceholderBox>
-      </section>
-
-      {/* Footer */}
-      <section className="flex flex-col items-center pb-10 mt-auto border-t-[0.5pt] border-brand-sage/50 pt-16">
-        <div className="w-full max-w-[480px] space-y-4 mt-8 text-center">
-          <p className="text-[11px] text-brand-sage leading-relaxed italic font-body">
-            Biodiversity metrics are sourced from iNaturalist and GBIF within a 15km radius.
-            Additional verification protocols (E-DNA, bioacoustic, remote sensing) are planned but
-            not yet integrated.
-          </p>
-        </div>
       </section>
     </section>
   );

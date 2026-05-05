@@ -1,6 +1,6 @@
-import type { Trends, Economics, FireData, Narratives } from "@/lib/types";
+import type { Trends, FireData, Narratives } from "@/lib/types";
 import {
-  SectionTitle, Hairline, DataTable, RiskBadge, SubsectionHeader, PlaceholderBox,
+  SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -10,18 +10,13 @@ function fmt(v: unknown): string {
 
 export function HistoryTrendsSection({
   trends,
-  economics,
   fire,
   narratives,
 }: {
   trends: Trends;
-  economics: Economics;
   fire: FireData;
   narratives?: Narratives["historyTrends"];
 }) {
-  const npvScenarios = economics.npv?.scenarios || [];
-  const fireDecades = trends.fireProneByDecade || [];
-
   return (
     <section id="history-trends">
       <SectionTitle title="History & Trends" />
@@ -78,16 +73,6 @@ export function HistoryTrendsSection({
             </div>
           </div>
         </>
-      )}
-
-      {fireDecades.length > 0 && (
-        <DataTable
-          headers={["Decade", "Fire-Prone Days"]}
-          rows={fireDecades.map((t) => [
-            fmt(t.decade || t.label),
-            fmt(t.avgDays || t.days || t.value),
-          ])}
-        />
       )}
 
       <Hairline />
@@ -160,43 +145,6 @@ export function HistoryTrendsSection({
             ? `Warming of +${trends.tempPerDecade.toFixed(2)}°C/decade increases evaporative demand, potentially reducing effective water surplus.`
             : "Temperature trends neutral for evaporative demand."}
         </p>
-      </PlaceholderBox>
-
-      <Hairline />
-
-      {/* 9.4 Property Value History */}
-      <SubsectionHeader id="9.4" title="Property Value History" sources={["NEW"]} />
-      {npvScenarios.length > 0 && (
-        <DataTable
-          headers={["NPV Scenario", "30-Year Value", "Risk"]}
-          rows={npvScenarios.map((s) => [
-            fmt(s.name),
-            `\u20ac${s.npv?.toLocaleString() ?? "\u2014"}`,
-            <RiskBadge key={s.name} level={s.riskLevel} />,
-          ])}
-        />
-      )}
-      <PlaceholderBox
-        id="9.4"
-        title="Estimated property value range"
-        status="DERIVED FROM NPV SCENARIOS + ECOSYSTEM VALUE"
-        variant="mixed"
-        note="Min/max are real NPV scenarios. The 40–60% rural-Iberia liquidity discount is an illustrative rule of thumb, not a market-derived figure."
-      >
-        {npvScenarios.length > 0 ? (
-          <>
-            <p className="text-sm text-brand-charcoal mb-2">
-              Based on NPV scenarios, the 30-year discounted value ranges from{" "}
-              {`\u20ac${Math.min(...npvScenarios.map(s => s.npv ?? 0)).toLocaleString()}`} to{" "}
-              {`\u20ac${Math.max(...npvScenarios.map(s => s.npv ?? 0)).toLocaleString()}`}.
-            </p>
-            <p className="text-xs text-brand-sage">
-              Property market values in rural Iberia typically trade at 40-60% of ecosystem NPV due to liquidity discount and regulatory constraints.
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-brand-sage">No NPV data available to derive property value estimate.</p>
-        )}
       </PlaceholderBox>
 
       <Hairline />
