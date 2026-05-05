@@ -3,17 +3,17 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { motion } from "framer-motion";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "relative flex h-full flex-col border p-8 transition-colors duration-300 md:p-10",
+  "relative flex flex-col p-8 rounded-2xl border shadow-sm transition-all duration-300",
   {
     variants: {
       variant: {
-        default:
-          "border-brand-sage/40 bg-brand-cream/40 hover:bg-brand-cream/70",
+        default: "bg-white border-brand-sage/30",
         popular:
-          "border-brand-forest/10 bg-white shadow-[0_32px_64px_-16px_rgba(27,58,47,0.12)] ring-1 ring-brand-forest/5",
+          "bg-white border-brand-charcoal shadow-lg shadow-brand-charcoal/10 -translate-y-2 py-14",
       },
     },
     defaultVariants: {
@@ -22,20 +22,17 @@ const cardVariants = cva(
   }
 );
 
-export interface PricingFeature {
-  label: string;
-  icon: React.ReactNode;
-}
-
 export interface PricingCardProps extends VariantProps<typeof cardVariants> {
   className?: string;
   planName: string;
   description: string;
   price: number;
-  billingCycle?: string;
-  features: PricingFeature[];
+  billingCycle: string;
+  features: string[];
   buttonText: string;
   href?: string;
+  footnote?: string;
+  icon?: React.ReactNode;
 }
 
 const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
@@ -50,93 +47,50 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
       features,
       buttonText,
       href,
+      footnote,
+      icon,
     },
     ref
   ) => {
-    const isPopular = variant === "popular";
-
     const buttonClasses = cn(
-      "mt-auto inline-flex w-full items-center justify-center px-6 py-4 text-sm font-semibold tracking-wide transition-all",
-      isPopular
-        ? "bg-brand-amber text-brand-charcoal hover:brightness-95"
-        : "bg-brand-forest text-brand-cream hover:bg-brand-forest/90"
+      "w-full inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.15em] transition",
+      variant === "popular"
+        ? "border border-brand-charcoal bg-brand-charcoal text-brand-cream hover:bg-transparent hover:text-brand-charcoal"
+        : "border border-brand-charcoal text-brand-charcoal hover:bg-brand-charcoal hover:text-brand-cream"
     );
 
     return (
       <motion.div
         ref={ref}
         className={cn(cardVariants({ variant }), className)}
+        whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
       >
-        {isPopular && (
-          <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 bg-brand-amber px-4 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-charcoal">
+        {variant === "popular" && (
+          <div className="absolute right-8 top-0 -translate-y-1/2 rounded-full bg-brand-charcoal px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-cream">
             Most Popular
           </div>
         )}
 
-        <div className="mb-12">
-          <h3
-            className={cn(
-              "serif-title text-brand-forest",
-              isPopular ? "text-4xl" : "text-3xl"
-            )}
-          >
-            {planName}
-          </h3>
-          <p
-            className={cn(
-              "mt-3 font-light text-brand-charcoal/70",
-              isPopular ? "text-base" : "text-sm"
-            )}
-          >
-            {description}
-          </p>
+        <div className="mb-4 flex items-center gap-4">
+          {icon && (
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-sage/15 text-brand-charcoal">
+              {icon}
+            </div>
+          )}
+          <div>
+            <h3 className="serif-title text-xl text-brand-charcoal">
+              {planName}
+            </h3>
+            <p className="text-sm text-brand-charcoal/70">{description}</p>
+          </div>
         </div>
 
-        <div className="mb-12 flex items-baseline gap-1">
-          <span
-            className={cn(
-              "serif-title font-bold text-brand-forest",
-              isPopular ? "text-5xl" : "text-4xl"
-            )}
-          >
+        <div className="my-6">
+          <span className="text-5xl font-semibold text-brand-charcoal">
             €{price.toLocaleString("en-US")}
           </span>
-          {billingCycle && (
-            <span
-              className={cn(
-                "font-light text-brand-charcoal/60",
-                isPopular ? "text-xl" : "text-lg"
-              )}
-            >
-              {billingCycle}
-            </span>
-          )}
+          <span className="text-brand-charcoal/60">{billingCycle}</span>
         </div>
-
-        <ul className="mb-12 flex-1 space-y-6">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-4">
-              <span
-                className={cn(
-                  "mt-0.5 flex-shrink-0",
-                  isPopular ? "text-brand-forest" : "text-brand-sage"
-                )}
-              >
-                {feature.icon}
-              </span>
-              <span
-                className={cn(
-                  "leading-snug",
-                  isPopular
-                    ? "font-medium text-brand-charcoal"
-                    : "text-brand-charcoal/80"
-                )}
-              >
-                {feature.label}
-              </span>
-            </li>
-          ))}
-        </ul>
 
         {href ? (
           <a href={href} className={buttonClasses}>
@@ -146,6 +100,21 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
           <button type="button" className={buttonClasses}>
             {buttonText}
           </button>
+        )}
+
+        <ul className="mt-8 flex-1 space-y-4 text-sm text-brand-charcoal/85">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-3">
+              <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-sage" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+
+        {footnote && (
+          <p className="mt-6 text-xs italic text-brand-charcoal/70">
+            {footnote}
+          </p>
         )}
       </motion.div>
     );
