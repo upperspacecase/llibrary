@@ -265,17 +265,6 @@ export function FutureScenariosSection({
 
       {/* 11.5 Revenue Opportunities */}
       <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
-      <div className="grid grid-cols-2 gap-8 mb-6">
-        <KPI
-          value={economics.carbonStock ? `${economics.carbonStock.toLocaleString()} tC` : null}
-          label="Carbon Stock"
-        />
-        <KPI
-          value={economics.carbonCreditValue ? `\u20ac${economics.carbonCreditValue.toLocaleString()}` : null}
-          unit="/yr"
-          label="Carbon Credit Value"
-        />
-      </div>
       {details.length > 0 && (
         <DataTable
           headers={["Revenue Stream", "Estimate"]}
