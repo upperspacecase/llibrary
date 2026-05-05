@@ -230,7 +230,8 @@ export function FutureScenariosSection({
         id="11.4"
         title="Investment requirements and phasing"
         status="DERIVED FROM revenue scenarios (est. 1–3× annual revenue)"
-        synthetic
+        variant="mixed"
+        note="Revenue scenarios are real. Phase costs apply hardcoded multipliers (×0.5, ×1.5, ×2) to those revenues — illustrative phasing, not a costed plan."
       >
         {(() => {
           return (
@@ -283,7 +284,8 @@ export function FutureScenariosSection({
         id="11.6"
         title="Uncertainty quantification and scenario spread"
         status="DERIVED FROM scenario range (conservative to optimized)"
-        synthetic
+        variant="mixed"
+        note="Spread (Optimized − Conservative) is real. Downside floor (×0.5 of Conservative) and confidence band (±spread/2) are heuristic, not statistical."
       >
         {(() => {
           const spread = opt - cons;

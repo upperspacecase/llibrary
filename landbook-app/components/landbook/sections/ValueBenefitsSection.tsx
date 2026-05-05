@@ -170,7 +170,8 @@ export function ValueBenefitsSection({
           id="7.4"
           title="Scenario assumptions"
           status="DERIVED FROM revenue scenarios, NPV data, carbon values"
-          synthetic
+          variant="mixed"
+          note="Carbon prices are computed from real economics data when available, with €25/€35/€50 fallbacks. Growth rates (0–6%), discount rates (4–8%), management intensity and climate-risk levels are hardcoded scenario labels."
         >
           <DataTable
             headers={["Assumption", "Conservative", "Moderate", "Optimized"]}

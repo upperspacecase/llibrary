@@ -83,7 +83,7 @@ export function SourcesMethodologySection({
         id="14.3"
         title="Data quality classification by section"
         status="DERIVED FROM API STATUS"
-        synthetic
+        variant="plausible"
       >
         <DataTable
           headers={["Section", "Classification", "Basis"]}
@@ -113,7 +113,7 @@ export function SourcesMethodologySection({
         id="14.4"
         title="SEEA-EA valuation methodology"
         status="DERIVED FROM VALUATION APPROACH"
-        synthetic
+        variant="fake"
       >
         <div className="text-sm text-brand-charcoal space-y-2">
           <p>
@@ -174,7 +174,7 @@ export function SourcesMethodologySection({
         id="14.8"
         title="Data source references"
         status="DERIVED FROM DATA_SOURCES INVENTORY"
-        synthetic
+        variant="fake"
       >
         <DataTable
           headers={["Source", "Reference"]}

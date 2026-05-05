@@ -336,7 +336,7 @@ export function BiodiversityHabitatSection({
           id="5.3"
           title="Ecological Function Estimates"
           status="DERIVED FROM SPECIES GROUPS + POLLINATION SCORE"
-          synthetic
+          variant="plausible"
         >
           <DataTable
             headers={["Function", "Indicator", "Assessment"]}
@@ -378,7 +378,7 @@ export function BiodiversityHabitatSection({
           id="5.4"
           title="Conservation Assessment"
           status="DERIVED FROM BIODIVERSITY SCORE + PROTECTED AREA STATUS"
-          synthetic
+          variant="plausible"
         >
           <DataTable
             headers={["Metric", "Value", "Notes"]}
@@ -445,7 +445,7 @@ export function BiodiversityHabitatSection({
           id="5.5"
           title="Planned Verification Protocols"
           status="NOT YET INTEGRATED INTO PIPELINE"
-          synthetic
+          variant="fake"
         >
           <div className="space-y-4 text-xs leading-relaxed text-on-surface">
             <p>
@@ -479,7 +479,8 @@ export function BiodiversityHabitatSection({
           id="5.6"
           title="Indicator Confidence"
           status="PARTIALLY DERIVED FROM OBSERVATION COUNTS; PER-INDICATOR CONFIDENCE NOT YET COMPUTED"
-          synthetic
+          variant="mixed"
+          note="Insect and bird confidence come from real iNaturalist/GBIF observation counts, with a +40 baseline offset capped at 95%. The Rare Botanical row has no data source — placeholder."
         >
           <div className="w-full font-body text-brand-forest">
             <div className="grid grid-cols-12 border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">

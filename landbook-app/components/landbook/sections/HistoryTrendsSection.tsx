@@ -98,7 +98,7 @@ export function HistoryTrendsSection({
         id="9.1"
         title="Forest gain/loss estimate"
         status="DERIVED FROM LAND COVER TYPE + CLIMATE TRENDS"
-        synthetic
+        variant="plausible"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           {trends.precipPerDecade != null && trends.precipPerDecade < 0
@@ -119,7 +119,7 @@ export function HistoryTrendsSection({
         id="9.2"
         title="Vegetation health proxy"
         status="DERIVED FROM PRECIPITATION TRENDS"
-        synthetic
+        variant="plausible"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           {trends.precipPerDecade != null
@@ -144,7 +144,7 @@ export function HistoryTrendsSection({
         id="9.3"
         title="Water resource trajectory"
         status="DERIVED FROM PRECIPITATION TRENDS + CLIMATE DATA"
-        synthetic
+        variant="plausible"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           {trends.precipPerDecade != null
@@ -180,7 +180,8 @@ export function HistoryTrendsSection({
         id="9.4"
         title="Estimated property value range"
         status="DERIVED FROM NPV SCENARIOS + ECOSYSTEM VALUE"
-        synthetic
+        variant="mixed"
+        note="Min/max are real NPV scenarios. The 40–60% rural-Iberia liquidity discount is an illustrative rule of thumb, not a market-derived figure."
       >
         {npvScenarios.length > 0 ? (
           <>
@@ -214,7 +215,7 @@ export function HistoryTrendsSection({
         id="9.5"
         title="Flood & drought event estimate"
         status="DERIVED FROM FIRE HISTORY + CLIMATE TRENDS"
-        synthetic
+        variant="plausible"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           {(fire.historical || []).length > 0
@@ -236,7 +237,7 @@ export function HistoryTrendsSection({
         id="9.6"
         title="Population & labor context"
         status="DERIVED FROM MUNICIPALITY CONTEXT"
-        synthetic
+        variant="fake"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           Rural interior municipalities in southern Europe have experienced sustained population decline of 1-3% per decade since the 1980s,
@@ -256,7 +257,7 @@ export function HistoryTrendsSection({
         id="9.7"
         title="Traditional land management practices"
         status="DERIVED FROM LAND COVER + AGRICULTURE SYSTEMS"
-        synthetic
+        variant="fake"
       >
         <p className="text-sm text-brand-charcoal mb-2">
           Traditional management in Mediterranean agro-silvo-pastoral systems includes rotational grazing,

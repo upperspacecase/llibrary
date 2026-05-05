@@ -173,7 +173,7 @@ export function LandWaterSection({
         id="4.6"
         title="Water Security Breakdown"
         status="DERIVED FROM WATER INDEX + DROUGHT RISK + PRECIPITATION"
-        synthetic
+        variant="plausible"
       >
         <DataTable
           headers={["Component", "Indicator", "Assessment"]}

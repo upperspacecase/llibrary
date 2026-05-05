@@ -123,7 +123,8 @@ export function RisksResilienceSection({
         id="10.1"
         title="Pest/disease risks, market volatility, regulatory change risks"
         status="DERIVED FROM climate zone, risk scores, regional context"
-        synthetic
+        variant="mixed"
+        note="Pest level is derived from the average of fire and drought risk scores (real). Market Volatility and Regulatory Change are hardcoded as 'Moderate' — defaults, not assessments."
       >
         <DataTable
           headers={["Risk Category", "Estimated Level", "Basis"]}
@@ -217,7 +218,7 @@ export function RisksResilienceSection({
         id="10.3"
         title="Heat stress projections, extreme-event probability"
         status="DERIVED FROM trends.tempPerDecade, fire-prone days"
-        synthetic
+        variant="plausible"
       >
         <div className="space-y-3 text-sm text-brand-charcoal">
           {trends.tempPerDecade != null && (
@@ -275,7 +276,8 @@ export function RisksResilienceSection({
         id="10.6"
         title="Resilience capacity metrics"
         status="DERIVED FROM energy.independenceScore, risk scores, trend data"
-        synthetic
+        variant="mixed"
+        note="Energy Independence and Water Security come from real scores. Ecosystem Buffers (10 − avgRisk × 1.5) and Adaptive Capacity (energy − 2 if warming > 0.3°C) use hand-tuned formulas with no calibration."
       >
         <DataTable
           headers={["Resilience Dimension", "Score", "Assessment"]}
