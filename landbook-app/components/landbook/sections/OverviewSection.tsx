@@ -1,5 +1,5 @@
 import type { Property, Scores, Economics, Water, FireData, RiskData, Energy, Maps, Meta, Narratives, ReportData } from "@/lib/types";
-import { Hairline } from "@/components/river";
+import { Hairline, RiskBadge } from "@/components/river";
 
 /**
  * Classify every data field in the report as Verified / Computed / Unverified.
@@ -236,9 +236,9 @@ export function OverviewSection({
       {/* Block 5 — Performance Indicators */}
       <section className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-10 font-body">
-          Performance Indicators
+          Risk Identification
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
           {/* Fire Risk */}
           <div>
             <div className="flex justify-between items-end mb-2">
@@ -292,6 +292,11 @@ export function OverviewSection({
               />
             </div>
           </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div className="text-center"><RiskBadge level={fire.riskLevel} /></div>
+          <div className="text-center"><RiskBadge level={flood.riskLevel} /></div>
+          <div className="text-center"><RiskBadge level={drought.riskLevel} /></div>
         </div>
       </section>
 
