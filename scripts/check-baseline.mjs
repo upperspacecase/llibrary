@@ -70,7 +70,7 @@ async function main() {
   const expected = normalise(JSON.parse(factsText));
   const input = JSON.parse(inputText);
 
-  const actual = normalise(processRawData(raw, input.submission, input.areaHa));
+  const actual = normalise(await processRawData(raw, input.submission, input.areaHa));
 
   const drift = diff(expected, actual);
   if (drift.length === 0) {

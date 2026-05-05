@@ -240,6 +240,7 @@ export default async function AgentsPage() {
                       water={data.water}
                       climate={data.climate}
                       drought={data.drought}
+                      flood={data.flood}
                       narratives={n.landWater}
                     />
                   </div>

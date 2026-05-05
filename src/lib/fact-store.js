@@ -174,7 +174,6 @@ export function reportDataToFacts(data) {
       features: wrap(data.water?.features, null, 'water'),
       nearestDistanceM: wrap(data.water?.nearestDistanceM, 'm', 'water'),
       floodDischarge: wrap(data.water?.floodDischarge, 'm³/s', 'flood'),
-      floodRisk: wrap(data.water?.floodRisk, null, 'flood'),
     },
     climate: {
       annualMeanTemp: wrap(data.climate?.annualMeanTemp, '°C', 'climate'),
@@ -203,8 +202,12 @@ export function reportDataToFacts(data) {
       historical: wrap(data.fire?.historical, null, 'historicalFires'),
     },
     flood: {
-      riskScore: wrap(data.flood?.riskScore, '/5', 'riskScores'),
-      riskLevel: wrap(data.flood?.riskLevel, null, 'riskScores'),
+      riskScore: wrap(data.flood?.riskScore, '/5', 'water'),
+      riskLevel: wrap(data.flood?.riskLevel, null, 'water'),
+      hand: wrap(data.flood?.hand, 'm', 'water'),
+      distanceToDrainageM: wrap(data.flood?.distanceToDrainageM, 'm', 'water'),
+      drainageName: wrap(data.flood?.drainageName, null, 'water'),
+      drainageKind: wrap(data.flood?.drainageKind, null, 'water'),
     },
     drought: {
       riskScore: wrap(data.drought?.riskScore, '/5', 'riskScores'),
@@ -321,7 +324,6 @@ export function factsToReportData(facts) {
       features: unwrap(facts.water?.features) || [],
       nearestDistanceM: unwrap(facts.water?.nearestDistanceM),
       floodDischarge: unwrap(facts.water?.floodDischarge),
-      floodRisk: unwrap(facts.water?.floodRisk),
     },
     climate: {
       annualMeanTemp: unwrap(facts.climate?.annualMeanTemp),
@@ -352,6 +354,10 @@ export function factsToReportData(facts) {
     flood: {
       riskScore: unwrap(facts.flood?.riskScore),
       riskLevel: unwrap(facts.flood?.riskLevel),
+      hand: unwrap(facts.flood?.hand),
+      distanceToDrainageM: unwrap(facts.flood?.distanceToDrainageM),
+      drainageName: unwrap(facts.flood?.drainageName),
+      drainageKind: unwrap(facts.flood?.drainageKind),
     },
     drought: {
       riskScore: unwrap(facts.drought?.riskScore),

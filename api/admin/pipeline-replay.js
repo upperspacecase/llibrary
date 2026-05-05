@@ -127,7 +127,7 @@ export default async function handler(req, res) {
       boundary: landbook.boundary || [],
     };
 
-    const data = processRawData(raw, submission, areaHa, { runId: newId, landbookId });
+    const data = await processRawData(raw, submission, areaHa, { runId: newId, landbookId });
 
     let narratives = {};
     let narrativeError = null;

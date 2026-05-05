@@ -75,7 +75,7 @@ export interface Water {
   waterways: number | null;
   waterBodies: number | null;
   floodDischarge: string | null;
-  floodRisk: string | null;
+  floodRisk?: string | null;
 }
 
 export interface Species {
@@ -95,6 +95,13 @@ export interface RiskData {
 export interface FireData extends RiskData {
   activeFires: number | null;
   historical: Array<{ year: string | number; count: number }>;
+}
+
+export interface FloodData extends RiskData {
+  hand?: number | null;
+  distanceToDrainageM?: number | null;
+  drainageName?: string | null;
+  drainageKind?: string | null;
 }
 
 export interface Energy {
@@ -228,7 +235,7 @@ export interface ReportData {
   water: Water;
   species: Species;
   fire: FireData;
-  flood: RiskData;
+  flood: FloodData;
   drought: RiskData;
   energy: Energy;
   economics: Economics;

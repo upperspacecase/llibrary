@@ -56,6 +56,7 @@ import {
 } from '../api/nasa-firms.js';
 
 import { fetchRiskScores } from '../api/risk-scores.js';
+import { findNearestDrainage, floodRiskFromHAND } from './flood-hand.js';
 import { getAdminUnit } from '../api/dgt.js';
 import { getForecast as getIPMAForecast, getNearestForecastLocation } from '../api/ipma.js';
 import { reverseGeocode } from '../api/nominatim.js';
@@ -440,7 +441,7 @@ function computeGBIFWindows() {
  * @param {number} areaHa - Property area in hectares
  * @param {{ runId?: string, landbookId?: string | null }} [options]
  */
-export function processRawData(raw, submission, areaHa, options = {}) {
+export async function processRawData(raw, submission, areaHa, options = {}) {
   const missingFields = [];
   const apiStatus = {};
 
@@ -677,13 +678,29 @@ export function processRawData(raw, submission, areaHa, options = {}) {
   const totalWaterFeatures = springs + wells + waterways + waterBodies;
   const waterSecurityIndex = Math.min(10, 2 + totalWaterFeatures * 0.8 + (annualRainfall ? annualRainfall / 200 : 0));
 
+  // ── HAND (Height Above Nearest Drainage) for flood risk ──
+  const drainage = waterRaw
+    ? findNearestDrainage(extractWays(waterRaw), lat, lng, haversineMeters)
+    : null;
+  let drainageElevation = null;
+  if (drainage) {
+    try {
+      drainageElevation = await getElevation(drainage.lat, drainage.lng);
+    } catch (e) {
+      console.warn('[pipeline] HAND drainage elevation lookup failed:', e.message);
+    }
+  }
+  const parcelMinElev = terrain.min;
+  const hand = (drainageElevation != null && parcelMinElev != null)
+    ? Math.round((parcelMinElev - drainageElevation) * 10) / 10
+    : null;
+
   const water = {
     springs, wells, waterways, waterBodies,
     features: waterFeatures,
     nearestDistanceM: waterFeatures[0]?.distanceM ?? null,
     securityIndex: Math.round(waterSecurityIndex * 10) / 10,
     floodDischarge: floodAnalysis?.current ?? null,
-    floodRisk: floodAnalysis?.level ?? 'Unknown',
   };
 
   // ── Species ───────────────────────────────────────────
@@ -799,10 +816,17 @@ export function processRawData(raw, submission, areaHa, options = {}) {
     }
   }
 
-  // ── Flood ─────────────────────────────────────────────
+  // ── Flood (HAND-based: parcel elevation vs nearest drainage) ──
+  // No nearby drainage in the Overpass radius means no fluvial flood vector.
+  const noNearbyDrainage = !!waterRaw && !drainage;
+  const handRisk = floodRiskFromHAND(hand);
   const flood = {
-    riskScore: riskScoresData?.flood != null ? Math.round(riskScoresData.flood / 20) : null, // 0-100 → 0-5
-    riskLevel: riskScoresData?.floodLabel ?? scoreToLabel(riskScoresData?.flood ?? 0),
+    riskScore: noNearbyDrainage ? 0 : handRisk.riskScore,
+    riskLevel: noNearbyDrainage ? 'Very Low' : handRisk.riskLevel,
+    hand,
+    distanceToDrainageM: drainage?.distanceM ?? null,
+    drainageName: drainage?.name ?? null,
+    drainageKind: drainage?.kind ?? null,
   };
 
   // ── Drought ───────────────────────────────────────────

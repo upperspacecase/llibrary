@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       boundary,
     };
 
-    const data = processRawData(raw, submission, areaHa, { runId, landbookId: id });
+    const data = await processRawData(raw, submission, areaHa, { runId, landbookId: id });
 
     // 5. Generate AI narratives (V2 — intro/callout per section)
     let narrativeError = null;

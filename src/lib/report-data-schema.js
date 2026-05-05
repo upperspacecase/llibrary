@@ -130,7 +130,7 @@ const WaterSchema = z.object({
   nearestDistanceM: numNullable.optional(),
   securityIndex: numNullable,
   floodDischarge: numOrString,
-  floodRisk: strNullable,
+  floodRisk: strNullable.optional(),
 }).passthrough();
 
 // ── Species ──────────────────────────────────────────────
@@ -179,6 +179,14 @@ const FireSchema = RiskSchema.extend({
   }).passthrough()).default([]),
   peakYear: numNullable,
   seasonal: z.array(z.object({}).passthrough()).default([]),
+}).passthrough();
+
+// HAND-based flood risk fields (height above nearest drainage)
+const FloodSchema = RiskSchema.extend({
+  hand: numNullable.optional(),
+  distanceToDrainageM: numNullable.optional(),
+  drainageName: strNullable.optional(),
+  drainageKind: strNullable.optional(),
 }).passthrough();
 
 // ── Energy ───────────────────────────────────────────────
@@ -374,7 +382,7 @@ export const ReportDataSchema = z.object({
   water: WaterSchema,
   species: SpeciesSchema,
   fire: FireSchema,
-  flood: RiskSchema,
+  flood: FloodSchema,
   drought: RiskSchema,
   energy: EnergySchema,
   economics: EconomicsSchema,
@@ -421,7 +429,7 @@ export const DomainSchemas = {
   water: WaterSchema,
   species: SpeciesSchema,
   fire: FireSchema,
-  flood: RiskSchema,
+  flood: FloodSchema,
   drought: RiskSchema,
   energy: EnergySchema,
   economics: EconomicsSchema,

@@ -70,7 +70,7 @@ export async function rebuildFacts(landbookId, options = {}) {
     boundary,
   };
 
-  const data = processRawData(raw, submission, areaHa);
+  const data = await processRawData(raw, submission, areaHa);
 
   // 5. Save to facts collection
   await saveFacts(landbookId, reportDataToFacts(data));

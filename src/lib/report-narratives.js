@@ -98,7 +98,7 @@ Geology: ${geology.lithology || '?'} (${geology.period || '?'}, ${geology.age ??
 
 ─── WATER ───
 Springs: ${water.springs ?? '?'}, Wells: ${water.wells ?? '?'}, Waterways: ${water.waterways ?? '?'}, Bodies: ${water.waterBodies ?? '?'}
-Security: ${water.securityIndex ?? '?'}/10 | Flood: ${water.floodRisk || '?'}
+Security: ${water.securityIndex ?? '?'}/10 | Flood: ${flood.riskLevel || '?'}
 
 ─── CLIMATE ───
 Mean: ${climate.annualMeanTemp ?? '?'}\u00b0C | Rain: ${climate.annualRainfall ?? '?'}mm | Season: ${climate.growingSeason ?? '?'} months | Zone: ${climate.zone || '?'}

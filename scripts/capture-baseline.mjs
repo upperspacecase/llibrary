@@ -96,7 +96,7 @@ async function main() {
   let facts;
   let processError = null;
   try {
-    facts = processRawData(raw, SUBMISSION, AREA_HA);
+    facts = await processRawData(raw, SUBMISSION, AREA_HA);
   } catch (err) {
     processError = err.message;
     console.warn("[baseline] processRawData threw:", err.message);

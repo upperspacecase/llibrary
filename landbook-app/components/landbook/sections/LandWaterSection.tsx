@@ -1,4 +1,4 @@
-import type { Terrain, Geology, Water, Climate, RiskData, Narratives } from "@/lib/types";
+import type { Terrain, Geology, Water, Climate, RiskData, FloodData, Narratives } from "@/lib/types";
 import {
   SectionTitle, KPI, Hairline, PercentileCard, DataTable, RiskBadge,
   SubsectionHeader, PlaceholderBox,
@@ -31,6 +31,7 @@ export function LandWaterSection({
   water,
   climate,
   drought,
+  flood,
   narratives,
 }: {
   terrain: Terrain;
@@ -38,6 +39,7 @@ export function LandWaterSection({
   water: Water;
   climate: Climate;
   drought: RiskData;
+  flood: FloodData;
   narratives?: Narratives["landWater"];
 }) {
   return (
@@ -143,7 +145,7 @@ export function LandWaterSection({
         rows={[
           ["Water Bodies", fmt(water.waterBodies)],
           ["Flood Discharge", fmt(water.floodDischarge)],
-          ["Flood Risk", <RiskBadge key="flood" level={water.floodRisk} />],
+          ["Flood Risk", <RiskBadge key="flood" level={flood.riskLevel} />],
           ["Annual Rainfall", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm` : "\u2014"],
         ]}
       />
