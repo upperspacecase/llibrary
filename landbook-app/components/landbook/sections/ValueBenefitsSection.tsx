@@ -9,6 +9,14 @@ function fmt(v: unknown): string {
   return String(v);
 }
 
+const serviceDescriptions: Record<string, string> = {
+  Food: "Forage, fruit, game and crop provision",
+  Water: "Supply, filtration and aquifer recharge",
+  Regulating: "Carbon storage, climate and flood regulation",
+  Soil: "Erosion control and nutrient cycling",
+  Cultural: "Recreation, amenity and landscape value",
+};
+
 export function ValueBenefitsSection({
   property,
   economics,
@@ -83,6 +91,26 @@ export function ValueBenefitsSection({
           Value of Services
         </h4>
         <Treemap segments={treemapSegments.filter((s) => s.value > 0)} />
+
+        {total > 0 && (
+          <>
+            <p className="text-xs leading-relaxed text-brand-forest/80 font-body max-w-2xl mt-8 mb-6">
+              Annual Natural Capital is split across five SEEA-EA service classes. Each block above is sized to its share of the total; the table below lists the same values exactly. <em>Regulating</em> bundles climate regulation with the carbon-storage benefit of standing biomass.
+            </p>
+            <DataTable
+              headers={["Service Class", "What It Covers", "% Share", "Annual Value"]}
+              rows={treemapSegments
+                .filter((s) => s.value > 0)
+                .sort((a, b) => b.value - a.value)
+                .map((s) => [
+                  s.name,
+                  serviceDescriptions[s.name] ?? "—",
+                  `${Math.round((s.value / total) * 100)}%`,
+                  `€${Math.round(s.value).toLocaleString()}`,
+                ])}
+            />
+          </>
+        )}
       </div>
 
       {/* ── Natural Capital Premium Estimates ── */}
