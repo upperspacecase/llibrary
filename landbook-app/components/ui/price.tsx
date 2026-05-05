@@ -13,7 +13,7 @@ const cardVariants = cva(
       variant: {
         default: "bg-white border-brand-sage/30",
         popular:
-          "bg-white border-brand-charcoal shadow-lg shadow-brand-charcoal/10 -translate-y-2",
+          "bg-white border-brand-charcoal shadow-lg shadow-brand-charcoal/10 -translate-y-2 py-14",
       },
     },
     defaultVariants: {

@@ -124,9 +124,11 @@ export function PricingSection() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-charcoal">
             The LandBook Guarantee
           </p>
-          <p className="serif-title mt-4 text-xl leading-snug text-brand-charcoal sm:text-2xl">
+          <p className="serif-title mx-auto mt-4 max-w-2xl text-xl leading-snug text-brand-charcoal sm:text-2xl">
             If our report doesn&rsquo;t uncover at least €10,000 in additional
-            natural capital value, you don&rsquo;t pay.
+            natural capital value,
+            <br />
+            you don&rsquo;t pay.
           </p>
         </motion.div>
       </div>
