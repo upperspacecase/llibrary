@@ -197,6 +197,9 @@ export default async function AgentsPage() {
                       economics={data.economics}
                       water={data.water}
                       fire={data.fire}
+                      flood={data.flood}
+                      drought={data.drought}
+                      energy={data.energy}
                       maps={data.maps}
                       meta={data.meta}
                       allNarratives={data.narratives}
