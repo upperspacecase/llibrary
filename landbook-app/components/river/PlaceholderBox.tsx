@@ -7,13 +7,13 @@ const VARIANT_STYLES: Record<Variant, {
   label: string;
 }> = {
   plausible: {
-    border: "border-brand-sage",
+    border: "border-brand-forest",
     tagBg: "bg-brand-sage/15",
     tagText: "text-brand-sage",
     label: "AI INSIGHT",
   },
   mixed: {
-    border: "border-brand-terracotta",
+    border: "border-brand-forest",
     tagBg: "bg-brand-sage/15",
     tagText: "text-brand-sage",
     label: "AI INSIGHT",
