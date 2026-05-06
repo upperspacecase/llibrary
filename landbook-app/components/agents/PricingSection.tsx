@@ -1,7 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { LandPlot, Leaf, Earth } from "lucide-react";
+import {
+  Sprout,
+  Bird,
+  Cloud,
+  TrendingUp,
+  BarChart3,
+  Zap,
+  Headphones,
+  Infinity as InfinityIcon,
+  Stamp,
+  LayoutDashboard,
+  GraduationCap,
+  ShieldCheck,
+} from "lucide-react";
 import { PricingCard } from "@/components/ui/price";
 
 const CREATE_URL = "https://www.landlibrary.co/create";
@@ -23,6 +36,8 @@ const itemVariants = {
     transition: { duration: 0.5, ease: "easeOut" as const },
   },
 };
+
+const featureIconClass = "h-5 w-5";
 
 export function PricingSection() {
   return (
@@ -48,7 +63,7 @@ export function PricingSection() {
         </motion.div>
 
         <motion.div
-          className="mt-16 grid grid-cols-1 items-center gap-8 md:grid-cols-2 lg:grid-cols-3"
+          className="mt-20 grid grid-cols-1 items-stretch gap-8 lg:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -59,16 +74,26 @@ export function PricingSection() {
               planName="Natural Capital Report"
               description="One property. Full intelligence. 48-hour turnaround."
               price={1500}
-              billingCycle=" one-time"
               features={[
-                "Natural capital valuation (soil, water, productivity)",
-                "Biodiversity assessment",
-                "Carbon sequestration potential",
-                "Future Scenarios",
+                {
+                  icon: <Sprout className={featureIconClass} />,
+                  label: "Natural capital valuation (soil, water, productivity)",
+                },
+                {
+                  icon: <Bird className={featureIconClass} />,
+                  label: "Biodiversity assessment",
+                },
+                {
+                  icon: <Cloud className={featureIconClass} />,
+                  label: "Carbon sequestration potential",
+                },
+                {
+                  icon: <TrendingUp className={featureIconClass} />,
+                  label: "Future Scenarios",
+                },
               ]}
               buttonText="Order Single Report"
               href={CREATE_URL}
-              icon={<LandPlot className="h-5 w-5" />}
             />
           </motion.div>
 
@@ -78,15 +103,23 @@ export function PricingSection() {
               planName="Land Steward Partner"
               description="For agents who steward every property fully."
               price={2997}
-              billingCycle="/mo"
+              billingCycle="/month"
               features={[
-                "Up to 5 Natural Capital Reports/month",
-                "24-hour priority turnaround",
-                "Direct support line",
+                {
+                  icon: <BarChart3 className={featureIconClass} />,
+                  label: "Up to 5 Natural Capital Reports/month",
+                },
+                {
+                  icon: <Zap className={featureIconClass} />,
+                  label: "24-hour priority turnaround",
+                },
+                {
+                  icon: <Headphones className={featureIconClass} />,
+                  label: "Direct support line",
+                },
               ]}
               buttonText="Partner With Us"
               href={CREATE_URL}
-              icon={<Leaf className="h-5 w-5" />}
             />
           </motion.div>
 
@@ -95,36 +128,52 @@ export function PricingSection() {
               planName="Agency Natural Capital Engine"
               description="Transform your agency's rural intelligence."
               price={7997}
-              billingCycle="/mo"
+              billingCycle="/month"
               features={[
-                "Unlimited Natural Capital Reports",
-                "Co-branded Landbook reports",
-                "Custom agency dashboard",
-                "Quarterly team training on natural capital valuation",
+                {
+                  icon: <InfinityIcon className={featureIconClass} />,
+                  label: "Unlimited Natural Capital Reports",
+                },
+                {
+                  icon: <Stamp className={featureIconClass} />,
+                  label: "Co-branded Landbook reports",
+                },
+                {
+                  icon: <LayoutDashboard className={featureIconClass} />,
+                  label: "Custom agency dashboard",
+                },
+                {
+                  icon: <GraduationCap className={featureIconClass} />,
+                  label: "Quarterly team training on natural capital valuation",
+                },
               ]}
               buttonText="Contact Enterprise"
               href={CREATE_URL}
-              icon={<Earth className="h-5 w-5" />}
             />
           </motion.div>
         </motion.div>
 
         <motion.div
-          className="mt-16 rounded-lg border border-brand-sage/40 bg-brand-sage/5 px-8 py-10 text-center"
+          className="relative mx-auto mt-32 max-w-4xl py-16 text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-charcoal">
-            The LandBook Guarantee
-          </p>
-          <p className="serif-title mx-auto mt-4 max-w-2xl text-xl leading-snug text-brand-charcoal sm:text-2xl">
-            If our report doesn&rsquo;t uncover at least €10,000 in additional
-            natural capital value,
-            <br />
-            you don&rsquo;t pay.
-          </p>
+          <hr className="mb-16 border-brand-sage/30" />
+          <div className="mx-auto mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-charcoal/5">
+            <ShieldCheck className="h-8 w-8 text-brand-charcoal" />
+          </div>
+          <div className="mx-auto max-w-2xl">
+            <h3 className="serif-title text-2xl italic tracking-tight text-brand-charcoal md:text-3xl">
+              The LandBook Guarantee
+            </h3>
+            <p className="mt-4 text-xl font-light leading-relaxed text-brand-charcoal/80 md:text-2xl">
+              &ldquo;If our report doesn&rsquo;t uncover at least €10,000 in
+              additional natural capital value, you don&rsquo;t pay.&rdquo;
+            </p>
+          </div>
+          <hr className="mt-16 border-brand-sage/30" />
         </motion.div>
       </div>
     </section>

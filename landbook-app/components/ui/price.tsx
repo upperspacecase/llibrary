@@ -3,17 +3,16 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "relative flex flex-col p-8 rounded-2xl border shadow-sm transition-all duration-300",
+  "relative flex h-full flex-col rounded-2xl border p-8 transition-colors duration-300 md:p-10",
   {
     variants: {
       variant: {
-        default: "bg-white border-brand-sage/30",
+        default: "border-brand-sage/30 bg-white shadow-sm",
         popular:
-          "bg-white border-brand-charcoal shadow-lg shadow-brand-charcoal/10 -translate-y-2 py-14",
+          "border-brand-charcoal/10 bg-white shadow-lg shadow-brand-charcoal/10 ring-1 ring-brand-charcoal/5",
       },
     },
     defaultVariants: {
@@ -22,17 +21,20 @@ const cardVariants = cva(
   }
 );
 
+export interface PricingFeature {
+  label: string;
+  icon: React.ReactNode;
+}
+
 export interface PricingCardProps extends VariantProps<typeof cardVariants> {
   className?: string;
   planName: string;
   description: string;
   price: number;
-  billingCycle: string;
-  features: string[];
+  billingCycle?: string;
+  features: PricingFeature[];
   buttonText: string;
   href?: string;
-  footnote?: string;
-  icon?: React.ReactNode;
 }
 
 const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
@@ -47,50 +49,93 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
       features,
       buttonText,
       href,
-      footnote,
-      icon,
     },
     ref
   ) => {
+    const isPopular = variant === "popular";
+
     const buttonClasses = cn(
-      "w-full inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.15em] transition",
-      variant === "popular"
-        ? "border border-brand-charcoal bg-brand-charcoal text-brand-cream hover:bg-transparent hover:text-brand-charcoal"
-        : "border border-brand-charcoal text-brand-charcoal hover:bg-brand-charcoal hover:text-brand-cream"
+      "mt-auto inline-flex w-full items-center justify-center rounded-full border border-brand-charcoal px-6 py-3 text-xs font-semibold uppercase tracking-[0.15em] transition",
+      isPopular
+        ? "bg-brand-charcoal text-brand-cream hover:bg-transparent hover:text-brand-charcoal"
+        : "text-brand-charcoal hover:bg-brand-charcoal hover:text-brand-cream"
     );
 
     return (
       <motion.div
         ref={ref}
         className={cn(cardVariants({ variant }), className)}
-        whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
       >
-        {variant === "popular" && (
-          <div className="absolute right-8 top-0 -translate-y-1/2 rounded-full bg-brand-charcoal px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-cream">
+        {isPopular && (
+          <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-charcoal px-4 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-cream">
             Most Popular
           </div>
         )}
 
-        <div className="mb-4 flex items-center gap-4">
-          {icon && (
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-sage/15 text-brand-charcoal">
-              {icon}
-            </div>
-          )}
-          <div>
-            <h3 className="serif-title text-xl text-brand-charcoal">
-              {planName}
-            </h3>
-            <p className="text-sm text-brand-charcoal/70">{description}</p>
-          </div>
+        <div className="mb-12">
+          <h3
+            className={cn(
+              "serif-title text-brand-charcoal",
+              isPopular ? "text-4xl" : "text-3xl"
+            )}
+          >
+            {planName}
+          </h3>
+          <p
+            className={cn(
+              "mt-3 font-light text-brand-charcoal/70",
+              isPopular ? "text-base" : "text-sm"
+            )}
+          >
+            {description}
+          </p>
         </div>
 
-        <div className="my-6">
-          <span className="text-5xl font-semibold text-brand-charcoal">
+        <div className="mb-12 flex items-baseline gap-1">
+          <span
+            className={cn(
+              "serif-title font-bold text-brand-charcoal",
+              isPopular ? "text-5xl" : "text-4xl"
+            )}
+          >
             €{price.toLocaleString("en-US")}
           </span>
-          <span className="text-brand-charcoal/60">{billingCycle}</span>
+          {billingCycle && (
+            <span
+              className={cn(
+                "font-light text-brand-charcoal/60",
+                isPopular ? "text-xl" : "text-lg"
+              )}
+            >
+              {billingCycle}
+            </span>
+          )}
         </div>
+
+        <ul className="mb-12 flex-1 space-y-6">
+          {features.map((feature, index) => (
+            <li key={index} className="flex items-start gap-4">
+              <span
+                className={cn(
+                  "mt-0.5 flex-shrink-0",
+                  isPopular ? "text-brand-charcoal" : "text-brand-sage"
+                )}
+              >
+                {feature.icon}
+              </span>
+              <span
+                className={cn(
+                  "leading-snug",
+                  isPopular
+                    ? "font-medium text-brand-charcoal"
+                    : "text-brand-charcoal/80"
+                )}
+              >
+                {feature.label}
+              </span>
+            </li>
+          ))}
+        </ul>
 
         {href ? (
           <a href={href} className={buttonClasses}>
@@ -100,21 +145,6 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
           <button type="button" className={buttonClasses}>
             {buttonText}
           </button>
-        )}
-
-        <ul className="mt-8 flex-1 space-y-4 text-sm text-brand-charcoal/85">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start gap-3">
-              <Check className="mt-0.5 h-5 w-5 flex-shrink-0 text-brand-sage" />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-
-        {footnote && (
-          <p className="mt-6 text-xs italic text-brand-charcoal/70">
-            {footnote}
-          </p>
         )}
       </motion.div>
     );
