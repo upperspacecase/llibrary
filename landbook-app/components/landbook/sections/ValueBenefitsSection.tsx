@@ -127,11 +127,12 @@ export function ValueBenefitsSection({
             <DataTable
               headers={["Intervention", "Annual €/ha (low–high)", "Annual Uplift", "30-Yr NPV Uplift", "Source"]}
               rows={economics.premiums.map((p) => {
+                const nameCell = p.matchType === "analogue" ? `${p.name} *` : p.name;
                 if (p.basis === "per-hectare" && p.annualMid != null) {
                   const lowHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.low;
                   const highHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.high;
                   return [
-                    p.name,
+                    nameCell,
                     lowHa != null && highHa != null
                       ? `€${lowHa.toLocaleString()}–${highHa.toLocaleString()}`
                       : "—",
@@ -141,7 +142,7 @@ export function ValueBenefitsSection({
                   ];
                 }
                 return [
-                  p.name,
+                  nameCell,
                   p.benefitCostRatio ? `${p.benefitCostRatio}:1 BCR` : "—",
                   "qualitative",
                   "qualitative",
@@ -164,6 +165,31 @@ export function ValueBenefitsSection({
               </div>
             )}
 
+            {/* Analogue note — when any row is an analogue match */}
+            {economics.premiums.some((p) => p.matchType === "analogue") && (
+              <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
+                <span className="not-italic">*</span> Analogue rows apply a TEEB DE intervention&rsquo;s per-hectare values to a biome outside the original case-study scope; treat the figures as benchmarks rather than direct estimates. See per-row notes below.
+              </p>
+            )}
+
+            {/* Per-row analogue notes */}
+            {economics.premiums.some((p) => p.matchType === "analogue") && (
+              <div className="mt-3 space-y-2">
+                {economics.premiums
+                  .filter((p) => p.matchType === "analogue")
+                  .map((p) => {
+                    const note = p.valueComposition?.split("— Analogue note: ")[1];
+                    if (!note) return null;
+                    return (
+                      <p key={p.id} className="text-[11px] text-brand-sage italic font-body leading-relaxed">
+                        <strong className="text-brand-forest not-italic">{p.name}:</strong>{" "}
+                        {note}
+                      </p>
+                    );
+                  })}
+              </div>
+            )}
+
             {/* Confidence note for any "lower" confidence rows */}
             {economics.premiums.some((p) => p.confidence === "lower") && (
               <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
@@ -173,8 +199,7 @@ export function ValueBenefitsSection({
           </>
         ) : (
           <p className="text-sm text-brand-sage italic">
-            No directly applicable TEEB DE case studies match this property&rsquo;s dominant biome.
-            Site-specific valuation required.
+            Premium estimates not yet computed — re-run the pipeline to populate.
           </p>
         )}
       </div>

@@ -228,6 +228,7 @@ const PremiumSchema = z.object({
   source: strNullable.optional(),
   basis: strNullable.optional(),
   confidence: strNullable.optional(),
+  matchType: strNullable.optional(),
   valueComposition: strNullable.optional(),
   annualLow: numNullable.optional(),
   annualMid: numNullable.optional(),

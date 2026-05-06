@@ -261,6 +261,9 @@ const TEEB_DE_INTERVENTIONS = [
     valueComposition: 'Climate action 700–2,240 + provisioning 370–600 + groundwater 40–120 + nature conservation 300–1,000 €/ha/yr',
     confidence: 'high',
     applicableBiomes: ['grassland'],
+    analogueBiomes: {
+      cropland: 'Applied to cropland as a converted-to-grassland uplift benchmark; underlying TEEB DE values are for avoided plough-up of existing High Nature Value grassland.',
+    },
   },
   {
     id: 'multifunctional-forest',
@@ -271,6 +274,10 @@ const TEEB_DE_INTERVENTIONS = [
     valueComposition: 'Aggregate German totals (carbon €267m + biodiversity ~€2.25bn + recreation €1.9bn) ÷ ~11.5m ha forest area',
     confidence: 'lower',
     applicableBiomes: ['forest', 'agroforestry'],
+    analogueBiomes: {
+      default: 'Land cover not directly classified by CORINE; multifunctional forest stewardship used as the most representative intervention for typical rural Portuguese property.',
+      wetland: 'Wetland sites typically include riparian woodland; forest-stewardship values used as a non-flood-specific benchmark alongside any floodplain-restoration row.',
+    },
   },
   {
     id: 'river-buffer-zones',
@@ -294,6 +301,8 @@ const TEEB_DE_INTERVENTIONS = [
   },
 ];
 
+const CONFIDENCE_DOWNGRADE = { high: 'medium', medium: 'lower', lower: 'lower' };
+
 /**
  * Build TEEB-DE-aligned natural-capital premium estimates for the property.
  *
@@ -302,24 +311,52 @@ const TEEB_DE_INTERVENTIONS = [
  * as benefit transfer (SEEA-EA convention) and converted to 30-year NPV using
  * the HM Treasury Green Book 3.5% social discount rate.
  *
- * Returns only interventions whose applicability rules match the property's
- * dominant biome and water-feature presence.
+ * Match types:
+ *   - direct:   intervention's own applicableBiomes covers this property
+ *   - analogue: intervention listed under analogueBiomes for this biome —
+ *               confidence is downgraded one notch and the row carries an
+ *               analogue note explaining the benchmark application.
+ *
+ * Every property gets at least one row: every biomeGroup the pipeline can
+ * emit (forest, agroforestry, grassland, cropland, wetland, default) is
+ * covered by either a direct or analogue match.
  */
 export function computeNaturalCapitalPremiums(areaHa, biomeGroup, waterFeatures) {
-  const applicable = TEEB_DE_INTERVENTIONS.filter((it) => {
-    if (it.applicableBiomes && !it.applicableBiomes.includes(biomeGroup)) return false;
-    if (it.requiresWaterFeatures && !(waterFeatures > 0)) return false;
-    return true;
-  });
+  const matched = [];
+  for (const it of TEEB_DE_INTERVENTIONS) {
+    if (it.requiresWaterFeatures && !(waterFeatures > 0)) continue;
 
-  return applicable.map((it) => {
+    let matchType = null;
+    let analogueNote = null;
+
+    if (it.applicableBiomes && it.applicableBiomes.includes(biomeGroup)) {
+      matchType = 'direct';
+    } else if (it.analogueBiomes && Object.prototype.hasOwnProperty.call(it.analogueBiomes, biomeGroup)) {
+      matchType = 'analogue';
+      analogueNote = it.analogueBiomes[biomeGroup];
+    } else if (!it.applicableBiomes) {
+      matchType = 'direct';
+    } else {
+      continue;
+    }
+
+    matched.push({ it, matchType, analogueNote });
+  }
+
+  return matched.map(({ it, matchType, analogueNote }) => {
+    const confidence = matchType === 'analogue' ? CONFIDENCE_DOWNGRADE[it.confidence] : it.confidence;
+    const valueComposition = matchType === 'analogue' && analogueNote
+      ? `${it.valueComposition} — Analogue note: ${analogueNote}`
+      : it.valueComposition;
+
     const row = {
       id: it.id,
       name: it.name,
       description: it.description,
       source: it.sourcePage,
-      valueComposition: it.valueComposition,
-      confidence: it.confidence,
+      valueComposition,
+      confidence,
+      matchType,
     };
 
     if (it.annualPerHa) {

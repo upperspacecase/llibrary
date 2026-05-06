@@ -136,6 +136,7 @@ export interface Premium {
   source?: string | null;
   basis?: "per-hectare" | "benefit-cost-ratio" | string | null;
   confidence?: "high" | "medium" | "lower" | string | null;
+  matchType?: "direct" | "analogue" | string | null;
   valueComposition?: string | null;
   annualLow?: number | null;
   annualMid?: number | null;
