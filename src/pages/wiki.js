@@ -683,8 +683,8 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">☀</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.solar.kWhPerM2Yr', 'int')}
-                  <div class="ed-mini-sub">kWh/m²/yr · vs national</div>
+                  ${P('Open-Meteo Solar/Wind', 'energy.solar.score', 'int', '/100')}
+                  <div class="ed-mini-sub" data-cell="energy.solar.level" data-fmt="str">latitude estimate</div>
                 </div>
                 ${D('National baseline')}
               </div>
@@ -694,8 +694,8 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">≋</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.wind.avgMs100m', '1f')}
-                  <div class="ed-mini-sub">m/s (100 m) · vs national</div>
+                  ${P('Open-Meteo Solar/Wind', 'energy.wind.score', 'int', '/100')}
+                  <div class="ed-mini-sub" data-cell="energy.wind.level" data-fmt="str">elevation estimate</div>
                 </div>
                 ${D('National baseline')}
               </div>
@@ -844,15 +844,12 @@ async function hydrateEnvironmentalDashboard() {
     return;
   }
 
-  // Compute synthetic trajectory bins from trends.yearly (annual series 1975+)
+  // Compute synthetic trajectory bins from trends.yearly (annual series 1975+).
+  // Pipeline shape per row: { year, meanTemp, precip }
   const yearly = Array.isArray(payload.trends && payload.trends.yearly) ? payload.trends.yearly : [];
   const meanOf = (arr, key) => {
     const vals = arr.map(r => r && r[key]).filter(v => typeof v === 'number');
     return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-  };
-  const sumOf = (arr, key) => {
-    const vals = arr.map(r => r && r[key]).filter(v => typeof v === 'number');
-    return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
   };
   const sliceYears = (lo, hi) => yearly.filter(r => r && r.year >= lo && r.year <= hi);
   const earlyRows  = sliceYears(1975, 1984);
@@ -860,27 +857,45 @@ async function hydrateEnvironmentalDashboard() {
   const recentRows = yearly.slice(-5);
   payload.trajectory = {
     temp: {
-      early:  meanOf(earlyRows,  'tempMean'),
-      late:   meanOf(lateRows,   'tempMean'),
-      recent: meanOf(recentRows, 'tempMean'),
+      early:  meanOf(earlyRows,  'meanTemp'),
+      late:   meanOf(lateRows,   'meanTemp'),
+      recent: meanOf(recentRows, 'meanTemp'),
     },
     precip: {
-      early:  meanOf(earlyRows,  'precipTotal'),
-      late:   meanOf(lateRows,   'precipTotal'),
-      recent: meanOf(recentRows, 'precipTotal'),
+      early:  meanOf(earlyRows,  'precip'),
+      late:   meanOf(lateRows,   'precip'),
+      recent: meanOf(recentRows, 'precip'),
     },
-    hotDays: {
-      early:  meanOf(earlyRows,  'hotDays'),
-      late:   meanOf(lateRows,   'hotDays'),
-      recent: meanOf(recentRows, 'hotDays'),
-    },
+    // 'hotDays' is not in the pipeline's yearly payload — leaves DATA?
+    hotDays: { early: null, late: null, recent: null },
   };
 
-  // Geology summary string
+  // Geology summary string from lithology + period + age
   const g = payload.geology || {};
   if (g.lithology || g.period) {
-    const bits = [g.lithology, g.period, g.age ? `${g.age} Ma` : null].filter(Boolean);
+    const bits = [g.lithology, g.period && !g.age ? g.period : null, g.age].filter(Boolean);
     payload.geology.summary = bits.join(' — ');
+  }
+
+  // Render the Top species cards (8 cells) if iNat data is available
+  const top10 = Array.isArray(payload.species && payload.species.top10) ? payload.species.top10 : [];
+  if (top10.length) {
+    const grid = document.querySelector('.ed-species-grid');
+    if (grid) {
+      grid.innerHTML = top10.slice(0, 8).map(sp => `
+        <div class="ed-species-card">
+          ${sp.photoUrl
+            ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
+            : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
+          <div class="ed-species-name">
+            <strong>${sp.name || sp.scientificName || '—'}</strong>
+            ${sp.scientificName && sp.name && sp.scientificName !== sp.name
+              ? `<em>${sp.scientificName}</em>` : ''}
+            <span class="ed-species-count">${sp.count} obs</span>
+          </div>
+        </div>
+      `).join('');
+    }
   }
 
   const walk = (obj, path) => path.split('.').reduce((o, k) => (o == null ? null : o[k]), obj);

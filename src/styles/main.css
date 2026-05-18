@@ -8444,9 +8444,28 @@ a {
   min-height: 64px;
   padding: 8px;
 }
+.ed-species-photo {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 2px;
+  display: block;
+}
 .ed-species-name {
   font-size: 10px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.2;
+}
+.ed-species-name em {
+  color: #888;
+  font-style: italic;
+}
+.ed-species-count {
+  color: #888;
+  font-size: 9px;
 }
 .ed-habitat {
   display: grid;
