@@ -43,6 +43,37 @@ export const SECTIONS_PT = {
     ],
   },
 
+  dashboard: {
+    id: 'dashboard',
+    title: 'Painel Ambiental',
+    subtitle: 'Síntese ambiental do município vs linha de base nacional de Portugal',
+    color: '#1B3A2F',
+    icon: 'activity',
+    description: 'Síntese ambiental do município vs linha de base nacional de Portugal',
+    accentColor: '#1B3A2F',
+    intro: `Síntese ambiental do município de Odemira a abranger trajetórias climáticas, composição do solo, balanço hídrico e biodiversidade, com dados do pipeline LandLibrary. Cada célula desta página é proveniente de uma API ou modelo nomeado — ver o registo de lacunas no fundo da página para perceber o que já está ligado e o que ainda precisa de um agregador regional.`,
+    articles: [
+      {
+        title: 'O que é isto',
+        content: `O painel apresenta Odemira à escala municipal (1.720,6 km², 13 freguesias, centróide 37,60°N 8,64°W) usando ~20 fontes de dados do pipeline. Os valores são agregados sobre a bounding box (ou grelha de amostragem para fontes pontuais), pelo que esta página representa a região no seu todo, não uma parcela individual.`,
+      },
+      {
+        title: 'Como ler',
+        content: `Os cartões estão agrupados em Tempo, Solo, Água e Biodiversidade. Cada métrica é comparada com uma linha de base nacional de Portugal quando existe, marcada Melhor / Semelhante / Pior. As fontes assinaladas DATA? a vermelho ainda não estão ligadas através da camada de agregação regional — estão listadas pelo nome no registo de lacunas no fundo da página juntamente com o que ainda falta.`,
+      },
+    ],
+    mapLayers: [],
+    visuals: {
+      stats: [
+        { label: 'Área', value: '1.720,6', sublabel: 'km²' },
+        { label: 'Freguesias', value: '13', sublabel: 'unidades adm.' },
+        { label: 'Centróide', value: '37,60°N', sublabel: '8,64°W' },
+        { label: 'Fontes', value: '~20', sublabel: 'APIs do pipeline' },
+      ],
+    },
+    references: [],
+  },
+
   ecology: {
     id: 'ecology',
     title: 'Ecologia',

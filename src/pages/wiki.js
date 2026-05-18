@@ -538,6 +538,306 @@ function renderDashboard(section) {
 }
 
 // ---------------------------------------------------------------------------
+// Environmental Dashboard (custom render — Odemira region snapshot)
+// ---------------------------------------------------------------------------
+
+function renderEnvironmentalDashboard() {
+  const P = (src) => `<span class="ed-data" title="Data source: ${src}">DATA?</span>`;
+  const PB = (src, note) =>
+    `<div class="ed-data-block" title="Data source: ${src}${note ? ' — ' + note : ''}">
+       <div class="ed-data-block-tag">DATA?</div>
+       <div class="ed-data-block-src">${src}</div>
+       ${note ? `<div class="ed-data-block-note">${note}</div>` : ''}
+     </div>`;
+  const D = (src) => `<span class="ed-delta" title="Comparator: ${src}">Δ?</span>`;
+  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const monthsRow = `<div class="ed-months">${months.map(m => `<span>${m}</span>`).join('')}</div>`;
+
+  const trajectoryRows = [
+    { label: 'Mean temp (°C)', icon: 'thermostat' },
+    { label: 'Precipitation (mm/yr)', icon: 'droplet' },
+    { label: 'Heat days (>30°C·yr)', icon: 'sun' },
+  ].map(r => `
+    <div class="ed-traj-row">
+      <div class="ed-traj-label">${r.label}</div>
+      <div>${P('Open-Meteo 50yr Archive')}</div>
+      <div>${P('Open-Meteo 50yr Archive')}</div>
+      <div>${P('Open-Meteo 50yr Archive')}</div>
+      <div class="ed-traj-delta">${D('National baseline')}</div>
+    </div>
+  `).join('');
+
+  const forecastCol = (label, src) => `
+    <div class="ed-forecast-col">
+      <div class="ed-forecast-source">${label}</div>
+      <div class="ed-forecast-icon">☁</div>
+      <div class="ed-forecast-temp">${P(src)}</div>
+      <div class="ed-forecast-meta">
+        <div><span>Rain</span>${P(src)}</div>
+        <div><span>Wind</span>${P(src)}</div>
+        <div class="ed-forecast-meta-full"><span>Max / Min</span>${P(src)}</div>
+      </div>
+    </div>
+  `;
+
+  const soilRow = (label, src) => `
+    <div class="ed-soil-row">
+      <span class="ed-soil-label">${label}</span>
+      <span class="ed-soil-value">${P(src)}</span>
+      <span class="ed-soil-delta">${D('National baseline')}</span>
+    </div>
+  `;
+
+  const speciesCard = () => `
+    <div class="ed-species-card">
+      ${PB('iNaturalist photo CDN')}
+      <div class="ed-species-name">${P('iNaturalist Species')}</div>
+    </div>
+  `;
+
+  const pollenLegend = [
+    ['#cdd9b8','Very low'], ['#9eb380','Low'], ['#c9a14a','Moderate'],
+    ['#b85a3a','High'], ['#8a3d27','Very high'],
+  ].map(([c,l]) => `<span class="ed-legend-chip"><i style="background:${c}"></i>${l}</span>`).join('');
+
+  const spiLegend = [
+    ['#3d6b48','Extremely wet'], ['#7a9a6e','Severely wet'],
+    ['#d6c89c','Moderate drought'], ['#b85a3a','Severe drought'],
+    ['#7a2a14','Extreme drought'],
+  ].map(([c,l]) => `<span class="ed-legend-chip"><i style="background:${c}"></i>${l}</span>`).join('');
+
+  const iucnLegend = [
+    ['#5a7256','LC','Least Concern'], ['#7a9a6e','NT','Near Threatened'],
+    ['#c9a14a','VU','Vulnerable'], ['#b85a3a','EN','Endangered'],
+    ['#7a2a14','CR','Critically Endangered'],
+  ].map(([c,k,l]) => `<span class="ed-iucn-chip"><i style="background:${c}">${k}</i>${l}</span>`).join('');
+
+  const habitatRows = ['Mosaic cropland','Forests','Shrubland','Grassland','Other']
+    .map(c => `<div class="ed-habitat-row"><span>${c}</span>${P('ESA WorldCover (aggregated)')}</div>`).join('');
+
+  const gapLedger = [
+    ['Regional 8-pt Baseline → Portugal national baseline', 'Wired @ point only. Need national aggregation across Portugal grid.'],
+    ['Open-Meteo 50yr Archive (climate trajectory)', 'Wired @ point. Need /api/regions/odemira/climate-trajectory.'],
+    ['Open-Meteo Climate Averages (monthly normals)', 'Wired @ point. Need /api/regions/odemira/monthly-normals.'],
+    ['Open-Meteo Forecast (next 5 days)', 'Wired @ point. Need region-mean forecast over Odemira sample grid.'],
+    ['IPMA Forecast', 'Wired @ point (PT only). Region-mean over Odemira parishes needed.'],
+    ['Open-Meteo Solar/Wind', 'Wired @ point. Region-mean over Odemira grid.'],
+    ['Pollen 12-month seasonality', 'NOT WIRED. Google Pollen API returns current index only. Need ECMWF CAMS pollen reanalysis or equivalent.'],
+    ['SoilGrids Properties (pH, OC, BD, depth)', 'Wired @ point. Need zonal stats over Odemira bbox.'],
+    ['SoilGrids Classification (WRB texture)', 'Wired @ point. Need dominant class over Odemira bbox.'],
+    ['Macrostrat Geology', 'Wired @ point. Need dominant lithology over Odemira bbox.'],
+    ['RUSLE-INE erosion risk', 'NOT WIRED. Need INE Portugal soil-erosion raster (RUSLE-PT) or PNRA dataset.'],
+    ['Mapbox Static + Overpass Water Features (hydrology map)', 'Wired @ point. Need bbox-clipped static map for Odemira.'],
+    ['Water balance P − ET₀ (10-yr)', 'Partial. Precipitation in Open-Meteo 50yr. ET₀ requires ERA5-Land or Hargreaves derivation — NOT WIRED.'],
+    ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
+    ['Groundwater (SNIRH)', 'NOT WIRED. Portuguese SNIRH piezometer network not in pipeline.'],
+    ['SPI-12 (1925–today)', 'Partial. Open-Meteo 50yr covers 1975+. Pre-1975 needs KNMI Climate Explorer or NOAA GHCN-monthly for Beja / Sines.'],
+    ['iNaturalist Species (top species + total)', 'Wired @ point. Need bbox aggregation across Odemira.'],
+    ['iNaturalist Threatened (IUCN badges)', 'Wired @ point. Bbox aggregation across Odemira.'],
+    ['iNaturalist trend windows (13 windows)', 'Partial. Pipeline has 3 windows. Extend iNat window job to ~5-year rolls from 1970 → 13 windows.'],
+    ['ESA WorldCover habitat composition', 'Partial. WMS gives tiles. Need pixel-area aggregator (zonal stats) over Odemira bbox.'],
+    ['NASA FIRMS Historical', 'Failing (HTTP 400). Not in current mockup but needs rotating/repaired endpoint before historical fire trend can be added.'],
+  ].map(([k,v]) => `
+    <div class="ed-gap-row">
+      <div class="ed-gap-key">${k}</div>
+      <div class="ed-gap-val">${v}</div>
+    </div>
+  `).join('');
+
+  return `
+    <section class="ed-root" id="environmental-dashboard">
+      <header class="ed-header">
+        <div class="ed-header-pill">
+          <div class="ed-header-pill-label">Region</div>
+          <div class="ed-header-pill-value">Odemira (Southwest Alentejo)</div>
+          <div class="ed-header-pill-sub">1,720.6 km² · 13 parishes · 37.30°N – 37.85°N · 8.95°W – 8.20°W</div>
+        </div>
+        <div class="ed-header-pill">
+          <div class="ed-header-pill-label">Date range</div>
+          <div class="ed-header-pill-value">${P('Date range picker (UI state)')}</div>
+          <div class="ed-header-pill-sub">default: trailing 30 days</div>
+        </div>
+        <div class="ed-header-legend">
+          <div class="ed-header-pill-label">vs national baseline</div>
+          <div class="ed-legend-row">
+            <span><i style="background:#5a7256"></i>Better</span>
+            <span><i style="background:#c9a14a"></i>Similar</span>
+            <span><i style="background:#b85a3a"></i>Worse</span>
+          </div>
+          <div class="ed-data ed-data--block">DATA? Portugal national baseline aggregation</div>
+        </div>
+      </header>
+
+      <div class="ed-grid">
+        <!-- WEATHER -->
+        <section class="ed-panel ed-panel--weather">
+          <div class="ed-panel-head"><span class="ed-panel-head-dot">◔</span> WEATHER</div>
+          <div class="ed-weather-grid">
+            <div class="ed-card ed-card--span-4">
+              <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
+              <div class="ed-traj-head">
+                <div></div><div>1975–84</div><div>2015–24</div><div>Last 5 yr</div><div class="ed-traj-delta">vs Baseline</div>
+              </div>
+              ${trajectoryRows}
+            </div>
+            <div class="ed-card ed-card--span-4">
+              <div class="ed-card-title">Monthly normals <span>(1991–2020)</span></div>
+              ${PB('Open-Meteo Climate Averages', 'Bars: monthly rainfall (mm) · Line: monthly mean temp (°C)')}
+              ${monthsRow}
+            </div>
+            <div class="ed-card ed-card--span-4">
+              <div class="ed-card-title">Current forecast <span>(next 5 days)</span></div>
+              <div class="ed-forecast">
+                ${forecastCol('Open-Meteo', 'Open-Meteo Forecast')}
+                ${forecastCol('IPMA', 'IPMA Forecast')}
+              </div>
+            </div>
+            <div class="ed-card ed-card--span-3">
+              <div class="ed-card-title">Solar potential</div>
+              <div class="ed-mini-row">
+                <span class="ed-mini-icon">☀</span>
+                <div class="ed-mini-stack">
+                  ${P('Open-Meteo Solar/Wind')}
+                  <div class="ed-mini-sub">kWh/m²/yr · vs national</div>
+                </div>
+                ${D('National baseline')}
+              </div>
+            </div>
+            <div class="ed-card ed-card--span-3">
+              <div class="ed-card-title">Wind potential</div>
+              <div class="ed-mini-row">
+                <span class="ed-mini-icon">≋</span>
+                <div class="ed-mini-stack">
+                  ${P('Open-Meteo Solar/Wind')}
+                  <div class="ed-mini-sub">m/s (100 m) · vs national</div>
+                </div>
+                ${D('National baseline')}
+              </div>
+            </div>
+            <div class="ed-card ed-card--span-6">
+              <div class="ed-card-title">Pollen seasonality <span>(12-month)</span></div>
+              ${PB('Pollen 12-month seasonality (NOT WIRED)', 'Google Pollen returns current index only; need ECMWF CAMS pollen reanalysis or 12-month seasonality dataset.')}
+              ${monthsRow}
+              <div class="ed-legend-row">${pollenLegend}</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SOIL -->
+        <section class="ed-panel ed-panel--soil">
+          <div class="ed-panel-head"><span class="ed-panel-head-dot">❦</span> SOIL</div>
+          <div class="ed-card">
+            <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
+            ${soilRow('pH (H₂O)', 'SoilGrids Properties')}
+            ${soilRow('Organic carbon', 'SoilGrids Properties')}
+            ${soilRow('WRB texture class', 'SoilGrids Classification')}
+            ${soilRow('Bulk density', 'SoilGrids Properties')}
+            ${soilRow('Depth to bedrock', 'SoilGrids Properties')}
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
+            <div class="ed-geology">${P('Macrostrat Geology')}</div>
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Erosion risk <span>(RUSLE-INE)</span></div>
+            ${PB('RUSLE-INE erosion (NOT WIRED)', 'Not in pipeline. Need INE Portugal soil-erosion raster (RUSLE-PT) or PNRA dataset.')}
+            <div class="ed-scale-row"><span>Low</span><span>Moderate</span><span>High</span><span>Very high</span></div>
+            <div class="ed-delta-row"><span>vs national</span>${D('National baseline')}</div>
+          </div>
+        </section>
+
+        <!-- WATER -->
+        <section class="ed-panel ed-panel--water">
+          <div class="ed-panel-head"><span class="ed-panel-head-dot">💧</span> WATER</div>
+          <div class="ed-water-grid">
+            <div class="ed-card ed-card--span-5">
+              <div class="ed-card-title">Hydrology <span>(context)</span></div>
+              ${PB('Mapbox Static + Overpass Water Features', 'Satellite/topo basemap clipped to Odemira bbox + OSM water polygons (Mira river, Santa Clara dam, Foupana).')}
+              <div class="ed-hydro-stats">
+                <div><span>Largest stream</span>${P('Overpass Water Features')}</div>
+                <div><span>Largest reservoir</span>${P('Overpass Water Features')}</div>
+              </div>
+            </div>
+            <div class="ed-water-right">
+              <div class="ed-card">
+                <div class="ed-card-title-row">
+                  <div class="ed-card-title">Water balance <span>(10-yr archival) P − ET₀ (mm)</span></div>
+                  ${D('National baseline')}
+                </div>
+                ${PB('Open-Meteo 50yr (P) + ERA-Land (ET₀) — ET₀ NOT WIRED', 'Precipitation series available from Open-Meteo. ET₀ requires ERA5-Land or Hargreaves derivation — not in pipeline.')}
+                <div class="ed-years"><span>1975</span><span>1985</span><span>1995</span><span>2005</span><span>2015</span><span>2025</span></div>
+              </div>
+              <div class="ed-water-pair">
+                <div class="ed-card">
+                  <div class="ed-card-title">GloFAS <span>(stream basin) anomaly</span></div>
+                  <div class="ed-mini-row">
+                    <span class="ed-mini-icon">≈</span>
+                    ${P('GloFAS Flood Forecast')}
+                  </div>
+                  <div class="ed-mini-sub">this week · vs 50-yr return-period reference</div>
+                  <div class="ed-delta-row">${D('GloFAS climatology')}</div>
+                </div>
+                <div class="ed-card">
+                  <div class="ed-card-title">Groundwater <span>(DWR / SNIRH)</span></div>
+                  ${PB('SNIRH (NOT WIRED)', 'Portuguese groundwater network not in pipeline. Need SNIRH API or piezometer stations within Odemira.')}
+                </div>
+              </div>
+            </div>
+            <div class="ed-card ed-card--span-12">
+              <div class="ed-card-title">SPI-12 <span>(drought index, 1925–today)</span></div>
+              ${PB('SPI-12 1925–today — partial wiring', 'Open-Meteo 50yr covers 1975+. Pre-1975 needs KNMI Climate Explorer or NOAA GHCN-monthly for Beja / Sines stations.')}
+              <div class="ed-legend-row">${spiLegend}</div>
+              <div class="ed-years ed-years--wide"><span>1925</span><span>1945</span><span>1965</span><span>1985</span><span>2005</span><span>2025</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BIODIVERSITY -->
+        <section class="ed-panel ed-panel--bio">
+          <div class="ed-panel-head"><span class="ed-panel-head-dot">❀</span> BIODIVERSITY</div>
+          <div class="ed-bio-grid">
+            <div class="ed-card ed-card--span-7">
+              <div class="ed-card-title">Top species <span>(by observations)</span></div>
+              <div class="ed-species-grid">
+                ${Array(8).fill(0).map(() => speciesCard()).join('')}
+              </div>
+              <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
+            </div>
+            <div class="ed-card ed-card--span-5">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Species observations <span>(13 trend windows)</span></div>
+                ${D('National baseline')}
+              </div>
+              ${PB('iNaturalist trend windows — partial wiring', 'Pipeline has 3 windows (1975–1994, 1995–2014, 2015–2025). 13 windows requested — extend iNat window job to ~5-year rolls from 1970.')}
+              <div class="ed-years"><span>1970</span><span>1985</span><span>2000</span><span>2015</span><span>2025</span></div>
+            </div>
+            <div class="ed-card ed-card--span-5">
+              <div class="ed-card-title">Total species</div>
+              <div class="ed-mini-row">
+                ${P('iNaturalist Species')}
+                ${D('Parish baseline')}
+              </div>
+              <div class="ed-mini-sub">unique taxa observed · vs Odemira parish baseline</div>
+            </div>
+            <div class="ed-card ed-card--span-7">
+              <div class="ed-card-title">Habitat <span>(ESA WorldCover 2021)</span></div>
+              ${PB('ESA WorldCover area aggregation — needs aggregator', 'WorldCover WMS gives map tiles. Need pixel-area aggregator (zonal stats) over Odemira bbox for class % breakdown.')}
+              <div class="ed-habitat">${habitatRows}</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="ed-gap-ledger">
+        <h3>Data gap ledger</h3>
+        <p>Every cell flagged <strong>DATA?</strong> above corresponds to a row below. Sources marked “wired @ point” exist in the pipeline but do not yet have a region-aggregate endpoint for Odemira.</p>
+        <div class="ed-gap-grid">${gapLedger}</div>
+      </section>
+    </section>
+  `;
+}
+
+// ---------------------------------------------------------------------------
 // Section view
 // ---------------------------------------------------------------------------
 
@@ -596,6 +896,8 @@ async function renderSection(sectionId) {
 
         <!-- Dashboard Panel (auto-generated from section.visuals) -->
         <div class="wiki-dashboard" id="wiki-dashboard"></div>
+
+        ${sectionId === 'dashboard' ? renderEnvironmentalDashboard() : ''}
 
         <!-- Articles (text selectable for edit toolbar) -->
         <section class="wiki-articles" id="wiki-articles">
