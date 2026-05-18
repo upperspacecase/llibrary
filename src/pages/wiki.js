@@ -575,19 +575,6 @@ function renderEnvironmentalDashboard() {
     </div>
   `).join('');
 
-  const forecastCol = (label, src) => `
-    <div class="ed-forecast-col">
-      <div class="ed-forecast-source">${label}</div>
-      <div class="ed-forecast-icon">☁</div>
-      <div class="ed-forecast-temp">${P(src)}</div>
-      <div class="ed-forecast-meta">
-        <div><span>Rain</span>${P(src)}</div>
-        <div><span>Wind</span>${P(src)}</div>
-        <div class="ed-forecast-meta-full"><span>Max / Min</span>${P(src)}</div>
-      </div>
-    </div>
-  `;
-
   const soilRow = (label, src, cell, fmt, unit) => `
     <div class="ed-soil-row">
       <span class="ed-soil-label">${label}</span>
@@ -627,8 +614,6 @@ function renderEnvironmentalDashboard() {
     ['Regional 8-pt Baseline → Portugal national baseline', 'Wired @ point only. Need national aggregation across Portugal grid.'],
     ['Open-Meteo 50yr Archive (climate trajectory)', 'Wired @ point. Need /api/regions/odemira/climate-trajectory.'],
     ['Open-Meteo Climate Averages (monthly normals)', 'Wired @ point. Need /api/regions/odemira/monthly-normals.'],
-    ['Open-Meteo Forecast (next 5 days)', 'Wired @ point. Need region-mean forecast over Odemira sample grid.'],
-    ['IPMA Forecast', 'Wired @ point (PT only). Region-mean over Odemira parishes needed.'],
     ['Open-Meteo Solar/Wind', 'Wired @ point. Region-mean over Odemira grid.'],
     ['Pollen 12-month seasonality', 'NOT WIRED. Google Pollen API returns current index only. Need ECMWF CAMS pollen reanalysis or equivalent.'],
     ['SoilGrids Properties (pH, OC, BD, depth)', 'Wired @ point. Need zonal stats over Odemira bbox.'],
@@ -659,24 +644,17 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--weather">
           <div class="ed-panel-head"><span class="ed-panel-head-dot">◔</span> WEATHER</div>
           <div class="ed-weather-grid">
-            <div class="ed-card ed-card--span-4">
+            <div class="ed-card ed-card--span-6">
               <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
               <div class="ed-traj-head">
                 <div></div><div>1975–84</div><div>2015–24</div><div>Last 5 yr</div><div class="ed-traj-delta">vs Baseline</div>
               </div>
               ${trajectoryRows}
             </div>
-            <div class="ed-card ed-card--span-4">
+            <div class="ed-card ed-card--span-6">
               <div class="ed-card-title">Monthly normals <span>(1991–2020)</span></div>
               ${PB('Open-Meteo Climate Averages', 'Bars: monthly rainfall (mm) · Line: monthly mean temp (°C)')}
               ${monthsRow}
-            </div>
-            <div class="ed-card ed-card--span-4">
-              <div class="ed-card-title">Current forecast <span>(next 5 days)</span></div>
-              <div class="ed-forecast">
-                ${forecastCol('Open-Meteo', 'Open-Meteo Forecast')}
-                ${forecastCol('IPMA', 'IPMA Forecast')}
-              </div>
             </div>
             <div class="ed-card ed-card--span-3">
               <div class="ed-card-title">Solar potential</div>
@@ -715,9 +693,9 @@ function renderEnvironmentalDashboard() {
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
             ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
-            ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  '1f', ' g/kg')}
+            ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  'str')}
             ${soilRow('WRB texture class', 'SoilGrids Classification', 'soil.classification', 'str')}
-            ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    '2f', ' kg/dm³')}
+            ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    'str')}
             ${soilRow('Depth to bedrock',  'SoilGrids Properties',     null)}
           </div>
           <div class="ed-card">
