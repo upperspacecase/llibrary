@@ -173,7 +173,10 @@ export function reportDataToFacts(data) {
       waterBodies: wrap(data.water?.waterBodies, 'count', 'water'),
       features: wrap(data.water?.features, null, 'water'),
       nearestDistanceM: wrap(data.water?.nearestDistanceM, 'm', 'water'),
+      nearestNamedStream: wrap(data.water?.nearestNamedStream, null, 'water'),
+      nearestNamedBody: wrap(data.water?.nearestNamedBody, null, 'water'),
       floodDischarge: wrap(data.water?.floodDischarge, 'm³/s', 'flood'),
+      floodAnomalyPct: wrap(data.water?.floodAnomalyPct, '%', 'flood'),
     },
     climate: {
       annualMeanTemp: wrap(data.climate?.annualMeanTemp, '°C', 'climate'),

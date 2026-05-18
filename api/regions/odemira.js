@@ -52,7 +52,7 @@ export default async function handler(req, res) {
       scores: unwrapSection(doc.scores),
     };
 
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     return res.status(200).json(payload);
   } catch (err) {
     console.error('GET /api/regions/odemira failed:', err);
