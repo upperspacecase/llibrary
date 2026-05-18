@@ -1,101 +1,50 @@
 /**
- * SoilGrids (ISRIC) — Global soil data via WMS GetFeatureInfo
- * Uses the stable WMS service at maps.isric.org instead of the flaky REST API.
- * Same 250m SoilGrids data, more reliable protocol.
+ * SoilGrids (ISRIC) — Global soil data via REST API.
+ * Previously used the WMS GetFeatureInfo endpoint, which broke in two ways:
+ *   (1) MapServer 8.0 now requires STYLES on every WMS call,
+ *   (2) maprasterquery dropped INFO_FORMAT=application/json support.
+ * REST is back and returns the exact shape parseSoilProperties already
+ * expects, so this is the simpler, more durable surface.
  * https://www.isric.org/explore/soilgrids/faq-soilgrids
  */
 
 import { fetchWithPolicy } from '../lib/fetch-policy.js';
 
-const WMS_BASE = 'https://maps.isric.org/mapserv';
+const REST_BASE = 'https://rest.isric.org/soilgrids/v2.0';
 
-const SOIL_LAYERS = [
-  { map: 'clay', layer: 'clay_0-5cm_mean', prop: 'clay' },
-  { map: 'sand', layer: 'sand_0-5cm_mean', prop: 'sand' },
-  { map: 'silt', layer: 'silt_0-5cm_mean', prop: 'silt' },
-  { map: 'phh2o', layer: 'phh2o_0-5cm_mean', prop: 'phh2o' },
-  { map: 'soc', layer: 'soc_0-5cm_mean', prop: 'soc' },
-  { map: 'nitrogen', layer: 'nitrogen_0-5cm_mean', prop: 'nitrogen' },
-  { map: 'cec', layer: 'cec_0-5cm_mean', prop: 'cec' },
-  { map: 'bdod', layer: 'bdod_0-5cm_mean', prop: 'bdod' },
-  { map: 'ocd', layer: 'ocd_0-5cm_mean', prop: 'ocd' },
-];
-
-const UNIT_MAP = {
-  clay: 'g/kg', sand: 'g/kg', silt: 'g/kg',
-  phh2o: 'pH*10', soc: 'dg/kg', nitrogen: 'cg/kg',
-  cec: 'mmol(c)/kg', bdod: 'cg/cm³', ocd: 'hg/m³',
-};
-
-async function getFeatureInfo(lat, lng, mapName, layerName) {
-  const d = 0.002; // ~250m bbox around the point
-  const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
-  const params = new URLSearchParams({
-    map: `/map/${mapName}.map`,
-    SERVICE: 'WMS',
-    VERSION: '1.1.1',
-    REQUEST: 'GetFeatureInfo',
-    LAYERS: layerName,
-    QUERY_LAYERS: layerName,
-    INFO_FORMAT: 'application/json',
-    SRS: 'EPSG:4326',
-    BBOX: bbox,
-    WIDTH: '1',
-    HEIGHT: '1',
-    X: '0',
-    Y: '0',
-  });
-  const res = await fetchWithPolicy(`${WMS_BASE}?${params}`, {}, {
-    source: 'soilgrids-wms', timeoutMs: 12000, accept: 'application/json',
-  });
-  if (!res.ok) throw new Error(`SoilGrids WMS error: ${res.status}`);
-  return res.json();
-}
-
-function extractValue(geoJson) {
-  // WMS GetFeatureInfo returns GeoJSON with feature properties containing the value
-  if (!geoJson || !geoJson.features || !geoJson.features.length) return null;
-  const props = geoJson.features[0].properties;
-  if (!props) return null;
-  // The value key varies — take the first numeric property
-  for (const [key, val] of Object.entries(props)) {
-    if (typeof val === 'number') return val;
-  }
-  return null;
-}
+const SOIL_PROPS = ['clay', 'sand', 'silt', 'phh2o', 'soc', 'nitrogen', 'cec', 'bdod', 'ocd'];
 
 export async function getSoilProperties(lat, lng) {
-  const results = await Promise.allSettled(
-    SOIL_LAYERS.map(l => getFeatureInfo(lat, lng, l.map, l.layer))
-  );
+  const params = new URLSearchParams();
+  for (const p of SOIL_PROPS) params.append('property', p);
+  params.append('depth', '0-5cm');
+  params.append('value', 'mean');
+  params.append('lat', String(lat));
+  params.append('lon', String(lng));
 
-  // Build response in the same shape as the old REST API so parseSoilProperties() still works
-  const layers = SOIL_LAYERS.map((l, i) => {
-    const val = results[i].status === 'fulfilled' ? extractValue(results[i].value) : null;
-    return {
-      name: l.prop,
-      unit_measure: { mapped_units: UNIT_MAP[l.prop] || '' },
-      depths: [{
-        label: '0-5cm',
-        values: { mean: val },
-      }],
-    };
+  const res = await fetchWithPolicy(`${REST_BASE}/properties/query?${params}`, {}, {
+    source: 'soilgrids-rest', timeoutMs: 15000, accept: 'application/json',
   });
-
-  return { properties: { layers } };
+  if (!res.ok) throw new Error(`SoilGrids REST error: ${res.status}`);
+  return res.json();
 }
 
 export async function getSoilClassification(lat, lng) {
   try {
-    const data = await getFeatureInfo(lat, lng, 'wrb', 'MostProbable');
-    if (!data || !data.features || !data.features.length) return null;
-    const props = data.features[0].properties || {};
-    // WRB layer returns class number — map to name
-    const classNum = props.value || props.MostProbable || null;
-    const className = classNum != null ? WRB_CLASSES[classNum] || `Class ${classNum}` : null;
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lon: String(lng),
+      number_classes: '1',
+    });
+    const res = await fetchWithPolicy(`${REST_BASE}/classification/query?${params}`, {}, {
+      source: 'soilgrids-rest', timeoutMs: 15000, accept: 'application/json',
+    });
+    if (!res.ok) throw new Error(`SoilGrids classification HTTP ${res.status}`);
+    const data = await res.json();
+    const top = Array.isArray(data.wrb_class_probability) ? data.wrb_class_probability[0] : null;
     return {
-      wrb_class_name: className,
-      wrb_class_probability: props.probability || null,
+      wrb_class_name: data.wrb_class_name || (top && top[0]) || null,
+      wrb_class_probability: top ? top[1] : (data.wrb_class_value ?? null),
     };
   } catch {
     return null;
