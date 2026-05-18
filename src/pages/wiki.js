@@ -855,8 +855,11 @@ async function hydrateEnvironmentalDashboard() {
       late:   meanOf(lateRows,   'precip'),
       recent: meanOf(recentRows, 'precip'),
     },
-    // 'hotDays' is not in the pipeline's yearly payload — leaves DATA?
-    hotDays: { early: null, late: null, recent: null },
+    hotDays: {
+      early:  meanOf(earlyRows,  'hotDays'),
+      late:   meanOf(lateRows,   'hotDays'),
+      recent: meanOf(recentRows, 'hotDays'),
+    },
   };
 
   // Geology summary string from lithology + period + age
