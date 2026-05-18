@@ -634,6 +634,8 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
   const waterRaw = raw.water?.ok ? raw.water.data : null;
   let springs = 0, wells = 0, waterways = 0, waterBodies = 0;
   let waterFeatures = [];
+  let nearestNamedStream = null;
+  let nearestNamedBody = null;
 
   if (waterRaw) {
     const nodes = extractNodes(waterRaw);
@@ -670,9 +672,22 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
         distanceM: Math.round(haversineMeters(lat, lng, coord[0], coord[1])),
       });
     }
-    waterFeatures = allFeatures
-      .sort((a, b) => a.distanceM - b.distanceM)
-      .slice(0, 30);
+    const sortedAll = allFeatures.sort((a, b) => a.distanceM - b.distanceM);
+    waterFeatures = sortedAll.slice(0, 30);
+
+    // Walk the FULL sorted list (not the 30-cap) for the nearest *named* stream
+    // and water body. The closest features are often unnamed farm ponds; the
+    // Mira / Foupana / Aguieiras kind of names live further out.
+    const streamKinds = new Set(['river', 'stream', 'canal', 'drain', 'ditch', 'waterway']);
+    const bodyKinds   = new Set(['water_body', 'water', 'reservoir', 'lake', 'pond', 'lagoon']);
+    const namedStream = sortedAll.find(f => f.name && streamKinds.has(f.kind));
+    const namedBody   = sortedAll.find(f => f.name && bodyKinds.has(f.kind));
+    nearestNamedStream = namedStream
+      ? { name: namedStream.name, kind: namedStream.kind, distanceM: namedStream.distanceM }
+      : null;
+    nearestNamedBody = namedBody
+      ? { name: namedBody.name, kind: namedBody.kind, distanceM: namedBody.distanceM }
+      : null;
   }
 
   const floodRaw = raw.flood?.ok ? raw.flood.data : null;
@@ -697,28 +712,12 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     ? Math.round((parcelMinElev - drainageElevation) * 10) / 10
     : null;
 
-  // Nearest named stream / nearest named water body — convenience fields the
-  // regional dashboard surfaces directly. A "stream" here is any waterway tag
-  // (river/stream/canal); a "water body" is anything matching natural=water.
-  const streamKinds = new Set(['river', 'stream', 'canal', 'drain', 'ditch', 'waterway']);
-  const bodyKinds   = new Set(['water_body', 'reservoir', 'lake', 'pond', 'lagoon']);
-  const nearestNamed = (kindSet) =>
-    waterFeatures.find(f => f.name && kindSet.has(f.kind)) ||
-    waterFeatures.find(f => f.name && (f.kind === 'water_body' || streamKinds.has(f.kind))) ||
-    null;
-  const nearestNamedStream = nearestNamed(streamKinds);
-  const nearestNamedBody   = waterFeatures.find(f => f.name && bodyKinds.has(f.kind)) || null;
-
   const water = {
     springs, wells, waterways, waterBodies,
     features: waterFeatures,
     nearestDistanceM: waterFeatures[0]?.distanceM ?? null,
-    nearestNamedStream: nearestNamedStream
-      ? { name: nearestNamedStream.name, kind: nearestNamedStream.kind, distanceM: nearestNamedStream.distanceM }
-      : null,
-    nearestNamedBody: nearestNamedBody
-      ? { name: nearestNamedBody.name, kind: nearestNamedBody.kind, distanceM: nearestNamedBody.distanceM }
-      : null,
+    nearestNamedStream,
+    nearestNamedBody,
     securityIndex: Math.round(waterSecurityIndex * 10) / 10,
     floodDischarge: floodAnalysis?.current ?? null,
     floodAnomalyPct: floodAnalysis?.anomalyPct ?? null,
