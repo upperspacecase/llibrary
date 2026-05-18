@@ -75,25 +75,9 @@ export const SECTIONS = {
     description: 'Region-wide environmental snapshot vs Portugal national baseline',
     accentColor: '#1B3A2F',
     intro: `A region-wide environmental snapshot of Odemira covering weather trajectories, soil composition, water balance and biodiversity, sampled from the LandLibrary data pipeline. Every cell on this page is sourced from a named API or model — see the data gap ledger below for what is wired today vs what still needs a regional aggregation endpoint.`,
-    articles: [
-      {
-        title: 'What this is',
-        content: `The dashboard summarises Odemira at the municipality scale (1,720.6 km², 13 parishes, centroid 37.60°N 8.64°W) using ~20 named data sources from the pipeline. Numbers are aggregated across the bounding box (or sample grid for point-based sources) so the page represents the region as a whole, not any individual parcel.`,
-      },
-      {
-        title: 'How to read it',
-        content: `Cards are grouped into Weather, Soil, Water and Biodiversity. Each metric is compared to a Portugal national baseline where one exists, marked Better / Similar / Worse. Sources marked DATA? in red have not yet been wired through the regional aggregation layer — they are listed by name in the gap ledger at the bottom of the page along with what is still needed.`,
-      },
-    ],
+    articles: [],
     mapLayers: [],
-    visuals: {
-      stats: [
-        { label: 'Area', value: '1,720.6', sublabel: 'km²' },
-        { label: 'Parishes', value: '13', sublabel: 'admin units' },
-        { label: 'Centroid', value: '37.60°N', sublabel: '8.64°W' },
-        { label: 'Sources', value: '~20', sublabel: 'pipeline APIs' },
-      ],
-    },
+    visuals: {},
     references: [],
   },
 

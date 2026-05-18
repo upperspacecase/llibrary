@@ -646,28 +646,6 @@ function renderEnvironmentalDashboard() {
 
   return `
     <section class="ed-root" id="environmental-dashboard">
-      <header class="ed-header">
-        <div class="ed-header-pill">
-          <div class="ed-header-pill-label">Region</div>
-          <div class="ed-header-pill-value">Odemira (Southwest Alentejo)</div>
-          <div class="ed-header-pill-sub">1,720.6 km² · 13 parishes · 37.30°N – 37.85°N · 8.95°W – 8.20°W</div>
-        </div>
-        <div class="ed-header-pill">
-          <div class="ed-header-pill-label">Date range</div>
-          <div class="ed-header-pill-value">${P('Date range picker (UI state)')}</div>
-          <div class="ed-header-pill-sub">default: trailing 30 days</div>
-        </div>
-        <div class="ed-header-legend">
-          <div class="ed-header-pill-label">vs national baseline</div>
-          <div class="ed-legend-row">
-            <span><i style="background:#5a7256"></i>Better</span>
-            <span><i style="background:#c9a14a"></i>Similar</span>
-            <span><i style="background:#b85a3a"></i>Worse</span>
-          </div>
-          <div class="ed-data ed-data--block">DATA? Portugal national baseline aggregation</div>
-        </div>
-      </header>
-
       <div class="ed-grid">
         <!-- WEATHER -->
         <section class="ed-panel ed-panel--weather">
@@ -877,6 +855,7 @@ async function renderSection(sectionId) {
         <h1 class="wiki-section-title">${t('wiki.sections.' + section.id) || section.title}</h1>
         <p class="wiki-section-subtitle">${section.intro}</p>
 
+        ${sectionId === 'dashboard' ? '' : `
         <div class="wiki-section-meta">
           <span class="wiki-section-meta-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -893,6 +872,7 @@ async function renderSection(sectionId) {
         </div>
 
         <hr class="wiki-section-divider" />
+        `}
 
         <!-- Dashboard Panel (auto-generated from section.visuals) -->
         <div class="wiki-dashboard" id="wiki-dashboard"></div>
@@ -912,6 +892,7 @@ async function renderSection(sectionId) {
         <!-- Map (bioregion only) -->
         ${sectionId === 'bioregion' ? '<div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>' : ''}
 
+        ${sectionId === 'dashboard' ? '' : `
         <!-- Community Contributions -->
         <section class="wiki-contributions" id="wiki-contributions">
           <div class="wiki-contributions-header">
@@ -921,6 +902,7 @@ async function renderSection(sectionId) {
             <div class="loading-block"><span class="loading-spinner"></span> ${t('wiki.section.loadingContributions')}</div>
           </div>
         </section>
+        `}
 
         ${['water', 'climate', 'landuse', 'community'].includes(sectionId) ? `
         <!-- Live Data -->
@@ -935,7 +917,8 @@ async function renderSection(sectionId) {
 
       </div>
 
-      <!-- Right column: Community Notes sidebar -->
+      <!-- Right column: Community Notes sidebar (hidden on dashboard tab) -->
+      ${sectionId === 'dashboard' ? '' : `
       <aside class="wiki-section-aside">
         <div class="wiki-community-notes">
           <h3 class="wiki-community-notes-title">${t('wiki.section.communityNotes')}</h3>
@@ -1002,6 +985,7 @@ async function renderSection(sectionId) {
           </div>
         </div>
       </aside>
+      `}
     </div>
 
     <!-- Text Selection Toolbar (hidden, positioned absolutely) -->
