@@ -8263,7 +8263,31 @@ a {
   gap: 6px;
   align-items: center;
   font-size: 11px;
+  position: relative;
 }
+.ed-traj-spark {
+  position: absolute;
+  left: calc((1.6 / (1.6 + 3 + 1)) * 100% + 6px);
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.ed-traj-cell { position: relative; z-index: 1; }
+.ed-traj-delta { position: relative; z-index: 1; }
+.ed-traj-delta-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+.ed-traj-delta-chip--better  { background: #5a7256; }
+.ed-traj-delta-chip--similar { background: #c9a14a; }
+.ed-traj-delta-chip--worse   { background: #b85a3a; }
 .ed-traj-head {
   font-size: 9px;
   text-transform: uppercase;
@@ -8409,16 +8433,50 @@ a {
 .ed-hydro-stats {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   font-size: 11px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
-.ed-hydro-stats > div {
+.ed-hydro-stat {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: baseline;
+  gap: 8px;
 }
 .ed-hydro-stats span { color: #888; }
+.ed-hydro-named {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  text-align: right;
+}
+.ed-hydro-named strong { color: #2C2C2C; font-weight: 600; }
+.ed-hydro-km { color: #888; font-size: 10px; }
+
+.ed-monthly {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+.ed-monthly-empty { font-size: 14px; }
+.ed-monthly-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 9px;
+  color: #888;
+  margin-top: 6px;
+}
+.ed-monthly-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ed-monthly-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+}
 
 /* Biodiversity inner grid */
 .ed-bio-grid {
@@ -8444,12 +8502,26 @@ a {
   min-height: 64px;
   padding: 8px;
 }
+.ed-species-photo-wrap {
+  position: relative;
+}
 .ed-species-photo {
   width: 100%;
   height: 80px;
   object-fit: cover;
   border-radius: 2px;
   display: block;
+}
+.ed-species-iucn {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 9px;
+  padding: 2px 5px;
+  letter-spacing: 0.04em;
+  border-radius: 1px;
 }
 .ed-species-name {
   font-size: 10px;

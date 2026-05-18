@@ -75,6 +75,11 @@ export function analyzeFloodRisk(data) {
     else if (ratio > 0.5) { level = 'Normal'; color = '#00CC00'; }
     else { level = 'Low Flow'; color = '#6699CC'; }
 
+    // Anomaly vs the trailing window's mean. The flood API returns ~8 months
+    // of past discharge, so this is "vs trailing 8mo mean" rather than a 50-yr
+    // climatology — honest about what we have.
+    const anomalyPct = avg > 0 ? Math.round((current / avg - 1) * 100) : null;
+
     return {
         level,
         color,
@@ -82,6 +87,7 @@ export function analyzeFloodRisk(data) {
         average: avg.toFixed(1),
         max: max.toFixed(1),
         ratio: ratio.toFixed(2),
+        anomalyPct,
         discharge: discharges,
         dates: data.daily.time,
     };

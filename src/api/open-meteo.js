@@ -275,7 +275,7 @@ export async function getSolarWind(lat, lng) {
     longitude: String(lng),
     start_date: `${lastYear}-01-01`,
     end_date: `${lastYear}-12-31`,
-    daily: 'shortwave_radiation_sum,wind_speed_10m_mean,wind_speed_10m_max',
+    daily: 'shortwave_radiation_sum,wind_speed_10m_mean,wind_speed_10m_max,wind_speed_100m_mean',
     timezone: 'auto',
   });
   const res = await enqueueArchive(() => fetchWithPolicy(`${ARCHIVE_BASE}?${params}`, {}, {
@@ -287,10 +287,21 @@ export async function getSolarWind(lat, lng) {
   const rad = (daily.shortwave_radiation_sum || []).filter(v => v != null);
   const wind = (daily.wind_speed_10m_mean || []).filter(v => v != null);
   const windMax = (daily.wind_speed_10m_max || []).filter(v => v != null);
+  const wind100 = (daily.wind_speed_100m_mean || []).filter(v => v != null);
+  const meanOf = a => a.length ? a.reduce((s, v) => s + v, 0) / a.length : null;
+  const radDailyMJ = meanOf(rad);
+
+  // Convert daily mean MJ/m² → annual kWh/m² (1 MJ = 0.2778 kWh, × 365 days)
+  const annualKWh = radDailyMJ != null ? Math.round(radDailyMJ * 0.2778 * 365) : null;
+  // Convert km/h @ 100m → m/s
+  const windMs100 = wind100.length ? +(meanOf(wind100) / 3.6).toFixed(1) : null;
+
   return {
-    solarIrradianceMJ: rad.length ? Math.round(rad.reduce((a, b) => a + b, 0) / rad.length * 10) / 10 : null,
-    windSpeedMean: wind.length ? Math.round(wind.reduce((a, b) => a + b, 0) / wind.length * 10) / 10 : null,
-    windSpeedMax: windMax.length ? Math.round(windMax.reduce((a, b) => a + b, 0) / windMax.length * 10) / 10 : null,
+    solarIrradianceMJ: radDailyMJ != null ? +radDailyMJ.toFixed(1) : null,
+    solarAnnualKWhPerM2: annualKWh,
+    windSpeedMean: wind.length ? +meanOf(wind).toFixed(1) : null,
+    windSpeedMax: windMax.length ? +meanOf(windMax).toFixed(1) : null,
+    windSpeedMs100m: windMs100,
     year: lastYear,
   };
 }

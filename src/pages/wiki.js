@@ -562,16 +562,17 @@ function renderEnvironmentalDashboard() {
   const monthsRow = `<div class="ed-months">${months.map(m => `<span>${m}</span>`).join('')}</div>`;
 
   const trajectoryRows = [
-    { label: 'Mean temp (°C)',         metric: 'temp',     fmt: '1f' },
-    { label: 'Precipitation (mm/yr)',  metric: 'precip',   fmt: 'int' },
-    { label: 'Heat days (>30°C·yr)',   metric: 'hotDays',  fmt: 'int' },
+    { label: 'Mean temp (°C)',         metric: 'temp',     fmt: '1f',  deltaMode: 'absC',  betterDir: -1, color: '#b85a3a' },
+    { label: 'Precipitation (mm/yr)',  metric: 'precip',   fmt: 'int', deltaMode: 'pct',   betterDir: +1, color: '#3d6b8c' },
+    { label: 'Heat days (>30°C·yr)',   metric: 'hotDays',  fmt: 'int', deltaMode: 'pct',   betterDir: -1, color: '#c47a3a' },
   ].map(r => `
-    <div class="ed-traj-row">
+    <div class="ed-traj-row" data-metric="${r.metric}" data-delta-mode="${r.deltaMode}" data-better-dir="${r.betterDir}" data-color="${r.color}">
       <div class="ed-traj-label">${r.label}</div>
-      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.early`, r.fmt)}</div>
-      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.late`, r.fmt)}</div>
-      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.recent`, r.fmt)}</div>
-      <div class="ed-traj-delta">${D('National baseline')}</div>
+      <div class="ed-traj-cell" data-pos="early">${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.early`, r.fmt)}</div>
+      <div class="ed-traj-cell" data-pos="late">${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.late`, r.fmt)}</div>
+      <div class="ed-traj-cell" data-pos="recent">${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.recent`, r.fmt)}</div>
+      <div class="ed-traj-delta">${D('Self (early → recent)')}</div>
+      <svg class="ed-traj-spark" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
     </div>
   `).join('');
 
@@ -653,18 +654,23 @@ function renderEnvironmentalDashboard() {
             </div>
             <div class="ed-card ed-card--span-6">
               <div class="ed-card-title">Monthly normals <span>(1991–2020)</span></div>
-              ${PB('Open-Meteo Climate Averages', 'Bars: monthly rainfall (mm) · Line: monthly mean temp (°C)')}
+              <svg class="ed-monthly" id="ed-monthly-chart" viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true">
+                <text x="180" y="70" text-anchor="middle" class="ed-monthly-empty" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
               ${monthsRow}
+              <div class="ed-monthly-legend">
+                <span><i style="background:#8b9a7e"></i>Rainfall (mm)</span>
+                <span><i style="background:#b85a3a"></i>Temperature (°C)</span>
+              </div>
             </div>
             <div class="ed-card ed-card--span-3">
               <div class="ed-card-title">Solar potential</div>
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">☀</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.solar.score', 'int', '/100')}
-                  <div class="ed-mini-sub" data-cell="energy.solar.level" data-fmt="str">latitude estimate</div>
+                  ${P('Open-Meteo Solar/Wind', 'energy.solar.kWhPerM2Yr', 'int', ' kWh/m²/yr')}
+                  <div class="ed-mini-sub">annual mean · GHI</div>
                 </div>
-                ${D('National baseline')}
               </div>
             </div>
             <div class="ed-card ed-card--span-3">
@@ -672,10 +678,9 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">≋</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.wind.score', 'int', '/100')}
-                  <div class="ed-mini-sub" data-cell="energy.wind.level" data-fmt="str">elevation estimate</div>
+                  ${P('Open-Meteo Solar/Wind', 'energy.wind.ms100m', '1f', ' m/s')}
+                  <div class="ed-mini-sub">at 100 m · annual mean</div>
                 </div>
-                ${D('National baseline')}
               </div>
             </div>
             <div class="ed-card ed-card--span-6">
@@ -718,8 +723,12 @@ function renderEnvironmentalDashboard() {
               <div class="ed-card-title">Hydrology <span>(context)</span></div>
               ${PB('Mapbox Static + Overpass Water Features', 'Satellite/topo basemap clipped to Odemira bbox + OSM water polygons (Mira river, Santa Clara dam, Foupana).')}
               <div class="ed-hydro-stats">
-                <div><span>Waterways (OSM)</span>${P('Overpass Water Features', 'water.waterways', 'int')}</div>
-                <div><span>Water bodies (OSM)</span>${P('Overpass Water Features', 'water.waterBodies', 'int')}</div>
+                <div class="ed-hydro-stat" data-cell="water.nearestNamedStream" data-fmt="hydro">
+                  <span>Nearest stream</span>${P('Overpass Water Features', null)}
+                </div>
+                <div class="ed-hydro-stat" data-cell="water.nearestNamedBody" data-fmt="hydro">
+                  <span>Nearest lake / reservoir</span>${P('Overpass Water Features', null)}
+                </div>
               </div>
             </div>
             <div class="ed-water-right">
@@ -733,13 +742,15 @@ function renderEnvironmentalDashboard() {
               </div>
               <div class="ed-water-pair">
                 <div class="ed-card">
-                  <div class="ed-card-title">GloFAS <span>discharge (this week)</span></div>
+                  <div class="ed-card-title">GloFAS <span>discharge anomaly</span></div>
                   <div class="ed-mini-row">
                     <span class="ed-mini-icon">≈</span>
-                    ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}
+                    <div class="ed-mini-stack">
+                      ${P('GloFAS Flood Forecast', 'water.floodAnomalyPct', 'signedPct')}
+                      <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
+                    </div>
                   </div>
-                  <div class="ed-mini-sub">m³/s at Odemira centroid · vs 50-yr return reference</div>
-                  <div class="ed-delta-row">${D('GloFAS climatology')}</div>
+                  <div class="ed-mini-sub">vs trailing 8mo mean at Odemira sample point</div>
                 </div>
                 <div class="ed-card">
                   <div class="ed-card-title">Groundwater <span>(DWR / SNIRH)</span></div>
@@ -858,21 +869,35 @@ async function hydrateEnvironmentalDashboard() {
   // Render the Top species cards (8 cells) if iNat data is available
   const top10 = Array.isArray(payload.species && payload.species.top10) ? payload.species.top10 : [];
   if (top10.length) {
+    const iucnColors = {
+      LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
+      EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
+    };
     const grid = document.querySelector('.ed-species-grid');
     if (grid) {
-      grid.innerHTML = top10.slice(0, 8).map(sp => `
-        <div class="ed-species-card">
-          ${sp.photoUrl
-            ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
-            : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
-          <div class="ed-species-name">
-            <strong>${sp.name || sp.scientificName || '—'}</strong>
-            ${sp.scientificName && sp.name && sp.scientificName !== sp.name
-              ? `<em>${sp.scientificName}</em>` : ''}
-            <span class="ed-species-count">${sp.count} obs</span>
+      grid.innerHTML = top10.slice(0, 8).map(sp => {
+        const iucn = sp.iucn || null;
+        const badgeBg = iucn ? (iucnColors[iucn] || '#888') : null;
+        const badge = iucn
+          ? `<span class="ed-species-iucn" style="background:${badgeBg}">${iucn}</span>`
+          : (sp.threatened ? `<span class="ed-species-iucn" style="background:#c9a14a">VU?</span>` : '');
+        return `
+          <div class="ed-species-card">
+            <div class="ed-species-photo-wrap">
+              ${sp.photoUrl
+                ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
+                : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
+              ${badge}
+            </div>
+            <div class="ed-species-name">
+              <strong>${sp.name || sp.scientificName || '—'}</strong>
+              ${sp.scientificName && sp.name && sp.scientificName !== sp.name
+                ? `<em>${sp.scientificName}</em>` : ''}
+              <span class="ed-species-count">${sp.count} obs</span>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   }
 
@@ -883,10 +908,11 @@ async function hydrateEnvironmentalDashboard() {
     const n = Number(raw);
     if (!Number.isFinite(n)) return String(raw);
     let s;
-    if (fmtKey === 'int')      s = Math.round(n).toLocaleString();
-    else if (fmtKey === '1f')  s = n.toFixed(1);
-    else if (fmtKey === '2f')  s = n.toFixed(2);
-    else                       s = String(n);
+    if (fmtKey === 'int')        s = Math.round(n).toLocaleString();
+    else if (fmtKey === '1f')    s = n.toFixed(1);
+    else if (fmtKey === '2f')    s = n.toFixed(2);
+    else if (fmtKey === 'signedPct') s = (n > 0 ? '+' : '') + Math.round(n) + '%';
+    else                          s = String(n);
     return s + (unit || '');
   };
 
@@ -896,7 +922,23 @@ async function hydrateEnvironmentalDashboard() {
     const fkey  = el.getAttribute('data-fmt')  || '';
     const unit  = el.getAttribute('data-unit') || '';
     const value = walk(payload, path);
-    const text  = fmt(value, fkey, unit);
+
+    // Custom renderers for shapes that don't reduce to a single string
+    if (fkey === 'hydro') {
+      if (value && (value.name || value.distanceM != null)) {
+        const km = value.distanceM != null ? (value.distanceM / 1000).toFixed(1) + ' km' : '—';
+        el.innerHTML = `
+          <span>${el.querySelector('span')?.textContent || ''}</span>
+          <div class="ed-hydro-named">
+            <strong>${value.name || '—'}</strong>
+            <span class="ed-hydro-km">${km}</span>
+          </div>`;
+        hydrated += 1;
+      }
+      return;
+    }
+
+    const text = fmt(value, fkey, unit);
     if (text != null) {
       el.textContent = text;
       el.classList.remove('ed-data');
@@ -904,6 +946,96 @@ async function hydrateEnvironmentalDashboard() {
       hydrated += 1;
     }
   });
+
+  // Climate trajectory sparklines + colored Δ chips
+  document.querySelectorAll('.ed-traj-row').forEach(row => {
+    const metric    = row.getAttribute('data-metric');
+    const deltaMode = row.getAttribute('data-delta-mode');
+    const betterDir = Number(row.getAttribute('data-better-dir')) || -1;
+    const color     = row.getAttribute('data-color') || '#1B3A2F';
+    const bin = payload.trajectory && payload.trajectory[metric];
+    if (!bin || bin.early == null || bin.late == null || bin.recent == null) return;
+
+    const vals = [bin.early, bin.late, bin.recent];
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = (max - min) || Math.abs(min) || 1;
+    const yFor = v => 80 - ((v - min) / range) * 60;
+    const xs = [50/3, 50, 250/3];           // 16.7, 50, 83.3 — column centres
+    const svg = row.querySelector('.ed-traj-spark');
+    if (svg) {
+      const poly = `<polyline fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"
+        points="${xs.map((x,i) => `${x},${yFor(vals[i])}`).join(' ')}" />`;
+      const dots = xs.map((x,i) =>
+        `<circle cx="${x}" cy="${yFor(vals[i])}" r="2.5" fill="${color}" />`
+      ).join('');
+      svg.innerHTML = poly + dots;
+    }
+
+    const delta = row.querySelector('.ed-traj-delta');
+    if (delta) {
+      let txt, dir;
+      if (deltaMode === 'pct') {
+        const pct = bin.early !== 0 ? Math.round((bin.recent - bin.early) / bin.early * 100) : 0;
+        dir = Math.sign(pct);
+        txt = (pct > 0 ? '+' : '') + pct + '%';
+      } else { // absC
+        const dC = +(bin.recent - bin.early).toFixed(1);
+        dir = Math.sign(dC);
+        txt = (dC > 0 ? '+' : '') + dC + '°C';
+      }
+      const cls = dir === 0 ? 'similar'
+                : dir === betterDir ? 'better' : 'worse';
+      delta.innerHTML = `<span class="ed-traj-delta-chip ed-traj-delta-chip--${cls}">${txt}</span>`;
+    }
+  });
+
+  // Monthly normals: bars (precip) + line (temp)
+  (() => {
+    const svg = document.getElementById('ed-monthly-chart');
+    if (!svg) return;
+    const climate = payload.climate || {};
+    const precip  = Array.isArray(climate.monthlyPrecip)  ? climate.monthlyPrecip  : [];
+    const hi      = Array.isArray(climate.monthlyAvgHigh) ? climate.monthlyAvgHigh : [];
+    const lo      = Array.isArray(climate.monthlyAvgLow)  ? climate.monthlyAvgLow  : [];
+    if (precip.length !== 12 || hi.length !== 12 || lo.length !== 12) return;
+    const tempMean = hi.map((h, i) => (h + lo[i]) / 2);
+
+    const W = 360, H = 140, PAD = 20;
+    const innerW = W - PAD * 2;
+    const innerH = H - PAD;
+    const slot = innerW / 12;
+    const pMax = Math.max(1, ...precip);
+    const tMin = Math.min(...tempMean);
+    const tMax = Math.max(...tempMean);
+    const tRange = (tMax - tMin) || 1;
+
+    const bars = precip.map((p, i) => {
+      const h = (p / pMax) * (innerH - 10);
+      const x = PAD + slot * i + slot * 0.15;
+      const w = slot * 0.7;
+      return `<rect x="${x.toFixed(1)}" y="${(innerH - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="#8b9a7e" />`;
+    }).join('');
+    const linePts = tempMean.map((t, i) => {
+      const x = PAD + slot * i + slot / 2;
+      const y = innerH - ((t - tMin) / tRange) * (innerH - 20) - 10;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    const dots = tempMean.map((t, i) => {
+      const x = PAD + slot * i + slot / 2;
+      const y = innerH - ((t - tMin) / tRange) * (innerH - 20) - 10;
+      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="#b85a3a" />`;
+    }).join('');
+    svg.innerHTML = `
+      ${bars}
+      <polyline fill="none" stroke="#b85a3a" stroke-width="1.5" points="${linePts}" />
+      ${dots}
+      <text x="${PAD - 4}" y="${PAD - 4}" font-size="9" fill="#888" text-anchor="end">mm</text>
+      <text x="${W - PAD + 4}" y="${PAD - 4}" font-size="9" fill="#888">°C</text>
+    `;
+    hydrated += 1;
+  })();
+
   console.log(`[dashboard] hydrated ${hydrated} cell${hydrated === 1 ? '' : 's'} from /api/regions/odemira (runId ${payload.runId})`);
 }
 

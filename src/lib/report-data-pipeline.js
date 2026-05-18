@@ -697,12 +697,31 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     ? Math.round((parcelMinElev - drainageElevation) * 10) / 10
     : null;
 
+  // Nearest named stream / nearest named water body — convenience fields the
+  // regional dashboard surfaces directly. A "stream" here is any waterway tag
+  // (river/stream/canal); a "water body" is anything matching natural=water.
+  const streamKinds = new Set(['river', 'stream', 'canal', 'drain', 'ditch', 'waterway']);
+  const bodyKinds   = new Set(['water_body', 'reservoir', 'lake', 'pond', 'lagoon']);
+  const nearestNamed = (kindSet) =>
+    waterFeatures.find(f => f.name && kindSet.has(f.kind)) ||
+    waterFeatures.find(f => f.name && (f.kind === 'water_body' || streamKinds.has(f.kind))) ||
+    null;
+  const nearestNamedStream = nearestNamed(streamKinds);
+  const nearestNamedBody   = waterFeatures.find(f => f.name && bodyKinds.has(f.kind)) || null;
+
   const water = {
     springs, wells, waterways, waterBodies,
     features: waterFeatures,
     nearestDistanceM: waterFeatures[0]?.distanceM ?? null,
+    nearestNamedStream: nearestNamedStream
+      ? { name: nearestNamedStream.name, kind: nearestNamedStream.kind, distanceM: nearestNamedStream.distanceM }
+      : null,
+    nearestNamedBody: nearestNamedBody
+      ? { name: nearestNamedBody.name, kind: nearestNamedBody.kind, distanceM: nearestNamedBody.distanceM }
+      : null,
     securityIndex: Math.round(waterSecurityIndex * 10) / 10,
     floodDischarge: floodAnalysis?.current ?? null,
+    floodAnomalyPct: floodAnalysis?.anomalyPct ?? null,
   };
 
   // ── Species ───────────────────────────────────────────
@@ -718,12 +737,36 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
   const groupEntries = Object.entries(speciesSummary.groups).map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
+  // IUCN code from iNat's conservation_status. iNat exposes either a string
+  // (e.g. 'LC') or an object { status: 'LC' / status_name: 'least concern' }.
+  const iucnCodeOf = (cs) => {
+    if (!cs) return null;
+    if (typeof cs === 'string') return cs.toUpperCase();
+    const raw = (cs.status || cs.status_name || '').toString().trim();
+    if (!raw) return null;
+    const upper = raw.toUpperCase();
+    if (['LC', 'NT', 'VU', 'EN', 'CR', 'EW', 'EX', 'DD'].includes(upper)) return upper;
+    const m = {
+      'LEAST CONCERN': 'LC',
+      'NEAR THREATENED': 'NT',
+      'VULNERABLE': 'VU',
+      'ENDANGERED': 'EN',
+      'CRITICALLY ENDANGERED': 'CR',
+      'EXTINCT IN THE WILD': 'EW',
+      'EXTINCT': 'EX',
+      'DATA DEFICIENT': 'DD',
+    };
+    return m[upper] || null;
+  };
+
   const top10 = speciesSummary.species.slice(0, 10).map(s => ({
     name: s.name,
     scientificName: s.scientificName,
     group: s.group,
     count: s.observationCount,
     photoUrl: s.photoUrl ?? null,
+    iucn: iucnCodeOf(s.conservationStatus),
+    threatened: !!s.threatened,
   }));
 
   const gbifKingdoms = Object.entries(gbifSummary.kingdoms).map(([name, count]) => ({ name, count }))
@@ -1286,13 +1329,14 @@ function computeTrends(raw) {
 
   (daily.time || []).forEach((dateStr, i) => {
     const year = dateStr.substring(0, 4);
-    if (!yearlyStats[year]) yearlyStats[year] = { temps: [], precip: 0, fireProneDays: 0 };
+    if (!yearlyStats[year]) yearlyStats[year] = { temps: [], precip: 0, fireProneDays: 0, hotDays: 0 };
     const tMax = daily.temperature_2m_max?.[i];
     const tMin = daily.temperature_2m_min?.[i];
     const precip = daily.precipitation_sum?.[i];
     if (tMax != null && tMin != null) yearlyStats[year].temps.push((tMax + tMin) / 2);
     if (precip != null) yearlyStats[year].precip += precip;
     if (precip != null && precip < 1 && tMax > 30) yearlyStats[year].fireProneDays++;
+    if (tMax != null && tMax > 30) yearlyStats[year].hotDays++;
   });
 
   const years = Object.keys(yearlyStats).sort();
@@ -1328,6 +1372,7 @@ function computeTrends(raw) {
     year: Number(y),
     meanTemp: annualTemps[i],
     precip: annualPrecip[i],
+    hotDays: yearlyStats[y].hotDays,
   })).filter(y => Number.isFinite(y.year));
 
   return result;
@@ -1380,8 +1425,18 @@ function deriveEnergyPotential(lat, terrain, water, annualRainfall, solarWindDat
   const independenceScore = Math.round((solarScore * 0.4 + windScore * 0.2 + hydroScore * 0.2 + biomassScore * 0.2));
 
   return {
-    solar: { level: levelFromScore(solarScore), detail: solarDetail, score: solarScore },
-    wind: { level: levelFromScore(windScore), detail: windDetail, score: windScore },
+    solar: {
+      level: levelFromScore(solarScore),
+      detail: solarDetail,
+      score: solarScore,
+      kWhPerM2Yr: solarWindData?.solarAnnualKWhPerM2 ?? null,
+    },
+    wind: {
+      level: levelFromScore(windScore),
+      detail: windDetail,
+      score: windScore,
+      ms100m: solarWindData?.windSpeedMs100m ?? null,
+    },
     microHydro: { level: levelFromScore(hydroScore), detail: `${hydroScore}/100 potential`, score: hydroScore },
     biomass: { level: levelFromScore(biomassScore), detail: `${biomassScore}/100 potential`, score: biomassScore },
     independenceScore,
