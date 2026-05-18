@@ -541,6 +541,29 @@ function renderDashboard(section) {
 // Environmental Dashboard (custom render — Odemira region snapshot)
 // ---------------------------------------------------------------------------
 
+// Inline Lucide SVG icons (https://lucide.dev). Stroke-only paths kept
+// minimal so they tree-shake to a few hundred bytes in the wiki bundle.
+function lucide(name, size = 18) {
+  const paths = {
+    'cloud-sun':
+      '<path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M20 12h2"/><path d="m17.66 17.66 1.41 1.41"/><path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"/><path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"/>',
+    'leaf':
+      '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 6.5-4.5 12-10 12-3 0-5-1-6-2"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>',
+    'droplet':
+      '<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+    'sprout':
+      '<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+    'sun':
+      '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+    'wind':
+      '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
+    'waves':
+      '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+  };
+  const d = paths[name] || '';
+  return `<svg class="ed-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+}
+
 function renderEnvironmentalDashboard() {
   const cellAttrs = (cell, fmt, unit) => {
     const parts = [];
@@ -643,7 +666,7 @@ function renderEnvironmentalDashboard() {
       <div class="ed-grid">
         <!-- WEATHER -->
         <section class="ed-panel ed-panel--weather">
-          <div class="ed-panel-head"><span class="ed-panel-head-dot">◔</span> WEATHER</div>
+          <div class="ed-panel-head">${lucide('cloud-sun')} WEATHER</div>
           <div class="ed-weather-grid">
             <div class="ed-card ed-card--span-6">
               <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
@@ -666,7 +689,7 @@ function renderEnvironmentalDashboard() {
             <div class="ed-card ed-card--span-3">
               <div class="ed-card-title">Solar potential</div>
               <div class="ed-mini-row">
-                <span class="ed-mini-icon">☀</span>
+                <span class="ed-mini-icon">${lucide('sun', 22)}</span>
                 <div class="ed-mini-stack">
                   ${P('Open-Meteo Solar/Wind', 'energy.solar.kWhPerM2Yr', 'int', ' kWh/m²/yr')}
                   <div class="ed-mini-sub">annual mean · GHI</div>
@@ -676,7 +699,7 @@ function renderEnvironmentalDashboard() {
             <div class="ed-card ed-card--span-3">
               <div class="ed-card-title">Wind potential</div>
               <div class="ed-mini-row">
-                <span class="ed-mini-icon">≋</span>
+                <span class="ed-mini-icon">${lucide('wind', 22)}</span>
                 <div class="ed-mini-stack">
                   ${P('Open-Meteo Solar/Wind', 'energy.wind.ms100m', '1f', ' m/s')}
                   <div class="ed-mini-sub">at 100 m · annual mean</div>
@@ -694,7 +717,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- SOIL -->
         <section class="ed-panel ed-panel--soil">
-          <div class="ed-panel-head"><span class="ed-panel-head-dot">❦</span> SOIL</div>
+          <div class="ed-panel-head">${lucide('leaf')} SOIL</div>
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
             ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
@@ -717,7 +740,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- WATER -->
         <section class="ed-panel ed-panel--water">
-          <div class="ed-panel-head"><span class="ed-panel-head-dot">💧</span> WATER</div>
+          <div class="ed-panel-head">${lucide('droplet')} WATER</div>
           <div class="ed-water-grid">
             <div class="ed-card ed-card--span-5">
               <div class="ed-card-title">Hydrology <span>(context)</span></div>
@@ -744,7 +767,7 @@ function renderEnvironmentalDashboard() {
                 <div class="ed-card">
                   <div class="ed-card-title">GloFAS <span>discharge anomaly</span></div>
                   <div class="ed-mini-row">
-                    <span class="ed-mini-icon">≈</span>
+                    <span class="ed-mini-icon">${lucide('waves', 22)}</span>
                     <div class="ed-mini-stack">
                       ${P('GloFAS Flood Forecast', 'water.floodAnomalyPct', 'signedPct')}
                       <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
@@ -769,7 +792,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- BIODIVERSITY -->
         <section class="ed-panel ed-panel--bio">
-          <div class="ed-panel-head"><span class="ed-panel-head-dot">❀</span> BIODIVERSITY</div>
+          <div class="ed-panel-head">${lucide('sprout')} BIODIVERSITY</div>
           <div class="ed-bio-grid">
             <div class="ed-card ed-card--span-7">
               <div class="ed-card-title">Top species <span>(by observations)</span></div>
