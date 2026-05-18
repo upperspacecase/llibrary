@@ -542,7 +542,15 @@ function renderDashboard(section) {
 // ---------------------------------------------------------------------------
 
 function renderEnvironmentalDashboard() {
-  const P = (src) => `<span class="ed-data" title="Data source: ${src}">DATA?</span>`;
+  const cellAttrs = (cell, fmt, unit) => {
+    const parts = [];
+    if (cell) parts.push(`data-cell="${cell}"`);
+    if (fmt) parts.push(`data-fmt="${fmt}"`);
+    if (unit) parts.push(`data-unit="${unit}"`);
+    return parts.join(' ');
+  };
+  const P = (src, cell, fmt, unit) =>
+    `<span class="ed-data" ${cellAttrs(cell, fmt, unit)} title="Data source: ${src}">DATA?</span>`;
   const PB = (src, note) =>
     `<div class="ed-data-block" title="Data source: ${src}${note ? ' — ' + note : ''}">
        <div class="ed-data-block-tag">DATA?</div>
@@ -554,15 +562,15 @@ function renderEnvironmentalDashboard() {
   const monthsRow = `<div class="ed-months">${months.map(m => `<span>${m}</span>`).join('')}</div>`;
 
   const trajectoryRows = [
-    { label: 'Mean temp (°C)', icon: 'thermostat' },
-    { label: 'Precipitation (mm/yr)', icon: 'droplet' },
-    { label: 'Heat days (>30°C·yr)', icon: 'sun' },
+    { label: 'Mean temp (°C)',         metric: 'temp',     fmt: '1f' },
+    { label: 'Precipitation (mm/yr)',  metric: 'precip',   fmt: 'int' },
+    { label: 'Heat days (>30°C·yr)',   metric: 'hotDays',  fmt: 'int' },
   ].map(r => `
     <div class="ed-traj-row">
       <div class="ed-traj-label">${r.label}</div>
-      <div>${P('Open-Meteo 50yr Archive')}</div>
-      <div>${P('Open-Meteo 50yr Archive')}</div>
-      <div>${P('Open-Meteo 50yr Archive')}</div>
+      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.early`, r.fmt)}</div>
+      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.late`, r.fmt)}</div>
+      <div>${P('Open-Meteo 50yr Archive', `trajectory.${r.metric}.recent`, r.fmt)}</div>
       <div class="ed-traj-delta">${D('National baseline')}</div>
     </div>
   `).join('');
@@ -580,10 +588,10 @@ function renderEnvironmentalDashboard() {
     </div>
   `;
 
-  const soilRow = (label, src) => `
+  const soilRow = (label, src, cell, fmt, unit) => `
     <div class="ed-soil-row">
       <span class="ed-soil-label">${label}</span>
-      <span class="ed-soil-value">${P(src)}</span>
+      <span class="ed-soil-value">${P(src, cell, fmt, unit)}</span>
       <span class="ed-soil-delta">${D('National baseline')}</span>
     </div>
   `;
@@ -675,7 +683,7 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">☀</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind')}
+                  ${P('Open-Meteo Solar/Wind', 'energy.solar.kWhPerM2Yr', 'int')}
                   <div class="ed-mini-sub">kWh/m²/yr · vs national</div>
                 </div>
                 ${D('National baseline')}
@@ -686,7 +694,7 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-row">
                 <span class="ed-mini-icon">≋</span>
                 <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind')}
+                  ${P('Open-Meteo Solar/Wind', 'energy.wind.avgMs100m', '1f')}
                   <div class="ed-mini-sub">m/s (100 m) · vs national</div>
                 </div>
                 ${D('National baseline')}
@@ -706,15 +714,15 @@ function renderEnvironmentalDashboard() {
           <div class="ed-panel-head"><span class="ed-panel-head-dot">❦</span> SOIL</div>
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
-            ${soilRow('pH (H₂O)', 'SoilGrids Properties')}
-            ${soilRow('Organic carbon', 'SoilGrids Properties')}
-            ${soilRow('WRB texture class', 'SoilGrids Classification')}
-            ${soilRow('Bulk density', 'SoilGrids Properties')}
-            ${soilRow('Depth to bedrock', 'SoilGrids Properties')}
+            ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
+            ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  '1f', ' g/kg')}
+            ${soilRow('WRB texture class', 'SoilGrids Classification', 'soil.classification', 'str')}
+            ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    '2f', ' kg/dm³')}
+            ${soilRow('Depth to bedrock',  'SoilGrids Properties',     null)}
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
-            <div class="ed-geology">${P('Macrostrat Geology')}</div>
+            <div class="ed-geology" data-cell="geology.summary" data-fmt="str">${P('Macrostrat Geology')}</div>
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Erosion risk <span>(RUSLE-INE)</span></div>
@@ -732,8 +740,8 @@ function renderEnvironmentalDashboard() {
               <div class="ed-card-title">Hydrology <span>(context)</span></div>
               ${PB('Mapbox Static + Overpass Water Features', 'Satellite/topo basemap clipped to Odemira bbox + OSM water polygons (Mira river, Santa Clara dam, Foupana).')}
               <div class="ed-hydro-stats">
-                <div><span>Largest stream</span>${P('Overpass Water Features')}</div>
-                <div><span>Largest reservoir</span>${P('Overpass Water Features')}</div>
+                <div><span>Waterways (OSM)</span>${P('Overpass Water Features', 'water.waterways', 'int')}</div>
+                <div><span>Water bodies (OSM)</span>${P('Overpass Water Features', 'water.waterBodies', 'int')}</div>
               </div>
             </div>
             <div class="ed-water-right">
@@ -747,12 +755,12 @@ function renderEnvironmentalDashboard() {
               </div>
               <div class="ed-water-pair">
                 <div class="ed-card">
-                  <div class="ed-card-title">GloFAS <span>(stream basin) anomaly</span></div>
+                  <div class="ed-card-title">GloFAS <span>discharge (this week)</span></div>
                   <div class="ed-mini-row">
                     <span class="ed-mini-icon">≈</span>
-                    ${P('GloFAS Flood Forecast')}
+                    ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}
                   </div>
-                  <div class="ed-mini-sub">this week · vs 50-yr return-period reference</div>
+                  <div class="ed-mini-sub">m³/s at Odemira centroid · vs 50-yr return reference</div>
                   <div class="ed-delta-row">${D('GloFAS climatology')}</div>
                 </div>
                 <div class="ed-card">
@@ -792,7 +800,7 @@ function renderEnvironmentalDashboard() {
             <div class="ed-card ed-card--span-5">
               <div class="ed-card-title">Total species</div>
               <div class="ed-mini-row">
-                ${P('iNaturalist Species')}
+                ${P('iNaturalist Species', 'species.total', 'int')}
                 ${D('Parish baseline')}
               </div>
               <div class="ed-mini-sub">unique taxa observed · vs Odemira parish baseline</div>
@@ -813,6 +821,97 @@ function renderEnvironmentalDashboard() {
       </section>
     </section>
   `;
+}
+
+// Hydrate the dashboard cells with real values from /api/regions/odemira.
+// Every cell tagged with [data-cell="<dot.path>"] is resolved against the
+// response; null/undefined values keep their DATA? placeholder.
+async function hydrateEnvironmentalDashboard() {
+  let payload;
+  try {
+    const res = await fetch('/api/regions/odemira', { headers: { accept: 'application/json' } });
+    if (!res.ok) {
+      console.warn('[dashboard] /api/regions/odemira →', res.status);
+      return;
+    }
+    payload = await res.json();
+    if (!payload.ok) {
+      console.warn('[dashboard] payload not ok:', payload.error);
+      return;
+    }
+  } catch (e) {
+    console.warn('[dashboard] fetch failed:', e.message);
+    return;
+  }
+
+  // Compute synthetic trajectory bins from trends.yearly (annual series 1975+)
+  const yearly = Array.isArray(payload.trends && payload.trends.yearly) ? payload.trends.yearly : [];
+  const meanOf = (arr, key) => {
+    const vals = arr.map(r => r && r[key]).filter(v => typeof v === 'number');
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+  const sumOf = (arr, key) => {
+    const vals = arr.map(r => r && r[key]).filter(v => typeof v === 'number');
+    return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+  };
+  const sliceYears = (lo, hi) => yearly.filter(r => r && r.year >= lo && r.year <= hi);
+  const earlyRows  = sliceYears(1975, 1984);
+  const lateRows   = sliceYears(2015, 2024);
+  const recentRows = yearly.slice(-5);
+  payload.trajectory = {
+    temp: {
+      early:  meanOf(earlyRows,  'tempMean'),
+      late:   meanOf(lateRows,   'tempMean'),
+      recent: meanOf(recentRows, 'tempMean'),
+    },
+    precip: {
+      early:  meanOf(earlyRows,  'precipTotal'),
+      late:   meanOf(lateRows,   'precipTotal'),
+      recent: meanOf(recentRows, 'precipTotal'),
+    },
+    hotDays: {
+      early:  meanOf(earlyRows,  'hotDays'),
+      late:   meanOf(lateRows,   'hotDays'),
+      recent: meanOf(recentRows, 'hotDays'),
+    },
+  };
+
+  // Geology summary string
+  const g = payload.geology || {};
+  if (g.lithology || g.period) {
+    const bits = [g.lithology, g.period, g.age ? `${g.age} Ma` : null].filter(Boolean);
+    payload.geology.summary = bits.join(' — ');
+  }
+
+  const walk = (obj, path) => path.split('.').reduce((o, k) => (o == null ? null : o[k]), obj);
+  const fmt = (raw, fmtKey, unit) => {
+    if (raw == null || raw === '') return null;
+    if (fmtKey === 'str') return String(raw) + (unit || '');
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return String(raw);
+    let s;
+    if (fmtKey === 'int')      s = Math.round(n).toLocaleString();
+    else if (fmtKey === '1f')  s = n.toFixed(1);
+    else if (fmtKey === '2f')  s = n.toFixed(2);
+    else                       s = String(n);
+    return s + (unit || '');
+  };
+
+  let hydrated = 0;
+  document.querySelectorAll('[data-cell]').forEach(el => {
+    const path  = el.getAttribute('data-cell');
+    const fkey  = el.getAttribute('data-fmt')  || '';
+    const unit  = el.getAttribute('data-unit') || '';
+    const value = walk(payload, path);
+    const text  = fmt(value, fkey, unit);
+    if (text != null) {
+      el.textContent = text;
+      el.classList.remove('ed-data');
+      el.classList.add('ed-data-real');
+      hydrated += 1;
+    }
+  });
+  console.log(`[dashboard] hydrated ${hydrated} cell${hydrated === 1 ? '' : 's'} from /api/regions/odemira (runId ${payload.runId})`);
 }
 
 // ---------------------------------------------------------------------------
@@ -1175,6 +1274,11 @@ async function renderSection(sectionId) {
 
     // Render dashboard visuals (if section has them)
     renderDashboard(section);
+
+    // Environmental dashboard hydration — fetch real data from the regional facts endpoint
+    if (sectionId === 'dashboard') {
+      hydrateEnvironmentalDashboard();
+    }
     const helpTrigger = document.getElementById('wiki-help-trigger');
     const helpPopover = document.getElementById('wiki-help-popover');
     if (helpTrigger && helpPopover) {

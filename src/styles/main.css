@@ -8174,6 +8174,12 @@ a {
   letter-spacing: -0.02em;
   cursor: help;
 }
+.ed-data-real {
+  display: inline-block;
+  font-weight: 600;
+  color: #2C2C2C;
+  font-size: 13px;
+}
 .ed-data--block {
   font-size: 10px;
   margin-top: 4px;
