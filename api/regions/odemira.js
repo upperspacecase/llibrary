@@ -36,10 +36,15 @@ export default async function handler(req, res) {
     // the 50 km ring + house marker overlays are drawn in CSS.
     let fireMap = null;
     const token = process.env.VITE_MAPBOX_TOKEN;
-    const coords = doc.property?.coords?.value ?? doc.property?.coords;
-    const center = Array.isArray(coords) && coords.length === 2 ? coords : null;
-    if (token && center) {
-      const [lat, lng] = center;
+    const rawCoords = unwrap(doc.property?.coords);
+    let lat = null, lng = null;
+    if (Array.isArray(rawCoords) && rawCoords.length === 2) {
+      [lat, lng] = rawCoords;
+    } else if (rawCoords && typeof rawCoords === 'object'
+               && typeof rawCoords.lat === 'number' && typeof rawCoords.lng === 'number') {
+      lat = rawCoords.lat; lng = rawCoords.lng;
+    }
+    if (token && lat != null && lng != null) {
       fireMap = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/${lng},${lat},8.5,0/700x400@2x?access_token=${token}`;
     }
 
