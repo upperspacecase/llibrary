@@ -1252,7 +1252,8 @@ async function hydrateEnvironmentalDashboard() {
   (() => {
     const wrap = document.getElementById('ed-fire-img-wrap');
     if (!wrap) return;
-    const url = payload.maps && (payload.maps.regional || payload.maps.overview);
+    const url = payload.fireMap
+      || (payload.maps && (payload.maps.regional || payload.maps.overview));
     if (!url) return;
     wrap.innerHTML = `
       <img class="ed-fire-img" src="${url}" alt="Static map of Odemira region with 50km reference ring" loading="lazy" />

@@ -30,11 +30,25 @@ export default async function handler(req, res) {
       });
     }
 
+    // Build a small-payload Mapbox Static URL for the Fire card — the
+    // pipeline's maps.regional includes the polygon overlay and trips
+    // Mapbox's URI-length limit. The fire card only needs the basemap;
+    // the 50 km ring + house marker overlays are drawn in CSS.
+    let fireMap = null;
+    const token = process.env.VITE_MAPBOX_TOKEN;
+    const coords = doc.property?.coords?.value ?? doc.property?.coords;
+    const center = Array.isArray(coords) && coords.length === 2 ? coords : null;
+    if (token && center) {
+      const [lat, lng] = center;
+      fireMap = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/${lng},${lat},8.5,0/700x400@2x?access_token=${token}`;
+    }
+
     const payload = {
       ok: true,
       landbookId: LANDBOOK_ID,
       updatedAt: doc.updatedAt ?? null,
       runId: doc.runId ?? null,
+      fireMap,
       property: unwrapSection(doc.property),
       terrain: unwrapSection(doc.terrain),
       soil: unwrapSection(doc.soil),
