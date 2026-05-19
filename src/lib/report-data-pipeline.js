@@ -58,6 +58,7 @@ import {
 import { fetchRiskScores } from '../api/risk-scores.js';
 import { findNearestDrainage, floodRiskFromHAND } from './flood-hand.js';
 import { getAdminUnit } from '../api/dgt.js';
+import { getLandCoverTimeSeries } from '../api/livingatlas.js';
 import { getForecast as getIPMAForecast, getNearestForecastLocation } from '../api/ipma.js';
 import { reverseGeocode } from '../api/nominatim.js';
 
@@ -254,6 +255,7 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['solarWind', () => getSolarWind(lat, lng)],
     ['pollen', () => getPollenIndex(lat, lng)],
     ['regionalBaseline', () => fetchRegionalBaseline(lat, lng)],
+    ['livingatlasLandCover', () => getLandCoverTimeSeries(boundary)],
     // Species trend windows — 3 five-year periods for temporal comparison
     ...computeBioWindows(lat, lng).map((w, i) => [
       `speciesWindow${i}`, () => getSpeciesCounts(lat, lng, 15, { d1: w.d1, d2: w.d2 }),
@@ -966,9 +968,11 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
   };
 
   // ── Agriculture ───────────────────────────────────────
+  const livingAtlas = raw.livingatlasLandCover?.ok ? raw.livingatlasLandCover.data : null;
   const agriculture = {
     landCover: lcData?.label ?? null,
     systems: agriSystems,
+    landCoverTimeSeries: livingAtlas?.years ?? null,
   };
 
   // ── Maps ──────────────────────────────────────────────

@@ -270,6 +270,7 @@ export function reportDataToFacts(data) {
     agriculture: {
       landCover: wrap(data.agriculture?.landCover, null, 'landCover'),
       systems: wrap(data.agriculture?.systems, null),
+      landCoverTimeSeries: wrap(data.agriculture?.landCoverTimeSeries, null, 'livingatlasLandCover'),
     },
     meta: {
       generatedAt: wrap(data.meta?.generatedAt),

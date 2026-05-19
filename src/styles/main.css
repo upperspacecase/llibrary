@@ -8599,6 +8599,79 @@ a {
   letter-spacing: 0.04em;
 }
 
+/* RISK section */
+.ed-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .ed-risk-grid { grid-template-columns: 1fr; }
+}
+.ed-risk-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.ed-risk-label {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  color: #2C2C2C;
+}
+.ed-risk-score {
+  font-size: 12px;
+  color: #888;
+}
+.ed-risk-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.ed-risk-meta > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+.ed-risk-meta span:first-child { color: #888; }
+
+/* Land cover time series */
+.ed-landcover {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+.ed-landcover-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 10px;
+  color: #555;
+  margin-top: 8px;
+}
+.ed-landcover-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ed-landcover-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+.ed-landcover-legend em {
+  font-style: normal;
+  color: #2C2C2C;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
 /* Gap ledger */
 .ed-gap-ledger {
   background: var(--white);

@@ -559,6 +559,10 @@ function lucide(name, size = 18) {
       '<path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/>',
     'waves':
       '<path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
+    'triangle-alert':
+      '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+    'flame':
+      '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   };
   const d = paths[name] || '';
   return `<svg class="ed-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -652,7 +656,7 @@ function renderEnvironmentalDashboard() {
     ['iNaturalist Species (top species + total)', 'Wired @ point. Need bbox aggregation across Odemira.'],
     ['iNaturalist Threatened (IUCN badges)', 'Wired @ point. Bbox aggregation across Odemira.'],
     ['iNaturalist trend windows (13 windows)', 'Partial. Pipeline has 3 windows. Extend iNat window job to ~5-year rolls from 1970 → 13 windows.'],
-    ['ESA WorldCover habitat composition', 'Partial. WMS gives tiles. Need pixel-area aggregator (zonal stats) over Odemira bbox.'],
+    ['Esri Living Atlas Sentinel-2 LandCover', 'Wired. Annual histogram per polygon via computeHistograms. Source = Impact Observatory + Esri + Microsoft.'],
     ['NASA FIRMS Historical', 'Failing (HTTP 400). Not in current mockup but needs rotating/repaired endpoint before historical fire trend can be added.'],
   ].map(([k,v]) => `
     <div class="ed-gap-row">
@@ -818,9 +822,56 @@ function renderEnvironmentalDashboard() {
               <div class="ed-mini-sub">unique taxa observed · vs Odemira parish baseline</div>
             </div>
             <div class="ed-card ed-card--span-7">
-              <div class="ed-card-title">Habitat <span>(ESA WorldCover 2021)</span></div>
-              ${PB('ESA WorldCover area aggregation — needs aggregator', 'WorldCover WMS gives map tiles. Need pixel-area aggregator (zonal stats) over Odemira bbox for class % breakdown.')}
-              <div class="ed-habitat">${habitatRows}</div>
+              <div class="ed-card-title">Land cover <span>(Esri Living Atlas · Sentinel-2 10m · 2017→)</span></div>
+              <svg class="ed-landcover" id="ed-landcover-chart" viewBox="0 0 360 160" preserveAspectRatio="none" aria-hidden="true">
+                <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RISK -->
+        <section class="ed-panel ed-panel--risk">
+          <div class="ed-panel-head">${lucide('triangle-alert')} RISK</div>
+          <div class="ed-risk-grid">
+            <div class="ed-card">
+              <div class="ed-card-title">Flood risk</div>
+              <div class="ed-risk-row">
+                <div class="ed-risk-label" data-cell="flood.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
+                <div class="ed-risk-score">
+                  ${P('Risk Scores (computed)', 'flood.riskScore', 'int', '/5')}
+                </div>
+              </div>
+              <div class="ed-risk-meta">
+                <div><span>Height above drainage</span>${P('Risk Scores (computed)', 'flood.hand', '1f', ' m')}</div>
+                <div><span>Nearest drainage</span><span data-cell="flood.drainageName" data-fmt="str">${P('Overpass Water Features', null)}</span> <span class="ed-hydro-km" data-cell="flood.distanceToDrainageM" data-fmt="distanceM">—</span></div>
+              </div>
+            </div>
+            <div class="ed-card">
+              <div class="ed-card-title">Fire risk</div>
+              <div class="ed-risk-row">
+                <div class="ed-risk-label" data-cell="fire.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
+                <div class="ed-risk-score">
+                  ${P('Risk Scores (computed)', 'fire.riskScore', 'int', '/5')}
+                </div>
+              </div>
+              <div class="ed-risk-meta">
+                <div><span>Active fires within 50 km</span>${P('NASA FIRMS Active', 'fire.activeFires', 'int')}</div>
+                <div><span>Historical (10yr) within 25 km</span>${P('NASA FIRMS Historical', null, null, ' — endpoint 400')}</div>
+              </div>
+            </div>
+            <div class="ed-card">
+              <div class="ed-card-title">Drought risk</div>
+              <div class="ed-risk-row">
+                <div class="ed-risk-label" data-cell="drought.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
+                <div class="ed-risk-score">
+                  ${P('Risk Scores (computed)', 'drought.riskScore', 'int', '/5')}
+                </div>
+              </div>
+              <div class="ed-risk-meta">
+                <div><span>SPI-12 series</span>${P('SPI-12 — partial wiring (only 1975+)', null)}</div>
+              </div>
             </div>
           </div>
         </section>
@@ -938,6 +989,7 @@ async function hydrateEnvironmentalDashboard() {
     else if (fmtKey === '1f')    s = n.toFixed(1);
     else if (fmtKey === '2f')    s = n.toFixed(2);
     else if (fmtKey === 'signedPct') s = (n > 0 ? '+' : '') + Math.round(n) + '%';
+    else if (fmtKey === 'distanceM') s = n >= 1000 ? (n / 1000).toFixed(1) + ' km' : Math.round(n) + ' m';
     else                          s = String(n);
     return s + (unit || '');
   };
@@ -1059,6 +1111,66 @@ async function hydrateEnvironmentalDashboard() {
       <text x="${PAD - 4}" y="${PAD - 4}" font-size="9" fill="#888" text-anchor="end">mm</text>
       <text x="${W - PAD + 4}" y="${PAD - 4}" font-size="9" fill="#888">°C</text>
     `;
+    hydrated += 1;
+  })();
+
+  // Land cover time series — stacked bars, one per year (2017→)
+  (() => {
+    const svg = document.getElementById('ed-landcover-chart');
+    const legend = document.getElementById('ed-landcover-legend');
+    if (!svg) return;
+    const years = Array.isArray(payload.agriculture && payload.agriculture.landCoverTimeSeries)
+      ? payload.agriculture.landCoverTimeSeries : null;
+    if (!years || !years.length) return;
+
+    const COLORS = {
+      'Trees':              '#3d6b48',
+      'Rangeland':          '#c9c08a',
+      'Crops':              '#d4a574',
+      'Built Area':         '#9d6360',
+      'Water':              '#3d6b8c',
+      'Flooded Vegetation': '#7a9a6e',
+      'Bare Ground':        '#a89580',
+      'Snow/Ice':           '#e8e8e8',
+      'Clouds':             '#cccccc',
+    };
+    const ORDER = ['Trees','Rangeland','Crops','Built Area','Water',
+                   'Flooded Vegetation','Bare Ground','Snow/Ice','Clouds'];
+
+    const W = 360, H = 160, PAD = 22;
+    const innerW = W - PAD * 2;
+    const innerH = H - PAD - 14; // leave 14 for x-axis labels
+    const slot = innerW / years.length;
+    const barW = Math.min(slot * 0.75, 28);
+
+    const bars = years.map((y, i) => {
+      const x = PAD + slot * i + (slot - barW) / 2;
+      let cumPct = 0;
+      const segs = ORDER.map(label => {
+        const pct = y.classes?.[label] || 0;
+        if (pct <= 0) return '';
+        const h = (pct / 100) * innerH;
+        const yPos = PAD + innerH - cumPct - h;
+        cumPct += h;
+        return `<rect x="${x.toFixed(1)}" y="${yPos.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${COLORS[label] || '#888'}"><title>${label}: ${pct}%</title></rect>`;
+      }).join('');
+      const labelY = H - 2;
+      const labelX = PAD + slot * i + slot / 2;
+      return segs + `<text x="${labelX.toFixed(1)}" y="${labelY}" font-size="9" fill="#888" text-anchor="middle">${y.year}</text>`;
+    }).join('');
+
+    svg.innerHTML = bars;
+
+    if (legend) {
+      // Show classes that appear with >1% in any year, sorted by latest-year share
+      const latest = years[years.length - 1].classes || {};
+      const visible = ORDER.filter(l => years.some(y => (y.classes?.[l] || 0) > 1));
+      visible.sort((a, b) => (latest[b] || 0) - (latest[a] || 0));
+      legend.innerHTML = visible.map(l => {
+        const pct = latest[l] != null ? `${latest[l]}%` : '';
+        return `<span><i style="background:${COLORS[l] || '#888'}"></i>${l} <em>${pct}</em></span>`;
+      }).join('');
+    }
     hydrated += 1;
   })();
 
