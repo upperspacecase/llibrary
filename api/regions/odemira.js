@@ -50,6 +50,7 @@ export default async function handler(req, res) {
       trends: unwrapSection(doc.trends),
       agriculture: unwrapSection(doc.agriculture),
       scores: unwrapSection(doc.scores),
+      maps: unwrapSection(doc.maps),
     };
 
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');

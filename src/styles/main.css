@@ -8604,34 +8604,58 @@ a {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  align-items: start;
+  align-items: stretch;
 }
 @media (max-width: 800px) {
   .ed-risk-grid { grid-template-columns: 1fr; }
 }
-.ed-risk-row {
+.ed-risk-card {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+.ed-risk-head {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  gap: 12px;
+}
+.ed-risk-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ed-risk-title-block .ed-card-title {
+  font-size: 18px;
 }
 .ed-risk-label {
   font-family: 'DM Serif Display', serif;
-  font-size: 16px;
-  color: #2C2C2C;
+  font-size: 18px;
+  line-height: 1.1;
 }
+.ed-risk-label--low,
+.ed-risk-label--no-data        { color: #5a7256; }
+.ed-risk-label--moderate       { color: #c47a3a; }
+.ed-risk-label--above-normal   { color: #d49a4a; }
+.ed-risk-label--elevated       { color: #c47a3a; }
+.ed-risk-label--high           { color: #b85a3a; }
+.ed-risk-label--severe         { color: #b91c1c; }
+.ed-risk-label--extreme        { color: #7a2a14; }
 .ed-risk-score {
-  font-size: 12px;
+  font-size: 13px;
   color: #888;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .ed-risk-meta {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   font-size: 11px;
-  margin-top: 6px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
 }
 .ed-risk-meta > div {
   display: flex;
@@ -8640,6 +8664,168 @@ a {
   align-items: baseline;
 }
 .ed-risk-meta span:first-child { color: #888; }
+.ed-risk-meta-named {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.ed-risk-meta-named strong { color: #2C2C2C; }
+.ed-risk-meta-named span { color: #888; }
+.ed-risk-unavail { color: #888; font-style: italic; }
+
+/* Flood illustration */
+.ed-flood-vis {
+  position: relative;
+  width: 100%;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ed-flood-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.ed-flood-overlay {
+  position: absolute;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: #b91c1c;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
+}
+.ed-flood-overlay--drop {
+  top: 52%;
+  left: 36%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(255, 252, 237, 0.88);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+.ed-flood-overlay-val {
+  display: block;
+  font-size: 13px;
+}
+.ed-flood-overlay-sub {
+  display: block;
+  font-size: 10px;
+  color: #b91c1c;
+  font-weight: 500;
+}
+.ed-flood-overlay--channel {
+  top: 72%;
+  left: 64%;
+  font-size: 10px;
+  color: #2C2C2C;
+  background: rgba(255, 252, 237, 0.85);
+  padding: 1px 4px;
+}
+
+/* Info callouts (the soft pill the mockup uses) */
+.ed-info-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: rgba(208, 204, 184, 0.25);
+  border: 1px solid rgba(208, 204, 184, 0.55);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #2C2C2C;
+  line-height: 1.4;
+}
+.ed-info-icon {
+  display: inline-flex;
+  color: #1B3A2F;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Fire map */
+.ed-fire-vis {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f5f1e8;
+}
+.ed-fire-img-wrap {
+  position: absolute;
+  inset: 0;
+}
+.ed-fire-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ed-fire-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  aspect-ratio: 1;
+  border: 1.5px dashed rgba(60, 60, 60, 0.65);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.ed-fire-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #1B3A2F;
+  background: rgba(255, 252, 237, 0.95);
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ed-fire-scale {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: #2C2C2C;
+  background: rgba(255, 252, 237, 0.9);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+/* Drought */
+.ed-drought-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ed-drought-title {
+  font-weight: 600;
+  font-size: 12px;
+  color: #2C2C2C;
+}
+.ed-drought-chart {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+.ed-drought-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #555;
+}
+.ed-drought-leg-up { color: #3d6b8c; }
+.ed-drought-leg-dn { color: #b85a3a; }
+.ed-drought-source {
+  font-size: 10px;
+  color: #888;
+  font-style: italic;
+}
 
 /* Land cover time series */
 .ed-landcover {

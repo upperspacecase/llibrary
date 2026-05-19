@@ -570,6 +570,10 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     frostDates,
   };
 
+  // Wire last-12-months monthly precip from the trends pass below — promoted
+  // onto the climate object so the dashboard's drought card can compare it
+  // directly to climate.monthlyPrecip (the 1991-2020 normal).
+
   // ── Terrain ───────────────────────────────────────────
   const elevVal = raw.elevation?.ok ? raw.elevation.data : null;
   const terrainData = raw.terrainProfile?.ok ? raw.terrainProfile.data : null;
@@ -883,6 +887,13 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
 
   // ── Climate trends (computed early for NPV scenarios) ──
   const trendsData = computeTrends(raw);
+
+  // Promote last-12-months monthly precip onto the climate object for the
+  // drought card's wetter/drier-than-normal anomaly chart.
+  if (trendsData.last12MonthsPrecip) {
+    climate.last12MonthsPrecip = trendsData.last12MonthsPrecip;
+    climate.last12MonthsYear   = trendsData.last12MonthsYear ?? null;
+  }
 
   // ── Energy potential ──────────────────────────────────
   const solarWindData = raw.solarWind?.ok ? raw.solarWind.data : null;
@@ -1377,6 +1388,26 @@ function computeTrends(raw) {
     precip: annualPrecip[i],
     hotDays: yearlyStats[y].hotDays,
   })).filter(y => Number.isFinite(y.year));
+
+  // Last full calendar year's monthly precip (Jan→Dec), aligned to the
+  // 1991–2020 monthly normals so the dashboard can render a 12-month
+  // wetter/drier-than-normal anomaly.
+  const lastYear = years[years.length - 1];
+  if (lastYear) {
+    const monthly = Array(12).fill(0);
+    const monthlyHasData = Array(12).fill(false);
+    (daily.time || []).forEach((dateStr, i) => {
+      if (!dateStr.startsWith(lastYear)) return;
+      const m = Number(dateStr.substring(5, 7)) - 1;
+      const v = daily.precipitation_sum?.[i];
+      if (typeof v === 'number') { monthly[m] += v; monthlyHasData[m] = true; }
+    });
+    result.last12MonthsPrecip = monthly.map((total, i) => ({
+      monthIndex: i,
+      total: monthlyHasData[i] ? Math.round(total) : null,
+    }));
+    result.last12MonthsYear = Number(lastYear);
+  }
 
   return result;
 }

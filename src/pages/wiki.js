@@ -563,6 +563,10 @@ function lucide(name, size = 18) {
       '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
     'flame':
       '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    'info':
+      '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+    'home':
+      '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   };
   const d = paths[name] || '';
   return `<svg class="ed-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -835,44 +839,84 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--risk">
           <div class="ed-panel-head">${lucide('triangle-alert')} RISK</div>
           <div class="ed-risk-grid">
-            <div class="ed-card">
-              <div class="ed-card-title">Flood risk</div>
-              <div class="ed-risk-row">
-                <div class="ed-risk-label" data-cell="flood.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
-                <div class="ed-risk-score">
-                  ${P('Risk Scores (computed)', 'flood.riskScore', 'int', '/5')}
+
+            <!-- Flood -->
+            <div class="ed-card ed-risk-card">
+              <div class="ed-risk-head">
+                <div class="ed-risk-title-block">
+                  <div class="ed-card-title">Flood risk</div>
+                  <div class="ed-risk-label" data-cell="flood.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
                 </div>
+                <div class="ed-risk-score">${P('Risk Scores (computed)', 'flood.riskScore', 'int', '/5')}</div>
+              </div>
+              <div class="ed-flood-vis">
+                <img class="ed-flood-img" src="/wiki/flood-crosssection.png" alt="Cross-section showing house above the nearest drainage channel" loading="lazy" />
+                <div class="ed-flood-overlay ed-flood-overlay--drop" id="ed-flood-drop">
+                  <span class="ed-flood-overlay-val">${P('Risk Scores (computed)', null)}</span>
+                  <span class="ed-flood-overlay-sub">drop to drainage</span>
+                </div>
+                <div class="ed-flood-overlay ed-flood-overlay--channel">Drainage channel</div>
+              </div>
+              <div class="ed-info-callout">
+                <span class="ed-info-icon">${lucide('info', 14)}</span>
+                <span id="ed-flood-callout">${P('Risk Scores (computed)', null)}</span>
               </div>
               <div class="ed-risk-meta">
-                <div><span>Height above drainage</span>${P('Risk Scores (computed)', 'flood.hand', '1f', ' m')}</div>
-                <div><span>Nearest drainage</span><span data-cell="flood.drainageName" data-fmt="str">${P('Overpass Water Features', null)}</span> <span class="ed-hydro-km" data-cell="flood.distanceToDrainageM" data-fmt="distanceM">—</span></div>
+                <div><span>Vertical drop to nearest drainage</span>${P('Risk Scores (computed)', 'flood.hand', 'absM')}</div>
+                <div><span>Nearest drainage</span><span class="ed-risk-meta-named"><strong data-cell="flood.drainageName" data-fmt="str">${P('Overpass Water Features', null)}</strong> <span data-cell="flood.distanceToDrainageM" data-fmt="distanceM">—</span></span></div>
               </div>
             </div>
-            <div class="ed-card">
-              <div class="ed-card-title">Fire risk</div>
-              <div class="ed-risk-row">
-                <div class="ed-risk-label" data-cell="fire.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
-                <div class="ed-risk-score">
-                  ${P('Risk Scores (computed)', 'fire.riskScore', 'int', '/5')}
+
+            <!-- Fire -->
+            <div class="ed-card ed-risk-card">
+              <div class="ed-risk-head">
+                <div class="ed-risk-title-block">
+                  <div class="ed-card-title">Fire risk</div>
+                  <div class="ed-risk-label" data-cell="fire.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
                 </div>
+                <div class="ed-risk-score">${P('Risk Scores (computed)', 'fire.riskScore', 'int', '/5')}</div>
+              </div>
+              <div class="ed-fire-vis" id="ed-fire-vis">
+                <div class="ed-fire-img-wrap" id="ed-fire-img-wrap">
+                  ${PB('Mapbox Static map (region with 50 km ring)', '')}
+                </div>
+                <div class="ed-fire-scale">50 km</div>
               </div>
               <div class="ed-risk-meta">
                 <div><span>Active fires within 50 km</span>${P('NASA FIRMS Active', 'fire.activeFires', 'int')}</div>
-                <div><span>Historical (10yr) within 25 km</span>${P('NASA FIRMS Historical', null, null, ' — endpoint 400')}</div>
+                <div><span>Historical (10yr) within 25 km</span><span class="ed-risk-unavail">Unavailable</span></div>
               </div>
             </div>
-            <div class="ed-card">
-              <div class="ed-card-title">Drought risk</div>
-              <div class="ed-risk-row">
-                <div class="ed-risk-label" data-cell="drought.riskLevel" data-fmt="str">${P('Risk Scores (computed)', null)}</div>
-                <div class="ed-risk-score">
-                  ${P('Risk Scores (computed)', 'drought.riskScore', 'int', '/5')}
+
+            <!-- Drought -->
+            <div class="ed-card ed-risk-card">
+              <div class="ed-risk-head">
+                <div class="ed-risk-title-block">
+                  <div class="ed-card-title">Drought risk</div>
+                  <div class="ed-risk-label" data-cell="drought.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
+                </div>
+                <div class="ed-risk-score">${P('Risk Scores (computed)', 'drought.riskScore', 'int', '/5')}</div>
+              </div>
+              <div class="ed-drought-block">
+                <div class="ed-drought-title">Rainfall over the last 12 months vs normal</div>
+                <svg class="ed-drought-chart" id="ed-drought-chart" viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true">
+                  <text x="180" y="70" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+                </svg>
+                <div class="ed-drought-legend">
+                  <span class="ed-drought-leg-up">↑ Wetter than normal</span>
+                  <span class="ed-drought-leg-dn">↓ Drier than normal</span>
                 </div>
               </div>
+              <div class="ed-info-callout">
+                <span class="ed-info-icon">${lucide('info', 14)}</span>
+                Shows whether the past 12 months were wetter or drier than a typical year for this location.
+              </div>
               <div class="ed-risk-meta">
-                <div><span>SPI-12 series</span>${P('SPI-12 — partial wiring (only 1975+)', null)}</div>
+                <div><span>12-month rainfall pattern</span><strong id="ed-drought-summary">${P('Last 12 months of precip', null)}</strong></div>
+                <div><span class="ed-drought-source">Based on month-vs-normal anomaly</span></div>
               </div>
             </div>
+
           </div>
         </section>
       </div>
@@ -989,7 +1033,8 @@ async function hydrateEnvironmentalDashboard() {
     else if (fmtKey === '1f')    s = n.toFixed(1);
     else if (fmtKey === '2f')    s = n.toFixed(2);
     else if (fmtKey === 'signedPct') s = (n > 0 ? '+' : '') + Math.round(n) + '%';
-    else if (fmtKey === 'distanceM') s = n >= 1000 ? (n / 1000).toFixed(1) + ' km' : Math.round(n) + ' m';
+    else if (fmtKey === 'distanceM') s = n >= 1000 ? '<' + (n / 1000).toFixed(1) + ' km' : '<' + Math.round(n) + ' m';
+    else if (fmtKey === 'absM')      s = Math.abs(n).toFixed(1) + ' m';
     else                          s = String(n);
     return s + (unit || '');
   };
@@ -1011,6 +1056,16 @@ async function hydrateEnvironmentalDashboard() {
             <strong>${value.name || '—'}</strong>
             <span class="ed-hydro-km">${km}</span>
           </div>`;
+        hydrated += 1;
+      }
+      return;
+    }
+    if (fkey === 'riskLevel') {
+      if (typeof value === 'string' && value) {
+        el.textContent = value;
+        const slug = value.toLowerCase().replace(/[^a-z]+/g, '-');
+        el.classList.remove('ed-data');
+        el.classList.add('ed-data-real', `ed-risk-label--${slug}`);
         hydrated += 1;
       }
       return;
@@ -1170,6 +1225,100 @@ async function hydrateEnvironmentalDashboard() {
         const pct = latest[l] != null ? `${latest[l]}%` : '';
         return `<span><i style="background:${COLORS[l] || '#888'}"></i>${l} <em>${pct}</em></span>`;
       }).join('');
+    }
+    hydrated += 1;
+  })();
+
+  // Flood overlay labels (drop + callout copy) — driven by |HAND|
+  (() => {
+    const hand = payload.flood && typeof payload.flood.hand === 'number' ? payload.flood.hand : null;
+    if (hand == null) return;
+    const abs = Math.abs(hand);
+    const drop = document.getElementById('ed-flood-drop');
+    const callout = document.getElementById('ed-flood-callout');
+    if (drop) {
+      drop.querySelector('.ed-flood-overlay-val').textContent = abs.toFixed(1) + ' m';
+    }
+    if (callout) {
+      const name = (payload.flood.drainageName || 'nearest drainage channel').toString();
+      callout.textContent = `The sample point is ${abs.toFixed(1)} m above ${name}.`;
+      callout.classList.remove('ed-data');
+      callout.classList.add('ed-data-real');
+    }
+    hydrated += 1;
+  })();
+
+  // Fire map: drop in the Mapbox URL the API surfaces alongside the dashboard payload.
+  (() => {
+    const wrap = document.getElementById('ed-fire-img-wrap');
+    if (!wrap) return;
+    const url = payload.maps && (payload.maps.regional || payload.maps.overview);
+    if (!url) return;
+    wrap.innerHTML = `
+      <img class="ed-fire-img" src="${url}" alt="Static map of Odemira region with 50km reference ring" loading="lazy" />
+      <div class="ed-fire-ring"></div>
+      <div class="ed-fire-marker">${lucide('home', 18)}</div>
+    `;
+    hydrated += 1;
+  })();
+
+  // Drought monthly anomaly chart — needs climate.last12 vs climate.monthlyPrecip
+  (() => {
+    const svg = document.getElementById('ed-drought-chart');
+    const summaryEl = document.getElementById('ed-drought-summary');
+    if (!svg) return;
+    const climate = payload.climate || {};
+    const normals = Array.isArray(climate.monthlyPrecip) ? climate.monthlyPrecip : null;
+    const last12 = Array.isArray(climate.last12MonthsPrecip) ? climate.last12MonthsPrecip : null;
+    if (!normals || normals.length !== 12 || !last12 || last12.length !== 12) return;
+
+    // last12 entries are { monthIndex: 0-11, total: mm } ordered Jan-Dec? Let the
+    // pipeline send them already aligned to calendar months Jan→Dec.
+    const anomalies = last12.map((m, i) => {
+      const norm = normals[i] || 0;
+      return m.total != null ? m.total - norm : null;
+    });
+
+    const W = 360, H = 140, PAD_X = 16, PAD_Y = 18;
+    const innerW = W - PAD_X * 2;
+    const innerH = H - PAD_Y * 2 - 14; // leave 14 for labels
+    const slot = innerW / 12;
+    const barW = slot * 0.55;
+    const maxAbs = Math.max(1, ...anomalies.map(a => Math.abs(a || 0)));
+    const zeroY = PAD_Y + innerH / 2;
+
+    const bars = anomalies.map((a, i) => {
+      const x = PAD_X + slot * i + (slot - barW) / 2;
+      if (a == null) return '';
+      const h = Math.abs(a) / maxAbs * (innerH / 2 - 2);
+      const y = a >= 0 ? zeroY - h : zeroY;
+      const fill = a >= 0 ? '#7a9ab5' : '#d49a4a';
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${fill}"><title>${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}: ${a > 0 ? '+' : ''}${Math.round(a)} mm vs normal</title></rect>`;
+    }).join('');
+
+    const labels = ['J','F','M','A','M','J','J','A','S','O','N','D'].map((m, i) => {
+      const x = PAD_X + slot * i + slot / 2;
+      return `<text x="${x.toFixed(1)}" y="${H - 4}" font-size="10" fill="#666" text-anchor="middle">${m}</text>`;
+    }).join('');
+
+    svg.innerHTML = `
+      <line x1="${PAD_X}" y1="${zeroY}" x2="${W - PAD_X}" y2="${zeroY}" stroke="#999" stroke-width="0.5"/>
+      ${bars}
+      ${labels}
+    `;
+
+    if (summaryEl) {
+      const drier = anomalies.filter(a => a != null && a < -5).length;
+      const wetter = anomalies.filter(a => a != null && a > 5).length;
+      let summary;
+      if (drier >= 6)      summary = 'A run of drier-than-normal months';
+      else if (drier >= 3) summary = 'A few drier-than-normal months';
+      else if (wetter >= 6) summary = 'A run of wetter-than-normal months';
+      else if (wetter >= 3) summary = 'A few wetter-than-normal months';
+      else                 summary = 'Close to typical year';
+      summaryEl.textContent = summary;
+      summaryEl.classList.remove('ed-data');
+      summaryEl.classList.add('ed-data-real');
     }
     hydrated += 1;
   })();

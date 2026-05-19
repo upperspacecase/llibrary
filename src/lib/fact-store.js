@@ -189,6 +189,8 @@ export function reportDataToFacts(data) {
       monthlyAvgHigh: wrap(data.climate?.monthlyAvgHigh, '°C[]', 'climate'),
       monthlyAvgLow: wrap(data.climate?.monthlyAvgLow, '°C[]', 'climate'),
       monthlyPrecip: wrap(data.climate?.monthlyPrecip, 'mm[]', 'climate'),
+      last12MonthsPrecip: wrap(data.climate?.last12MonthsPrecip, null, 'climateTrends'),
+      last12MonthsYear: wrap(data.climate?.last12MonthsYear, null, 'climateTrends'),
     },
     species: {
       total: wrap(data.species?.total, 'count', 'species'),
