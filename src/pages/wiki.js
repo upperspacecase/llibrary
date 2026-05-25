@@ -644,14 +644,13 @@ function renderEnvironmentalDashboard() {
     ['Open-Meteo Solar/Wind', 'Wired @ point. Region-mean over Odemira grid.'],
     ['SoilGrids Properties (pH, OC, BD, depth)', 'Wired @ point. Need zonal stats over Odemira bbox.'],
     ['SoilGrids Classification (WRB texture)', 'Wired @ point. Need dominant class over Odemira bbox.'],
-    ['Macrostrat Geology', 'Wired @ point. Need dominant lithology over Odemira bbox.'],
-    ['Mapbox Static + Overpass Water Features (hydrology map)', 'Wired @ point. Need bbox-clipped static map for Odemira.'],
+    ['Macrostrat Geology', 'Wired. 8-point sample across the polygon; dominant lithology by frequency surfaces as primary.'],
     ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
     ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
     ['SPI-12 (1940–today)', 'Wired. ERA5-backed Open-Meteo archive precip, gamma-fit per calendar month, Wilson-Hilferty Z transform. Pre-1940 would need NOAA GHCN-monthly for Beja / Sines.'],
-    ['iNaturalist Species (top species + total)', 'Wired @ point. Need bbox aggregation across Odemira.'],
-    ['iNaturalist Threatened (IUCN badges)', 'Wired @ point. Bbox aggregation across Odemira.'],
-    ['iNaturalist trend windows (13 windows)', 'Partial. Pipeline has 3 windows. Extend iNat window job to ~5-year rolls from 1970 → 13 windows.'],
+    ['iNaturalist Species (top species + total)', 'Wired. bbox query across the Odemira polygon.'],
+    ['iNaturalist Threatened (IUCN badges)', 'Wired. bbox query across the Odemira polygon.'],
+    ['iNaturalist trend windows', 'Wired. 13 rolling 5-yr windows from 1970 → current year, all bbox-aggregated.'],
     ['Esri Living Atlas Sentinel-2 LandCover', 'Wired. Annual histogram per polygon via computeHistograms. Source = Impact Observatory + Esri + Microsoft.'],
     ['NASA FIRMS Historical', 'Failing (HTTP 400). Not in current mockup but needs rotating/repaired endpoint before historical fire trend can be added.'],
   ].map(([k,v]) => `
@@ -793,12 +792,11 @@ function renderEnvironmentalDashboard() {
               <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
             </div>
             <div class="ed-card ed-card--span-5">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Species observations <span>(13 trend windows)</span></div>
-                ${D('National baseline')}
-              </div>
-              ${PB('iNaturalist trend windows — partial wiring', 'Pipeline has 3 windows (1975–1994, 1995–2014, 2015–2025). 13 windows requested — extend iNat window job to ~5-year rolls from 1970.')}
-              <div class="ed-years"><span>1970</span><span>1985</span><span>2000</span><span>2015</span><span>2025</span></div>
+              <div class="ed-card-title">Species observations <span>(5-yr windows · iNaturalist research-grade)</span></div>
+              <svg class="ed-bio-trend" id="ed-bio-trend" viewBox="0 0 400 180" preserveAspectRatio="none" aria-hidden="true">
+                <text x="200" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-years" id="ed-bio-years"></div>
             </div>
             <div class="ed-card ed-card--span-5">
               <div class="ed-card-title">Total species</div>
@@ -1372,6 +1370,51 @@ async function hydrateEnvironmentalDashboard() {
       if (ticks[0] !== first) ticks.unshift(first);
       if (ticks[ticks.length - 1] !== last) ticks.push(last);
       yearsEl.innerHTML = ticks.map(y => `<span>${y}</span>`).join('');
+    }
+    hydrated += 1;
+  })();
+
+  // Biodiversity: species observations across 13 rolling 5-yr windows
+  (() => {
+    const svg = document.getElementById('ed-bio-trend');
+    const yearsEl = document.getElementById('ed-bio-years');
+    if (!svg) return;
+    const wins = payload.species && payload.species.trends && Array.isArray(payload.species.trends.windows)
+      ? payload.species.trends.windows : null;
+    if (!wins || !wins.length) return;
+    const vals = wins.map(w => (typeof w.count === 'number' ? w.count : null));
+    if (vals.every(v => v == null)) return;
+
+    const W = 400, H = 180, PAD_X = 28, PAD_Y = 12;
+    const innerW = W - PAD_X * 2;
+    const innerH = H - PAD_Y * 2 - 4;
+    const n = wins.length;
+    const maxV = Math.max(...vals.filter(v => v != null));
+    const xFor = i => PAD_X + (i / Math.max(1, n - 1)) * innerW;
+    const yFor = v => v == null ? null : PAD_Y + innerH - (v / maxV) * innerH;
+
+    // Area under the line
+    const linePts = vals.map((v, i) => v == null ? null : `${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).filter(Boolean);
+    const areaPts = [`${xFor(0).toFixed(1)},${PAD_Y + innerH}`, ...linePts, `${xFor(n - 1).toFixed(1)},${PAD_Y + innerH}`];
+    const dots = vals.map((v, i) => v == null
+      ? ''
+      : `<circle cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="2.5" fill="#3d6b48"><title>${wins[i].label}: ${v} taxa</title></circle>`).join('');
+
+    svg.innerHTML = `
+      <polygon fill="#3d6b48" fill-opacity="0.18" stroke="none" points="${areaPts.join(' ')}" />
+      <polyline fill="none" stroke="#3d6b48" stroke-width="1.5" points="${linePts.join(' ')}" />
+      ${dots}
+      <text x="${PAD_X - 4}" y="${(PAD_Y + 4).toFixed(1)}" font-size="9" fill="#888" text-anchor="end">${maxV}</text>
+      <text x="${PAD_X - 4}" y="${(PAD_Y + innerH).toFixed(1)}" font-size="9" fill="#888" text-anchor="end">0</text>
+    `;
+
+    if (yearsEl) {
+      // Show first / mid / last labels
+      const firstY = wins[0].label.split('-')[0];
+      const midI   = Math.floor(n / 2);
+      const midY   = wins[midI].label.split('-')[0];
+      const lastY  = wins[n - 1].label.split('-')[1] || wins[n - 1].label.split('-')[0];
+      yearsEl.innerHTML = `<span>${firstY}</span><span>${midY}</span><span>${lastY}</span>`;
     }
     hydrated += 1;
   })();

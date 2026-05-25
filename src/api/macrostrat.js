@@ -23,6 +23,63 @@ export async function getGeology(lat, lng) {
 }
 
 /**
+ * Multi-point dominant-lithology sampler. Macrostrat's API has no bbox or
+ * polygon query, so we sample N points across the boundary, fetch each,
+ * and return a synthetic `success.data` ordered by frequency so the
+ * existing parseGeology() reads the dominant unit as `primary`.
+ *
+ * @param {Array<[number, number]>} boundary - [[lat, lng], ...] polygon
+ * @param {[number, number]} center - [lat, lng]
+ * @param {number} n - sample count (default 8 boundary points + 1 center)
+ */
+export async function getGeologyBbox(boundary, center, n = 8) {
+    const points = [];
+    if (Array.isArray(boundary) && boundary.length >= 3) {
+        const step = Math.max(1, Math.floor(boundary.length / n));
+        for (let i = 0; i < boundary.length && points.length < n; i += step) {
+            const p = boundary[i];
+            if (Array.isArray(p) && p.length === 2) points.push(p);
+        }
+    }
+    if (Array.isArray(center) && center.length === 2) points.push(center);
+    if (!points.length) throw new Error('Macrostrat bbox: no sample points');
+
+    const settled = await Promise.allSettled(points.map(([la, ln]) => getGeology(la, ln)));
+    const units = [];
+    for (const r of settled) {
+        if (r.status !== 'fulfilled') continue;
+        const data = r.value?.success?.data;
+        if (Array.isArray(data) && data.length) units.push(data[0]);
+    }
+    if (!units.length) throw new Error('Macrostrat bbox: no valid samples');
+
+    const litLabel = (u) => Array.isArray(u.lith)
+        ? u.lith.map(l => l.lith || l.name).filter(Boolean).join(', ')
+        : (typeof u.lith === 'string' ? u.lith : 'Unknown');
+    const counts = new Map();
+    const examples = new Map();
+    for (const u of units) {
+        const key = litLabel(u);
+        counts.set(key, (counts.get(key) || 0) + 1);
+        if (!examples.has(key)) examples.set(key, u);
+    }
+    const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+
+    // Synthetic Macrostrat envelope — parseGeology reads .success.data[0] as
+    // primary, so the dominant lithology lands first.
+    return {
+        success: {
+            v: 2,
+            data: ordered.map(([key, count]) => {
+                const base = examples.get(key) || {};
+                return { ...base, _sampleCount: count, _sampleTotal: units.length };
+            }),
+            _sampledFrom: points.length,
+        },
+    };
+}
+
+/**
  * Parse Macrostrat response into a display-friendly format.
  */
 export function parseGeology(data) {

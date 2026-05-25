@@ -25,7 +25,7 @@ import {
   parseSoilClassification,
 } from '../api/soilgrids.js';
 
-import { getGeology, parseGeology } from '../api/macrostrat.js';
+import { getGeology, getGeologyBbox, parseGeology } from '../api/macrostrat.js';
 
 import {
   getSpeciesCounts,
@@ -223,6 +223,9 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
   const bbox = getBbox(boundary);
   const center = [lat, lng];
 
+  // iNat takes nelat/swlat/etc.; assemble once and pass to every iNat call.
+  const inatBbox = { swLat: bbox[0], swLng: bbox[1], neLat: bbox[2], neLng: bbox[3] };
+
   // 50-year historical window for trend analysis
   const endYear = new Date().getFullYear() - 1;
   const startYear50 = endYear - 49;
@@ -237,9 +240,9 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['climateTrends', () => getHistoricalWeather(lat, lng, `${startYear50}-01-01`, `${endYear}-12-31`)],
     ['soilProps', () => getSoilProperties(lat, lng)],
     ['soilClass', () => getSoilClassification(lat, lng)],
-    ['geology', () => getGeology(lat, lng)],
-    ['species', () => getSpeciesCounts(lat, lng)],
-    ['threatened', () => getThreatenedSpecies(lat, lng)],
+    ['geology', () => getGeologyBbox(boundary, center)],
+    ['species', () => getSpeciesCounts(lat, lng, 15, { bbox: inatBbox })],
+    ['threatened', () => getThreatenedSpecies(lat, lng, 25, { bbox: inatBbox })],
     ['gbif', () => getSpeciesOccurrences(lat, lng)],
     ['flood', () => getFloodForecastWithHistory(lat, lng)],
     ['water', () => getWaterFeatures(bbox)],
@@ -260,7 +263,7 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['precipLongTerm', () => getDailyPrecipSince(lat, lng)],
     // Species trend windows — 3 five-year periods for temporal comparison
     ...computeBioWindows(lat, lng).map((w, i) => [
-      `speciesWindow${i}`, () => getSpeciesCounts(lat, lng, 15, { d1: w.d1, d2: w.d2 }),
+      `speciesWindow${i}`, () => getSpeciesCounts(lat, lng, 15, { bbox: inatBbox, d1: w.d1, d2: w.d2 }),
     ]),
   ];
 
@@ -419,13 +422,23 @@ const CORINE_LABELS = {
 
 // ── iNaturalist & GBIF temporal trends ─────────────────────
 
+// 13 rolling 5-year windows from 1970 → current year. Used by the
+// Biodiversity panel's "Species observations (13 trend windows)" card.
 function computeBioWindows(lat, lng) {
   const currentYear = new Date().getFullYear();
-  return [
-    { label: `${currentYear - 15}-${currentYear - 10}`, d1: `${currentYear - 15}-01-01`, d2: `${currentYear - 10}-12-31` },
-    { label: `${currentYear - 10}-${currentYear - 5}`, d1: `${currentYear - 10}-01-01`, d2: `${currentYear - 5}-12-31` },
-    { label: `${currentYear - 5}-${currentYear}`, d1: `${currentYear - 5}-01-01`, d2: `${currentYear}-12-31` },
-  ];
+  const windows = [];
+  let start = 1970;
+  while (start <= currentYear && windows.length < 13) {
+    const end = Math.min(start + 4, currentYear);
+    windows.push({
+      label: `${start}-${end}`,
+      d1: `${start}-01-01`,
+      d2: `${end}-12-31`,
+    });
+    start += 5;
+  }
+  // If we have more than 13 (~57 years would give 12), keep the trailing 13.
+  return windows.slice(-13);
 }
 
 function computeGBIFWindows() {

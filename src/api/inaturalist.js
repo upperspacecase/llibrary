@@ -36,27 +36,44 @@ export async function getObservations(lat, lng, radiusKm = 15, options = {}) {
 
 export async function getSpeciesCounts(lat, lng, radiusKm = 15, options = {}) {
   const params = new URLSearchParams({
-    lat: String(lat),
-    lng: String(lng),
-    radius: String(radiusKm),
     per_page: String(options.limit || 500),
     quality_grade: 'research',
     locale: options.locale || 'en',
   });
+
+  // Prefer bbox when supplied; otherwise fall back to point + radius. The
+  // pipeline passes a bbox for whole-region aggregation (e.g. an entire
+  // municipality), and a point + radius for parcel-scale lookups.
+  // bbox shape: { swLat, swLng, neLat, neLng }
+  if (options.bbox
+      && typeof options.bbox.swLat === 'number'
+      && typeof options.bbox.swLng === 'number'
+      && typeof options.bbox.neLat === 'number'
+      && typeof options.bbox.neLng === 'number') {
+    params.set('swlat', String(options.bbox.swLat));
+    params.set('swlng', String(options.bbox.swLng));
+    params.set('nelat', String(options.bbox.neLat));
+    params.set('nelng', String(options.bbox.neLng));
+  } else {
+    params.set('lat', String(lat));
+    params.set('lng', String(lng));
+    params.set('radius', String(radiusKm));
+  }
+
   if (options.iconic_taxa) params.set('iconic_taxa', options.iconic_taxa);
   if (options.threatened) params.set('threatened', 'true');
   if (options.d1) params.set('d1', options.d1);
   if (options.d2) params.set('d2', options.d2);
 
   const res = await fetchWithPolicy(`${BASE}/observations/species_counts?${params}`, {}, {
-    source: 'inaturalist-species-counts', timeoutMs: 10000, accept: 'application/json',
+    source: 'inaturalist-species-counts', timeoutMs: 15000, accept: 'application/json',
   });
   if (!res.ok) throw new Error(`iNaturalist species counts error: ${res.status}`);
   return res.json();
 }
 
-export async function getThreatenedSpecies(lat, lng, radiusKm = 25) {
-  return getSpeciesCounts(lat, lng, radiusKm, { threatened: true });
+export async function getThreatenedSpecies(lat, lng, radiusKm = 25, options = {}) {
+  return getSpeciesCounts(lat, lng, radiusKm, { ...options, threatened: true });
 }
 
 export async function getTaxonDetail(taxonId) {
