@@ -329,6 +329,10 @@ export type NarrativesV2 = Narratives;
 
 export interface Landbook {
   id: string;
+  ownerId?: string;
+  name?: string;
+  clientName?: string;
+  cadastralRef?: string;
   boundary: number[][];
   center: Coords;
   area: number;
@@ -339,4 +343,74 @@ export interface Landbook {
   dataUpdated?: string;
   created: string;
   updated?: string;
+  agentNotes?: string;
+}
+
+export interface LandbookOverride {
+  landbookId: string;
+  ownerId: string;
+  fields: {
+    name?: string;
+    narrative?: string;
+    area?: string;
+    naturalCapital?: string;
+    carbonStock?: string;
+  };
+  updatedAt: string;
+}
+
+export interface ShareRecipient {
+  name: string;
+  email: string;
+  role?: string;
+  sentAt?: string;
+  viewedAt?: string;
+}
+
+export interface ShareActivity {
+  kind:
+    | "created"
+    | "recipient_added"
+    | "viewed"
+    | "downloaded"
+    | "expires_updated";
+  at: string;
+  meta?: Record<string, string | number | null>;
+}
+
+export interface LandbookShare {
+  landbookId: string;
+  ownerId: string;
+  token: string;
+  createdAt: string;
+  expiresAt?: string | null;
+  emailGate: boolean;
+  recipients: ShareRecipient[];
+  activity: ShareActivity[];
+}
+
+export interface AgentSettings {
+  ownerId: string;
+  agencyName?: string;
+  leadAgent?: string;
+  license?: string;
+  phone?: string;
+  publicEmail?: string;
+  tagline?: string;
+  accentColor?: string;
+  logoUrl?: string;
+  logoStoragePath?: string;
+  updatedAt?: string;
+}
+
+export interface LandbookFile {
+  landbookId: string;
+  ownerId: string;
+  name: string;
+  kind: string;
+  size: number;
+  storagePath: string;
+  downloadUrl: string;
+  uploadedAt: string;
+  agentNote?: string;
 }

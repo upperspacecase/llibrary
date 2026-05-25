@@ -1,14 +1,39 @@
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import {
-  Eyebrow,
-  PillButton,
-  Icon,
-} from "@/components/agent/primitives";
+import { getCollection } from "@/lib/db";
+import { getCurrentUser } from "@/lib/firebase/admin";
+import type {
+  Landbook,
+  LandbookOverride,
+} from "@/lib/types";
+import EditorClient, {
+  type EditorComputed,
+  type EditorOverrides,
+} from "./EditorClient";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Edit · Agents",
 };
+
+const DEFAULT_NARRATIVE =
+  "The overview narrative for this property will appear here. Click into any field to add your edits — they'll be tracked as overrides in the audit trail.";
+
+function formatHa(value?: number | null): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 1 })} ha`;
+}
+
+function formatCurrency(value?: number | null): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
+
+function formatTonnes(value?: number | null): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "—";
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 0 })} t CO₂e`;
+}
 
 export default async function EditorPage({
   params,
@@ -16,170 +41,43 @@ export default async function EditorPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const user = await getCurrentUser();
+  if (!user) notFound();
+
+  const books = await getCollection<Landbook>("landbooks");
+  const book = await books.findOne({ id, ownerId: user.uid });
+  if (!book) notFound();
+
+  const overridesCol = await getCollection<LandbookOverride>(
+    "landbook_overrides"
+  );
+  const overrideDoc = await overridesCol.findOne({
+    landbookId: id,
+    ownerId: user.uid,
+  });
+
+  const plainBook = JSON.parse(JSON.stringify(book)) as Landbook;
+  const plainOverrides = overrideDoc
+    ? (JSON.parse(JSON.stringify(overrideDoc.fields || {})) as EditorOverrides)
+    : {};
+
+  const computed: EditorComputed = {
+    name:
+      plainBook.name ||
+      plainBook.data?.property?.name ||
+      plainBook.address ||
+      "Untitled property",
+    narrative: DEFAULT_NARRATIVE,
+    area: formatHa(plainBook.data?.property?.area ?? plainBook.area),
+    naturalCapital: formatCurrency(plainBook.data?.economics?.totalValue),
+    carbonStock: formatTonnes(plainBook.data?.economics?.carbonStock),
+  };
 
   return (
-    <main className="min-h-screen bg-brand-cream">
-      <header className="border-b border-brand-sage/25 bg-white">
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-4">
-            <Link
-              href="/agent"
-              className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60"
-            >
-              <span>←</span> My LandBooks
-            </Link>
-            <div className="h-5 w-px bg-brand-sage/40" />
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.15em] text-brand-charcoal/50">
-                Editing draft
-              </p>
-              <p
-                className="font-serif text-base font-bold leading-tight"
-                style={{ fontFamily: "var(--font-libre), serif" }}
-              >
-                LandBook #{id}
-              </p>
-            </div>
-            <span className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-brand-sage/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-charcoal/70">
-              No unsaved overrides
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60"
-            >
-              Discard
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-brand-sage/40 bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal hover:border-brand-charcoal"
-            >
-              <Icon.Eye /> Preview
-            </button>
-            <PillButton variant="primary">Save &amp; publish</PillButton>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 border-t border-brand-sage/20 px-6 py-2 text-[11px] font-medium text-brand-charcoal/55">
-          <span className="border-b-2 border-brand-charcoal px-1 py-1 text-brand-charcoal">
-            Overview
-          </span>
-          <span className="ml-2 text-brand-charcoal/45">
-            The rest of the report is generated by our analysts and not
-            editable.
-          </span>
-        </div>
-      </header>
-
-      <div className="grid min-h-[calc(100vh-104px)] grid-cols-1 lg:grid-cols-[1fr_320px]">
-        <div className="overflow-y-auto bg-brand-cream/60 p-10">
-          <div className="mx-auto max-w-2xl rounded-md bg-white p-12 shadow-xl">
-            <Eyebrow>Overview</Eyebrow>
-            <div className="mt-4 group relative inline-block">
-              <h1
-                className="font-serif text-3xl font-bold leading-tight text-brand-charcoal"
-                style={{ fontFamily: "var(--font-libre), serif" }}
-                contentEditable
-                suppressContentEditableWarning
-              >
-                Untitled property
-              </h1>
-              <button className="invisible absolute -right-8 top-1 text-brand-charcoal/40 group-hover:visible">
-                <Icon.Pencil />
-              </button>
-            </div>
-
-            <div className="mt-8 grid grid-cols-3 gap-6 border-y border-brand-sage/25 py-6">
-              {[
-                ["Area", "—"],
-                ["Natural capital", "—"],
-                ["Carbon stock", "—"],
-              ].map(([label, val]) => (
-                <div key={label} className="-mx-2 px-2">
-                  <p className="text-[10px] uppercase tracking-[0.15em] text-brand-charcoal/50">
-                    {label}
-                  </p>
-                  <p
-                    className="mt-2 font-serif text-2xl font-bold tabular-nums"
-                    style={{ fontFamily: "var(--font-libre), serif" }}
-                  >
-                    {val}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 group relative">
-              <p
-                className="text-sm leading-relaxed text-brand-charcoal/90"
-                contentEditable
-                suppressContentEditableWarning
-              >
-                The overview narrative for this property will appear here.
-                Click into any field to add your edits — they&rsquo;ll be
-                tracked as overrides in the audit trail.
-              </p>
-              <button className="invisible absolute -right-8 top-0 text-brand-charcoal/40 group-hover:visible">
-                <Icon.Pencil />
-              </button>
-            </div>
-
-            <div className="mt-8 rounded border border-dashed border-brand-sage/45 bg-brand-cream/50 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/65">
-                  Insert client content
-                </p>
-                <Link
-                  href={`/agent/${id}/upload`}
-                  className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55 hover:text-brand-charcoal"
-                >
-                  + Add block
-                </Link>
-              </div>
-              <p className="mt-1 text-[11px] text-brand-charcoal/50">
-                Drop a photo, note, or document into this section.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <aside className="border-t border-brand-sage/25 bg-white lg:border-l lg:border-t-0">
-          <div className="border-b border-brand-sage/25 px-5 py-4">
-            <Eyebrow>Field inspector</Eyebrow>
-            <p
-              className="mt-2 font-serif text-base font-bold"
-              style={{ fontFamily: "var(--font-libre), serif" }}
-            >
-              Nothing selected
-            </p>
-            <p className="text-[11px] text-brand-charcoal/55">
-              Click a value on the left to see its source and override it.
-            </p>
-          </div>
-          <div className="space-y-5 px-5 py-5 text-sm">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.15em] text-brand-charcoal/55">
-                Computed value
-              </p>
-              <p className="mt-1 tabular-nums text-brand-charcoal/40">—</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.15em] text-brand-charcoal/55">
-                Your override
-              </p>
-              <input
-                placeholder="—"
-                disabled
-                className="mt-1 w-full rounded border border-brand-sage/30 bg-brand-cream/40 px-3 py-2 text-base text-brand-charcoal/40"
-              />
-              <p className="mt-1 text-[10px] text-brand-charcoal/45">
-                Overrides are visible in the audit trail. Buyers see only the
-                final number.
-              </p>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </main>
+    <EditorClient
+      landbookId={id}
+      computed={computed}
+      overrides={plainOverrides}
+    />
   );
 }
