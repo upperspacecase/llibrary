@@ -1343,14 +1343,16 @@ function computeTrends(raw) {
 
   (daily.time || []).forEach((dateStr, i) => {
     const year = dateStr.substring(0, 4);
-    if (!yearlyStats[year]) yearlyStats[year] = { temps: [], precip: 0, fireProneDays: 0, hotDays: 0 };
+    if (!yearlyStats[year]) yearlyStats[year] = { temps: [], precip: 0, fireProneDays: 0, hotDays: 0, et0: 0, et0Days: 0 };
     const tMax = daily.temperature_2m_max?.[i];
     const tMin = daily.temperature_2m_min?.[i];
     const precip = daily.precipitation_sum?.[i];
+    const et0   = daily.et0_fao_evapotranspiration?.[i];
     if (tMax != null && tMin != null) yearlyStats[year].temps.push((tMax + tMin) / 2);
     if (precip != null) yearlyStats[year].precip += precip;
     if (precip != null && precip < 1 && tMax > 30) yearlyStats[year].fireProneDays++;
     if (tMax != null && tMax > 30) yearlyStats[year].hotDays++;
+    if (typeof et0 === 'number') { yearlyStats[year].et0 += et0; yearlyStats[year].et0Days++; }
   });
 
   const years = Object.keys(yearlyStats).sort();
@@ -1382,12 +1384,22 @@ function computeTrends(raw) {
 
   // Per-year mean temp + total precip — preserved for the dashboard's
   // historic panel which renders the actual time series, not just the trend.
-  result.yearly = years.map((y, i) => ({
-    year: Number(y),
-    meanTemp: annualTemps[i],
-    precip: annualPrecip[i],
-    hotDays: yearlyStats[y].hotDays,
-  })).filter(y => Number.isFinite(y.year));
+  result.yearly = years.map((y, i) => {
+    const s = yearlyStats[y];
+    // Only surface ET₀ when the year is reasonably complete (≥ 300 days
+    // with data) — partial years would otherwise show artificially low
+    // ET₀ and inflate the apparent water surplus.
+    const et0 = s.et0Days >= 300 ? Math.round(s.et0) : null;
+    const precip = annualPrecip[i];
+    return {
+      year: Number(y),
+      meanTemp: annualTemps[i],
+      precip,
+      hotDays: s.hotDays,
+      et0,
+      waterBalance: (et0 != null && typeof precip === 'number') ? precip - et0 : null,
+    };
+  }).filter(y => Number.isFinite(y.year));
 
   // Last full calendar year's monthly precip (Jan→Dec), aligned to the
   // 1991–2020 monthly normals so the dashboard can render a 12-month

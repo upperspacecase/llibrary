@@ -8599,6 +8599,32 @@ a {
   letter-spacing: 0.04em;
 }
 
+/* Water balance chart (Water section) */
+.ed-water-balance-chart {
+  width: 100%;
+  height: 180px;
+  display: block;
+}
+.ed-water-balance-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  align-items: center;
+}
+.ed-wb-leg-surplus { color: #3d6b8c; }
+.ed-wb-leg-deficit { color: #b85a3a; }
+.ed-wb-leg-surplus::before,
+.ed-wb-leg-deficit::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.ed-wb-leg-surplus::before { background: #7a9ab5; }
+.ed-wb-leg-deficit::before { background: #d49a4a; }
+
 /* RISK section */
 .ed-risk-grid {
   display: grid;

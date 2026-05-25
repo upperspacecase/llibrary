@@ -653,7 +653,7 @@ function renderEnvironmentalDashboard() {
     ['Macrostrat Geology', 'Wired @ point. Need dominant lithology over Odemira bbox.'],
     ['RUSLE-INE erosion risk', 'NOT WIRED. Need INE Portugal soil-erosion raster (RUSLE-PT) or PNRA dataset.'],
     ['Mapbox Static + Overpass Water Features (hydrology map)', 'Wired @ point. Need bbox-clipped static map for Odemira.'],
-    ['Water balance P − ET₀ (10-yr)', 'Partial. Precipitation in Open-Meteo 50yr. ET₀ requires ERA5-Land or Hargreaves derivation — NOT WIRED.'],
+    ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
     ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
     ['Groundwater (SNIRH)', 'NOT WIRED. Portuguese SNIRH piezometer network not in pipeline.'],
     ['SPI-12 (1925–today)', 'Partial. Open-Meteo 50yr covers 1975+. Pre-1975 needs KNMI Climate Explorer or NOAA GHCN-monthly for Beja / Sines.'],
@@ -765,11 +765,16 @@ function renderEnvironmentalDashboard() {
             <div class="ed-water-right">
               <div class="ed-card">
                 <div class="ed-card-title-row">
-                  <div class="ed-card-title">Water balance <span>(10-yr archival) P − ET₀ (mm)</span></div>
-                  ${D('National baseline')}
+                  <div class="ed-card-title">Water balance <span>P − ET₀ (mm/yr)</span></div>
+                  <div class="ed-water-balance-legend">
+                    <span class="ed-wb-leg-surplus">Surplus</span>
+                    <span class="ed-wb-leg-deficit">Deficit</span>
+                  </div>
                 </div>
-                ${PB('Open-Meteo 50yr (P) + ERA-Land (ET₀) — ET₀ NOT WIRED', 'Precipitation series available from Open-Meteo. ET₀ requires ERA5-Land or Hargreaves derivation — not in pipeline.')}
-                <div class="ed-years"><span>1975</span><span>1985</span><span>1995</span><span>2005</span><span>2015</span><span>2025</span></div>
+                <svg class="ed-water-balance-chart" id="ed-wb-chart" viewBox="0 0 700 180" preserveAspectRatio="none" aria-hidden="true">
+                  <text x="350" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+                </svg>
+                <div class="ed-years" id="ed-wb-years"></div>
               </div>
               <div class="ed-water-pair">
                 <div class="ed-card">
@@ -1320,6 +1325,67 @@ async function hydrateEnvironmentalDashboard() {
       summaryEl.textContent = summary;
       summaryEl.classList.remove('ed-data');
       summaryEl.classList.add('ed-data-real');
+    }
+    hydrated += 1;
+  })();
+
+  // Water balance area chart — annual P − ET₀ across the archive
+  (() => {
+    const svg = document.getElementById('ed-wb-chart');
+    const yearsEl = document.getElementById('ed-wb-years');
+    if (!svg) return;
+    const yearly = Array.isArray(payload.trends && payload.trends.yearly) ? payload.trends.yearly : [];
+    const rows = yearly.filter(r => r && typeof r.waterBalance === 'number');
+    if (!rows.length) return;
+
+    const W = 700, H = 180, PAD_X = 24, PAD_Y = 12;
+    const innerW = W - PAD_X * 2;
+    const innerH = H - PAD_Y * 2;
+    const xs = rows.map((_, i) => PAD_X + (i / Math.max(1, rows.length - 1)) * innerW);
+    const ys = rows.map(r => r.waterBalance);
+    const maxAbs = Math.max(50, ...ys.map(v => Math.abs(v)));
+    const zeroY = PAD_Y + innerH / 2;
+    const yFor = v => zeroY - (v / maxAbs) * (innerH / 2);
+
+    // Build two filled paths — one for the positive (surplus) lobes
+    // clipped to y ≤ zeroY, one for the negative (deficit) lobes clipped
+    // to y ≥ zeroY. SVG masks the "wrong" side by setting that path's
+    // value to zero in the band.
+    const buildArea = (color, side /* +1 surplus, -1 deficit */) => {
+      const pts = [];
+      pts.push(`${xs[0].toFixed(1)},${zeroY.toFixed(1)}`);
+      rows.forEach((r, i) => {
+        const v = r.waterBalance;
+        const clip = side > 0 ? Math.max(0, v) : Math.min(0, v);
+        pts.push(`${xs[i].toFixed(1)},${yFor(clip).toFixed(1)}`);
+      });
+      pts.push(`${xs[xs.length - 1].toFixed(1)},${zeroY.toFixed(1)}`);
+      return `<polygon fill="${color}" fill-opacity="0.85" stroke="none" points="${pts.join(' ')}" />`;
+    };
+    const linePts = rows.map((r, i) => `${xs[i].toFixed(1)},${yFor(r.waterBalance).toFixed(1)}`).join(' ');
+
+    // Y-axis labels: +maxAbs, 0, −maxAbs
+    const yLabel = (v, y) => `<text x="${PAD_X - 4}" y="${y.toFixed(1)}" font-size="9" fill="#888" text-anchor="end">${v > 0 ? '+' : ''}${Math.round(v)}</text>`;
+
+    svg.innerHTML = `
+      <line x1="${PAD_X}" y1="${zeroY}" x2="${W - PAD_X}" y2="${zeroY}" stroke="#999" stroke-width="0.5"/>
+      ${buildArea('#7a9ab5', +1)}
+      ${buildArea('#d49a4a', -1)}
+      <polyline fill="none" stroke="#5a7256" stroke-width="1.2" points="${linePts}" />
+      ${yLabel(+Math.round(maxAbs), PAD_Y + 4)}
+      ${yLabel(0, zeroY)}
+      ${yLabel(-Math.round(maxAbs), H - PAD_Y - 4)}
+    `;
+
+    // Decade year labels
+    if (yearsEl) {
+      const first = rows[0].year;
+      const last  = rows[rows.length - 1].year;
+      const ticks = [];
+      for (let y = Math.ceil(first / 10) * 10; y <= last; y += 10) ticks.push(y);
+      if (ticks[0] !== first) ticks.unshift(first);
+      if (ticks[ticks.length - 1] !== last) ticks.push(last);
+      yearsEl.innerHTML = ticks.map(y => `<span>${y}</span>`).join('');
     }
     hydrated += 1;
   })();

@@ -67,6 +67,7 @@ export async function getHistoricalWeather(lat, lng, startDate, endDate) {
     daily: [
       'temperature_2m_max', 'temperature_2m_min',
       'precipitation_sum', 'wind_speed_10m_max',
+      'et0_fao_evapotranspiration',
     ].join(','),
     timezone: 'auto',
   });
