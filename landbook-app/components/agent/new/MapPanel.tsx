@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useImperativeHandle, useRef, forwardRef } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+  forwardRef,
+} from "react";
 import mapboxgl from "mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import type { Feature, Polygon } from "geojson";
@@ -17,13 +23,21 @@ export interface MapPanelHandle {
 export interface MapPanelProps {
   token: string | undefined;
   onPolygonChange: (ring: number[][] | null) => void;
+  hasPolygon: boolean;
 }
 
+const STYLES = {
+  satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+  terrain: "mapbox://styles/mapbox/outdoors-v12",
+} as const;
+type StyleKey = keyof typeof STYLES;
+
 export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
-  function MapPanel({ token, onPolygonChange }, ref) {
+  function MapPanel({ token, onPolygonChange, hasPolygon }, ref) {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const drawRef = useRef<MapboxDraw | null>(null);
+    const [style, setStyleKey] = useState<StyleKey>("satellite");
 
     useEffect(() => {
       if (!token || !containerRef.current) return;
@@ -31,7 +45,7 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
 
       const map = new mapboxgl.Map({
         container: containerRef.current,
-        style: "mapbox://styles/mapbox/satellite-streets-v12",
+        style: STYLES.satellite,
         center: [0, 20],
         zoom: 1.5,
       });
@@ -69,6 +83,26 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
         drawRef.current = null;
       };
     }, [token, onPolygonChange]);
+
+    // Switch basemap style without remounting the map; reattach the draw
+    // control + features once the new style finishes loading.
+    useEffect(() => {
+      const map = mapRef.current;
+      const draw = drawRef.current;
+      if (!map || !draw) return;
+      const saved = draw.getAll();
+      try {
+        map.removeControl(draw);
+      } catch {
+        // not attached — ignore
+      }
+      map.setStyle(STYLES[style]);
+      const onLoad = () => {
+        map.addControl(draw);
+        if (saved.features.length) draw.set(saved);
+      };
+      map.once("styledata", onLoad);
+    }, [style]);
 
     useImperativeHandle(ref, () => ({
       flyTo(lng, lat) {
@@ -112,6 +146,11 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       },
     }));
 
+    function resetBoundary() {
+      drawRef.current?.deleteAll();
+      onPolygonChange(null);
+    }
+
     if (!token) {
       return (
         <div className="relative flex min-h-[420px] items-center justify-center rounded-lg border border-brand-sage/30 bg-brand-forest px-6 text-center text-brand-cream/85">
@@ -124,10 +163,47 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
     }
 
     return (
-      <div
-        ref={containerRef}
-        className="relative min-h-[420px] overflow-hidden rounded-lg border border-brand-sage/30"
-      />
+      <div className="relative">
+        <div
+          ref={containerRef}
+          className="relative min-h-[420px] overflow-hidden rounded-lg border border-brand-sage/30"
+        />
+        {/* Top map controls — hidden on mobile */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 hidden items-start justify-between gap-3 md:flex">
+          <div className="pointer-events-auto">
+            {hasPolygon && (
+              <button
+                type="button"
+                onClick={resetBoundary}
+                className="rounded-full bg-brand-charcoal/85 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-cream shadow backdrop-blur transition hover:bg-brand-charcoal"
+              >
+                Reset boundary
+              </button>
+            )}
+          </div>
+          <div
+            role="group"
+            aria-label="Map style"
+            className="pointer-events-auto flex overflow-hidden rounded-full bg-brand-charcoal/85 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-cream/75 shadow backdrop-blur"
+          >
+            {(["satellite", "terrain"] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setStyleKey(key)}
+                aria-pressed={style === key}
+                className={
+                  style === key
+                    ? "bg-brand-cream px-3 py-1.5 text-brand-charcoal"
+                    : "px-3 py-1.5 transition hover:text-brand-cream"
+                }
+              >
+                {key === "satellite" ? "Satellite" : "Terrain"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 );

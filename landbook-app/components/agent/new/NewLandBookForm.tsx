@@ -2,7 +2,14 @@
 
 import { useMemo, useRef, useState, useTransition } from "react";
 import area from "@turf/area";
-import type { Feature, FeatureCollection, Polygon, MultiPolygon } from "geojson";
+import length from "@turf/length";
+import type {
+  Feature,
+  FeatureCollection,
+  LineString,
+  Polygon,
+  MultiPolygon,
+} from "geojson";
 import { kml as kmlToGeoJson } from "@tmcw/togeojson";
 import {
   Eyebrow,
@@ -78,7 +85,7 @@ export function NewLandBookForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
-  const areaHa = useMemo(() => {
+  const metrics = useMemo(() => {
     if (!boundary || boundary.length < 4) return null;
     const ring = boundary;
     const closed =
@@ -86,15 +93,34 @@ export function NewLandBookForm() {
       ring[0]![1] === ring[ring.length - 1]![1]
         ? ring
         : [...ring, ring[0]!];
-    const feature: Feature<Polygon> = {
+    const poly: Feature<Polygon> = {
       type: "Feature",
       properties: {},
       geometry: { type: "Polygon", coordinates: [closed] },
     };
-    return area(feature) / 10000;
+    const ringLine: Feature<LineString> = {
+      type: "Feature",
+      properties: {},
+      geometry: { type: "LineString", coordinates: closed },
+    };
+    return {
+      areaHa: area(poly) / 10000,
+      perimeterM: length(ringLine, { units: "kilometers" }) * 1000,
+    };
   }, [boundary]);
 
   const vertexCount = boundary ? Math.max(0, boundary.length - 1) : 0;
+
+  function formatArea(ha: number): string {
+    if (ha >= 100) return `${ha.toFixed(1)} ha`;
+    if (ha >= 1) return `${ha.toFixed(2)} ha`;
+    return `${(ha * 10000).toFixed(0)} m²`;
+  }
+
+  function formatPerimeter(m: number): string {
+    if (m >= 1000) return `${(m / 1000).toFixed(2)} km`;
+    return `${Math.round(m)} m`;
+  }
 
   const canSubmit = Boolean(boundary && address.trim().length > 0 && !isPending);
 
@@ -148,8 +174,13 @@ export function NewLandBookForm() {
     const formEl = formRef.current;
     if (!formEl) return;
     const fd = new FormData(formEl);
+    const name = String(fd.get("name") ?? "").trim();
+    if (!name) {
+      setError("A property title is required.");
+      return;
+    }
     const payload = {
-      name: String(fd.get("name") ?? ""),
+      name,
       address: address.trim(),
       cadastralRef: String(fd.get("cadastralRef") ?? ""),
       clientName: String(fd.get("clientName") ?? ""),
@@ -173,8 +204,11 @@ export function NewLandBookForm() {
       className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_1fr]"
     >
       <div className="space-y-6 rounded-lg border border-brand-sage/30 bg-white p-8">
-        <Field label="Property name (internal)" hint="Only your team sees this">
-          <TextInput name="name" placeholder="A short name for this property" />
+        <Field label="Property title" hint="Shown as the LandBook name in your dashboard.">
+          <TextInput
+            name="name"
+            placeholder="e.g. Quinta do Vale da Porca"
+          />
         </Field>
 
         <div>
@@ -191,17 +225,27 @@ export function NewLandBookForm() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Area (ha)">
-            <TextInput
-              placeholder="—"
-              defaultValue={areaHa != null ? areaHa.toFixed(2) : ""}
-              key={areaHa ?? "empty"}
-            />
-          </Field>
-          <Field label="Cadastral ref. (optional)">
-            <TextInput name="cadastralRef" placeholder="—" />
-          </Field>
+        <Field label="Cadastral ref. (optional)">
+          <TextInput name="cadastralRef" placeholder="—" />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-4 rounded border border-brand-sage/30 bg-brand-cream/40 p-4">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
+              Land size
+            </p>
+            <p className="mt-1 font-serif text-lg font-bold text-brand-charcoal tabular-nums">
+              {metrics ? formatArea(metrics.areaHa) : "—"}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
+              Perimeter
+            </p>
+            <p className="mt-1 font-serif text-lg font-bold text-brand-charcoal tabular-nums">
+              {metrics ? formatPerimeter(metrics.perimeterM) : "—"}
+            </p>
+          </div>
         </div>
 
         <div className="border-t border-brand-sage/20 pt-6">
@@ -277,10 +321,11 @@ export function NewLandBookForm() {
           ref={mapRef}
           token={MAPBOX_TOKEN}
           onPolygonChange={setBoundary}
+          hasPolygon={Boolean(boundary)}
         />
-        {boundary && areaHa != null && (
+        {boundary && metrics && (
           <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-brand-charcoal px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-cream">
-            Detected boundary · {areaHa.toFixed(2)} ha · {vertexCount} vertices
+            {formatArea(metrics.areaHa)} · {formatPerimeter(metrics.perimeterM)} · {vertexCount} vertices
           </div>
         )}
       </div>
