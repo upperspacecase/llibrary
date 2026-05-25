@@ -1,9 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Eyebrow, Icon } from "@/components/agent/primitives";
-import { storage } from "@/lib/firebase/client";
 import type { LandbookFile } from "@/lib/types";
 import { recordFileAction, saveAgentNotesAction } from "./actions";
 
@@ -57,12 +55,12 @@ export default function UploadClient({
   const [pendingNotes, startNotesTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  function startUpload(rawFiles: FileList | File[]) {
+  async function startUpload(rawFiles: FileList | File[]) {
     const list = Array.from(rawFiles);
     for (const file of list) {
       const jobId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const safe = safeFilename(file.name);
-      const storagePath = `landbooks/${landbookId}/uploads/${jobId}-${safe}`;
+      const path = `landbooks/${landbookId}/${jobId}-${safe}`;
 
       setJobs((prev) => [
         ...prev,
@@ -75,80 +73,55 @@ export default function UploadClient({
         },
       ]);
 
-      const task = uploadBytesResumable(ref(storage, storagePath), file, {
-        contentType: file.type || undefined,
-      });
-
-      task.on(
-        "state_changed",
-        (snap) => {
-          const pct = snap.totalBytes
-            ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
-            : 0;
-          setJobs((prev) =>
-            prev.map((j) => (j.id === jobId ? { ...j, progress: pct } : j))
-          );
-        },
-        (err) => {
-          setJobs((prev) =>
-            prev.map((j) =>
-              j.id === jobId
-                ? { ...j, status: "error", error: err.message }
-                : j
-            )
-          );
-        },
-        async () => {
-          try {
-            const downloadUrl = await getDownloadURL(task.snapshot.ref);
-            const res = await recordFileAction(landbookId, {
-              name: file.name,
-              kind: file.type || "unknown",
-              size: file.size,
-              storagePath,
-              downloadUrl,
-            });
-            if (!res.ok) {
-              setJobs((prev) =>
-                prev.map((j) =>
-                  j.id === jobId
-                    ? { ...j, status: "error", error: res.error || "Save failed" }
-                    : j
-                )
-              );
-              return;
-            }
-            const recorded: LandbookFile = {
-              landbookId,
-              ownerId: "",
-              name: file.name,
-              kind: file.type || "unknown",
-              size: file.size,
-              storagePath,
-              downloadUrl,
-              uploadedAt: new Date().toISOString(),
-            };
-            setFiles((prev) => [recorded, ...prev]);
-            setJobs((prev) =>
-              prev.map((j) =>
-                j.id === jobId ? { ...j, status: "done", progress: 100 } : j
-              )
-            );
-          } catch (e) {
-            setJobs((prev) =>
-              prev.map((j) =>
-                j.id === jobId
-                  ? {
-                      ...j,
-                      status: "error",
-                      error: (e as Error).message,
-                    }
-                  : j
-              )
-            );
+      try {
+        const res = await fetch(
+          `/api/agent/upload?filename=${encodeURIComponent(path)}`,
+          {
+            method: "POST",
+            headers: { "content-type": file.type || "application/octet-stream" },
+            body: file,
           }
+        );
+        if (!res.ok) {
+          const detail = (await res.json().catch(() => ({}))) as { error?: string };
+          throw new Error(detail.error || `Upload failed (${res.status})`);
         }
-      );
+        const { url } = (await res.json()) as { url: string };
+
+        const recordRes = await recordFileAction(landbookId, {
+          name: file.name,
+          kind: file.type || "unknown",
+          size: file.size,
+          downloadUrl: url,
+        });
+        if (!recordRes.ok) {
+          throw new Error(recordRes.error || "Save failed");
+        }
+
+        const recorded: LandbookFile = {
+          landbookId,
+          ownerId: "",
+          name: file.name,
+          kind: file.type || "unknown",
+          size: file.size,
+          downloadUrl: url,
+          uploadedAt: new Date().toISOString(),
+        };
+        setFiles((prev) => [recorded, ...prev]);
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === jobId ? { ...j, status: "done", progress: 100 } : j
+          )
+        );
+      } catch (err) {
+        setJobs((prev) =>
+          prev.map((j) =>
+            j.id === jobId
+              ? { ...j, status: "error", error: (err as Error).message }
+              : j
+          )
+        );
+      }
     }
   }
 
@@ -252,7 +225,7 @@ export default function UploadClient({
         <ul className="mt-8 divide-y divide-brand-sage/20 overflow-hidden rounded-lg border border-brand-sage/30 bg-white">
           {files.map((f) => (
             <li
-              key={f.storagePath}
+              key={f.downloadUrl}
               className="flex items-center justify-between gap-4 px-5 py-4"
             >
               <div className="flex items-center gap-3 min-w-0">

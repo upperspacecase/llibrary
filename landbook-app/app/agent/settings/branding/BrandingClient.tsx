@@ -1,13 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import {
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-} from "firebase/storage";
 import { Eyebrow, PillButton } from "@/components/agent/primitives";
-import { storage } from "@/lib/firebase/client";
 import type { AgentSettings } from "@/lib/types";
 import { saveBrandingAction, saveLogoAction } from "./actions";
 
@@ -51,45 +45,34 @@ export default function BrandingClient({ ownerId, initial }: Props) {
     fileRef.current?.click();
   }
 
-  function uploadLogo(file: File) {
+  async function uploadLogo(file: File) {
     setLogoError(null);
     setLogoProgress(0);
-    const path = `agents/${ownerId}/logos/${Date.now()}-${safeFilename(file.name)}`;
-    const task = uploadBytesResumable(ref(storage, path), file, {
-      contentType: file.type || undefined,
-    });
-    task.on(
-      "state_changed",
-      (snap) => {
-        const pct = snap.totalBytes
-          ? Math.round((snap.bytesTransferred / snap.totalBytes) * 100)
-          : 0;
-        setLogoProgress(pct);
-      },
-      (err) => {
-        setLogoError(err.message);
-        setLogoProgress(null);
-      },
-      async () => {
-        try {
-          const url = await getDownloadURL(task.snapshot.ref);
-          const res = await saveLogoAction({
-            storagePath: path,
-            downloadUrl: url,
-          });
-          if (!res.ok) {
-            setLogoError(res.error || "Save failed");
-            setLogoProgress(null);
-            return;
-          }
-          setLogoUrl(url);
-          setLogoProgress(null);
-        } catch (e) {
-          setLogoError((e as Error).message);
-          setLogoProgress(null);
+    const path = `logos/${Date.now()}-${safeFilename(file.name)}`;
+    try {
+      const res = await fetch(
+        `/api/agent/upload?filename=${encodeURIComponent(path)}`,
+        {
+          method: "POST",
+          headers: { "content-type": file.type || "application/octet-stream" },
+          body: file,
         }
+      );
+      if (!res.ok) {
+        const detail = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(detail.error || `Upload failed (${res.status})`);
       }
-    );
+      const { url } = (await res.json()) as { url: string };
+      const saveRes = await saveLogoAction({ downloadUrl: url });
+      if (!saveRes.ok) {
+        throw new Error(saveRes.error || "Save failed");
+      }
+      setLogoUrl(url);
+      setLogoProgress(null);
+    } catch (e) {
+      setLogoError((e as Error).message);
+      setLogoProgress(null);
+    }
   }
 
   function save() {

@@ -16,7 +16,6 @@ export interface RecordFileInput {
   name: string;
   kind: string;
   size: number;
-  storagePath: string;
   downloadUrl: string;
 }
 
@@ -37,7 +36,6 @@ export async function recordFileAction(
     name: input.name,
     kind: input.kind || "unknown",
     size: input.size,
-    storagePath: input.storagePath,
     downloadUrl: input.downloadUrl,
     uploadedAt: new Date().toISOString(),
   };

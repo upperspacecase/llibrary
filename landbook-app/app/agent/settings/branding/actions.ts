@@ -57,7 +57,7 @@ export async function saveBrandingAction(
 }
 
 export async function saveLogoAction(
-  input: { storagePath: string; downloadUrl: string }
+  input: { downloadUrl: string }
 ): Promise<{ ok: boolean; error?: string }> {
   const user = await requireCurrentUser();
   const col = await getCollection<AgentSettings>("agent_settings");
@@ -67,7 +67,6 @@ export async function saveLogoAction(
       $set: {
         ownerId: user.uid,
         logoUrl: input.downloadUrl,
-        logoStoragePath: input.storagePath,
         updatedAt: new Date().toISOString(),
       },
     },

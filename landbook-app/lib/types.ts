@@ -399,7 +399,6 @@ export interface AgentSettings {
   tagline?: string;
   accentColor?: string;
   logoUrl?: string;
-  logoStoragePath?: string;
   updatedAt?: string;
 }
 
@@ -409,7 +408,6 @@ export interface LandbookFile {
   name: string;
   kind: string;
   size: number;
-  storagePath: string;
   downloadUrl: string;
   uploadedAt: string;
   agentNote?: string;
