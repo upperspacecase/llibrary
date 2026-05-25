@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "./UserMenu";
 
 type NavKey = "books" | "billing" | "settings";
 
@@ -61,9 +62,7 @@ export function AgentHeader({ active = "books" }: { active?: NavKey }) {
             </svg>
             Help
           </button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-forest text-[11px] font-semibold text-brand-cream">
-            —
-          </div>
+          <UserMenu />
         </div>
       </div>
     </header>
