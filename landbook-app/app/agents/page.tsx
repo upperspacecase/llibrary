@@ -25,7 +25,6 @@ export const metadata: Metadata = {
     "Show up to every listing pitch with a professional LandBook that builds trust with sellers and cuts buyer due diligence from weeks to days.",
 };
 
-const CREATE_URL = "https://www.landlibrary.co/create";
 const DEMO_LANDBOOK_ID = "4f10f955-3b64-4307-83fc-97bae872b68c";
 
 async function getLandbook(id: string): Promise<Landbook | null> {
@@ -146,7 +145,7 @@ function HeroCopy() {
 
       <div className="mt-8 sm:mt-10">
         <a
-          href={CREATE_URL}
+          href="/agent/signin"
           className="inline-flex w-full items-center justify-center rounded-full border border-brand-charcoal bg-brand-charcoal px-8 py-4 text-sm font-semibold uppercase tracking-[0.15em] text-brand-cream transition hover:bg-transparent hover:text-brand-charcoal sm:w-auto"
         >
           Get your first LandBook
