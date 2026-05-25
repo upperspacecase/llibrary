@@ -84,14 +84,61 @@ function buildHashInput(source, schemaVersion) {
  *   hashSource?: object,  // unwrapped reportData to hash. Falls back to facts when omitted.
  * }} [ctx]
  */
+/**
+ * Merge new wrapped facts against the previous doc so that a leaf with a
+ * non-null prior value is NOT overwritten by a null/missing new value.
+ *
+ * Why: upstream sources (Open-Meteo archive, NASA FIRMS, …) periodically
+ * rate-limit or 5xx, which surfaces as `wrap(null, …)` for that leaf. Without
+ * this merge, the next save would replace the good prior reading with null
+ * and the dashboard would degrade to DATA? until the next clean run.
+ *
+ * Rules:
+ *   - Only operates one level deep (the canonical fact ontology is shallow).
+ *   - Each leaf is the `wrap()` envelope: { value, unit, confidence, sourceRef }.
+ *   - If the new value is null/undefined AND the prior value is non-null,
+ *     keep the prior leaf. Otherwise take the new leaf as-is.
+ */
+function mergeFactsPreservingNonNull(next, prev) {
+  if (!prev || typeof prev !== 'object') return next;
+  const out = { ...next };
+  for (const [sectionKey, sectionVal] of Object.entries(next)) {
+    if (!sectionVal || typeof sectionVal !== 'object' || Array.isArray(sectionVal)) continue;
+    const prevSection = prev[sectionKey];
+    if (!prevSection || typeof prevSection !== 'object') continue;
+    const mergedSection = { ...sectionVal };
+    for (const [leafKey, leafVal] of Object.entries(sectionVal)) {
+      const isEnvelope = leafVal && typeof leafVal === 'object' && 'value' in leafVal;
+      if (!isEnvelope) continue;
+      const prevLeaf = prevSection[leafKey];
+      const prevIsEnvelope = prevLeaf && typeof prevLeaf === 'object' && 'value' in prevLeaf;
+      if (!prevIsEnvelope) continue;
+      const newIsEmpty = leafVal.value == null
+        || (Array.isArray(leafVal.value) && leafVal.value.length === 0);
+      const prevHasValue = prevLeaf.value != null
+        && !(Array.isArray(prevLeaf.value) && prevLeaf.value.length === 0);
+      if (newIsEmpty && prevHasValue) {
+        mergedSection[leafKey] = { ...prevLeaf, _stale: true };
+      }
+    }
+    out[sectionKey] = mergedSection;
+  }
+  return out;
+}
+
 export async function saveFacts(landbookId, facts, ctx = {}) {
   const c = await col();
+
+  // Preserve previous non-null leaves when this run has nulls (rate-limit /
+  // transient source failure). Same shape doc, just stickier.
+  const prev = await c.findOne({ landbookId });
+  const merged = mergeFactsPreservingNonNull(facts, prev);
 
   const schemaVersion = ctx.schemaVersion || 1;
   // Prefer hashing the unwrapped canonical content, not the wrap envelope.
   // If the caller didn't supply hashSource, fall back to the wrapped facts —
   // suboptimal but stable (and matches the pre-Phase-5 surface).
-  const hashInput = buildHashInput(ctx.hashSource || facts, schemaVersion);
+  const hashInput = buildHashInput(ctx.hashSource || merged, schemaVersion);
   const contentHash = createHash('sha256')
     .update(stableJson(hashInput))
     .digest('hex')
@@ -101,7 +148,7 @@ export async function saveFacts(landbookId, facts, ctx = {}) {
     { landbookId },
     {
       $set: {
-        ...facts,
+        ...merged,
         landbookId,
         contentHash,
         runId: ctx.runId || null,
