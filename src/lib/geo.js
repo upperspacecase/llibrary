@@ -5,8 +5,14 @@
 const EARTH_RADIUS = 6371000; // meters
 
 /**
- * Calculate area of a polygon using the Shoelace formula on geodetic coordinates.
- * Uses spherical excess method for better accuracy.
+ * Polygon area on the sphere (Bevis-Cambareri / Karney form).
+ * For each vertex i: term_i = (λ_{i+1} - λ_{i-1}) · sin(φ_i), all in radians.
+ * Area = | R² · Σ term_i / 2 |.
+ *
+ * The previous implementation indexed `coords[i+2][0]` instead of `coords[i][0]`,
+ * which understated area by ~50% on small polygons (a 1° equatorial square
+ * returned ~6,200 km² where the true value is ~12,365 km²).
+ *
  * @param {Array<[number, number]>} coords - Array of [lat, lng] pairs
  * @returns {number} Area in square meters
  */
@@ -14,13 +20,14 @@ export function polygonArea(coords) {
   if (!coords || coords.length < 3) return 0;
 
   const toRad = d => d * Math.PI / 180;
-  let total = 0;
   const n = coords.length;
+  let total = 0;
 
   for (let i = 0; i < n; i++) {
-    const j = (i + 1) % n;
-    const k = (i + 2) % n;
-    total += toRad(coords[j][1] - coords[i][1]) * Math.sin(toRad(coords[k][0]));
+    const prev = coords[(i - 1 + n) % n];
+    const curr = coords[i];
+    const next = coords[(i + 1) % n];
+    total += (toRad(next[1]) - toRad(prev[1])) * Math.sin(toRad(curr[0]));
   }
 
   return Math.abs(total * EARTH_RADIUS * EARTH_RADIUS / 2);

@@ -22,7 +22,9 @@ let submissionId = null;
 // ---------------------------------------------------------------------------
 const postcodeInput = document.getElementById('postcode-input');
 const btnSearch = document.getElementById('btn-search');
+const propertyTitleInput = document.getElementById('property-title-input');
 const statArea = document.getElementById('stat-area');
+const statPerimeter = document.getElementById('stat-perimeter');
 const areaOverrideRow = document.getElementById('area-override-row');
 const areaOverride = document.getElementById('area-override');
 const instructions = document.getElementById('map-instructions');
@@ -306,6 +308,12 @@ function updateStats() {
       : formatArea(area).replace(/([\d.]+)\s*(\S+)/, '$1<span class="unit">$2</span>');
   }
   if (areaOverride) areaOverride.placeholder = ha.toFixed(2);
+  if (statPerimeter) {
+    const m = polygonPerimeter(boundaryPoints);
+    statPerimeter.innerHTML = m >= 1000
+      ? `${(m / 1000).toFixed(2)}<span class="unit">km</span>`
+      : `${Math.round(m)}<span class="unit">m</span>`;
+  }
 }
 
 if (btnReset) btnReset.addEventListener('click', clearAll);
@@ -399,6 +407,7 @@ const errPostcode = document.getElementById('err-postcode');
 const errBoundary = document.getElementById('err-boundary');
 const errName = document.getElementById('err-name');
 const errContact = document.getElementById('err-contact');
+const errPropertyTitle = document.getElementById('err-property-title');
 
 function showError(el, inputEl, show) {
   if (el) el.classList.toggle('visible', show);
@@ -410,6 +419,7 @@ function clearErrors() {
   showError(errBoundary, null, false);
   showError(errName, nameInput, false);
   showError(errContact, contactInput, false);
+  showError(errPropertyTitle, propertyTitleInput, false);
 }
 
 function updateSubmitState() {
@@ -423,6 +433,7 @@ function updateSubmitState() {
 if (postcodeInput) postcodeInput.addEventListener('input', () => { showError(errPostcode, postcodeInput, false); });
 if (nameInput) nameInput.addEventListener('input', () => { showError(errName, nameInput, false); });
 if (contactInput) contactInput.addEventListener('input', () => { showError(errContact, contactInput, false); });
+if (propertyTitleInput) propertyTitleInput.addEventListener('input', () => { showError(errPropertyTitle, propertyTitleInput, false); });
 
 // ---------------------------------------------------------------------------
 // Notes character count
@@ -438,12 +449,14 @@ if (btnSubmit) {
   btnSubmit.addEventListener('click', async () => {
     clearErrors();
 
+    const hasPropertyTitle = propertyTitleInput && propertyTitleInput.value.trim().length > 0;
     const hasPostcode = postcodeInput && postcodeInput.value.trim().length >= 3;
     const hasBoundary = isClosed && boundaryPoints.length >= 3;
     const hasName = nameInput && nameInput.value.trim().length > 0;
     const hasContact = contactInput && contactInput.value.trim().length > 3;
 
     let valid = true;
+    if (!hasPropertyTitle) { showError(errPropertyTitle, propertyTitleInput, true); valid = false; }
     if (!hasPostcode) { showError(errPostcode, postcodeInput, true); valid = false; }
     if (!hasBoundary) { showError(errBoundary, null, true); valid = false; }
     if (!hasName) { showError(errName, nameInput, true); valid = false; }
@@ -462,8 +475,10 @@ if (btnSubmit) {
         boundary: boundaryPoints,
         center: polygonCentroid(boundaryPoints),
         area,
+        areaOverride: overrideHa > 0 ? overrideHa : null,
         perimeter: polygonPerimeter(boundaryPoints),
         postcode: postcodeInput.value.trim(),
+        propertyTitle: propertyTitleInput.value.trim(),
         name: nameInput ? nameInput.value.trim() : '',
         contactMethod: getPillValue('contact-method'),
         contact: contactInput ? contactInput.value.trim() : '',

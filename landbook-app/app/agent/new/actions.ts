@@ -18,6 +18,8 @@ export interface CreateLandbookInput {
   email: string;
   /** Polygon ring as [lng, lat][]; first point should equal last */
   boundary: number[][];
+  /** Hectares, overrides the computed area when provided */
+  areaOverrideHa: number | null;
 }
 
 function isClosedRing(ring: number[][]): boolean {
@@ -48,7 +50,7 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
   // Match v1 store.js semantics: area in m², perimeter in m, center {lat,lng}.
   // boundary stored as [lat, lng][] (v1's convention) so the submissions
   // pipeline downstream doesn't need to flip coordinates.
-  const sqMeters = area(polygon);
+  const computedSqMeters = area(polygon);
   const ringLine: Feature<LineString> = {
     type: "Feature",
     properties: {},
@@ -57,6 +59,15 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
   const perimeterMeters = length(ringLine, { units: "kilometers" }) * 1000;
   const [cx, cy] = centroid(polygon).geometry.coordinates;
   const boundaryLatLng: number[][] = closed.slice(0, -1).map(([lng, lat]) => [lat!, lng!]);
+
+  // Honor the agent's manual size override when present. Stored area is in
+  // m²; override input is in ha. Always keep the computed value in
+  // `areaComputed` so we can show "agent set X, computed Y" downstream.
+  const overrideHa = input.areaOverrideHa;
+  const finalSqMeters =
+    overrideHa != null && Number.isFinite(overrideHa) && overrideHa > 0
+      ? overrideHa * 10000
+      : computedSqMeters;
 
   const id = randomUUID();
   const now = new Date().toISOString();
@@ -67,7 +78,9 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
     ownerId: user.uid,
     boundary: boundaryLatLng,
     center: { lat: cy!, lng: cx! },
-    area: sqMeters,
+    area: finalSqMeters,
+    areaComputed: computedSqMeters,
+    areaOverride: overrideHa ?? null,
     perimeter: perimeterMeters,
     postcode: trimmedAddress,
     address: trimmedAddress,

@@ -439,7 +439,12 @@ export interface Submission {
   ownerId?: string;
   boundary: number[][];
   center: Coords | null;
+  /** Area in m². If areaOverride is set, this equals areaOverride·10000. */
   area: number | null;
+  /** Auto-computed area in m² (kept even when agent overrides). */
+  areaComputed?: number | null;
+  /** Agent-supplied override in hectares, when present. */
+  areaOverride?: number | null;
   perimeter: number | null;
   postcode: string;
   address?: string;

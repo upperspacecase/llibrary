@@ -78,6 +78,7 @@ function extractFirstPolygonRing(input: unknown): number[][] | null {
 export function NewLandBookForm() {
   const [address, setAddress] = useState("");
   const [boundary, setBoundary] = useState<number[][] | null>(null);
+  const [areaOverride, setAreaOverride] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -179,6 +180,7 @@ export function NewLandBookForm() {
       setError("A property title is required.");
       return;
     }
+    const overrideHa = areaOverride.trim() ? Number(areaOverride) : NaN;
     const payload = {
       name,
       address: address.trim(),
@@ -186,6 +188,7 @@ export function NewLandBookForm() {
       clientName: String(fd.get("clientName") ?? ""),
       email: String(fd.get("email") ?? ""),
       boundary,
+      areaOverrideHa: Number.isFinite(overrideHa) && overrideHa > 0 ? overrideHa : null,
     };
     setError(null);
     startTransition(async () => {
@@ -232,10 +235,25 @@ export function NewLandBookForm() {
         <div className="grid grid-cols-2 gap-4 rounded border border-brand-sage/30 bg-brand-cream/40 p-4">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
-              Land size
+              Land size (ha)
             </p>
-            <p className="mt-1 font-serif text-lg font-bold text-brand-charcoal tabular-nums">
-              {metrics ? formatArea(metrics.areaHa) : "—"}
+            <div className="mt-1 flex items-baseline gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+                min="0"
+                value={areaOverride}
+                onChange={(e) => setAreaOverride(e.target.value)}
+                placeholder={metrics ? metrics.areaHa.toFixed(2) : "—"}
+                className="w-full border-b border-brand-sage/40 bg-transparent pb-1 font-serif text-lg font-bold tabular-nums text-brand-charcoal outline-none placeholder:font-normal placeholder:text-brand-charcoal/55 focus:border-brand-charcoal"
+              />
+              <span className="text-[11px] text-brand-charcoal/55">ha</span>
+            </div>
+            <p className="mt-1 text-[10px] text-brand-charcoal/45">
+              {metrics
+                ? `Computed ${metrics.areaHa.toFixed(2)} ha — type to override.`
+                : "Auto-computed once you draw."}
             </p>
           </div>
           <div>

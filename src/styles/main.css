@@ -3138,12 +3138,11 @@ a {
 }
 
 /* Reset button (sidebar, after boundary closed) */
-/* Reset Boundary button (map overlay) */
+/* Reset Boundary button (map overlay — top-left) */
 .btn-map-reset {
   position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 16px;
+  left: 16px;
   z-index: 50;
   padding: 8px 20px;
   font-size: 13px;
@@ -3193,7 +3192,7 @@ a {
 
 .create-map-style-toggle {
   position: absolute;
-  bottom: 24px;
+  top: 16px;
   right: 16px;
   display: flex;
   background: rgba(255, 255, 255, 0.95);
@@ -3201,6 +3200,14 @@ a {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
   z-index: 50;
   overflow: hidden;
+}
+
+/* Hide map controls on mobile — reach the buttons via the sidebar */
+@media (max-width: 768px) {
+  .btn-map-reset,
+  .create-map-style-toggle {
+    display: none !important;
+  }
 }
 
 .map-style-btn {

@@ -62,6 +62,12 @@
           <p class="create-desc">Enter your post code or use your location, then draw your boundary on the map.</p>
 
           <div class="create-field">
+            <label for="property-title-input">Property Title</label>
+            <input type="text" id="property-title-input" placeholder="e.g. Quinta do Vale da Porca" autocomplete="off">
+            <p class="create-field-error" id="err-property-title">Give your land a title</p>
+          </div>
+
+          <div class="create-field">
             <label for="postcode-input">Postcode / Location</label>
             <div class="create-search">
               <input type="text" id="postcode-input" placeholder="Enter post code..." autocomplete="postal-code">
@@ -80,6 +86,10 @@
             <div class="create-address-row">
               <span class="create-address-label">Land Area</span>
               <span class="create-address-value" id="stat-area">&mdash;</span>
+            </div>
+            <div class="create-address-row">
+              <span class="create-address-label">Perimeter</span>
+              <span class="create-address-value" id="stat-perimeter">&mdash;</span>
             </div>
             <div class="create-area-override" id="area-override-row" style="display:none;">
               <div class="create-area-override-input">
