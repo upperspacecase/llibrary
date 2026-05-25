@@ -414,3 +414,53 @@ export interface LandbookFile {
   uploadedAt: string;
   agentNote?: string;
 }
+
+export interface AgentStripe {
+  ownerId: string;
+  stripeCustomerId: string;
+  subscriptionId?: string;
+  planPriceId?: string;
+  status?: string;
+  currentPeriodEnd?: number;
+  lastPaymentStatus?: "paid" | "failed";
+  lastPaymentAt?: string;
+  updatedAt: string;
+}
+
+export interface LandbookPayment {
+  landbookId: string;
+  ownerId: string;
+  sessionId: string;
+  amount: number;
+  currency: string;
+  paidAt: string;
+}
+
+export interface Submission {
+  id: string;
+  ownerId?: string;
+  boundary: number[][];
+  center: Coords | null;
+  area: number | null;
+  perimeter: number | null;
+  postcode: string;
+  address?: string;
+  name: string;
+  contactMethod: string;
+  contact: string;
+  propertyName?: string;
+  clientName?: string;
+  cadastralRef?: string;
+  landCondition?: string[];
+  landUse?: string[];
+  zoning?: string[];
+  waterReliability?: string;
+  waterSource?: string[];
+  challenges?: string[];
+  landGoals?: string[];
+  helpNeeded?: string[];
+  notes?: string;
+  files?: Array<{ name: string; size: number; type: string; url: string }>;
+  created: string;
+  landbookId?: string;
+}

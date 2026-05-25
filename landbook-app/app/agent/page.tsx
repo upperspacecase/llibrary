@@ -10,8 +10,8 @@ import {
 } from "@/components/agent/primitives";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
-import type { Landbook } from "@/lib/types";
-import { bookDisplayName, deriveStatus } from "@/lib/landbook-status";
+import type { Landbook, Submission } from "@/lib/types";
+import { bookDisplayName, deriveStatus, type LandbookStatus } from "@/lib/landbook-status";
 
 export const dynamic = "force-dynamic";
 
@@ -21,17 +21,66 @@ export const metadata: Metadata = {
 
 const FILTERS = ["All", "Drafts", "Processing", "Ready", "Shared", "Archived"];
 
-async function loadBooks(): Promise<Landbook[]> {
+type AgentItem = {
+  id: string;
+  href: string;
+  display: string;
+  subline: string;
+  status: LandbookStatus;
+  updated?: string;
+  isSubmission: boolean;
+};
+
+async function loadItems(): Promise<AgentItem[]> {
   const user = await getCurrentUser();
   if (!user) return [];
 
-  const col = await getCollection<Landbook>("landbooks");
-  const docs = await col
-    .find({ ownerId: user.uid })
-    .sort({ updated: -1, created: -1 })
-    .toArray();
+  const [booksCol, subsCol] = await Promise.all([
+    getCollection<Landbook>("landbooks"),
+    getCollection<Submission>("submissions"),
+  ]);
 
-  return docs.map((d) => JSON.parse(JSON.stringify(d)) as Landbook);
+  const [bookDocs, subDocs] = await Promise.all([
+    booksCol.find({ ownerId: user.uid }).sort({ updated: -1, created: -1 }).toArray(),
+    subsCol.find({ ownerId: user.uid, landbookId: { $exists: false } }).sort({ created: -1 }).toArray(),
+  ]);
+
+  const books = bookDocs.map((d): AgentItem => {
+    const plain = JSON.parse(JSON.stringify(d)) as Landbook;
+    return {
+      id: plain.id,
+      href: `/agent/${plain.id}/edit`,
+      display: bookDisplayName(plain),
+      subline: plain.address || "No address yet",
+      status: deriveStatus(plain),
+      updated: plain.updated || plain.created,
+      isSubmission: false,
+    };
+  });
+
+  const submissions = subDocs.map((d): AgentItem => {
+    const plain = JSON.parse(JSON.stringify(d)) as Submission;
+    const name =
+      plain.propertyName || plain.address || plain.postcode || `Submission ${plain.id.slice(0, 8)}`;
+    const subline = plain.clientName
+      ? `${plain.address || plain.postcode} · ${plain.clientName}`
+      : plain.address || plain.postcode || "Pending review";
+    return {
+      id: plain.id,
+      href: "/agent",
+      display: name,
+      subline,
+      status: "Processing",
+      updated: plain.created,
+      isSubmission: true,
+    };
+  });
+
+  return [...submissions, ...books].sort((a, b) => {
+    const av = a.updated || "";
+    const bv = b.updated || "";
+    return bv.localeCompare(av);
+  });
 }
 
 function formatDate(value?: string): string {
@@ -46,8 +95,8 @@ function formatDate(value?: string): string {
 }
 
 export default async function MyLandBooksPage() {
-  const books = await loadBooks();
-  const total = books.length;
+  const items = await loadItems();
+  const total = items.length;
 
   return (
     <main className="min-h-screen bg-brand-cream">
@@ -102,7 +151,7 @@ export default async function MyLandBooksPage() {
             </div>
           </div>
 
-          {books.length === 0 ? (
+          {items.length === 0 ? (
             <div className="mt-6 rounded-lg border border-dashed border-brand-sage/40 bg-white py-20 text-center">
               <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-brand-sage/40 bg-brand-cream text-brand-charcoal/60">
                 <Icon.Plus />
@@ -124,53 +173,62 @@ export default async function MyLandBooksPage() {
             </div>
           ) : (
             <ul className="mt-6 divide-y divide-brand-sage/25 overflow-hidden rounded-lg border border-brand-sage/30 bg-white">
-              {books.map((book) => {
-                const status = deriveStatus(book);
-                const display = bookDisplayName(book);
-                return (
-                  <li
-                    key={book.id}
-                    className="flex items-center gap-6 px-6 py-5 transition hover:bg-brand-cream/40"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3">
+              {items.map((item) => (
+                <li
+                  key={`${item.isSubmission ? "s" : "b"}:${item.id}`}
+                  className="flex items-center gap-6 px-6 py-5 transition hover:bg-brand-cream/40"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3">
+                      {item.isSubmission ? (
+                        <span
+                          className="font-serif text-lg font-bold text-brand-charcoal/80"
+                          style={{ fontFamily: "var(--font-libre), serif" }}
+                        >
+                          {item.display}
+                        </span>
+                      ) : (
                         <Link
-                          href={`/agent/${book.id}/edit`}
+                          href={item.href}
                           className="font-serif text-lg font-bold text-brand-charcoal hover:underline"
                           style={{ fontFamily: "var(--font-libre), serif" }}
                         >
-                          {display}
+                          {item.display}
                         </Link>
-                        <StatusPill status={status} />
-                      </div>
-                      <p className="mt-1 truncate text-[12px] text-brand-charcoal/55">
-                        {book.address || "No address yet"}
-                        {book.clientName ? ` · ${book.clientName}` : ""}
-                      </p>
+                      )}
+                      <StatusPill status={item.status} />
                     </div>
-                    <div className="hidden text-right text-[11px] text-brand-charcoal/55 md:block">
-                      <p className="font-semibold uppercase tracking-[0.12em] text-brand-charcoal/45">
-                        Updated
-                      </p>
-                      <p className="mt-1">
-                        {formatDate(book.updated || book.created)}
-                      </p>
-                    </div>
+                    <p className="mt-1 truncate text-[12px] text-brand-charcoal/55">
+                      {item.subline}
+                    </p>
+                  </div>
+                  <div className="hidden text-right text-[11px] text-brand-charcoal/55 md:block">
+                    <p className="font-semibold uppercase tracking-[0.12em] text-brand-charcoal/45">
+                      {item.isSubmission ? "Submitted" : "Updated"}
+                    </p>
+                    <p className="mt-1">{formatDate(item.updated)}</p>
+                  </div>
+                  {!item.isSubmission && (
                     <div className="flex items-center gap-2">
-                      <Link href={`/agent/${book.id}/upload`}>
+                      <Link href={`/agent/${item.id}/upload`}>
                         <PillButton variant="light" icon={<Icon.Upload />}>
                           Upload
                         </PillButton>
                       </Link>
-                      <Link href={`/agent/${book.id}/share`}>
+                      <Link href={`/agent/${item.id}/share`}>
                         <PillButton variant="ghost" icon={<Icon.Share />}>
                           Share
                         </PillButton>
                       </Link>
                     </div>
-                  </li>
-                );
-              })}
+                  )}
+                  {item.isSubmission && (
+                    <span className="text-[11px] uppercase tracking-[0.15em] text-brand-charcoal/45">
+                      Awaiting analyst
+                    </span>
+                  )}
+                </li>
+              ))}
             </ul>
           )}
         </div>
