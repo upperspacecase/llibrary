@@ -78,6 +78,29 @@ export async function getHistoricalWeather(lat, lng, startDate, endDate) {
   return res.json();
 }
 
+/**
+ * Long-record daily precipitation from the ERA5-backed Open-Meteo archive.
+ * Defaults to 1940-01-01 — the earliest date the archive serves. Only the
+ * precipitation_sum field is requested so the payload stays bounded even
+ * for an ~85 year request.
+ */
+export async function getDailyPrecipSince(lat, lng, startDate = '1940-01-01') {
+  const endDate = `${new Date().getFullYear() - 1}-12-31`;
+  const params = new URLSearchParams({
+    latitude: String(lat),
+    longitude: String(lng),
+    start_date: startDate,
+    end_date: endDate,
+    daily: 'precipitation_sum',
+    timezone: 'auto',
+  });
+  const res = await enqueueArchive(() => fetchWithPolicy(`${ARCHIVE_BASE}?${params}`, {}, {
+    source: 'open-meteo-precip-long', timeoutMs: 45000, accept: 'application/json',
+  }));
+  if (!res.ok) throw new Error(`Open-Meteo long-archive error: ${res.status}`);
+  return res.json();
+}
+
 export async function getClimateAverages(lat, lng) {
   const endYear = new Date().getFullYear() - 1;
   const startYear = endYear - 29;

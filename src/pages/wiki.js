@@ -656,7 +656,7 @@ function renderEnvironmentalDashboard() {
     ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
     ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
     ['Groundwater (SNIRH)', 'NOT WIRED. Portuguese SNIRH piezometer network not in pipeline.'],
-    ['SPI-12 (1925–today)', 'Partial. Open-Meteo 50yr covers 1975+. Pre-1975 needs KNMI Climate Explorer or NOAA GHCN-monthly for Beja / Sines.'],
+    ['SPI-12 (1940–today)', 'Wired. ERA5-backed Open-Meteo archive precip, gamma-fit per calendar month, Wilson-Hilferty Z transform. Pre-1940 would need NOAA GHCN-monthly for Beja / Sines.'],
     ['iNaturalist Species (top species + total)', 'Wired @ point. Need bbox aggregation across Odemira.'],
     ['iNaturalist Threatened (IUCN badges)', 'Wired @ point. Bbox aggregation across Odemira.'],
     ['iNaturalist trend windows (13 windows)', 'Partial. Pipeline has 3 windows. Extend iNat window job to ~5-year rolls from 1970 → 13 windows.'],
@@ -795,10 +795,13 @@ function renderEnvironmentalDashboard() {
               </div>
             </div>
             <div class="ed-card ed-card--span-12">
-              <div class="ed-card-title">SPI-12 <span>(drought index, 1925–today)</span></div>
-              ${PB('SPI-12 1925–today — partial wiring', 'Open-Meteo 50yr covers 1975+. Pre-1975 needs KNMI Climate Explorer or NOAA GHCN-monthly for Beja / Sines stations.')}
+              <div class="ed-card-title">SPI-12 <span id="ed-spi-range">(drought index)</span></div>
+              <svg class="ed-spi-ribbon" id="ed-spi-ribbon" viewBox="0 0 1000 32" preserveAspectRatio="none" aria-hidden="true">
+                <rect width="1000" height="32" fill="#fef2f2"/>
+                <text x="500" y="20" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
               <div class="ed-legend-row">${spiLegend}</div>
-              <div class="ed-years ed-years--wide"><span>1925</span><span>1945</span><span>1965</span><span>1985</span><span>2005</span><span>2025</span></div>
+              <div class="ed-years ed-years--wide" id="ed-spi-years"></div>
             </div>
           </div>
         </section>
@@ -1386,6 +1389,50 @@ async function hydrateEnvironmentalDashboard() {
       if (ticks[0] !== first) ticks.unshift(first);
       if (ticks[ticks.length - 1] !== last) ticks.push(last);
       yearsEl.innerHTML = ticks.map(y => `<span>${y}</span>`).join('');
+    }
+    hydrated += 1;
+  })();
+
+  // SPI-12 ribbon — one colored stripe per month across the full archive
+  (() => {
+    const svg = document.getElementById('ed-spi-ribbon');
+    const yearsEl = document.getElementById('ed-spi-years');
+    const rangeEl = document.getElementById('ed-spi-range');
+    if (!svg) return;
+    const series = Array.isArray(payload.climate && payload.climate.spi12Series)
+      ? payload.climate.spi12Series : null;
+    if (!series || !series.length) return;
+
+    // Same color stops as the legend chips: dark-green wet → dark-red drought.
+    const colorFor = spi => {
+      if (spi == null) return '#eee';
+      if (spi >= 2)    return '#3d6b48';
+      if (spi >= 1)    return '#7a9a6e';
+      if (spi >  -1)   return '#d6c89c';
+      if (spi >  -2)   return '#b85a3a';
+      return '#7a2a14';
+    };
+
+    const W = 1000, H = 32;
+    const n = series.length;
+    const stripeW = W / n;
+    const stripes = series.map((m, i) => {
+      const x = (i * stripeW).toFixed(2);
+      return `<rect x="${x}" y="0" width="${(stripeW + 0.3).toFixed(2)}" height="${H}" fill="${colorFor(m.spi)}"><title>${m.date}: SPI ${m.spi == null ? '—' : (m.spi > 0 ? '+' : '') + m.spi}</title></rect>`;
+    }).join('');
+    svg.innerHTML = stripes;
+
+    // Decade year ticks aligned to the actual data span
+    if (yearsEl) {
+      const first = Number(series[0].date.substring(0, 4));
+      const last  = Number(series[series.length - 1].date.substring(0, 4));
+      const step  = (last - first) > 60 ? 20 : 10;
+      const ticks = [];
+      for (let y = Math.ceil(first / step) * step; y <= last; y += step) ticks.push(y);
+      if (ticks[0] !== first) ticks.unshift(first);
+      if (ticks[ticks.length - 1] !== last) ticks.push(last);
+      yearsEl.innerHTML = ticks.map(y => `<span>${y}</span>`).join('');
+      if (rangeEl) rangeEl.textContent = `(drought index, ${first}–${last})`;
     }
     hydrated += 1;
   })();

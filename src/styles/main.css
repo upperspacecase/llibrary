@@ -8599,6 +8599,14 @@ a {
   letter-spacing: 0.04em;
 }
 
+/* SPI-12 ribbon (Water section) */
+.ed-spi-ribbon {
+  width: 100%;
+  height: 32px;
+  display: block;
+  margin-top: 6px;
+}
+
 /* Water balance chart (Water section) */
 .ed-water-balance-chart {
   width: 100%;

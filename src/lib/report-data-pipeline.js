@@ -11,6 +11,7 @@ import {
   getClimateAverages,
   getHistoricalWeather,
   getSolarWind,
+  getDailyPrecipSince,
   processSoilMoisture,
   estimateFrostDates,
 } from '../api/open-meteo.js';
@@ -256,6 +257,7 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['pollen', () => getPollenIndex(lat, lng)],
     ['regionalBaseline', () => fetchRegionalBaseline(lat, lng)],
     ['livingatlasLandCover', () => getLandCoverTimeSeries(boundary)],
+    ['precipLongTerm', () => getDailyPrecipSince(lat, lng)],
     // Species trend windows — 3 five-year periods for temporal comparison
     ...computeBioWindows(lat, lng).map((w, i) => [
       `speciesWindow${i}`, () => getSpeciesCounts(lat, lng, 15, { d1: w.d1, d2: w.d2 }),
@@ -895,6 +897,12 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     climate.last12MonthsYear   = trendsData.last12MonthsYear ?? null;
   }
 
+  // SPI-12 series — gamma-fit per calendar month, Wilson-Hilferty Z transform.
+  const spiDaily = raw.precipLongTerm?.ok ? raw.precipLongTerm.data : null;
+  if (spiDaily?.daily?.time && spiDaily.daily.precipitation_sum) {
+    climate.spi12Series = computeSpi12(spiDaily.daily);
+  }
+
   // ── Energy potential ──────────────────────────────────
   const solarWindData = raw.solarWind?.ok ? raw.solarWind.data : null;
   const energy = deriveEnergyPotential(lat, terrain, water, annualRainfall, solarWindData);
@@ -1326,6 +1334,80 @@ export function buildMapUrls(boundary, center) {
 }
 
 // ── Derived data helpers ───────────────────────────────────
+
+/**
+ * SPI-12 (Standardized Precipitation Index, 12-month accumulation).
+ *
+ * Input: a flat ERA5 daily {time:[], precipitation_sum:[]} record.
+ *
+ * Method:
+ *   1. Aggregate daily → monthly precip totals.
+ *   2. Build a 12-month rolling sum at each month (S[m] = Σ precip over last
+ *      12 months ending at m).
+ *   3. For each calendar month c (Jan–Dec), fit a Gamma(α, β) distribution
+ *      to the historical S values for that c using method of moments.
+ *   4. Standardise each value to a Z (the SPI itself) via the Wilson-Hilferty
+ *      cube-root transform of Gamma → Normal — the WMO-canonical fast path.
+ *
+ * Returns an array of { date: 'YYYY-MM', spi: number, sum12: number }.
+ */
+function computeSpi12(daily) {
+  const time = daily.time || [];
+  const precip = daily.precipitation_sum || [];
+  if (!time.length) return [];
+
+  // 1. Daily → monthly totals (Map "YYYY-MM" → mm).
+  const monthly = new Map();
+  for (let i = 0; i < time.length; i++) {
+    const v = precip[i];
+    if (typeof v !== 'number') continue;
+    const key = time[i].substring(0, 7); // "YYYY-MM"
+    monthly.set(key, (monthly.get(key) || 0) + v);
+  }
+  const months = Array.from(monthly.keys()).sort();
+  if (months.length < 24) return [];
+  const totals = months.map(m => monthly.get(m));
+
+  // 2. 12-month rolling sum — first 11 months stay null.
+  const sum12 = totals.map((_, i) => {
+    if (i < 11) return null;
+    let s = 0;
+    for (let j = i - 11; j <= i; j++) s += totals[j];
+    return s;
+  });
+
+  // 3. Group by calendar month c, fit gamma, standardise.
+  const byCalMonth = Array.from({ length: 12 }, () => []);
+  for (let i = 0; i < months.length; i++) {
+    if (sum12[i] == null) continue;
+    const c = Number(months[i].substring(5, 7)) - 1;
+    byCalMonth[c].push(sum12[i]);
+  }
+  // Gamma params (method of moments) per calendar month.
+  const params = byCalMonth.map(vals => {
+    if (vals.length < 10) return null;
+    const n = vals.length;
+    const mean = vals.reduce((a, b) => a + b, 0) / n;
+    const variance = vals.reduce((a, b) => a + (b - mean) ** 2, 0) / n;
+    if (variance <= 0 || mean <= 0) return null;
+    return { shape: (mean * mean) / variance, scale: variance / mean };
+  });
+
+  // 4. Wilson-Hilferty: Gamma(k, θ) → Z ≈ ((x/(kθ))^(1/3) − (1 − 1/(9k))) / sqrt(1/(9k)).
+  const out = [];
+  for (let i = 0; i < months.length; i++) {
+    const s = sum12[i];
+    if (s == null || s <= 0) { out.push({ date: months[i], spi: null, sum12: s }); continue; }
+    const c = Number(months[i].substring(5, 7)) - 1;
+    const p = params[c];
+    if (!p) { out.push({ date: months[i], spi: null, sum12: s }); continue; }
+    const w = s / (p.shape * p.scale);
+    const z = (Math.cbrt(w) - (1 - 1 / (9 * p.shape))) / Math.sqrt(1 / (9 * p.shape));
+    const clamped = Math.max(-3.5, Math.min(3.5, z));
+    out.push({ date: months[i], spi: +clamped.toFixed(2), sum12: Math.round(s) });
+  }
+  return out;
+}
 
 function computeTrends(raw) {
   const result = {
