@@ -44,8 +44,12 @@ export default async function handler(req, res) {
                && typeof rawCoords.lat === 'number' && typeof rawCoords.lng === 'number') {
       lat = rawCoords.lat; lng = rawCoords.lng;
     }
+    let hydroMap = null;
     if (token && lat != null && lng != null) {
       fireMap = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/${lng},${lat},8.5,0/700x400@2x?access_token=${token}`;
+      // Hydrology basemap — closer zoom + house marker pin so the river network
+      // around the sample point is legible.
+      hydroMap = `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/pin-s+1b3a2f(${lng},${lat})/${lng},${lat},10,0/600x320@2x?access_token=${token}`;
     }
 
     const payload = {
@@ -54,6 +58,7 @@ export default async function handler(req, res) {
       updatedAt: doc.updatedAt ?? null,
       runId: doc.runId ?? null,
       fireMap,
+      hydroMap,
       property: unwrapSection(doc.property),
       terrain: unwrapSection(doc.terrain),
       soil: unwrapSection(doc.soil),

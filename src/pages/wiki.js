@@ -622,11 +622,6 @@ function renderEnvironmentalDashboard() {
     </div>
   `;
 
-  const pollenLegend = [
-    ['#cdd9b8','Very low'], ['#9eb380','Low'], ['#c9a14a','Moderate'],
-    ['#b85a3a','High'], ['#8a3d27','Very high'],
-  ].map(([c,l]) => `<span class="ed-legend-chip"><i style="background:${c}"></i>${l}</span>`).join('');
-
   const spiLegend = [
     ['#3d6b48','Extremely wet'], ['#7a9a6e','Severely wet'],
     ['#d6c89c','Moderate drought'], ['#b85a3a','Severe drought'],
@@ -647,15 +642,12 @@ function renderEnvironmentalDashboard() {
     ['Open-Meteo 50yr Archive (climate trajectory)', 'Wired @ point. Need /api/regions/odemira/climate-trajectory.'],
     ['Open-Meteo Climate Averages (monthly normals)', 'Wired @ point. Need /api/regions/odemira/monthly-normals.'],
     ['Open-Meteo Solar/Wind', 'Wired @ point. Region-mean over Odemira grid.'],
-    ['Pollen 12-month seasonality', 'NOT WIRED. Google Pollen API returns current index only. Need ECMWF CAMS pollen reanalysis or equivalent.'],
     ['SoilGrids Properties (pH, OC, BD, depth)', 'Wired @ point. Need zonal stats over Odemira bbox.'],
     ['SoilGrids Classification (WRB texture)', 'Wired @ point. Need dominant class over Odemira bbox.'],
     ['Macrostrat Geology', 'Wired @ point. Need dominant lithology over Odemira bbox.'],
-    ['RUSLE-INE erosion risk', 'NOT WIRED. Need INE Portugal soil-erosion raster (RUSLE-PT) or PNRA dataset.'],
     ['Mapbox Static + Overpass Water Features (hydrology map)', 'Wired @ point. Need bbox-clipped static map for Odemira.'],
     ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
     ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
-    ['Groundwater (SNIRH)', 'NOT WIRED. Portuguese SNIRH piezometer network not in pipeline.'],
     ['SPI-12 (1940–today)', 'Wired. ERA5-backed Open-Meteo archive precip, gamma-fit per calendar month, Wilson-Hilferty Z transform. Pre-1940 would need NOAA GHCN-monthly for Beja / Sines.'],
     ['iNaturalist Species (top species + total)', 'Wired @ point. Need bbox aggregation across Odemira.'],
     ['iNaturalist Threatened (IUCN badges)', 'Wired @ point. Bbox aggregation across Odemira.'],
@@ -714,12 +706,6 @@ function renderEnvironmentalDashboard() {
                 </div>
               </div>
             </div>
-            <div class="ed-card ed-card--span-6">
-              <div class="ed-card-title">Pollen seasonality <span>(12-month)</span></div>
-              ${PB('Pollen 12-month seasonality (NOT WIRED)', 'Google Pollen returns current index only; need ECMWF CAMS pollen reanalysis or 12-month seasonality dataset.')}
-              ${monthsRow}
-              <div class="ed-legend-row">${pollenLegend}</div>
-            </div>
           </div>
         </section>
 
@@ -732,17 +718,10 @@ function renderEnvironmentalDashboard() {
             ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  'str')}
             ${soilRow('WRB texture class', 'SoilGrids Classification', 'soil.classification', 'str')}
             ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    'str')}
-            ${soilRow('Depth to bedrock',  'SoilGrids Properties',     null)}
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
             <div class="ed-geology" data-cell="geology.summary" data-fmt="str">${P('Macrostrat Geology')}</div>
-          </div>
-          <div class="ed-card">
-            <div class="ed-card-title">Erosion risk <span>(RUSLE-INE)</span></div>
-            ${PB('RUSLE-INE erosion (NOT WIRED)', 'Not in pipeline. Need INE Portugal soil-erosion raster (RUSLE-PT) or PNRA dataset.')}
-            <div class="ed-scale-row"><span>Low</span><span>Moderate</span><span>High</span><span>Very high</span></div>
-            <div class="ed-delta-row"><span>vs national</span>${D('National baseline')}</div>
           </div>
         </section>
 
@@ -752,7 +731,9 @@ function renderEnvironmentalDashboard() {
           <div class="ed-water-grid">
             <div class="ed-card ed-card--span-5">
               <div class="ed-card-title">Hydrology <span>(context)</span></div>
-              ${PB('Mapbox Static + Overpass Water Features', 'Satellite/topo basemap clipped to Odemira bbox + OSM water polygons (Mira river, Santa Clara dam, Foupana).')}
+              <div class="ed-hydro-map" id="ed-hydro-map">
+                ${PB('Mapbox Static basemap', '')}
+              </div>
               <div class="ed-hydro-stats">
                 <div class="ed-hydro-stat" data-cell="water.nearestNamedStream" data-fmt="hydro">
                   <span>Nearest stream</span>${P('Overpass Water Features', null)}
@@ -776,22 +757,16 @@ function renderEnvironmentalDashboard() {
                 </svg>
                 <div class="ed-years" id="ed-wb-years"></div>
               </div>
-              <div class="ed-water-pair">
-                <div class="ed-card">
-                  <div class="ed-card-title">GloFAS <span>discharge anomaly</span></div>
-                  <div class="ed-mini-row">
-                    <span class="ed-mini-icon">${lucide('waves', 22)}</span>
-                    <div class="ed-mini-stack">
-                      ${P('GloFAS Flood Forecast', 'water.floodAnomalyPct', 'signedPct')}
-                      <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
-                    </div>
+              <div class="ed-card">
+                <div class="ed-card-title">GloFAS <span>discharge anomaly</span></div>
+                <div class="ed-mini-row">
+                  <span class="ed-mini-icon">${lucide('waves', 22)}</span>
+                  <div class="ed-mini-stack">
+                    ${P('GloFAS Flood Forecast', 'water.floodAnomalyPct', 'signedPct')}
+                    <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
                   </div>
-                  <div class="ed-mini-sub">vs trailing 8mo mean at Odemira sample point</div>
                 </div>
-                <div class="ed-card">
-                  <div class="ed-card-title">Groundwater <span>(DWR / SNIRH)</span></div>
-                  ${PB('SNIRH (NOT WIRED)', 'Portuguese groundwater network not in pipeline. Need SNIRH API or piezometer stations within Odemira.')}
-                </div>
+                <div class="ed-mini-sub">vs trailing 8mo mean at Odemira sample point</div>
               </div>
             </div>
             <div class="ed-card ed-card--span-12">
@@ -1253,6 +1228,14 @@ async function hydrateEnvironmentalDashboard() {
       callout.classList.remove('ed-data');
       callout.classList.add('ed-data-real');
     }
+    hydrated += 1;
+  })();
+
+  // Hydrology basemap
+  (() => {
+    const wrap = document.getElementById('ed-hydro-map');
+    if (!wrap || !payload.hydroMap) return;
+    wrap.innerHTML = `<img class="ed-hydro-img" src="${payload.hydroMap}" alt="Mapbox outdoors basemap centred on Odemira sample point with river network" loading="lazy" />`;
     hydrated += 1;
   })();
 
