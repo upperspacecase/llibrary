@@ -63,14 +63,18 @@ async function loadItems(): Promise<AgentItem[]> {
     const subline = plain.clientName
       ? `${plain.address || plain.postcode} · ${plain.clientName}`
       : plain.address || plain.postcode || "Pending review";
+    // The v1 refresh pipeline writes `data` back to the submissions
+    // collection when no landbook exists for the id. Once data is present,
+    // it's effectively ready — same status semantics as a landbook.
+    const ready = Boolean(plain.data);
     return {
       id: plain.id,
-      href: "/agent",
+      href: ready ? `/agent/${plain.id}/edit` : "/agent",
       display: name,
       subline,
-      status: "Processing",
-      updated: plain.created,
-      isSubmission: true,
+      status: ready ? "Ready" : "Processing",
+      updated: plain.dataUpdated || plain.updated || plain.created,
+      isSubmission: !ready,
     };
   });
 
