@@ -225,7 +225,6 @@ export function FutureScenariosSection({
       <Hairline />
 
       {/* 11.4 Pathway Details */}
-      <SubsectionHeader id="11.4" title="Pathway Details" sources={["NEW"]} />
       <PlaceholderBox
         id="11.4"
         title="Investment requirements and phasing"
@@ -281,7 +280,6 @@ export function FutureScenariosSection({
       <Hairline />
 
       {/* 11.6 Scenario Risk Profiles */}
-      <SubsectionHeader id="11.6" title="Scenario Risk Profiles" sources={["NEW"]} />
       <PlaceholderBox
         id="11.6"
         title="Uncertainty quantification and scenario spread"

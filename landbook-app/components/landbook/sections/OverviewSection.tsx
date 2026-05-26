@@ -125,7 +125,7 @@ export function OverviewSection({
     <section id="overview">
       {/* Block 1 — Header */}
       <header>
-        <h1 className="font-headline text-5xl font-bold text-brand-forest tracking-tighter mb-2">
+        <h1 className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
           {property.name}
         </h1>
       </header>

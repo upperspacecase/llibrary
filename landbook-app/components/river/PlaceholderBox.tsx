@@ -8,13 +8,13 @@ const VARIANT_STYLES: Record<Variant, {
 }> = {
   plausible: {
     border: "border-brand-forest",
-    tagBg: "bg-brand-sage/15",
+    tagBg: "bg-brand-forest",
     tagText: "text-brand-sage",
     label: "AI INSIGHT",
   },
   mixed: {
     border: "border-brand-forest",
-    tagBg: "bg-brand-sage/15",
+    tagBg: "bg-brand-forest",
     tagText: "text-brand-sage",
     label: "AI INSIGHT",
   },
@@ -45,9 +45,10 @@ export function PlaceholderBox({
   const borderClass = isAiInsight
     ? ""
     : `border-l-[3px] ${styles?.border ?? "border-brand-sage/40"}`;
+  const paddingClass = isAiInsight ? "py-3 mb-8" : "pl-8 pr-4 py-3 mb-8";
 
   return (
-    <div className={`${borderClass} pl-8 pr-4 py-3 mb-8`}>
+    <div className={`${borderClass} ${paddingClass}`}>
       {styles && (
         <span
           className={`inline-block text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 mb-5 ${styles.tagBg} ${styles.tagText}`}

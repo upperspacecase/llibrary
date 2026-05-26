@@ -1,7 +1,7 @@
 import type { Economics, Scores, Narratives, Meta, Property } from "@/lib/types";
 import {
   SectionTitle, DataTable,
-  SubsectionHeader, Treemap, PlaceholderBox,
+  Treemap, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -333,7 +333,6 @@ export function ValueBenefitsSection({
 
       {/* ── Scenario Assumptions ── */}
       <div className="mb-20">
-        <SubsectionHeader id="7.4" title="Scenario Assumptions" sources={["NEW"]} />
         <PlaceholderBox
           id="7.4"
           title="Scenario assumptions"

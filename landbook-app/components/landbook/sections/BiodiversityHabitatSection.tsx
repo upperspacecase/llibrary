@@ -445,11 +445,6 @@ export function BiodiversityHabitatSection({
 
       {/* 5.6 Indicator Confidence & Sensitivity */}
       <section className="mb-20">
-        <div className="mb-12">
-          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase font-body">
-            Indicator Confidence &amp; Sensitivity
-          </h3>
-        </div>
         <PlaceholderBox
           id="5.6"
           title="Indicator Confidence"

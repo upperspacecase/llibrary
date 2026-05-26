@@ -58,7 +58,6 @@ export function SourcesMethodologySection({
       <Hairline />
 
       {/* 14.3 Data Quality Matrix */}
-      <SubsectionHeader id="14.3" title="Data Quality Matrix" sources={["NEW"]} />
       <PlaceholderBox
         id="14.3"
         title="Data quality classification by section"

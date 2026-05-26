@@ -78,7 +78,6 @@ export function HistoryTrendsSection({
       <Hairline />
 
       {/* 9.1 Land Cover Change */}
-      <SubsectionHeader id="9.1" title="Land Cover Change (2000-2024)" sources={["NEW"]} />
       <PlaceholderBox
         id="9.1"
         title="Forest gain/loss estimate"
@@ -99,7 +98,6 @@ export function HistoryTrendsSection({
       <Hairline />
 
       {/* 9.2 Vegetation Trends */}
-      <SubsectionHeader id="9.2" title="Vegetation Trends" sources={["NEW"]} />
       <PlaceholderBox
         id="9.2"
         title="Vegetation health proxy"
@@ -124,7 +122,6 @@ export function HistoryTrendsSection({
       <Hairline />
 
       {/* 9.3 Water Resource Trends */}
-      <SubsectionHeader id="9.3" title="Water Resource Trends" sources={["NEW"]} />
       <PlaceholderBox
         id="9.3"
         title="Water resource trajectory"

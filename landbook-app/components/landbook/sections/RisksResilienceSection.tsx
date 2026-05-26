@@ -382,7 +382,6 @@ export function RisksResilienceSection({
       <Hairline />
 
       {/* 10.6 Resilience Capacity */}
-      <SubsectionHeader id="10.6" title="Resilience Capacity" sources={["Computed"]} />
       <PlaceholderBox
         id="10.6"
         title="Resilience capacity metrics"
