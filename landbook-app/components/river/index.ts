@@ -19,3 +19,5 @@ export { DataSourceError } from "./DataSourceError";
 export { SubsectionHeader } from "./SubsectionHeader";
 export { Treemap } from "./Treemap";
 export type { TreemapSegment } from "./Treemap";
+export { Donut } from "./Donut";
+export type { DonutSegment } from "./Donut";

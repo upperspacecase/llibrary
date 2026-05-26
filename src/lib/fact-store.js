@@ -282,6 +282,8 @@ export function reportDataToFacts(data) {
       carbonStock: wrap(data.economics?.carbonStock, 'tCO2e'),
       carbonAnnualSeq: wrap(data.economics?.carbonAnnualSeq, 'tCO2e/yr'),
       carbonCreditValue: wrap(data.economics?.carbonCreditValue, '€/yr'),
+      premiums: wrap(data.economics?.premiums, null),
+      premiumMethodology: wrap(data.economics?.premiumMethodology, null),
     },
     scores: {
       naturalCapital: wrap(data.scores?.naturalCapital, '/100'),
@@ -433,6 +435,8 @@ export function factsToReportData(facts) {
       carbonStock: unwrap(facts.economics?.carbonStock),
       carbonAnnualSeq: unwrap(facts.economics?.carbonAnnualSeq),
       carbonCreditValue: unwrap(facts.economics?.carbonCreditValue),
+      premiums: unwrap(facts.economics?.premiums) || [],
+      premiumMethodology: unwrap(facts.economics?.premiumMethodology),
     },
     scores: {
       naturalCapital: unwrap(facts.scores?.naturalCapital),

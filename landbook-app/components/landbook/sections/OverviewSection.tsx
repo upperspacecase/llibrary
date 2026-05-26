@@ -226,7 +226,7 @@ export function OverviewSection({
               Energy Independence
             </span>
             <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
-              {energy.independenceScore != null ? energy.independenceScore.toFixed(1) : "\u2014"}
+              {energy.independenceScore != null ? (energy.independenceScore / 10).toFixed(1) : "\u2014"}
               <span className="text-base ml-1 text-brand-sage">/10</span>
             </p>
           </div>
@@ -479,7 +479,8 @@ export function OverviewSection({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {segments.map((seg, i) => (
                     <div key={seg.label} className={`space-y-1 ${i % 2 === 1 ? "text-right" : ""}`}>
-                      <span className="text-[10px] font-bold text-brand-forest uppercase tracking-widest font-body block">
+                      <span className={`text-[10px] font-bold text-brand-forest uppercase tracking-widest font-body flex items-center gap-2 ${i % 2 === 1 ? "justify-end" : ""}`}>
+                        <span className={`${seg.color} inline-block w-3 h-3 shrink-0`} aria-hidden="true" />
                         {seg.pct}% {seg.label}
                       </span>
                       <p className={`text-[11px] text-brand-sage leading-relaxed italic font-body ${i % 2 === 1 ? "text-right" : ""}`}>

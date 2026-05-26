@@ -1,7 +1,7 @@
 import type { Economics, Scores, Narratives, Meta, Property } from "@/lib/types";
 import {
   SectionTitle, DataTable,
-  Treemap, PlaceholderBox,
+  Donut, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -41,13 +41,13 @@ export function ValueBenefitsSection({
   const cultural = es.cultural || 0;
   const total = es.total || (water + food + carbon + regulation + soil + cultural);
 
-  // Treemap: fold carbon into regulating (5 blocks)
-  const treemapSegments = [
-    { name: "Food", value: food, color: "bg-brand-forest" },
-    { name: "Water", value: water, color: "bg-brand-sage" },
-    { name: "Regulating", value: regulation + carbon, color: "bg-brand-terracotta" },
-    { name: "Soil", value: soil, color: "bg-brand-amber" },
-    { name: "Cultural", value: cultural, color: "bg-brand-forest/70" },
+  // Donut: fold carbon into regulating (5 segments)
+  const donutSegments = [
+    { name: "Food", value: food, fill: "#1B3A2F" },
+    { name: "Water", value: water, fill: "#8B9A7E" },
+    { name: "Regulating", value: regulation + carbon, fill: "#C4705A" },
+    { name: "Soil", value: soil, fill: "#D4A574" },
+    { name: "Cultural", value: cultural, fill: "rgba(27,58,47,0.55)" },
   ];
 
   return (
@@ -65,11 +65,14 @@ export function ValueBenefitsSection({
               ? `€${economics.totalValue.toLocaleString()}`
               : "—"}
           </h2>
-          {narratives?.intro && (
-            <p className="text-sm leading-relaxed text-brand-forest/80 font-body max-w-2xl">
-              {narratives.intro}
+          <div className="space-y-4 text-sm leading-relaxed text-brand-forest/80 font-body max-w-2xl">
+            <p>
+              The Natural Capital Value and Ecosystem Services is assessed using the UN SEEA-EA framework as a guiding methodology. National ecosystem accounts indicate average rural land services at roughly €700–€2,500 per hectare annually. This is an aggregated average, not parcel-specific.
             </p>
-          )}
+            <p>
+              LandBook supports deeper assessment through soil analysis, water quality testing, and biodiversity surveys&mdash;shifting from indicative averages to verified Natural Capital Values tied to actual ecosystem condition and local market incentives.
+            </p>
+          </div>
           {property.area > 0 && economics.totalValue != null && economics.valuePerHa != null && (
             <p className="text-[11px] text-brand-sage italic font-body mt-3">
               €{economics.totalValue.toLocaleString()} ÷ {property.area.toFixed(2)} ha = €{economics.valuePerHa.toLocaleString()}/ha
@@ -85,21 +88,25 @@ export function ValueBenefitsSection({
         )}
       </div>
 
-      {/* ── Value of Services (Treemap) ── */}
+      {/* ── Value of Services (Donut) ── */}
       <div className="mb-20">
         <h4 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-8 font-body">
           Value of Services
         </h4>
-        <Treemap segments={treemapSegments.filter((s) => s.value > 0)} />
+        <Donut
+          segments={donutSegments}
+          centerLabel="Annual"
+          centerValue={total > 0 ? `€${Math.round(total).toLocaleString()}` : undefined}
+        />
 
         {total > 0 && (
           <>
             <p className="text-xs leading-relaxed text-brand-forest/80 font-body max-w-2xl mt-8 mb-6">
-              Annual Natural Capital is split across five SEEA-EA service classes. Each block above is sized to its share of the total; the table below lists the same values exactly. <em>Regulating</em> bundles climate regulation with the carbon-storage benefit of standing biomass.
+              Annual Natural Capital is split across five SEEA-EA service classes. The ring above is sized to each share of the total; the table below lists the same values exactly. <em>Regulating</em> bundles climate regulation with the carbon-storage benefit of standing biomass.
             </p>
             <DataTable
               headers={["Service Class", "What It Covers", "% Share", "Annual Value"]}
-              rows={treemapSegments
+              rows={donutSegments
                 .filter((s) => s.value > 0)
                 .sort((a, b) => b.value - a.value)
                 .map((s) => [
@@ -114,7 +121,7 @@ export function ValueBenefitsSection({
       </div>
 
       {/* ── Natural Capital Premium Estimates ── */}
-      <div className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
+      <div className="mb-20">
         <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
           Natural Capital Premium Estimates
         </h3>
@@ -295,32 +302,17 @@ export function ValueBenefitsSection({
         </div>
 
         {economics.npv?.scenarios?.length > 0 ? (
-          <table className="w-full text-left font-body text-sm">
-            <thead>
-              <tr className="border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">
-                <th className="pb-4">Scenario</th>
-                <th className="pb-4">30-Year NPV</th>
-                <th className="pb-4">Uplift vs Baseline</th>
-                <th className="pb-4 text-right">Risk Level</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-[0.5px] divide-brand-sage/20">
-              {economics.npv.scenarios.map((s) => (
-                <tr key={s.name}>
-                  <td className="py-6 font-bold text-brand-forest text-base">{fmt(s.name)}</td>
-                  <td className="py-6 text-brand-charcoal text-base">
-                    {s.npv != null ? `€${s.npv.toLocaleString()}` : "—"}
-                  </td>
-                  <td className="py-6 text-brand-charcoal text-sm">
-                    {s.uplift30yr != null && s.uplift30yr > 0
-                      ? `+€${s.uplift30yr.toLocaleString()}`
-                      : s.intervention === null ? "—" : ""}
-                  </td>
-                  <td className="py-6 text-right font-medium text-brand-forest">{fmt(s.riskLevel)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable
+            headers={["Scenario", "30-Year NPV", "Uplift vs Baseline", "Risk Level"]}
+            rows={economics.npv.scenarios.map((s) => [
+              fmt(s.name),
+              s.npv != null ? `€${s.npv.toLocaleString()}` : "—",
+              s.uplift30yr != null && s.uplift30yr > 0
+                ? `+€${s.uplift30yr.toLocaleString()}`
+                : s.intervention === null ? "—" : "",
+              fmt(s.riskLevel),
+            ])}
+          />
         ) : (
           <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
         )}
@@ -374,10 +366,7 @@ export function ValueBenefitsSection({
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-8">
           Valuation Methodology
         </h3>
-        <div className="p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20 space-y-4">
-          <h4 className="font-serif text-lg font-bold text-brand-forest">
-            Valuation Methodology Detail
-          </h4>
+        <div className="space-y-4">
           <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase pb-4 border-b border-brand-sage/20">
             Derived from Pipeline Methodology
           </p>

@@ -25,12 +25,12 @@
 export const NARRATIVE_SCHEMA = {
   overview: {
     intro: {
-      maxWords: 40,
-      prompt: "1 paragraph. Position the property within its bioregion and highlight the key investment strength from the data.",
+      maxWords: 55,
+      prompt: "1 paragraph. Make a compelling case for the land's total value by weaving together its strongest data points across natural capital (€/yr), water security, biodiversity, energy potential, climate, soil, and 30-year NPV. Lead with the single most striking number. Avoid focusing on biodiversity alone — span the full picture.",
     },
     callout: {
       maxWords: 20,
-      prompt: "1 aspirational sentence about this specific property and its potential.",
+      prompt: "1 aspirational sentence about this specific property and its potential as a whole — economic upside, ecological strength, or long-term resilience.",
     },
   },
 

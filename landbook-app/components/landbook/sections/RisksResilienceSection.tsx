@@ -180,7 +180,7 @@ export function RisksResilienceSection({
   const ecosystemBuffers = Math.max(1, Math.round(10 - avgRisk * 1.5));
   // independenceScore is 0–100 from the pipeline; convert to 0–10 for display
   const energyScore10 =
-    energy.independenceScore != null ? Math.round(energy.independenceScore / 10) : null;
+    energy.independenceScore != null ? Number((energy.independenceScore / 10).toFixed(1)) : null;
   const eScore = energyScore10 ?? 3;
   const trendPenalty = trends.tempPerDecade != null && trends.tempPerDecade > 0.3 ? 2 : 0;
   const adaptiveCapacity = Math.max(1, Math.round(eScore - trendPenalty));
