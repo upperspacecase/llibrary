@@ -185,6 +185,11 @@ export default function BooksList({ items }: { items: AgentItem[] }) {
             </div>
             {!item.isSubmission && (
               <div className="flex items-center gap-2">
+                <Link href={`/${item.id}`} target="_blank" rel="noopener">
+                  <PillButton variant="light" icon={<Icon.Eye />}>
+                    Preview
+                  </PillButton>
+                </Link>
                 <PdfButton id={item.id} />
                 <Link href={`/agent/${item.id}/upload`}>
                   <PillButton variant="light" icon={<Icon.Upload />}>
