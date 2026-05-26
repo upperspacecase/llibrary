@@ -21,6 +21,7 @@
     "@anthropic-ai/sdk": "^0.78.0",
     "@pinecone-database/pinecone": "^7.1.0",
     "@vercel/blob": "^2.3.0",
+    "cheerio": "^1.2.0",
     "handlebars": "^4.7.9",
     "mapbox-gl": "^3.19.0",
     "mongodb": "^7.1.0",
