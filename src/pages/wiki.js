@@ -567,6 +567,8 @@ function lucide(name, size = 18) {
       '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
     'home':
       '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    'map-pin':
+      '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
   };
   const d = paths[name] || '';
   return `<svg class="ed-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -641,14 +643,14 @@ function renderEnvironmentalDashboard() {
     <section class="ed-root" id="environmental-dashboard">
 
       <!-- Region overview map: data input stations layered by source -->
-      <section class="ed-region-map-block">
-        <div class="ed-region-map-header">
-          <div class="ed-region-map-title">${lucide('triangle-alert')}<span>Data input stations</span></div>
+      <section class="ed-panel ed-region-map-block">
+        <div class="ed-panel-head">${lucide('map-pin')} DATA INPUT STATIONS</div>
+        <div class="ed-region-map-body">
+          <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
           <div class="ed-station-toggles" id="ed-station-toggles" role="group" aria-label="Toggle station layers">
             <span class="ed-station-toggles-empty">Loading stations…</span>
           </div>
         </div>
-        <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
       </section>
 
       <div class="ed-grid">
@@ -1386,11 +1388,12 @@ async function hydrateEnvironmentalDashboard() {
           el.className = 'ed-station-dot';
           el.style.background = meta.color;
           el.dataset.externalId = f.externalId;
-          el.title = `${meta.label} · ${f.name}`;
+          const popupName = f.displayName || f.name || f.externalId;
+          el.title = `${meta.label} · ${popupName}`;
           const m = new mapboxgl.Marker({ element: el })
             .setLngLat([f.lng, f.lat])
             .setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML(`
-              <strong>${f.name || f.externalId}</strong><br/>
+              <strong>${popupName}</strong><br/>
               <span style="color:#888">${meta.label}</span>
               ${f.parameters && f.parameters.length
                 ? `<br/><small>${f.parameters.slice(0, 4).map(p => p.name).filter(Boolean).join(' · ')}</small>`
@@ -1441,7 +1444,7 @@ async function hydrateEnvironmentalDashboard() {
     } catch { return; }
     const features = payloadResv.features;
 
-    const labelFor = (f) => f.landmark ? `${f.code} · ${f.landmark}` : f.code;
+    const labelFor = (f) => f.displayName || (f.landmark ? `${f.code} · ${f.landmark}` : f.code);
 
     // Drought years: any month with SPI-12 < -1.5 in our archive.
     const droughtYears = new Set();
@@ -1525,18 +1528,30 @@ async function hydrateEnvironmentalDashboard() {
         const delta = f.deltaPctPoints;
         const deltaStr = delta != null ? `${delta > 0 ? '+' : ''}${delta} pp y/y` : '—';
         const deltaCls = delta == null ? 'neutral' : delta > 0 ? 'up' : (delta < 0 ? 'down' : 'neutral');
+        const displayName = f.displayName || f.code;
+        const subtitle    = f.secondary || (f.landmark ? `· ${f.landmark}` : '');
         return `
-          <div class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}">
+          <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
             <div class="ed-reservoirs-reading-name">
-              <strong>${f.code}</strong>${f.landmark ? ` <span>· ${f.landmark}</span>` : ''}
+              <strong>${displayName}</strong>${subtitle ? ` <span>${subtitle}</span>` : ''}
             </div>
             <div class="ed-reservoirs-reading-pct">${latest ? Math.round(latest.pct) + '%' : '—'}</div>
             <div class="ed-reservoirs-reading-meta">
               <span class="ed-reservoirs-reading-date">${latest?.date || '—'}</span>
               <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${deltaCls}">${deltaStr}</span>
             </div>
-          </div>`;
+          </button>`;
       }).join('');
+      // Click-to-select — same effect as picking from the dropdown.
+      readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-external-id');
+          if (id && id !== heroId) {
+            select.value = id;
+            applySelection(id);
+          }
+        });
+      });
     }
 
     function applySelection(heroId) {
@@ -1582,7 +1597,7 @@ async function hydrateEnvironmentalDashboard() {
 
     select.disabled = false;
     select.innerHTML = features.map((f, i) =>
-      `<option value="${f.externalId}"${i === 0 ? ' selected' : ''}>${f.code} · n=${f.count}</option>`
+      `<option value="${f.externalId}"${i === 0 ? ' selected' : ''}>${f.displayName || f.code} · n=${f.count}</option>`
     ).join('');
 
     function drawChart(heroId) {
@@ -1636,21 +1651,31 @@ async function hydrateEnvironmentalDashboard() {
         // Convention: positive deltaM = water dropped further (worse)
         const deltaCls = delta == null ? 'neutral' : delta > 0 ? 'down' : (delta < 0 ? 'up' : 'neutral');
         const deltaStr = delta != null ? `${delta > 0 ? '+' : ''}${delta} m y/y` : '—';
+        const displayName = f.displayName || f.code;
         return `
-          <div class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero ed-reservoirs-reading--gw' : ''}" data-external-id="${f.externalId}">
-            <div class="ed-reservoirs-reading-name"><strong>${f.code}</strong></div>
+          <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero ed-reservoirs-reading--gw' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
+            <div class="ed-reservoirs-reading-name"><strong>${displayName}</strong></div>
             <div class="ed-reservoirs-reading-pct">${f.latest ? f.latest.value.toFixed(2) + ' m' : '—'}</div>
             <div class="ed-reservoirs-reading-meta">
               <span class="ed-reservoirs-reading-date">${f.latest?.date || '—'}</span>
               <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${deltaCls}">${deltaStr}</span>
             </div>
-          </div>`;
+          </button>`;
       }).join('');
+      readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-external-id');
+          if (id && id !== heroId) {
+            select.value = id;
+            applySelection(id);
+          }
+        });
+      });
     }
 
     function applySelection(heroId) {
       const f = features.find(x => x.externalId === heroId) || features[0];
-      if (heroLbl) heroLbl.textContent = f.code;
+      if (heroLbl) heroLbl.textContent = f.displayName || f.code;
       drawChart(f.externalId);
       renderReadings(f.externalId);
       document.dispatchEvent(new CustomEvent('station:highlight', {

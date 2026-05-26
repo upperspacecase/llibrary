@@ -2,6 +2,19 @@ import { getCollection } from '../../_db.js';
 
 const HERO_CODE_PREFIX = '28G/01A'; // Santa Clara — longest record, matches the dam landmark
 
+// SNIRH reservoir names arrive ALL-CAPS with the code in parens, e.g.
+// "ALBUFEIRA DE SANTA CLARA (28G/01A)". Strip the redundant code suffix and
+// title-case with Portuguese preposition rules.
+const PT_SMALL = new Set(['de', 'da', 'do', 'dos', 'das', 'e']);
+function tidySnirhName(s) {
+  if (!s) return null;
+  const stripped = s.replace(/\s*\([^)]+\)\s*$/, '').trim();
+  if (!stripped) return null;
+  return stripped.toLowerCase().split(/\s+/).map((w, i) =>
+    i > 0 && PT_SMALL.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)
+  ).join(' ');
+}
+
 // Reverse-geocode against the wiki landmark catalogue we already ingested
 // (kind=reservoir within ≤5 km) so the chart labels read like
 // "28G/01A · Santa Clara" instead of just the SNIRH code.
@@ -88,14 +101,26 @@ export default async function handler(req, res) {
         }
       }
 
+      // Friendly display name: SNIRH name (tidied) beats landmark match.
+      const tidied = tidySnirhName(r.name);
+      const parish = r.metadata?.parish || null;
+      const municipality = r.metadata?.municipality || null;
+      const displayName = tidied || landmarkName || r.code || r.externalId;
+      // "Albufeira de Santa Clara · São Teotónio · Odemira"
+      const secondary = [parish, municipality].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(' · ');
+
       features.push({
-        code:      r.code,
-        externalId: r.externalId,
-        lat:       r.lat,
-        lng:       r.lng,
-        landmark:  landmarkName,
+        code:        r.code,
+        externalId:  r.externalId,
+        lat:         r.lat,
+        lng:         r.lng,
+        displayName,
+        secondary,
+        parish,
+        municipality,
+        landmark:    landmarkName,
         landmarkKm,
-        hero:      (r.code || '').startsWith(HERO_CODE_PREFIX),
+        hero:        (r.code || '').startsWith(HERO_CODE_PREFIX),
         unit:      obs.unit || null,
         max,
         first:     series[0]?.date ?? null,

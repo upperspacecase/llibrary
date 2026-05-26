@@ -57,12 +57,25 @@ export default async function handler(req, res) {
         }
       }
 
+      const parish       = p.metadata?.parish       || null;
+      const municipality = p.metadata?.municipality || null;
+      // Piezometers don't carry a SNIRH name — only the cadastral code.
+      // Best human label: "584/4 · Aljezur" (parish in the same municipality
+      // as Odemira is implied; outside Odemira we include the municipality).
+      const inOdemira    = (municipality || '').toLowerCase() === 'odemira';
+      const friendlyTail = inOdemira ? parish : [parish, municipality].filter(Boolean).join(' · ');
+      const displayName  = friendlyTail ? `${p.code} · ${friendlyTail}` : (p.code || p.externalId);
+
       features.push({
-        code:       p.code,
-        externalId: p.externalId,
-        lat:        p.lat,
-        lng:        p.lng,
-        unit:       obs.unit || 'm',
+        code:        p.code,
+        externalId:  p.externalId,
+        lat:         p.lat,
+        lng:         p.lng,
+        displayName,
+        parish,
+        municipality,
+        inOdemira,
+        unit:        obs.unit || 'm',
         minDepth:   minV,
         maxDepth:   maxV,
         first:      series[0].date,
