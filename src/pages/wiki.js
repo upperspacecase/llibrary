@@ -928,6 +928,20 @@ function renderEnvironmentalDashboard() {
               </svg>
               <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
             </div>
+
+            <div class="ed-card ed-card--span-12 ed-obs-card">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Observation heatmap <span>(iNaturalist · cumulative through <span id="ed-obs-yearlabel">—</span>)</span></div>
+                <div class="ed-obs-stats" id="ed-obs-stats">—</div>
+              </div>
+              <div class="ed-obs-map" id="ed-obs-map" aria-label="iNaturalist observation heatmap"></div>
+              <div class="ed-obs-controls">
+                <button type="button" class="ed-obs-play" id="ed-obs-play" aria-label="Play / pause">▶</button>
+                <input type="range" class="ed-obs-slider" id="ed-obs-slider" min="0" max="0" step="1" value="0" />
+                <svg class="ed-obs-spark" id="ed-obs-spark" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true"></svg>
+              </div>
+              <p class="ed-obs-note">Where iNaturalist users have observed and photographed wildlife. Reflects observer activity — denser heat means more people uploaded, not necessarily more biodiversity. Sensitive species are auto-obscured by iNat to a ~10 km box.</p>
+            </div>
           </div>
         </section>
 
@@ -2531,6 +2545,149 @@ async function hydrateEnvironmentalDashboard() {
     }
     select.addEventListener('change', () => applySelection(select.value));
     applySelection(initialHero);
+    hydrated += 1;
+  })();
+
+  // iNaturalist observation heatmap — cumulative through year X. Mapbox
+  // `heatmap` layer driven by a year slider; play button steps through.
+  (async () => {
+    const mapEl   = document.getElementById('ed-obs-map');
+    const slider  = document.getElementById('ed-obs-slider');
+    const playBtn = document.getElementById('ed-obs-play');
+    const stats   = document.getElementById('ed-obs-stats');
+    const spark   = document.getElementById('ed-obs-spark');
+    const yearLbl = document.getElementById('ed-obs-yearlabel');
+    if (!mapEl || !slider || !playBtn) return;
+
+    let data;
+    try {
+      const res = await fetch('/api/regions/odemira/observations');
+      if (!res.ok) return;
+      data = await res.json();
+      if (!data.ok || !data.geojson?.features?.length) return;
+    } catch { return; }
+
+    const minYear = data.minYear, maxYear = data.maxYear;
+    slider.min   = String(minYear);
+    slider.max   = String(maxYear);
+    slider.value = String(maxYear);
+
+    const map = createMap('ed-obs-map', {
+      center: [-8.6400, 37.5500],
+      zoom: 8.8,
+      scrollZoom: false,
+    });
+
+    function cumulativeCount(year) {
+      let n = 0;
+      for (const r of data.yearCounts) if (r.year <= year) n += r.count;
+      return n;
+    }
+    function renderStats(year) {
+      const total = cumulativeCount(year);
+      const yearCount = data.yearCounts.find(r => r.year === year)?.count ?? 0;
+      if (yearLbl) yearLbl.textContent = String(year);
+      if (stats) stats.innerHTML = `<strong>${total.toLocaleString()}</strong> observations through ${year} <span>·</span> <span>${yearCount.toLocaleString()} in ${year}</span>`;
+    }
+
+    function renderSpark() {
+      if (!spark) return;
+      const W = 1000, H = 60, PAD = { l: 0, r: 0, t: 4, b: 12 };
+      const cW = W - PAD.l - PAD.r;
+      const cH = H - PAD.t - PAD.b;
+      const xFor = y => PAD.l + ((y - minYear) / Math.max(1, maxYear - minYear)) * cW;
+      const yMax = Math.max(...data.yearCounts.map(r => r.count)) || 1;
+      const yFor = v => PAD.t + (1 - v / yMax) * cH;
+      const yearMap = new Map(data.yearCounts.map(r => [r.year, r.count]));
+      const barW = Math.max(1, cW / Math.max(1, maxYear - minYear) * 0.8);
+      let bars = '';
+      for (let y = minYear; y <= maxYear; y++) {
+        const c = yearMap.get(y) || 0;
+        if (!c) continue;
+        const x = xFor(y) - barW / 2;
+        const h = yFor(0) - yFor(c);
+        bars += `<rect x="${x.toFixed(1)}" y="${yFor(c).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="#5a7256"/>`;
+      }
+      spark.innerHTML = bars;
+    }
+
+    map.on('load', () => {
+      map.addSource('obs', { type: 'geojson', data: data.geojson });
+      map.addLayer({
+        id: 'obs-heat',
+        type: 'heatmap',
+        source: 'obs',
+        maxzoom: 14,
+        paint: {
+          'heatmap-weight': 1,
+          'heatmap-intensity': [
+            'interpolate', ['linear'], ['zoom'],
+            7, 0.6, 12, 1.8,
+          ],
+          'heatmap-radius': [
+            'interpolate', ['linear'], ['zoom'],
+            7, 8, 10, 16, 13, 26,
+          ],
+          'heatmap-opacity': [
+            'interpolate', ['linear'], ['zoom'],
+            7, 0.85, 14, 0.65,
+          ],
+          'heatmap-color': [
+            'interpolate', ['linear'], ['heatmap-density'],
+            0,    'rgba(33,102,172,0)',
+            0.15, 'rgba(103,169,207,0.6)',
+            0.4,  'rgba(209,229,240,0.8)',
+            0.6,  'rgba(253,219,199,0.9)',
+            0.8,  'rgba(239,138,98,0.95)',
+            1.0,  'rgba(178,24,43,1)',
+          ],
+        },
+      });
+      // Above heatmap, dots at high zoom so individual observations are visible.
+      map.addLayer({
+        id: 'obs-points',
+        type: 'circle',
+        source: 'obs',
+        minzoom: 11,
+        paint: {
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 1.5, 14, 3.5],
+          'circle-color': '#7a3220',
+          'circle-opacity': 0.55,
+          'circle-stroke-width': 0,
+        },
+      });
+      applyYearFilter(Number(slider.value));
+    });
+
+    function applyYearFilter(year) {
+      const f = ['<=', ['get', 'y'], year];
+      if (map.getLayer('obs-heat'))   map.setFilter('obs-heat', f);
+      if (map.getLayer('obs-points')) map.setFilter('obs-points', f);
+      renderStats(year);
+    }
+
+    slider.addEventListener('input', () => applyYearFilter(Number(slider.value)));
+
+    let playing = false;
+    let playTimer = null;
+    function setPlaying(on) {
+      playing = on;
+      playBtn.textContent = on ? '❚❚' : '▶';
+      if (on) {
+        playTimer = setInterval(() => {
+          const cur = Number(slider.value);
+          const next = cur >= maxYear ? minYear : cur + 1;
+          slider.value = String(next);
+          applyYearFilter(next);
+        }, 350);
+      } else if (playTimer) {
+        clearInterval(playTimer); playTimer = null;
+      }
+    }
+    playBtn.addEventListener('click', () => setPlaying(!playing));
+
+    renderSpark();
+    renderStats(maxYear);
     hydrated += 1;
   })();
 

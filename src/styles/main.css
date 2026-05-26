@@ -9243,6 +9243,89 @@ a {
   margin-left: 2px;
 }
 
+/* iNaturalist observation heatmap card */
+.ed-obs-card { padding: 16px; }
+.ed-obs-stats {
+  font-size: 12px;
+  color: #555;
+}
+.ed-obs-stats strong { color: #2C2C2C; font-weight: 700; }
+.ed-obs-stats span { color: #888; margin: 0 4px; }
+.ed-obs-map {
+  width: 100%;
+  height: 520px;
+  margin-top: 12px;
+  background: #f5f1e8;
+  display: block;
+}
+.ed-obs-controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  position: relative;
+}
+.ed-obs-spark {
+  grid-column: 2;
+  width: 100%;
+  height: 36px;
+  display: block;
+  margin-top: -2px;
+}
+.ed-obs-slider {
+  grid-column: 2;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  background: #eee5d8;
+  border-radius: 2px;
+  outline: none;
+}
+.ed-obs-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1d9e75;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #1d9e75;
+}
+.ed-obs-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1d9e75;
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #1d9e75;
+}
+.ed-obs-play {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+  background: #fff;
+  font-size: 13px;
+  color: #2C2C2C;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ed-obs-play:hover { background: #f5f1e8; }
+.ed-obs-note {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #888;
+  line-height: 1.4;
+}
+
 /* SNIRH sensors panel */
 .ed-snirh-panel {
   background: var(--white);
