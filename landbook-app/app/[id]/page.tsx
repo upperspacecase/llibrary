@@ -133,6 +133,18 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
   const baseData = layerResult?.data || landbook.data;
   const narrativesStale = layerResult?.narrativesStale ?? false;
 
+  // Backfill fields that the fact-store didn't persist in older runs
+  // from the blob, so existing landbooks keep rendering without a re-run.
+  if (baseData && layerResult?.data && landbook.data?.economics) {
+    const blobEcon = landbook.data.economics;
+    if (!baseData.economics.premiums?.length && blobEcon.premiums?.length) {
+      baseData.economics.premiums = blobEcon.premiums;
+    }
+    if (!baseData.economics.premiumMethodology && blobEcon.premiumMethodology) {
+      baseData.economics.premiumMethodology = blobEcon.premiumMethodology;
+    }
+  }
+
   // Layer the agent's overrides on top so the buyer sees what the agent
   // intends. Overrides are stored as the raw strings the agent typed;
   // applyOverrides parses + scales them into the underlying data shape.
