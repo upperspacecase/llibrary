@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getCollection } from "@/lib/db";
 import { stripe } from "@/lib/stripe/server";
+import { kickRefreshPipeline } from "@/lib/pipeline";
 import type { AgentStripe, LandbookPayment } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -17,7 +18,7 @@ async function handleCheckoutCompleted(
     const landbookId = session.metadata?.landbookId;
     if (!landbookId || !session.id) return;
     const payments = await getCollection<LandbookPayment>("landbook_payments");
-    await payments.updateOne(
+    const upserted = await payments.updateOne(
       { sessionId: session.id },
       {
         $setOnInsert: {
@@ -27,10 +28,14 @@ async function handleCheckoutCompleted(
           amount: session.amount_total ?? 0,
           currency: session.currency ?? "eur",
           paidAt: new Date().toISOString(),
+          source: "one_off",
         },
       },
       { upsert: true }
     );
+    // Kick the pipeline only on the first webhook for this session
+    // (Stripe can retry). upsertedCount > 0 means we just inserted.
+    if (upserted.upsertedCount > 0) kickRefreshPipeline(landbookId);
     return;
   }
 

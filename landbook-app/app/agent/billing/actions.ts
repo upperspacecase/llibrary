@@ -58,6 +58,7 @@ export async function startSubscriptionCheckout(planId: PlanId): Promise<void> {
     mode: "subscription",
     customer: customerId,
     line_items: [{ price: plan.priceId, quantity: 1 }],
+    allow_promotion_codes: true,
     success_url: `${origin}/agent/billing?subscribed=1`,
     cancel_url: `${origin}/agent/billing?canceled=1`,
     metadata: { ownerId: user.uid, planId },

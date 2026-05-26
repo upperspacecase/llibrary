@@ -499,10 +499,15 @@ export interface AgentStripe {
 export interface LandbookPayment {
   landbookId: string;
   ownerId: string;
-  sessionId: string;
+  /** Stripe Checkout Session id for one-off payments; null for subscription coverage. */
+  sessionId: string | null;
   amount: number;
   currency: string;
   paidAt: string;
+  /** "one_off" = Stripe Checkout in payment mode. "subscription" = covered by an active sub. */
+  source: "one_off" | "subscription";
+  /** Stripe price id at the time of the charge (or the active sub price for subscription coverage). */
+  priceId?: string;
 }
 
 export interface Submission {

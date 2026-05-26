@@ -329,7 +329,7 @@ export function NewLandBookForm() {
             disabled={!canSubmit}
             className="disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isPending ? "Submitting…" : "Submit for analysis"}
+            {isPending ? "Saving…" : "Save & continue"}
           </PillButton>
         </div>
       </div>

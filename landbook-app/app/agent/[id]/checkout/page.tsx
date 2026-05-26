@@ -115,7 +115,7 @@ export default async function CheckoutPage({
               { n: "1", label: "Property", state: "done" },
               { n: "2", label: "Plan", state: "done" },
               { n: "3", label: "Payment", state: "active" },
-              { n: "4", label: "Confirm", state: "todo" },
+              { n: "4", label: "Submitted", state: "todo" },
             ]}
           />
 

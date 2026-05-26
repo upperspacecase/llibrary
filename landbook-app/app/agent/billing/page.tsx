@@ -28,20 +28,46 @@ interface BillingData {
   invoices: Stripe.Invoice[];
 }
 
-async function loadBilling(customerId: string): Promise<BillingData> {
-  const customer = await stripe.customers.retrieve(customerId, {
-    expand: ["invoice_settings.default_payment_method"],
-  });
-  if (customer.deleted) {
-    return { subscription: null, paymentMethod: null, invoices: [] };
-  }
+const EMPTY_BILLING: BillingData = {
+  subscription: null,
+  paymentMethod: null,
+  invoices: [],
+};
 
-  const subs = await stripe.subscriptions.list({
-    customer: customerId,
-    status: "all",
-    limit: 1,
-    expand: ["data.items.data.price"],
-  });
+type LoadBillingResult =
+  | { kind: "ok"; data: BillingData }
+  | { kind: "missing" } // customerId is stale (test/live mode mismatch or deleted in Stripe)
+  | { kind: "ok"; data: BillingData };
+
+async function loadBilling(customerId: string): Promise<LoadBillingResult> {
+  let customer: Stripe.Customer | Stripe.DeletedCustomer;
+  try {
+    customer = await stripe.customers.retrieve(customerId, {
+      expand: ["invoice_settings.default_payment_method"],
+    });
+  } catch (err) {
+    // Most common cause: a customer created in test mode while we were on
+    // test keys, now we're on live keys (or vice versa). The id is stale.
+    if (
+      err instanceof Stripe.errors.StripeError &&
+      err.code === "resource_missing"
+    ) {
+      return { kind: "missing" };
+    }
+    throw err;
+  }
+  if (customer.deleted) return { kind: "missing" };
+
+  const [subs, invoiceList] = await Promise.all([
+    stripe.subscriptions.list({
+      customer: customerId,
+      status: "all",
+      limit: 1,
+      expand: ["data.items.data.price"],
+    }),
+    stripe.invoices.list({ customer: customerId, limit: 10 }),
+  ]);
+
   const subscription =
     subs.data.find((s) =>
       ["active", "trialing", "past_due", "paused", "unpaid"].includes(s.status)
@@ -51,15 +77,9 @@ async function loadBilling(customerId: string): Promise<BillingData> {
   const paymentMethod =
     defaultPm && typeof defaultPm !== "string" ? defaultPm : null;
 
-  const invoiceList = await stripe.invoices.list({
-    customer: customerId,
-    limit: 10,
-  });
-
   return {
-    subscription,
-    paymentMethod,
-    invoices: invoiceList.data,
+    kind: "ok",
+    data: { subscription, paymentMethod, invoices: invoiceList.data },
   };
 }
 
@@ -116,16 +136,22 @@ export default async function BillingPage({
   const params = await searchParams;
   const user = await getCurrentUser();
 
-  let billing: BillingData = {
-    subscription: null,
-    paymentMethod: null,
-    invoices: [],
-  };
+  let billing: BillingData = EMPTY_BILLING;
   if (user) {
     const col = await getCollection<AgentStripe>("agent_stripe");
     const doc = await col.findOne({ ownerId: user.uid });
     if (doc?.stripeCustomerId) {
-      billing = await loadBilling(doc.stripeCustomerId);
+      const result = await loadBilling(doc.stripeCustomerId);
+      if (result.kind === "ok") {
+        billing = result.data;
+      } else {
+        // Drop the stale customer id so this doesn't keep failing. A new
+        // checkout will create a fresh Stripe customer.
+        await col.updateOne(
+          { ownerId: user.uid },
+          { $unset: { stripeCustomerId: "", subscriptionId: "", planPriceId: "", status: "" } }
+        );
+      }
     }
   }
 

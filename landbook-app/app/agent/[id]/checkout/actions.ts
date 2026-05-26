@@ -56,7 +56,8 @@ export async function startReportCheckout(landbookId: string): Promise<void> {
     mode: "payment",
     customer: customerId,
     line_items: [{ price: plan.priceId, quantity: 1 }],
-    success_url: `${origin}/agent/${landbookId}/share?paid=1`,
+    allow_promotion_codes: true,
+    success_url: `${origin}/agent/${landbookId}/submitted?paid=1`,
     cancel_url: `${origin}/agent/${landbookId}/checkout?canceled=1`,
     metadata: { ownerId: user.uid, landbookId, planId: plan.id },
     payment_intent_data: {

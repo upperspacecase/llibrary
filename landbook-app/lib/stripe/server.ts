@@ -18,6 +18,11 @@ export interface PlanConfig {
   amount: number;
   currency: string;
   billingCycle?: string;
+  /**
+   * LandBooks included per calendar month. `null` = unlimited. Only
+   * meaningful for subscription plans; report is per-LandBook one-off.
+   */
+  monthlyAllowance: number | null;
 }
 
 export const PLANS: Record<PlanId, PlanConfig> = {
@@ -30,6 +35,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     mode: "payment",
     amount: 1500,
     currency: "EUR",
+    monthlyAllowance: 1,
   },
   steward: {
     id: "steward",
@@ -41,6 +47,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     amount: 2997,
     currency: "EUR",
     billingCycle: "/month",
+    monthlyAllowance: 5,
   },
   engine: {
     id: "engine",
@@ -52,6 +59,7 @@ export const PLANS: Record<PlanId, PlanConfig> = {
     amount: 7997,
     currency: "EUR",
     billingCycle: "/month",
+    monthlyAllowance: null,
   },
 };
 
