@@ -717,45 +717,19 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--water">
           <div class="ed-panel-head">${lucide('droplet')} WATER</div>
           <div class="ed-water-grid">
-            <div class="ed-card ed-card--span-5">
-              <div class="ed-card-title">Hydrology <span>(context)</span></div>
-              <div class="ed-hydro-map" id="ed-hydro-map">
-                ${PB('Mapbox Static basemap', '')}
-              </div>
-              <div class="ed-hydro-stats">
-                <div class="ed-hydro-stat" data-cell="water.nearestNamedStream" data-fmt="hydro">
-                  <span>Nearest stream</span>${P('Overpass Water Features', null)}
-                </div>
-                <div class="ed-hydro-stat" data-cell="water.nearestNamedBody" data-fmt="hydro">
-                  <span>Nearest lake / reservoir</span>${P('Overpass Water Features', null)}
+            <div class="ed-subhead ed-card--span-12">Water quantity</div>
+            <div class="ed-card ed-card--span-12">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Water balance <span>P − ET₀ (mm/yr)</span></div>
+                <div class="ed-water-balance-legend">
+                  <span class="ed-wb-leg-surplus">Surplus</span>
+                  <span class="ed-wb-leg-deficit">Deficit</span>
                 </div>
               </div>
-            </div>
-            <div class="ed-water-right">
-              <div class="ed-card">
-                <div class="ed-card-title-row">
-                  <div class="ed-card-title">Water balance <span>P − ET₀ (mm/yr)</span></div>
-                  <div class="ed-water-balance-legend">
-                    <span class="ed-wb-leg-surplus">Surplus</span>
-                    <span class="ed-wb-leg-deficit">Deficit</span>
-                  </div>
-                </div>
-                <svg class="ed-water-balance-chart" id="ed-wb-chart" viewBox="0 0 700 180" preserveAspectRatio="none" aria-hidden="true">
-                  <text x="350" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-                </svg>
-                <div class="ed-years" id="ed-wb-years"></div>
-              </div>
-              <div class="ed-card">
-                <div class="ed-card-title">GloFAS <span>discharge anomaly</span></div>
-                <div class="ed-mini-row">
-                  <span class="ed-mini-icon">${lucide('waves', 22)}</span>
-                  <div class="ed-mini-stack">
-                    ${P('GloFAS Flood Forecast', 'water.floodAnomalyPct', 'signedPct')}
-                    <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
-                  </div>
-                </div>
-                <div class="ed-mini-sub">vs trailing 8mo mean · <span data-cell="water.floodBasinStation" data-fmt="str">Odemira sample point</span></div>
-              </div>
+              <svg class="ed-water-balance-chart" id="ed-wb-chart" viewBox="0 0 700 180" preserveAspectRatio="none" aria-hidden="true">
+                <text x="350" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-years" id="ed-wb-years"></div>
             </div>
             <div class="ed-card ed-card--span-12">
               <div class="ed-card-title">SPI-12 <span id="ed-spi-range">(drought index)</span></div>
@@ -831,6 +805,36 @@ function renderEnvironmentalDashboard() {
                 <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-water-stack-legend" id="ed-water-stack-legend"></div>
+            </div>
+
+            <div class="ed-subhead ed-card--span-12">Water quality</div>
+
+            <div class="ed-card ed-card--span-12 ed-wq-card">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Nitrate over time <span>(SNIRH · groundwater)</span></div>
+                <div class="ed-wq-stats" id="ed-wq-nitrate-stats">—</div>
+              </div>
+              <p class="ed-wq-note">High nitrate levels in groundwater are a marker for agricultural run-off (fertiliser, manure). Drinking-water guideline is 50 mg/l NO₃ (WHO / EU); chronic exceedance harms infant health and indicates an over-fertilised catchment.</p>
+              <svg class="ed-wq-chart" id="ed-wq-nitrate-chart" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="110" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-wq-legend">
+                <span><i style="background:#3d6b8c"></i>Monthly median across Odemira quality stations</span>
+                <span><i class="ed-wq-range"></i>Min–max spread that month</span>
+                <span><i class="ed-wq-threshold"></i>WHO / EU guideline (50 mg/l)</span>
+              </div>
+            </div>
+
+            <div class="ed-card ed-card--span-12 ed-wq-card">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Heavy metals over time <span>(SNIRH · groundwater, mg/l)</span></div>
+                <div class="ed-wq-stats" id="ed-wq-metals-stats">—</div>
+              </div>
+              <p class="ed-wq-note">Trace metals in groundwater above guideline values (Pb 0.01 / Hg 0.001 / As 0.01 mg/l, WHO drinking-water) indicate industrial or mining contamination and are persistent: most don't degrade and bio-accumulate up the food chain.</p>
+              <svg class="ed-wq-chart" id="ed-wq-metals-chart" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="110" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-wq-legend" id="ed-wq-metals-legend"></div>
             </div>
           </div>
         </section>
@@ -1810,6 +1814,134 @@ async function hydrateEnvironmentalDashboard() {
     hydrated += 1;
   })();
 
+  // Water quality cards — Nitrate (single series + spread) and Heavy metals
+  // (one line per element). Both hydrate from /api/regions/odemira/water-quality.
+  (async () => {
+    const nChart = document.getElementById('ed-wq-nitrate-chart');
+    const mChart = document.getElementById('ed-wq-metals-chart');
+    if (!nChart && !mChart) return;
+    let data;
+    try {
+      const res = await fetch('/api/regions/odemira/water-quality');
+      if (!res.ok) return;
+      data = await res.json();
+      if (!data.ok) return;
+    } catch { return; }
+
+    const XMIN = new Date(Date.UTC(1990, 0, 1)).getTime();
+    const XMAX = Date.now();
+    const monthTs = (k) => new Date(`${k}-01T00:00:00Z`).getTime();
+
+    // ── Nitrate ────────────────────────────────────────────
+    if (nChart && data.nitrate && data.nitrate.points && data.nitrate.points.length) {
+      const pts = data.nitrate.points;
+      const W = 1000, H = 220, PAD = { l: 48, r: 14, t: 14, b: 28 };
+      const cW = W - PAD.l - PAD.r;
+      const cH = H - PAD.t - PAD.b;
+      const yVals = pts.flatMap(p => [p.min, p.median, p.max]);
+      const yMax = Math.max(50, ...yVals); // include 50 mg/l threshold even if exceeded rarely
+      const xFor = ts => PAD.l + ((ts - XMIN) / (XMAX - XMIN)) * cW;
+      const yFor = v => PAD.t + (1 - v / yMax) * cH;
+
+      let grid = '';
+      const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax].map(v => Math.round(v));
+      for (const v of yTicks) {
+        const y = yFor(v);
+        grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+        grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${v}</text>`;
+      }
+
+      // 50 mg/l threshold line
+      const yThresh = yFor(50);
+      const threshold = `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${yThresh.toFixed(1)}" y2="${yThresh.toFixed(1)}" stroke="#b91c1c" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="${(W - PAD.r + 4).toFixed(1)}" y="${(yThresh + 3).toFixed(1)}" font-size="10" fill="#b91c1c">50</text>`;
+
+      // Min–max spread as a faint band
+      const topPts = pts.map(p => `${xFor(monthTs(p.month)).toFixed(1)},${yFor(p.max).toFixed(1)}`);
+      const botPts = pts.map(p => `${xFor(monthTs(p.month)).toFixed(1)},${yFor(p.min).toFixed(1)}`).reverse();
+      const band = `<polygon points="${topPts.concat(botPts).join(' ')}" fill="#3d6b8c" fill-opacity="0.12"/>`;
+
+      // Median line
+      const medianPts = pts.map(p => `${xFor(monthTs(p.month)).toFixed(1)},${yFor(p.median).toFixed(1)}`).join(' ');
+      const median = `<polyline fill="none" stroke="#3d6b8c" stroke-width="1.6" points="${medianPts}"/>`;
+
+      let xLabels = '';
+      for (let y = 1990; y <= new Date().getFullYear(); y += 5) {
+        const x = xFor(Date.UTC(y, 0, 1));
+        if (x < PAD.l || x > W - PAD.r) continue;
+        xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
+      }
+
+      nChart.innerHTML = `${grid}${threshold}${band}${median}${xLabels}`;
+
+      const stats = document.getElementById('ed-wq-nitrate-stats');
+      const latest = pts[pts.length - 1];
+      const exceedances = pts.filter(p => p.max > 50).length;
+      if (stats && latest) {
+        stats.innerHTML = `<strong>${latest.median.toFixed(1)} mg/l</strong> median in ${latest.month}
+          · <span class="ed-wq-stats-meta">${exceedances} month${exceedances === 1 ? '' : 's'} with any station above 50 mg/l</span>`;
+      }
+      hydrated += 1;
+    }
+
+    // ── Heavy metals ───────────────────────────────────────
+    if (mChart && data.metals && Array.isArray(data.metals.series)) {
+      const series = data.metals.series.filter(s => s.points && s.points.length);
+      const allPoints = series.flatMap(s => s.points);
+      if (allPoints.length) {
+        const W = 1000, H = 220, PAD = { l: 60, r: 14, t: 14, b: 28 };
+        const cW = W - PAD.l - PAD.r;
+        const cH = H - PAD.t - PAD.b;
+        const yMax = Math.max(...allPoints.map(p => p.value));
+        const xFor = ts => PAD.l + ((ts - XMIN) / (XMAX - XMIN)) * cW;
+        const yFor = v => PAD.t + (1 - v / yMax) * cH;
+        const palette = ['#3d6b8c', '#b85a3a', '#1d9e75', '#d49a4a', '#8b4789', '#888888'];
+
+        let grid = '';
+        const yTicks = [0, yMax * 0.25, yMax * 0.5, yMax * 0.75, yMax];
+        for (const v of yTicks) {
+          const y = yFor(v);
+          grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+          grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${v.toFixed(3)}</text>`;
+        }
+
+        let lines = '';
+        for (let i = 0; i < series.length; i++) {
+          const s = series[i];
+          // Sparse data → use circles plus connecting line.
+          const ptStr = s.points.map(p => `${xFor(monthTs(p.month)).toFixed(1)},${yFor(p.value).toFixed(1)}`).join(' ');
+          const color = palette[i % palette.length];
+          lines += `<polyline fill="none" stroke="${color}" stroke-width="1.2" opacity="0.85" points="${ptStr}"/>`;
+          for (const p of s.points) {
+            lines += `<circle cx="${xFor(monthTs(p.month)).toFixed(1)}" cy="${yFor(p.value).toFixed(1)}" r="2.4" fill="${color}"><title>${s.label}: ${p.value} ${s.unit} (${p.month}, n=${p.n})</title></circle>`;
+          }
+        }
+
+        let xLabels = '';
+        for (let y = 1990; y <= new Date().getFullYear(); y += 5) {
+          const x = xFor(Date.UTC(y, 0, 1));
+          if (x < PAD.l || x > W - PAD.r) continue;
+          xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
+        }
+
+        mChart.innerHTML = `${grid}${lines}${xLabels}`;
+
+        const legend = document.getElementById('ed-wq-metals-legend');
+        if (legend) {
+          legend.innerHTML = series.map((s, i) => {
+            const color = palette[i % palette.length];
+            return `<span><i style="background:${color}"></i>${s.label} <small>(${s.count} mo · ${s.stationsContributing} stations)</small></span>`;
+          }).join('');
+        }
+        const stats = document.getElementById('ed-wq-metals-stats');
+        if (stats) {
+          stats.innerHTML = `${series.length} metals · ${allPoints.length} monthly aggregates`;
+        }
+        hydrated += 1;
+      }
+    }
+  })();
+
   // SNIRH panel — populate the four network cards from the stations catalog
   (async () => {
     const grid = document.getElementById('ed-snirh-grid');
@@ -1864,14 +1996,6 @@ async function hydrateEnvironmentalDashboard() {
         ? `<span class="ed-snirh-card-pname">Stations</span> ${codes.join(', ')}${overflow ? ` <span class="ed-snirh-card-overflow">+ ${overflow} more</span>` : ''}`
         : '<span class="ed-snirh-card-empty">No stations in Odemira bbox.</span>';
     });
-    hydrated += 1;
-  })();
-
-  // Hydrology basemap
-  (() => {
-    const wrap = document.getElementById('ed-hydro-map');
-    if (!wrap || !payload.hydroMap) return;
-    wrap.innerHTML = `<img class="ed-hydro-img" src="${payload.hydroMap}" alt="Mapbox outdoors basemap centred on Odemira sample point with river network" loading="lazy" />`;
     hydrated += 1;
   })();
 

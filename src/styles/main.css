@@ -8805,6 +8805,61 @@ a {
 .ed-reservoirs-reading-delta--down  { color: #b85a3a; font-weight: 600; }
 .ed-reservoirs-reading-delta--neutral { color: #888; }
 
+/* Water section sub-headers (Quantity / Quality) */
+.ed-subhead {
+  font-family: 'DM Serif Display', serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #1B3A2F;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  padding-bottom: 4px;
+  margin-top: 6px;
+}
+.ed-subhead:first-child { margin-top: 0; }
+
+/* Water-quality cards (Nitrate / Heavy metals) */
+.ed-wq-card { padding: 16px; }
+.ed-wq-note {
+  font-size: 11px;
+  color: #555;
+  line-height: 1.5;
+  margin: 6px 0 10px;
+  max-width: 60ch;
+}
+.ed-wq-chart {
+  width: 100%;
+  height: 220px;
+  display: block;
+}
+.ed-wq-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+  align-items: center;
+}
+.ed-wq-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ed-wq-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+.ed-wq-legend small { color: #888; }
+.ed-wq-range { background: #3d6b8c; opacity: 0.18; height: 8px !important; }
+.ed-wq-threshold { background: transparent !important; border-top: 2px dashed #b91c1c; height: 1px !important; }
+.ed-wq-stats {
+  font-size: 12px;
+  color: #2C2C2C;
+}
+.ed-wq-stats strong {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+}
+.ed-wq-stats-meta { color: #888; }
+
 /* Groundwater reuses the reservoirs visual scaffold, but the hero colour
    is blue (water table) instead of teal (reservoir), and "down" means the
    water table dropped further — that's bad, so use the worse colour. */
