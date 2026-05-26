@@ -8698,7 +8698,112 @@ a {
   border: 1.5px solid #fff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
   cursor: pointer;
+  transition: width 0.15s ease, height 0.15s ease, box-shadow 0.15s ease;
 }
+.ed-station-dot--highlighted {
+  width: 16px;
+  height: 16px;
+  border-color: #1d9e75;
+  box-shadow: 0 0 0 3px rgba(29, 158, 117, 0.25), 0 1px 2px rgba(0,0,0,0.3);
+  z-index: 10;
+}
+
+/* Reservoirs card */
+.ed-reservoirs { padding: 16px; }
+.ed-reservoirs .ed-card-title-row {
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ed-reservoirs-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #555;
+}
+.ed-reservoirs-picker select {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 3px;
+  background: #fff;
+  color: #2C2C2C;
+  cursor: pointer;
+}
+.ed-reservoirs-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 11px;
+  color: #555;
+  margin: 8px 0 6px;
+  align-items: center;
+}
+.ed-reservoirs-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ed-reservoirs-legend i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: #b4b2a9;
+  opacity: 0.5;
+}
+.ed-reservoirs-leg-hero i { height: 2px; background: #1d9e75; opacity: 1; }
+.ed-reservoirs-leg-drought i { height: 8px; background: #faeeda; opacity: 1; }
+
+.ed-reservoirs-chart {
+  width: 100%;
+  height: 280px;
+  display: block;
+}
+.ed-reservoirs-readings {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+@media (max-width: 800px) {
+  .ed-reservoirs-readings { grid-template-columns: 1fr 1fr; }
+}
+.ed-reservoirs-reading {
+  border: 1px solid var(--card-border);
+  padding: 8px 10px;
+  background: rgba(208, 204, 184, 0.08);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+.ed-reservoirs-reading--hero {
+  border-color: #1d9e75;
+  background: rgba(29, 158, 117, 0.06);
+}
+.ed-reservoirs-reading-name {
+  font-size: 11px;
+  grid-column: 1;
+}
+.ed-reservoirs-reading-name strong { font-weight: 600; color: #2C2C2C; }
+.ed-reservoirs-reading-name span { color: #888; }
+.ed-reservoirs-reading-pct {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: #2C2C2C;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-variant-numeric: tabular-nums;
+}
+.ed-reservoirs-reading-meta {
+  font-size: 10px;
+  color: #888;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  grid-column: 1;
+}
+.ed-reservoirs-reading-delta--up    { color: #1d9e75; font-weight: 600; }
+.ed-reservoirs-reading-delta--down  { color: #b85a3a; font-weight: 600; }
+.ed-reservoirs-reading-delta--neutral { color: #888; }
 
 /* Biodiversity: 13-window species trend */
 .ed-bio-trend {
