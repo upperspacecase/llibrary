@@ -70,3 +70,21 @@ export function requireAdmin(req, res) {
     }
     return true;
 }
+
+/**
+ * Either an admin session OR a matching `Authorization: Bearer
+ * <INTERNAL_API_TOKEN>` header. Used by endpoints that the landbook-app
+ * Next.js app proxies after it has done its own Firebase auth + agent
+ * ownership check, so the call upstream doesn't need a human admin.
+ */
+export function requireAdminOrInternal(req, res) {
+    const token = process.env.INTERNAL_API_TOKEN;
+    if (token) {
+        const header = req.headers.authorization || '';
+        const presented = header.startsWith('Bearer ')
+            ? header.slice('Bearer '.length).trim()
+            : '';
+        if (presented && presented === token) return true;
+    }
+    return requireAdmin(req, res);
+}

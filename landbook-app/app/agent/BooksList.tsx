@@ -5,6 +5,56 @@ import Link from "next/link";
 import { PillButton, StatusPill, Icon } from "@/components/agent/primitives";
 import type { LandbookStatus } from "@/lib/landbook-status";
 
+function PdfButton({ id }: { id: string }) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function download() {
+    setPending(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/agent/${id}/pdf`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const cd = res.headers.get("content-disposition") || "";
+      const m = /filename="?([^"]+)"?/i.exec(cd);
+      const filename = m?.[1] || `landbook-${id}.pdf`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <PillButton
+        variant="light"
+        icon={<Icon.Download />}
+        onClick={download}
+        disabled={pending}
+        title={pending ? "First-time generation can take ~60s" : "Download PDF"}
+      >
+        {pending ? "Preparing…" : "PDF"}
+      </PillButton>
+      {error && (
+        <span className="text-[10px] text-brand-terracotta">{error}</span>
+      )}
+    </div>
+  );
+}
+
 export type AgentItem = {
   id: string;
   href: string;
@@ -135,6 +185,7 @@ export default function BooksList({ items }: { items: AgentItem[] }) {
             </div>
             {!item.isSubmission && (
               <div className="flex items-center gap-2">
+                <PdfButton id={item.id} />
                 <Link href={`/agent/${item.id}/upload`}>
                   <PillButton variant="light" icon={<Icon.Upload />}>
                     Upload

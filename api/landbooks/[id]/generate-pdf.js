@@ -6,7 +6,7 @@
  */
 
 import { GridFSBucket } from 'mongodb';
-import { requireAdmin } from '../../_auth.js';
+import { requireAdminOrInternal } from '../../_auth.js';
 import { getDb, getCollection } from '../../_db.js';
 import { notifyError } from '../../_notify.js';
 
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  if (!requireAdmin(req, res)) return;
+  if (!requireAdminOrInternal(req, res)) return;
 
   const { id } = req.query;
   if (!id) return res.status(400).json({ error: 'Missing id' });
