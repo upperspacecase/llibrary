@@ -246,6 +246,39 @@ const RevenueDetailSchema = z.object({
   investment: strNullable,
 }).passthrough();
 
+const RevenueLayerSchema = z.object({
+  key: str,
+  name: str,
+  active: numNullable,
+  realized: numNullable,
+  monetizable: numNullable,
+  monetizableShare: numNullable,
+}).passthrough();
+
+const ImplicitScenarioSchema = z.object({
+  key: str,
+  name: str,
+  total: numNullable,
+  upliftVsBaseline: numNullable,
+  components: z.object({
+    regulating: numNullable,
+    food: numNullable,
+    cultural: numNullable,
+    soil: numNullable,
+    water: numNullable,
+  }).passthrough(),
+}).passthrough();
+
+const LayerNpvRowSchema = z.object({
+  key: str,
+  name: str,
+  realizedNpv: numNullable,
+  monetizableNpv: numNullable,
+  implicitNpv: numNullable,
+  totalNpv: numNullable,
+  upliftVsBau: numNullable,
+}).passthrough();
+
 const EconomicsSchema = z.object({
   valuePerHa: numNullable,
   totalValue: numNullable,
@@ -266,6 +299,9 @@ const EconomicsSchema = z.object({
     optimized: numNullable,
     details: z.array(RevenueDetailSchema).default([]),
   }).passthrough(),
+  revenueLayers: z.array(RevenueLayerSchema).default([]).optional(),
+  implicitScenarios: z.array(ImplicitScenarioSchema).default([]).optional(),
+  layerNpv: z.array(LayerNpvRowSchema).default([]).optional(),
   carbonStock: numNullable,
   carbonAnnualSeq: numNullable,
   carbonCreditValue: numNullable,

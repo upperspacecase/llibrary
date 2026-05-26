@@ -1,4 +1,13 @@
-import type { Economics, Scores, Narratives, Meta, Property } from "@/lib/types";
+import type {
+  Economics,
+  Scores,
+  Narratives,
+  Meta,
+  Property,
+  ServiceBreakdownRow,
+  ServiceSensitivity,
+  ImplicitScenarioRow,
+} from "@/lib/types";
 import {
   SectionTitle, DataTable,
   Donut, PlaceholderBox,
@@ -9,13 +18,37 @@ function fmt(v: unknown): string {
   return String(v);
 }
 
-const serviceDescriptions: Record<string, string> = {
-  Food: "Forage, fruit, game and crop provision",
-  Water: "Supply, filtration and aquifer recharge",
-  Regulating: "Carbon storage, climate and flood regulation",
-  Soil: "Erosion control and nutrient cycling",
-  Cultural: "Recreation, amenity and landscape value",
+const ES_LABELS: Record<string, { label: string; description: string }> = {
+  regulating: { label: "Regulating", description: "Carbon storage, climate and flood regulation" },
+  food:       { label: "Food",       description: "Forage, fruit, game and crop provision" },
+  cultural:   { label: "Cultural",   description: "Recreation, amenity and landscape value" },
+  soil:       { label: "Soil",       description: "Erosion control and nutrient cycling" },
+  water:      { label: "Water",      description: "Supply, filtration and aquifer recharge" },
 };
+
+const ES_FILLS: Record<string, string> = {
+  regulating: "#C4705A",
+  food:       "#1B3A2F",
+  cultural:   "rgba(27,58,47,0.55)",
+  soil:       "#D4A574",
+  water:      "#8B9A7E",
+};
+
+const FALLBACK_SENSITIVITY: Record<string, ServiceSensitivity> = {
+  regulating: { tier: "High",   note: "Stewardship grows biomass and soil carbon" },
+  food:       { tier: "High",   note: "Improved systems lift productivity" },
+  cultural:   { tier: "Low",    note: "Stable across scenarios" },
+  soil:       { tier: "Medium", note: "Responds to land management" },
+  water:      { tier: "Medium", note: "Responds to buffer planting and infiltration work" },
+};
+
+function sensitivityFor(esClass: string, fromData: ServiceSensitivity | undefined, waterSecurity10: number | null): ServiceSensitivity {
+  if (fromData) return fromData;
+  if (esClass === "water" && waterSecurity10 != null && waterSecurity10 >= 9) {
+    return { tier: "Low", note: `Already at site maximum (Water Security ${waterSecurity10.toFixed(1)}/10)` };
+  }
+  return FALLBACK_SENSITIVITY[esClass] ?? { tier: "—", note: "" };
+}
 
 export function ValueBenefitsSection({
   property,
@@ -30,7 +63,7 @@ export function ValueBenefitsSection({
   meta: Meta;
   narratives?: Narratives["valueBenefits"];
 }) {
-  const es = economics.ecosystemServices || {} as Record<string, number>;
+  const es = economics.ecosystemServices || ({} as Record<string, number>);
 
   // Raw service values
   const water = es.water || 0;
@@ -39,16 +72,59 @@ export function ValueBenefitsSection({
   const regulation = es.regulation || 0;
   const soil = es.soil || 0;
   const cultural = es.cultural || 0;
-  const total = es.total || (water + food + carbon + regulation + soil + cultural);
+  const computedTotal = water + food + carbon + regulation + soil + cultural;
+  const total = es.total || computedTotal;
 
-  // Donut: fold carbon into regulating (5 segments)
-  const donutSegments = [
-    { name: "Food", value: food, fill: "#1B3A2F" },
-    { name: "Water", value: water, fill: "#8B9A7E" },
-    { name: "Regulating", value: regulation + carbon, fill: "#C4705A" },
-    { name: "Soil", value: soil, fill: "#D4A574" },
-    { name: "Cultural", value: cultural, fill: "rgba(27,58,47,0.55)" },
-  ];
+  // Service breakdown: prefer pipeline-built breakdown so sensitivity comes
+  // from the same code path. Fall back to computing it from raw keyed values.
+  const waterSecurity10 = scores.water != null ? scores.water / 10 : null;
+
+  const breakdown: ServiceBreakdownRow[] = (() => {
+    const fromPipeline = (economics.ecosystemServices as { breakdown?: ServiceBreakdownRow[] }).breakdown;
+    if (fromPipeline && fromPipeline.length > 0) return fromPipeline;
+    const order = ["regulating", "food", "cultural", "soil", "water"] as const;
+    const values: Record<string, number> = {
+      regulating: regulation + carbon,
+      food,
+      cultural,
+      soil,
+      water,
+    };
+    return order.map((key) => ({
+      key,
+      label: ES_LABELS[key].label,
+      value: values[key],
+      description: ES_LABELS[key].description,
+      sensitivity: sensitivityFor(key, undefined, waterSecurity10),
+    }));
+  })();
+
+  const donutSegments = breakdown.map((b) => ({
+    name: b.label,
+    value: b.value,
+    fill: ES_FILLS[b.key] ?? "#8B9A7E",
+  }));
+
+  // Implicit-only NPV scenarios for the Long Term Value table — same source
+  // of truth as Future Scenarios' implicit decomposition. Annuity factor
+  // ≈ 18.392 (HM Treasury Green Book 3.5% over 30 years).
+  const annuityFactor = economics.premiumMethodology?.annuityFactor ?? 18.392;
+  const implicitScenarios: ImplicitScenarioRow[] = economics.implicitScenarios ?? [];
+  const baselineImplicit = implicitScenarios.find((s) => s.key === "bau")?.total ?? total;
+  const implicitNpvRows = implicitScenarios.map((s) => {
+    const npv = Math.round(s.total * annuityFactor);
+    const upliftAnnual = s.total - baselineImplicit;
+    return {
+      name: s.name,
+      npv,
+      uplift: Math.round(upliftAnnual * annuityFactor),
+      riskLevel:
+        s.key === "bau" ? "Low"
+        : s.key === "conservative" ? "Low"
+        : s.key === "moderate" ? "Medium"
+        : "Medium-High",
+    };
+  });
 
   return (
     <section id="value-benefits">
@@ -66,12 +142,16 @@ export function ValueBenefitsSection({
               : "—"}
           </h2>
           <div className="space-y-4 text-sm leading-relaxed text-brand-forest/80 font-body max-w-2xl">
-            <p>
-              The Natural Capital Value and Ecosystem Services is assessed using the UN SEEA-EA framework as a guiding methodology. National ecosystem accounts indicate average rural land services at roughly €700–€2,500 per hectare annually. This is an aggregated average, not parcel-specific.
-            </p>
-            <p>
-              LandBook supports deeper assessment through soil analysis, water quality testing, and biodiversity surveys&mdash;shifting from indicative averages to verified Natural Capital Values tied to actual ecosystem condition and local market incentives.
-            </p>
+            {narratives?.intro && <p>{narratives.intro}</p>}
+            {total > 0 && (
+              <p>
+                This €{Math.round(total).toLocaleString()}/yr forms the implicit baseline layer of the property&rsquo;s total value stack &mdash; services delivered regardless of monetization.{" "}
+                <a href="#future-scenarios" className="text-brand-forest underline decoration-brand-sage/40 underline-offset-2 hover:decoration-brand-forest">
+                  Future Scenarios
+                </a>{" "}
+                shows how interventions can both enhance this baseline and unlock additional realized and monetizable layers on top.
+              </p>
+            )}
           </div>
           {property.area > 0 && economics.totalValue != null && economics.valuePerHa != null && (
             <p className="text-[11px] text-brand-sage italic font-body mt-3">
@@ -102,19 +182,23 @@ export function ValueBenefitsSection({
         {total > 0 && (
           <>
             <p className="text-xs leading-relaxed text-brand-forest/80 font-body max-w-2xl mt-8 mb-6">
-              Annual Natural Capital is split across five SEEA-EA service classes. The ring above is sized to each share of the total; the table below lists the same values exactly. <em>Regulating</em> bundles climate regulation with the carbon-storage benefit of standing biomass.
+              Annual Natural Capital is split across five SEEA-EA service classes. The ring above is sized to each share of the total; the table below lists the same values plus the dynamic vs. static sensitivity each class shows under stewardship.
             </p>
             <DataTable
-              headers={["Service Class", "What It Covers", "% Share", "Annual Value"]}
-              rows={donutSegments
-                .filter((s) => s.value > 0)
+              headers={["Service Class", "What It Covers", "% Share", "Annual Value", "Intervention Sensitivity"]}
+              rows={breakdown
+                .filter((b) => b.value > 0)
                 .sort((a, b) => b.value - a.value)
-                .map((s) => [
-                  s.name,
-                  serviceDescriptions[s.name] ?? "—",
-                  `${Math.round((s.value / total) * 100)}%`,
-                  `€${Math.round(s.value).toLocaleString()}`,
-                ])}
+                .map((b) => {
+                  const sens = sensitivityFor(b.key, b.sensitivity, waterSecurity10);
+                  return [
+                    b.label,
+                    b.description,
+                    `${Math.round((b.value / total) * 100)}%`,
+                    `€${Math.round(b.value).toLocaleString()}`,
+                    `${sens.tier} — ${sens.note}`,
+                  ];
+                })}
             />
           </>
         )}
@@ -270,7 +354,7 @@ export function ValueBenefitsSection({
         </div>
       )}
 
-      {/* ── Long Term Value ── */}
+      {/* ── Long Term Value (Implicit-layer NPV) ── */}
       <div className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
           Long Term Value
@@ -279,16 +363,24 @@ export function ValueBenefitsSection({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
           <div className="flex flex-col justify-center">
             <span className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-2 font-body">
-              Thirty-Year NPV
+              Thirty-Year Implicit NPV
             </span>
             <h2 className="font-serif font-bold text-brand-forest leading-tight tracking-tighter text-4xl lg:text-[2.6rem]">
               {economics.npv.thirtyYear != null
                 ? `€${economics.npv.thirtyYear.toLocaleString()}`
                 : "—"}
             </h2>
-            <p className="text-xs mt-4 leading-relaxed text-brand-forest/70 font-body max-w-xs">
-              What 30 years of Annual Natural Capital is worth today, after discounting future years at 3.5%.
-            </p>
+            {total > 0 && economics.npv.thirtyYear != null && (
+              <p className="text-xs mt-4 leading-relaxed text-brand-forest/70 font-body max-w-xs">
+                The 30-year NPV of the implicit ecosystem services layer alone
+                (€{Math.round(total).toLocaleString()}/yr discounted at 3.5%).{" "}
+                <a href="#future-scenarios" className="underline decoration-brand-sage/40 underline-offset-2 hover:decoration-brand-forest">
+                  Future Scenarios
+                </a>{" "}
+                extends this with realized and monetizable layers and shows
+                scenarios where the implicit baseline itself grows.
+              </p>
+            )}
           </div>
           {narratives?.assetCallout && (
             <div className="flex items-center">
@@ -301,7 +393,17 @@ export function ValueBenefitsSection({
           )}
         </div>
 
-        {economics.npv?.scenarios?.length > 0 ? (
+        {implicitNpvRows.length > 0 ? (
+          <DataTable
+            headers={["Scenario", "30-Year Implicit NPV", "Uplift vs Baseline", "Risk Level"]}
+            rows={implicitNpvRows.map((row) => [
+              row.name,
+              `€${row.npv.toLocaleString()}`,
+              row.uplift > 0 ? `+€${row.uplift.toLocaleString()}` : row.uplift < 0 ? `−€${Math.abs(row.uplift).toLocaleString()}` : "—",
+              row.riskLevel,
+            ])}
+          />
+        ) : economics.npv?.scenarios?.length > 0 ? (
           <DataTable
             headers={["Scenario", "30-Year NPV", "Uplift vs Baseline", "Risk Level"]}
             rows={economics.npv.scenarios.map((s) => [
@@ -318,8 +420,7 @@ export function ValueBenefitsSection({
         )}
 
         <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-          Each &ldquo;+&rdquo; scenario applies a single TEEB DE intervention&rsquo;s mid-range uplift to the baseline.
-          See Premium Estimates above for per-intervention values and How These Numbers Are Calculated for the formula.
+          Implicit NPV unchanged for BAU; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
         </p>
       </div>
 

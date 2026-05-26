@@ -70,6 +70,10 @@ import {
   computeNaturalCapitalPremiums,
   PREMIUM_METHODOLOGY,
   computeRevenueScenarios,
+  computeServiceSensitivity,
+  computeImplicitScenarios,
+  computeRevenueLayers,
+  computeLayerNpv,
   computeRiskProfile,
   computeSoilScore,
   computeCarbonScore,
@@ -987,6 +991,18 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     services: svcArray, // keep full array too
   };
 
+  // Per-class sensitivity labels — drive the "Intervention sensitivity" column
+  // on the V&B services table. Water flips to "Low" at site maximum.
+  const waterSecurity10 = allScores.water?.score ?? null;
+  const servicesBreakdown = [
+    { key: 'regulating', label: 'Regulating', value: (svcKeyed.regulation ?? 0) + (svcKeyed.carbon ?? 0), description: 'Carbon storage, climate and flood regulation', sensitivity: computeServiceSensitivity('regulating', waterSecurity10) },
+    { key: 'food',       label: 'Food',       value: svcKeyed.food ?? 0,     description: 'Forage, fruit, game and crop provision',                sensitivity: computeServiceSensitivity('food', waterSecurity10) },
+    { key: 'cultural',   label: 'Cultural',   value: svcKeyed.cultural ?? 0, description: 'Recreation, amenity and landscape value',               sensitivity: computeServiceSensitivity('cultural', waterSecurity10) },
+    { key: 'soil',       label: 'Soil',       value: svcKeyed.soil ?? 0,     description: 'Erosion control and nutrient cycling',                  sensitivity: computeServiceSensitivity('soil', waterSecurity10) },
+    { key: 'water',      label: 'Water',      value: svcKeyed.water ?? 0,    description: 'Supply, filtration and aquifer recharge',               sensitivity: computeServiceSensitivity('water', waterSecurity10) },
+  ];
+  svcKeyed.breakdown = servicesBreakdown;
+
   // Natural Capital Premium Estimates (TEEB DE 2018 benefit transfer)
   const premiums = computeNaturalCapitalPremiums(
     areaHa,
@@ -1007,6 +1023,14 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     details: revArr, // keep full array
   };
 
+  // Layered scenario model — used by V&B's Long Term Value and Future
+  // Scenarios' total-stack table. Realized vs monetizable splits the active
+  // revenue layer; implicitScenarios shifts the €/yr ES baseline under
+  // stewardship; layerNpv reconciles all three into 30-year NPV.
+  const revenueLayers = computeRevenueLayers(revKeyed.conservative, revKeyed.moderate, revKeyed.optimized);
+  const implicitScenarios = computeImplicitScenarios(areaHa, svcKeyed, premiums);
+  const layerNpv = computeLayerNpv(revenueLayers, implicitScenarios);
+
   const economics = {
     valuePerHa: svcKeyed.total ? Math.round(svcKeyed.total / areaHa) : null,
     totalValue: svcKeyed.total ?? null,
@@ -1015,6 +1039,9 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     premiumMethodology: PREMIUM_METHODOLOGY,
     npv: npvObj,
     revenueScenarios: revKeyed,
+    revenueLayers,
+    implicitScenarios,
+    layerNpv,
     carbonStock: Number.isFinite(allScores.carbonStockTotal) ? allScores.carbonStockTotal : 0,
     carbonAnnualSeq,
     carbonCreditValue,

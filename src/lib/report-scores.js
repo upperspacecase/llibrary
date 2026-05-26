@@ -251,6 +251,9 @@ export function computeEcosystemServices(areaHa, apiResults) {
 
 const ANNUITY_FACTOR_30Y_3_5PCT = 18.392; // (1 - 1.035^-30) / 0.035
 
+// Allocation of an intervention's per-hectare uplift across the 5 ES classes
+// used in V&B + Future Scenarios (regulating, food, cultural, soil, water).
+// Values per intervention sum to 1.0.
 const TEEB_DE_INTERVENTIONS = [
   {
     id: 'grassland-conservation',
@@ -264,6 +267,7 @@ const TEEB_DE_INTERVENTIONS = [
     analogueBiomes: {
       cropland: 'Applied to cropland as a converted-to-grassland uplift benchmark; underlying TEEB DE values are for avoided plough-up of existing High Nature Value grassland.',
     },
+    affectsServices: { regulating: 0.50, food: 0.20, cultural: 0.10, soil: 0.15, water: 0.05 },
   },
   {
     id: 'multifunctional-forest',
@@ -278,6 +282,7 @@ const TEEB_DE_INTERVENTIONS = [
       default: 'Land cover not directly classified by CORINE; multifunctional forest stewardship used as the most representative intervention for typical rural Portuguese property.',
       wetland: 'Wetland sites typically include riparian woodland; forest-stewardship values used as a non-flood-specific benchmark alongside any floodplain-restoration row.',
     },
+    affectsServices: { regulating: 0.55, food: 0.05, cultural: 0.25, soil: 0.10, water: 0.05 },
   },
   {
     id: 'river-buffer-zones',
@@ -288,6 +293,7 @@ const TEEB_DE_INTERVENTIONS = [
     valueComposition: '20-yr NPV €767m benefit vs €894m agricultural cost; multifunctional BCR 1.8:1. Original study used 2% discount rate.',
     confidence: 'medium',
     requiresWaterFeatures: true,
+    affectsServices: { regulating: 0.20, food: 0.05, cultural: 0.05, soil: 0.20, water: 0.50 },
   },
   {
     id: 'floodplain-restoration',
@@ -298,6 +304,7 @@ const TEEB_DE_INTERVENTIONS = [
     valueComposition: 'Multifunctional NPV ~€1.18bn vs ~€407m project costs; BCR 3:1.',
     confidence: 'medium',
     applicableBiomes: ['wetland'],
+    affectsServices: { regulating: 0.25, food: 0.05, cultural: 0.15, soil: 0.05, water: 0.50 },
   },
 ];
 
@@ -391,6 +398,237 @@ export const PREMIUM_METHODOLOGY = {
   annuityFactor: ANNUITY_FACTOR_30Y_3_5PCT,
   formula: '30-yr NPV uplift = annual €/ha × eligible ha × annuity factor; annuity factor = Σ (1.035)⁻ᵗ for t=1..30 ≈ 18.39',
 };
+
+// ---------------------------------------------------------------------------
+// Intervention sensitivity per ES class — used to label which services are
+// dynamic vs. static across stewardship scenarios. Water tier flips to "Low"
+// when the property is already at its water-security ceiling.
+// ---------------------------------------------------------------------------
+
+const ES_SENSITIVITY_BASE = {
+  regulating: { tier: 'High', note: 'Stewardship grows biomass and soil carbon' },
+  food:       { tier: 'High', note: 'Improved systems lift productivity' },
+  cultural:   { tier: 'Low',  note: 'Stable across scenarios' },
+  soil:       { tier: 'Medium', note: 'Responds to land management' },
+  water:      { tier: 'Medium', note: 'Responds to buffer planting and infiltration work' },
+};
+
+/**
+ * Per-ES-class sensitivity label. Water flips to "Low — already at site
+ * maximum (Water Security X/10)" when the security index is at the ceiling.
+ *
+ * @param {string} esClass - one of regulating/food/cultural/soil/water
+ * @param {number|null} waterSecurity10 - water security index 0-10
+ * @returns {{ tier: string, note: string }}
+ */
+export function computeServiceSensitivity(esClass, waterSecurity10) {
+  const base = ES_SENSITIVITY_BASE[esClass];
+  if (!base) return { tier: 'Unknown', note: '' };
+  if (esClass === 'water' && waterSecurity10 != null && waterSecurity10 >= 9) {
+    return {
+      tier: 'Low',
+      note: `Already at site maximum (Water Security ${waterSecurity10.toFixed(1)}/10)`,
+    };
+  }
+  return { ...base };
+}
+
+// ---------------------------------------------------------------------------
+// Implicit-layer scenarios — show how the €/yr ecosystem-services baseline
+// shifts under stewardship. BAU = baseline; Conservative gets a small uplift
+// (passive stewardship); Moderate applies high-confidence interventions at
+// mid uplift; Optimized applies all per-hectare interventions at high uplift.
+// Component values distribute the per-intervention uplift across 5 ES classes
+// using each intervention's affectsServices allocation.
+// ---------------------------------------------------------------------------
+
+const SCENARIO_INTENSITY = {
+  conservative: { tierKey: 'low',  fraction: 0.15, useSubset: 'high-confidence-only' },
+  moderate:     { tierKey: 'mid',  fraction: 1.00, useSubset: 'high-confidence-only' },
+  optimized:    { tierKey: 'high', fraction: 1.00, useSubset: 'all' },
+};
+
+const ES_CLASSES = ['regulating', 'food', 'cultural', 'soil', 'water'];
+
+/**
+ * Build the implicit-layer scenarios used by Value & Benefits' Long Term Value
+ * table and by Future Scenarios' total-stack composition.
+ *
+ * @param {number} areaHa
+ * @param {Object} svcKeyed - keyed ecosystem services with totals per class
+ * @param {Array} interventions - TEEB DE interventions matched to this property (output of computeNaturalCapitalPremiums)
+ * @returns {Array<{
+ *   key: string,
+ *   name: string,
+ *   total: number,
+ *   components: { regulating: number, food: number, cultural: number, soil: number, water: number },
+ *   upliftVsBaseline: number,
+ * }>}
+ */
+export function computeImplicitScenarios(areaHa, svcKeyed, interventions) {
+  // Baseline 5-class breakdown (matches the V&B donut: regulating folds in carbon).
+  const baseline = {
+    regulating: (svcKeyed.regulation ?? 0) + (svcKeyed.carbon ?? 0),
+    food: svcKeyed.food ?? 0,
+    cultural: svcKeyed.cultural ?? 0,
+    soil: svcKeyed.soil ?? 0,
+    water: svcKeyed.water ?? 0,
+  };
+  const baselineTotal = ES_CLASSES.reduce((sum, k) => sum + baseline[k], 0);
+
+  // Per-hectare interventions only contribute annual uplift; BCR-only ones
+  // are excluded from scenario annuals.
+  const quantitative = (interventions || []).filter(
+    (it) => it.basis === 'per-hectare' && it.annualPerHa,
+  );
+  const highConfidence = quantitative.filter((it) => it.confidence === 'high' || it.confidence === 'medium');
+
+  const buildScenario = (key, name) => {
+    if (key === 'bau') {
+      return {
+        key,
+        name,
+        total: baselineTotal,
+        components: { ...baseline },
+        upliftVsBaseline: 0,
+      };
+    }
+    const cfg = SCENARIO_INTENSITY[key];
+    const pool = cfg.useSubset === 'all' ? quantitative : highConfidence;
+    const components = { ...baseline };
+    for (const it of pool) {
+      const ratePerHa = it.annualPerHa[cfg.tierKey] ?? 0;
+      const upliftTotal = ratePerHa * areaHa * cfg.fraction;
+      const alloc = it.affectsServices || {};
+      for (const esClass of ES_CLASSES) {
+        components[esClass] += upliftTotal * (alloc[esClass] ?? 0);
+      }
+    }
+    // Round to whole € for display stability
+    for (const esClass of ES_CLASSES) {
+      components[esClass] = Math.round(components[esClass]);
+    }
+    const total = ES_CLASSES.reduce((sum, k) => sum + components[k], 0);
+    return {
+      key,
+      name,
+      total,
+      components,
+      upliftVsBaseline: total - baselineTotal,
+    };
+  };
+
+  return [
+    buildScenario('bau', 'Business as Usual'),
+    buildScenario('conservative', 'Conservative'),
+    buildScenario('moderate', 'Moderate'),
+    buildScenario('optimized', 'Optimized'),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Revenue layer split — divide each scenario's active annual revenue into
+// realized (agricultural production) and monetizable (carbon credits + premium
+// markets). Monetization share grows with scenario aggressiveness; BAU has
+// no monetization, Optimized has the largest share.
+// ---------------------------------------------------------------------------
+
+const MONETIZATION_SHARE = {
+  bau: 0.00,
+  conservative: 0.18,
+  moderate: 0.45,
+  optimized: 0.55,
+};
+
+/**
+ * Build the realized/monetizable split for each scenario.
+ *
+ * BAU annual is derived as half of Conservative (the same convention used
+ * elsewhere in the report). Monetizable share is split between carbon and
+ * premium-market components for transparency.
+ *
+ * @param {number|null} cons - Conservative annual €
+ * @param {number|null} mod - Moderate annual €
+ * @param {number|null} opt - Optimized annual €
+ * @returns {Array<{
+ *   key: string,
+ *   name: string,
+ *   active: number,
+ *   realized: number,
+ *   monetizable: number,
+ *   monetizableShare: number,
+ * }>}
+ */
+export function computeRevenueLayers(cons, mod, opt) {
+  const safe = (n) => (typeof n === 'number' && Number.isFinite(n) ? n : 0);
+  const bau = Math.round(safe(cons) * 0.5);
+
+  const build = (key, name, active) => {
+    const share = MONETIZATION_SHARE[key] ?? 0;
+    const monetizable = Math.round(active * share);
+    return {
+      key,
+      name,
+      active,
+      realized: active - monetizable,
+      monetizable,
+      monetizableShare: share,
+    };
+  };
+
+  return [
+    build('bau', 'Business as Usual', bau),
+    build('conservative', 'Conservative', safe(cons)),
+    build('moderate', 'Moderate', safe(mod)),
+    build('optimized', 'Optimized', safe(opt)),
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Layered NPV — 30-year NPV for each of realized / monetizable / implicit
+// per scenario, plus the total stack and uplift vs BAU.
+// ---------------------------------------------------------------------------
+
+/**
+ * @param {Array} revenueLayers - output of computeRevenueLayers
+ * @param {Array} implicitScenarios - output of computeImplicitScenarios
+ * @returns {Array<{
+ *   key: string,
+ *   name: string,
+ *   realizedNpv: number,
+ *   monetizableNpv: number,
+ *   implicitNpv: number,
+ *   totalNpv: number,
+ *   upliftVsBau: number,
+ * }>}
+ */
+export function computeLayerNpv(revenueLayers, implicitScenarios) {
+  const af = ANNUITY_FACTOR_30Y_3_5PCT;
+  const byKey = (arr, key) => arr.find((s) => s.key === key);
+
+  const rows = revenueLayers.map((rev) => {
+    const imp = byKey(implicitScenarios, rev.key) || { total: 0 };
+    const realizedNpv = Math.round(rev.realized * af);
+    const monetizableNpv = Math.round(rev.monetizable * af);
+    const implicitNpv = Math.round(imp.total * af);
+    const totalNpv = realizedNpv + monetizableNpv + implicitNpv;
+    return {
+      key: rev.key,
+      name: rev.name,
+      realizedNpv,
+      monetizableNpv,
+      implicitNpv,
+      totalNpv,
+      upliftVsBau: 0, // filled below
+    };
+  });
+
+  const bauNpv = rows.find((r) => r.key === 'bau')?.totalNpv ?? 0;
+  for (const row of rows) {
+    row.upliftVsBau = row.totalNpv - bauNpv;
+  }
+  return rows;
+}
 
 // ---------------------------------------------------------------------------
 // Revenue Scenarios — keyed by agriculture system type

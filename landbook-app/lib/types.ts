@@ -112,6 +112,19 @@ export interface Energy {
   biomass: Record<string, unknown>;
 }
 
+export interface ServiceSensitivity {
+  tier: string;
+  note: string;
+}
+
+export interface ServiceBreakdownRow {
+  key: string;
+  label: string;
+  value: number;
+  description: string;
+  sensitivity: ServiceSensitivity;
+}
+
 export interface EcosystemServices {
   water: number;
   food: number;
@@ -120,6 +133,40 @@ export interface EcosystemServices {
   soil: number;
   cultural: number;
   total?: number;
+  breakdown?: ServiceBreakdownRow[];
+}
+
+export interface RevenueLayer {
+  key: string;
+  name: string;
+  active: number;
+  realized: number;
+  monetizable: number;
+  monetizableShare: number;
+}
+
+export interface ImplicitScenarioRow {
+  key: string;
+  name: string;
+  total: number;
+  upliftVsBaseline: number;
+  components: {
+    regulating: number;
+    food: number;
+    cultural: number;
+    soil: number;
+    water: number;
+  };
+}
+
+export interface LayerNpvRow {
+  key: string;
+  name: string;
+  realizedNpv: number;
+  monetizableNpv: number;
+  implicitNpv: number;
+  totalNpv: number;
+  upliftVsBau: number;
 }
 
 export interface RevenueScenarios {
@@ -176,6 +223,9 @@ export interface Economics {
     }>;
   };
   revenueScenarios: RevenueScenarios;
+  revenueLayers?: RevenueLayer[];
+  implicitScenarios?: ImplicitScenarioRow[];
+  layerNpv?: LayerNpvRow[];
   carbonStock: number | null;
   carbonAnnualSeq: number | null;
   carbonCreditValue: number | null;

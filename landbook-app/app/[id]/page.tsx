@@ -143,6 +143,18 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
     if (!baseData.economics.premiumMethodology && blobEcon.premiumMethodology) {
       baseData.economics.premiumMethodology = blobEcon.premiumMethodology;
     }
+    if (!baseData.economics.revenueLayers?.length && blobEcon.revenueLayers?.length) {
+      baseData.economics.revenueLayers = blobEcon.revenueLayers;
+    }
+    if (!baseData.economics.implicitScenarios?.length && blobEcon.implicitScenarios?.length) {
+      baseData.economics.implicitScenarios = blobEcon.implicitScenarios;
+    }
+    if (!baseData.economics.layerNpv?.length && blobEcon.layerNpv?.length) {
+      baseData.economics.layerNpv = blobEcon.layerNpv;
+    }
+    if (!baseData.economics.ecosystemServices?.breakdown?.length && blobEcon.ecosystemServices?.breakdown?.length) {
+      baseData.economics.ecosystemServices.breakdown = blobEcon.ecosystemServices.breakdown;
+    }
   }
 
   // Layer the agent's overrides on top so the buyer sees what the agent
