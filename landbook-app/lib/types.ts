@@ -3,6 +3,9 @@ export interface Coords {
   lng: number;
 }
 
+// Forward declared; full Landbook interface is later in the file. Adding
+// it here so editors/imports can refer to the release fields uniformly.
+
 export interface Property {
   name: string;
   address: string;
@@ -142,7 +145,10 @@ export interface RevenueLayer {
   active: number;
   realized: number;
   monetizable: number;
+  carbonCredits?: number;
+  premiumMarkets?: number;
   monetizableShare: number;
+  carbonShareOfMonetizable?: number;
 }
 
 export interface ImplicitScenarioRow {
@@ -394,6 +400,10 @@ export interface Landbook {
   created: string;
   updated?: string;
   agentNotes?: string;
+  /** ISO timestamp set by an admin via /api/landbooks/[id]/release.
+   *  Until set, the agent sees "Processing" even if `data` is present. */
+  releasedAt?: string | null;
+  releasedBy?: string | null;
 }
 
 export interface LandbookOverride {
@@ -548,4 +558,8 @@ export interface Submission {
   data?: ReportData | null;
   dataUpdated?: string;
   agentNotes?: string;
+  /** ISO timestamp set by an admin via /api/landbooks/[id]/release.
+   *  Until set, the agent sees "Processing" even if `data` is present. */
+  releasedAt?: string | null;
+  releasedBy?: string | null;
 }

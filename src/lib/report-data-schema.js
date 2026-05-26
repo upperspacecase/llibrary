@@ -252,7 +252,10 @@ const RevenueLayerSchema = z.object({
   active: numNullable,
   realized: numNullable,
   monetizable: numNullable,
+  carbonCredits: numNullable.optional(),
+  premiumMarkets: numNullable.optional(),
   monetizableShare: numNullable,
+  carbonShareOfMonetizable: numNullable.optional(),
 }).passthrough();
 
 const ImplicitScenarioSchema = z.object({

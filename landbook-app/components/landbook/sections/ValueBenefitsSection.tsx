@@ -11,12 +11,10 @@ import type {
 import {
   SectionTitle, DataTable,
   Donut, PlaceholderBox,
+  HorizontalStackedBar,
+  VerticalStackedBars,
+  CumulativeLineChart,
 } from "@/components/river";
-
-function fmt(v: unknown): string {
-  if (v == null || v === "") return "—";
-  return String(v);
-}
 
 const ES_LABELS: Record<string, { label: string; description: string }> = {
   regulating: { label: "Regulating", description: "Carbon storage, climate and flood regulation" },
@@ -105,26 +103,7 @@ export function ValueBenefitsSection({
     fill: ES_FILLS[b.key] ?? "#8B9A7E",
   }));
 
-  // Implicit-only NPV scenarios for the Long Term Value table — same source
-  // of truth as Future Scenarios' implicit decomposition. Annuity factor
-  // ≈ 18.392 (HM Treasury Green Book 3.5% over 30 years).
-  const annuityFactor = economics.premiumMethodology?.annuityFactor ?? 18.392;
   const implicitScenarios: ImplicitScenarioRow[] = economics.implicitScenarios ?? [];
-  const baselineImplicit = implicitScenarios.find((s) => s.key === "bau")?.total ?? total;
-  const implicitNpvRows = implicitScenarios.map((s) => {
-    const npv = Math.round(s.total * annuityFactor);
-    const upliftAnnual = s.total - baselineImplicit;
-    return {
-      name: s.name,
-      npv,
-      uplift: Math.round(upliftAnnual * annuityFactor),
-      riskLevel:
-        s.key === "bau" ? "Low"
-        : s.key === "conservative" ? "Low"
-        : s.key === "moderate" ? "Medium"
-        : "Medium-High",
-    };
-  });
 
   return (
     <section id="value-benefits">
@@ -354,7 +333,7 @@ export function ValueBenefitsSection({
         </div>
       )}
 
-      {/* ── Long Term Value (Implicit-layer NPV) ── */}
+      {/* ── Long Term Value — implicit-only mirror of the Future Scenarios 4-block layout ── */}
       <div className="mb-20">
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
           Long Term Value
@@ -393,34 +372,188 @@ export function ValueBenefitsSection({
           )}
         </div>
 
-        {implicitNpvRows.length > 0 ? (
-          <DataTable
-            headers={["Scenario", "30-Year Implicit NPV", "Uplift vs Baseline", "Risk Level"]}
-            rows={implicitNpvRows.map((row) => [
-              row.name,
-              `€${row.npv.toLocaleString()}`,
-              row.uplift > 0 ? `+€${row.uplift.toLocaleString()}` : row.uplift < 0 ? `−€${Math.abs(row.uplift).toLocaleString()}` : "—",
-              row.riskLevel,
-            ])}
-          />
-        ) : economics.npv?.scenarios?.length > 0 ? (
-          <DataTable
-            headers={["Scenario", "30-Year NPV", "Uplift vs Baseline", "Risk Level"]}
-            rows={economics.npv.scenarios.map((s) => [
-              fmt(s.name),
-              s.npv != null ? `€${s.npv.toLocaleString()}` : "—",
-              s.uplift30yr != null && s.uplift30yr > 0
-                ? `+€${s.uplift30yr.toLocaleString()}`
-                : s.intervention === null ? "—" : "",
-              fmt(s.riskLevel),
-            ])}
-          />
-        ) : (
-          <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
-        )}
+        {(() => {
+          // Five-class color palette — same tonal progression used in the
+          // Future Scenarios donuts so the eye recognises the implicit cluster.
+          const ES_FILLS = {
+            regulating: "#1B3A2F",
+            food:       "#2E5A47",
+            cultural:   "#5B7A6E",
+            soil:       "#8B9A7E",
+            water:      "#A8B8AB",
+          };
+          const segmentKeys = [
+            { key: "regulating", label: "Regulating",        fill: ES_FILLS.regulating },
+            { key: "food",       label: "Food provisioning", fill: ES_FILLS.food },
+            { key: "cultural",   label: "Cultural",          fill: ES_FILLS.cultural },
+            { key: "soil",       label: "Soil",              fill: ES_FILLS.soil },
+            { key: "water",      label: "Water",             fill: ES_FILLS.water },
+          ];
+
+          const byKey = (key: string) => implicitScenarios.find((r) => r.key === key);
+          const bauRow = byKey("bau");
+          const optRow = byKey("optimized");
+          const bauTotal = bauRow?.total ?? 0;
+          const optTotal = optRow?.total ?? 0;
+
+          if (!bauRow || implicitScenarios.length === 0) {
+            return (
+              <p className="text-sm text-brand-sage italic">
+                Implicit scenario data not yet computed — re-run the pipeline to populate.
+              </p>
+            );
+          }
+
+          const todaySegments = segmentKeys.map((sk) => ({
+            key: sk.key,
+            label: sk.label,
+            value: bauRow.components[sk.key as keyof typeof bauRow.components] ?? 0,
+            fill: sk.fill,
+          }));
+
+          const scenarioGroups = implicitScenarios.map((row) => ({
+            key: row.key,
+            label: row.name,
+            segments: {
+              regulating: row.components.regulating,
+              food: row.components.food,
+              cultural: row.components.cultural,
+              soil: row.components.soil,
+              water: row.components.water,
+            },
+            total: row.total,
+          }));
+
+          const donutScenarios = ["conservative", "moderate", "optimized"];
+          const donutData = donutScenarios
+            .map((k) => byKey(k))
+            .filter((row): row is NonNullable<typeof row> => !!row)
+            .map((row) => ({
+              key: row.key,
+              name: row.name,
+              total: row.total,
+              segments: segmentKeys.map((sk) => ({
+                name: sk.label,
+                value: row.components[sk.key as keyof typeof row.components] ?? 0,
+                fill: sk.fill,
+              })),
+            }));
+
+          const cumulativeSeries = implicitScenarios.map((row) => ({
+            key: row.key,
+            label: `${row.name} · €${Math.round(row.total * 30).toLocaleString()}`,
+            annual: row.total,
+            stroke:
+              row.key === "bau" ? "#8B9A7E"
+              : row.key === "conservative" ? "#A8B8AB"
+              : row.key === "moderate" ? "#5B7A6E"
+              : "#1B3A2F",
+            dashed: row.key === "bau",
+          }));
+
+          return (
+            <>
+              {/* Block 1 — Today (implicit only) */}
+              <div className="mb-12">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Today</p>
+                <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                  Ecosystem services deliver €{Math.round(bauTotal).toLocaleString()} this year
+                </p>
+                <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                  Five SEEA-EA classes: regulating, food, cultural, soil, water
+                </p>
+                <HorizontalStackedBar segments={todaySegments} />
+              </div>
+
+              {/* Block 2 — By scenario */}
+              <div className="mb-12">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">By scenario</p>
+                <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                  Stewardship grows that to €{Math.round(optTotal).toLocaleString()} under Optimized
+                  {optTotal > bauTotal && (
+                    <span className="text-brand-sage font-body font-medium text-lg"> &mdash; €{Math.round(optTotal - bauTotal).toLocaleString()} added to the implicit baseline</span>
+                  )}
+                </p>
+                <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                  Same five classes, four management paths
+                </p>
+                <VerticalStackedBars
+                  groups={scenarioGroups}
+                  segmentKeys={segmentKeys}
+                />
+                <div className="mt-6">
+                  <DataTable
+                    headers={["Scenario", "Total implicit", "Uplift vs BAU", "Risk Level"]}
+                    rows={implicitScenarios.map((row) => {
+                      const uplift = row.total - bauTotal;
+                      return [
+                        row.name,
+                        `€${Math.round(row.total).toLocaleString()}/yr`,
+                        uplift > 0 ? `+€${Math.round(uplift).toLocaleString()}/yr` : "—",
+                        row.key === "bau" ? "Low"
+                          : row.key === "conservative" ? "Low"
+                          : row.key === "moderate" ? "Medium"
+                          : "Medium-High",
+                      ];
+                    })}
+                  />
+                </div>
+              </div>
+
+              {/* Block 3 — Components by scenario */}
+              {donutData.length > 0 && (
+                <div className="mb-12">
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Components by scenario</p>
+                  <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-5">
+                    Where the uplift lands
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {donutData.map((sc) => (
+                      <div key={sc.key} className="flex flex-col">
+                        <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">
+                          {sc.name} · €{Math.round(sc.total).toLocaleString()}
+                        </p>
+                        <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 justify-center">
+                    {segmentKeys.map((sk) => (
+                      <div key={sk.key} className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2" style={{ background: sk.fill }} aria-hidden="true" />
+                        <span className="text-[10px] font-body text-brand-charcoal/80">{sk.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Block 4 — Over 30 years (implicit only, undiscounted) */}
+              {cumulativeSeries.length > 0 && (() => {
+                const bauCum = bauTotal * 30;
+                const optCum = optTotal * 30;
+                return (
+                  <div className="mb-12">
+                    <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Over 30 years</p>
+                    <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                      Compounds to €{Math.round(optCum).toLocaleString()} under Optimized
+                      {bauCum > 0 && (
+                        <span className="text-brand-sage font-body font-medium text-lg"> vs €{Math.round(bauCum).toLocaleString()} BAU</span>
+                      )}
+                    </p>
+                    <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                      Cumulative undiscounted implicit value, constant annual rate. NPV reflected in the headline above uses the 3.5% discount rate.
+                    </p>
+                    <CumulativeLineChart series={cumulativeSeries} years={30} />
+                  </div>
+                );
+              })()}
+            </>
+          );
+        })()}
 
         <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-          Implicit NPV unchanged for BAU; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
+          BAU holds the baseline; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
         </p>
       </div>
 

@@ -551,12 +551,23 @@ const MONETIZATION_SHARE = {
   optimized: 0.55,
 };
 
+// What fraction of the monetizable layer is carbon credits vs premium markets,
+// per scenario. Conservative is carbon-only (early enrollment); premium share
+// grows with scenario aggressiveness as the property develops the operational
+// capacity to participate in premium markets.
+const CARBON_SHARE_OF_MONETIZABLE = {
+  bau: 0.00,
+  conservative: 1.00,
+  moderate: 0.65,
+  optimized: 0.55,
+};
+
 /**
- * Build the realized/monetizable split for each scenario.
+ * Build the realized/monetizable split for each scenario, including the
+ * carbon-credits vs premium-markets sub-split of the monetizable layer.
  *
  * BAU annual is derived as half of Conservative (the same convention used
- * elsewhere in the report). Monetizable share is split between carbon and
- * premium-market components for transparency.
+ * elsewhere in the report).
  *
  * @param {number|null} cons - Conservative annual €
  * @param {number|null} mod - Moderate annual €
@@ -567,7 +578,10 @@ const MONETIZATION_SHARE = {
  *   active: number,
  *   realized: number,
  *   monetizable: number,
+ *   carbonCredits: number,
+ *   premiumMarkets: number,
  *   monetizableShare: number,
+ *   carbonShareOfMonetizable: number,
  * }>}
  */
 export function computeRevenueLayers(cons, mod, opt) {
@@ -577,13 +591,19 @@ export function computeRevenueLayers(cons, mod, opt) {
   const build = (key, name, active) => {
     const share = MONETIZATION_SHARE[key] ?? 0;
     const monetizable = Math.round(active * share);
+    const carbonShare = CARBON_SHARE_OF_MONETIZABLE[key] ?? 0;
+    const carbonCredits = Math.round(monetizable * carbonShare);
+    const premiumMarkets = monetizable - carbonCredits;
     return {
       key,
       name,
       active,
       realized: active - monetizable,
       monetizable,
+      carbonCredits,
+      premiumMarkets,
       monetizableShare: share,
+      carbonShareOfMonetizable: carbonShare,
     };
   };
 

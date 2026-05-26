@@ -21,3 +21,9 @@ export { Treemap } from "./Treemap";
 export type { TreemapSegment } from "./Treemap";
 export { Donut } from "./Donut";
 export type { DonutSegment } from "./Donut";
+export {
+  HorizontalStackedBar,
+  VerticalStackedBars,
+  CumulativeLineChart,
+} from "./LayerCharts";
+export type { StackedSegment } from "./LayerCharts";

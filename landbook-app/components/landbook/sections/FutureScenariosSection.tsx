@@ -7,6 +7,10 @@ import type {
 } from "@/lib/types";
 import {
   SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
+  Donut,
+  HorizontalStackedBar,
+  VerticalStackedBars,
+  CumulativeLineChart,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -34,137 +38,27 @@ const SCENARIO_RISK: Record<string, string> = {
   optimized: "Medium-High",
 };
 
-// Implicit acts as a muted foundation so the active layers (where
-// stewardship decisions actually live) carry the visual weight.
+// Top-level 3-layer palette used in the Today + By-scenario stacked bars.
 const LAYER_FILLS = {
-  implicit: "rgba(139, 154, 126, 0.28)",
-  realized: "#1B3A2F",
-  monetizable: "#C4705A",
+  implicit: "#1B3A2F",
+  realized: "#C4705A",
+  monetizable: "#D4A574",
 };
 
-const ES_COMPONENT_ROWS: Array<{ key: keyof ImplicitScenarioRow["components"]; label: string; note: string }> = [
-  { key: "regulating", label: "Regulating",        note: "Stewardship grows biomass and soil carbon" },
-  { key: "food",       label: "Food provisioning", note: "Improved systems lift productivity" },
-  { key: "cultural",   label: "Cultural",          note: "Stable across scenarios" },
-  { key: "soil",       label: "Soil",              note: "Erosion control and nutrient cycling improve" },
-  { key: "water",      label: "Water",             note: "Responds to buffer planting and infiltration work" },
-];
+// Tonal palette for the 7-segment donut: implicit cluster reads as a green
+// progression, active layers carry the warm tones, so the eye groups the
+// segments by layer without needing labels to do that work.
+const COMPONENT_FILLS = {
+  regulating: "#1B3A2F",
+  food:       "#2E5A47",
+  cultural:   "#5B7A6E",
+  soil:       "#8B9A7E",
+  water:      "#A8B8AB",
+  realized:   "#C4705A",
+  carbon:     "#D4A574",
+  premium:    "#E5C499",
+};
 
-/**
- * Stacked-column chart showing 30-year cumulative value per scenario, broken
- * into implicit / realized / monetizable layers. Constant annual rate per
- * layer assumed (matches the existing scenario model).
- */
-function StackedScenarioChart({
-  rows,
-  years = 30,
-}: {
-  rows: Array<{
-    key: string;
-    name: string;
-    implicit: number;
-    realized: number;
-    monetizable: number;
-  }>;
-  years?: number;
-}) {
-  const W = 760;
-  const H = 320;
-  const padL = 64;
-  const padR = 16;
-  const padT = 16;
-  const padB = 56;
-  const innerW = W - padL - padR;
-  const innerH = H - padT - padB;
-
-  const cumulative = rows.map((r) => ({
-    ...r,
-    implicit30: r.implicit * years,
-    realized30: r.realized * years,
-    monetizable30: r.monetizable * years,
-    total30: (r.implicit + r.realized + r.monetizable) * years,
-  }));
-  const maxY = Math.max(...cumulative.map((r) => r.total30), 1);
-  const niceMax = Math.ceil(maxY / 50000) * 50000 || maxY;
-  const yTicks = 5;
-
-  const barCount = cumulative.length;
-  const slot = innerW / barCount;
-  const barW = Math.min(96, slot * 0.55);
-
-  const yAt = (v: number) => padT + innerH - (v / niceMax) * innerH;
-
-  return (
-    <div>
-      <div className="flex justify-between items-end mb-4">
-        <h4 className="text-[10px] font-bold tracking-widest text-brand-forest uppercase">
-          30-Year Cumulative Value · Stacked by Layer
-        </h4>
-        <p className="text-[10px] text-brand-sage uppercase tracking-widest">
-          {years}-year horizon, constant annual rate
-        </p>
-      </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-        {/* Y gridlines + labels */}
-        {Array.from({ length: yTicks + 1 }, (_, i) => {
-          const v = (niceMax / yTicks) * i;
-          const y = yAt(v);
-          return (
-            <g key={`y${i}`}>
-              <line x1={padL} x2={W - padR} y1={y} y2={y} stroke="#E5E0D3" strokeWidth={1} />
-              <text x={padL - 8} y={y + 3} textAnchor="end" fontSize={10} fill="#8B9A7E">
-                {`€${Math.round(v).toLocaleString()}`}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Axis lines */}
-        <line x1={padL} x2={padL} y1={padT} y2={padT + innerH} stroke="#8B9A7E" strokeWidth={1} />
-        <line x1={padL} x2={W - padR} y1={padT + innerH} y2={padT + innerH} stroke="#8B9A7E" strokeWidth={1} />
-
-        {/* Stacked bars */}
-        {cumulative.map((r, i) => {
-          const cx = padL + slot * (i + 0.5);
-          const x = cx - barW / 2;
-          const implicitY = yAt(r.implicit30);
-          const implicitH = (padT + innerH) - implicitY;
-          const realizedY = yAt(r.implicit30 + r.realized30);
-          const realizedH = implicitY - realizedY;
-          const monetY = yAt(r.total30);
-          const monetH = realizedY - monetY;
-          return (
-            <g key={r.key}>
-              <rect x={x} y={implicitY} width={barW} height={implicitH} fill={LAYER_FILLS.implicit} />
-              <rect x={x} y={realizedY} width={barW} height={realizedH} fill={LAYER_FILLS.realized} />
-              <rect x={x} y={monetY} width={barW} height={monetH} fill={LAYER_FILLS.monetizable} />
-              <text x={cx} y={H - padB + 18} textAnchor="middle" fontSize={11} fontWeight={700} fill="#1B3A2F">
-                {r.name}
-              </text>
-              <text x={cx} y={H - padB + 34} textAnchor="middle" fontSize={10} fill="#8B9A7E">
-                {`€${Math.round(r.total30).toLocaleString()}`}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-      <div className="flex flex-wrap gap-6 mt-3">
-        {[
-          { label: "Implicit ecosystem services", fill: LAYER_FILLS.implicit },
-          { label: "Realized agriculture", fill: LAYER_FILLS.realized },
-          { label: "Monetizable (carbon + premium)", fill: LAYER_FILLS.monetizable },
-        ].map((l) => (
-          <div key={l.label} className="flex items-center gap-2">
-            <div className="w-3 h-3" style={{ background: l.fill }} />
-            <span className="text-[10px] font-bold text-brand-forest tracking-wide">
-              {l.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 export function FutureScenariosSection({
   economics,
@@ -267,88 +161,197 @@ export function FutureScenariosSection({
         </div>
       )}
 
-      {/* 11.1 Scenario Framework */}
+      {/* 11.1 Scenario Framework — four visualization blocks (one story, three zoom levels) */}
       <SubsectionHeader id="11.1" title="Scenario Framework" sources={["Computed"]} />
-      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-4">
-        Active revenue potential (realized + monetizable)
-      </p>
-      <div className="grid grid-cols-3 gap-8 mb-8">
-        {activeCards.map((card) => (
-          <div key={card.key} className="border-t border-brand-sage/30 pt-4">
-            <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">
-              {card.name}
-            </div>
-            <div className="font-serif text-3xl font-bold text-brand-forest leading-none tracking-tighter">
-              {card.active > 0 ? `€${card.active.toLocaleString()}` : "—"}
-              <span className="text-sm font-body font-medium ml-1 text-brand-sage">/yr</span>
-            </div>
-            {card.active > 0 && (
-              <div className="mt-3 text-[11px] text-brand-charcoal/80 font-body leading-snug">
-                <span className="font-bold text-brand-forest">€{card.realized.toLocaleString()}</span> realized
-                <span className="text-brand-sage"> + </span>
-                <span className="font-bold text-brand-forest">€{card.monetizable.toLocaleString()}</span> monetizable
+
+      {(() => {
+        const bauRow = stackedRows.find((r) => r.key === "bau");
+        const optRow = stackedRows.find((r) => r.key === "optimized");
+        const bauTotal = bauRow ? bauRow.implicit + bauRow.realized + bauRow.monetizable : 0;
+        const optTotal = optRow ? optRow.implicit + optRow.realized + optRow.monetizable : 0;
+        const annualUplift = optTotal - bauTotal;
+
+        // Realized labels per scenario — pulled from the agriculture-systems
+        // detail rows the pipeline already emits. Each tier carries its own
+        // "(improved)" / "(all optimized)" suffix.
+        const findSystems = (scenarioName: string) =>
+          details.find((d) => (d.scenario || "").toLowerCase() === scenarioName.toLowerCase())?.systems ?? null;
+        const realizedLabelFor = (key: string): string => {
+          if (key === "bau") return findSystems("Conservative") ?? "Current agriculture";
+          const sys = findSystems(SCENARIO_LABELS[key] ?? "");
+          return sys ?? `Agriculture (${SCENARIO_LABELS[key]?.toLowerCase()})`;
+        };
+
+        const todaySegments = bauRow ? [
+          { key: "implicit",    label: "Implicit ecosystem services", value: bauRow.implicit,    fill: LAYER_FILLS.implicit },
+          { key: "realized",    label: "Realized agriculture",        value: bauRow.realized,    fill: LAYER_FILLS.realized },
+          { key: "monetizable", label: "Monetizable (carbon + premium)", value: bauRow.monetizable, fill: LAYER_FILLS.monetizable },
+        ] : [];
+
+        const layerKeys = [
+          { key: "implicit",    label: "Implicit ecosystem services", fill: LAYER_FILLS.implicit },
+          { key: "realized",    label: "Realized agriculture",        fill: LAYER_FILLS.realized },
+          { key: "monetizable", label: "Monetizable (carbon + premium)", fill: LAYER_FILLS.monetizable },
+        ];
+
+        const scenarioGroups = stackedRows.map((r) => ({
+          key: r.key,
+          label: SCENARIO_LABELS[r.key] ?? r.key,
+          segments: { implicit: r.implicit, realized: r.realized, monetizable: r.monetizable },
+          total: r.implicit + r.realized + r.monetizable,
+        }));
+
+        // Donut segments for each scenario (Cons/Mod/Opt). 7-8 wedges:
+        // 5 implicit ES classes + realized + carbon credits + premium markets.
+        const donutScenarios = ["conservative", "moderate", "optimized"] as const;
+        const donutFor = (key: string) => {
+          const imp = byKey(implicitScenarios, key);
+          const rev = byKey(revenueLayers, key);
+          if (!imp || !rev) return null;
+          const realizedLabel = realizedLabelFor(key);
+          return {
+            key,
+            name: SCENARIO_LABELS[key],
+            total: imp.total + rev.realized + rev.monetizable,
+            segments: [
+              { name: "Regulating",        value: imp.components.regulating, fill: COMPONENT_FILLS.regulating },
+              { name: "Food provisioning", value: imp.components.food,       fill: COMPONENT_FILLS.food },
+              { name: "Cultural",          value: imp.components.cultural,   fill: COMPONENT_FILLS.cultural },
+              { name: "Soil",              value: imp.components.soil,       fill: COMPONENT_FILLS.soil },
+              { name: "Water",             value: imp.components.water,      fill: COMPONENT_FILLS.water },
+              { name: realizedLabel,       value: rev.realized,              fill: COMPONENT_FILLS.realized },
+              { name: "Carbon credits",    value: rev.carbonCredits ?? rev.monetizable, fill: COMPONENT_FILLS.carbon },
+              { name: "Premium markets",   value: rev.premiumMarkets ?? 0,   fill: COMPONENT_FILLS.premium },
+            ],
+          };
+        };
+        const donutData = donutScenarios.map(donutFor).filter((x): x is NonNullable<ReturnType<typeof donutFor>> => !!x);
+
+        // 30-year cumulative — line per scenario at total annual × years.
+        const cumulativeSeries = stackedRows.map((r) => {
+          const total = r.implicit + r.realized + r.monetizable;
+          return {
+            key: r.key,
+            label: `${SCENARIO_LABELS[r.key] ?? r.key} · €${Math.round(total * 30).toLocaleString()}`,
+            annual: total,
+            stroke:
+              r.key === "bau" ? "#8B9A7E"
+              : r.key === "conservative" ? "#A8B8AB"
+              : r.key === "moderate" ? "#5B7A6E"
+              : "#1B3A2F",
+            dashed: r.key === "bau",
+          };
+        });
+
+        return (
+          <>
+            {/* Block 1 — Today */}
+            {bauRow && bauTotal > 0 && (
+              <div className="mb-12">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Today</p>
+                <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                  Your land delivers €{Math.round(bauTotal).toLocaleString()} in value this year
+                </p>
+                <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                  Three layers: implicit ecosystem services, realized agriculture, monetizable enrollment
+                </p>
+                <HorizontalStackedBar segments={todaySegments} />
               </div>
             )}
-          </div>
-        ))}
-      </div>
 
-      {/* Stacked-layer chart */}
-      {stackedRows.length > 0 && (
-        <div className="mb-10">
-          <StackedScenarioChart rows={stackedRows} />
-        </div>
-      )}
+            {/* Block 2 — By scenario */}
+            {scenarioGroups.length > 0 && (
+              <div className="mb-12">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">By scenario</p>
+                <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                  Interventions grow that to €{Math.round(optTotal).toLocaleString()} under Optimized
+                  {annualUplift > 0 && (
+                    <span className="text-brand-sage font-body font-medium text-lg"> &mdash; a €{Math.round(annualUplift).toLocaleString()} annual uplift</span>
+                  )}
+                </p>
+                <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                  Same three layers, four management paths
+                </p>
+                <VerticalStackedBars
+                  groups={scenarioGroups}
+                  segmentKeys={layerKeys}
+                />
+                <div className="mt-6">
+                  <DataTable
+                    headers={["Scenario", "Realized agriculture", "Monetizable", "Implicit ecosystem services", "Total annual value", "Description"]}
+                    rows={scenarioGroups.map((g) => [
+                      g.label,
+                      g.segments.realized > 0 ? `€${Math.round(g.segments.realized).toLocaleString()}` : "—",
+                      g.segments.monetizable > 0 ? `€${Math.round(g.segments.monetizable).toLocaleString()}` : "—",
+                      `€${Math.round(g.segments.implicit).toLocaleString()}`,
+                      `€${Math.round(g.total).toLocaleString()}`,
+                      SCENARIO_DESCRIPTIONS[g.key] ?? "",
+                    ])}
+                  />
+                </div>
+              </div>
+            )}
 
-      {/* Layered scenario table */}
-      {stackedRows.length > 0 && (
-        <DataTable
-          headers={["Scenario", "Realized agriculture", "Monetizable", "Implicit ecosystem services", "Total annual value", "Description"]}
-          rows={stackedRows.map((r) => [
-            r.name,
-            r.realized > 0 ? `€${r.realized.toLocaleString()}` : "—",
-            r.monetizable > 0 ? `€${r.monetizable.toLocaleString()}` : "—",
-            `€${Math.round(r.implicit).toLocaleString()}`,
-            `€${Math.round(r.implicit + r.realized + r.monetizable).toLocaleString()}`,
-            SCENARIO_DESCRIPTIONS[r.key] ?? "",
-          ])}
-        />
-      )}
+            {/* Block 3 — What's inside each scenario */}
+            {donutData.length > 0 && (
+              <div className="mb-12">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">What&rsquo;s inside each scenario</p>
+                <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-5">
+                  Component composition by scenario
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {donutData.map((sc) => (
+                    <div key={sc.key} className="flex flex-col">
+                      <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">
+                        {sc.name} · €{Math.round(sc.total).toLocaleString()}
+                      </p>
+                      <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6 justify-center">
+                  {[
+                    { label: "Regulating",        fill: COMPONENT_FILLS.regulating },
+                    { label: "Food provisioning", fill: COMPONENT_FILLS.food },
+                    { label: "Cultural",          fill: COMPONENT_FILLS.cultural },
+                    { label: "Soil",              fill: COMPONENT_FILLS.soil },
+                    { label: "Water",             fill: COMPONENT_FILLS.water },
+                    { label: "Realized agriculture", fill: COMPONENT_FILLS.realized },
+                    { label: "Carbon credits",    fill: COMPONENT_FILLS.carbon },
+                    { label: "Premium markets",   fill: COMPONENT_FILLS.premium },
+                  ].map((l) => (
+                    <div key={l.label} className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2" style={{ background: l.fill }} aria-hidden="true" />
+                      <span className="text-[10px] font-body text-brand-charcoal/80">{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-      {/* Implicit decomposition sub-table */}
-      {implicitScenarios.length > 0 && (
-        <div className="mt-10">
-          <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-4">
-            Implicit layer composition by scenario
-          </p>
-          <DataTable
-            headers={[
-              "Component",
-              ...SCENARIO_ORDER.map((k) => SCENARIO_LABELS[k]),
-              "Notes",
-            ]}
-            rows={ES_COMPONENT_ROWS.map((row) => {
-              const cells: string[] = [row.label];
-              for (const k of SCENARIO_ORDER) {
-                const sc = byKey(implicitScenarios, k);
-                const val = sc?.components?.[row.key] ?? null;
-                cells.push(val != null ? `€${Math.round(val).toLocaleString()}` : "—");
-              }
-              cells.push(row.note);
-              return cells;
-            }).concat([
-              [
-                "Total implicit",
-                ...SCENARIO_ORDER.map((k) => {
-                  const sc = byKey(implicitScenarios, k);
-                  return sc ? `€${Math.round(sc.total).toLocaleString()}` : "—";
-                }),
-                "",
-              ],
-            ])}
-          />
-        </div>
-      )}
+            {/* Block 4 — Over 30 years */}
+            {cumulativeSeries.length > 0 && (() => {
+              const bauCum = (cumulativeSeries.find((s) => s.key === "bau")?.annual ?? 0) * 30;
+              const optCum = (cumulativeSeries.find((s) => s.key === "optimized")?.annual ?? 0) * 30;
+              return (
+                <div className="mb-12">
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Over 30 years</p>
+                  <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
+                    Compounds to €{Math.round(optCum).toLocaleString()} under Optimized
+                    {bauCum > 0 && (
+                      <span className="text-brand-sage font-body font-medium text-lg"> vs €{Math.round(bauCum).toLocaleString()} BAU</span>
+                    )}
+                  </p>
+                  <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
+                    Cumulative undiscounted value, constant annual rate
+                  </p>
+                  <CumulativeLineChart series={cumulativeSeries} years={30} />
+                </div>
+              );
+            })()}
+          </>
+        );
+      })()}
 
       <Hairline />
 
