@@ -662,6 +662,18 @@ function renderEnvironmentalDashboard() {
 
   return `
     <section class="ed-root" id="environmental-dashboard">
+
+      <!-- Region overview map: data input stations layered by source -->
+      <section class="ed-region-map-block">
+        <div class="ed-region-map-header">
+          <div class="ed-region-map-title">${lucide('triangle-alert')}<span>Data input stations</span></div>
+          <div class="ed-station-toggles" id="ed-station-toggles" role="group" aria-label="Toggle station layers">
+            <span class="ed-station-toggles-empty">Loading stations…</span>
+          </div>
+        </div>
+        <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
+      </section>
+
       <div class="ed-grid">
         <!-- WEATHER -->
         <section class="ed-panel ed-panel--weather">
@@ -1226,6 +1238,104 @@ async function hydrateEnvironmentalDashboard() {
       callout.classList.remove('ed-data');
       callout.classList.add('ed-data-real');
     }
+    hydrated += 1;
+  })();
+
+  // Region overview map — stations from /api/regions/odemira/stations, with
+  // a tickbox per source. Falls back silently when Mapbox or the endpoint
+  // is unavailable.
+  (async () => {
+    const container = document.getElementById('ed-station-map');
+    const togglesEl = document.getElementById('ed-station-toggles');
+    if (!container || !togglesEl) return;
+    let payloadStations;
+    try {
+      const res = await fetch('/api/regions/odemira/stations');
+      if (!res.ok) return;
+      payloadStations = await res.json();
+      if (!payloadStations.ok || !Array.isArray(payloadStations.features)) return;
+    } catch { return; }
+
+    const features = payloadStations.features;
+    if (!features.length) {
+      togglesEl.innerHTML = '<span class="ed-station-toggles-empty">No stations catalogued yet — run scripts/odemira-stations-ingest.mjs.</span>';
+      return;
+    }
+
+    const sourceMeta = {
+      snirh_piezometria:    { color: '#3d6b8c', label: 'Piezometers (SNIRH)' },
+      snirh_hidrometrica:   { color: '#1B3A2F', label: 'River gauges (SNIRH)' },
+      snirh_nascentes:      { color: '#5a7256', label: 'Springs (SNIRH)' },
+      snirh_qualidade_sub:  { color: '#8b4789', label: 'Groundwater quality (SNIRH)' },
+      glofas_basin:         { color: '#d49a4a', label: 'GloFAS basin sample' },
+      wiki_landmark:        { color: '#888888', label: 'Landmarks' },
+    };
+
+    // Group features by source so we can toggle layer-by-layer.
+    const grouped = {};
+    for (const f of features) {
+      (grouped[f.source] = grouped[f.source] || []).push(f);
+    }
+    const sourcesPresent = Object.keys(grouped).sort((a, b) =>
+      (grouped[b].length - grouped[a].length));
+
+    // Build the toggle UI
+    togglesEl.innerHTML = sourcesPresent.map(s => {
+      const meta = sourceMeta[s] || { color: '#888', label: s };
+      return `
+        <label class="ed-station-toggle">
+          <input type="checkbox" data-source="${s}" checked />
+          <i class="ed-station-toggle-swatch" style="background:${meta.color}"></i>
+          <span class="ed-station-toggle-label">${meta.label}</span>
+          <span class="ed-station-toggle-count">${grouped[s].length}</span>
+        </label>`;
+    }).join('');
+
+    // Initialise the map
+    const map = createMap('ed-station-map', {
+      center: [-8.6400, 37.5967],
+      zoom: 9,
+      scrollZoom: false,
+    });
+
+    // Markers, keyed by source so toggles can hide/show them
+    const markersBySource = {};
+    map.on('load', () => {
+      for (const source of sourcesPresent) {
+        const meta = sourceMeta[source] || { color: '#888', label: source };
+        markersBySource[source] = [];
+        for (const f of grouped[source]) {
+          const el = document.createElement('div');
+          el.className = 'ed-station-dot';
+          el.style.background = meta.color;
+          el.title = `${meta.label} · ${f.name}`;
+          const m = new mapboxgl.Marker({ element: el })
+            .setLngLat([f.lng, f.lat])
+            .setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML(`
+              <strong>${f.name || f.externalId}</strong><br/>
+              <span style="color:#888">${meta.label}</span>
+              ${f.parameters && f.parameters.length
+                ? `<br/><small>${f.parameters.slice(0, 4).map(p => p.name).filter(Boolean).join(' · ')}</small>`
+                : ''}
+            `))
+            .addTo(map);
+          markersBySource[source].push(m);
+        }
+      }
+    });
+
+    // Wire toggles
+    togglesEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const src = cb.getAttribute('data-source');
+        const list = markersBySource[src] || [];
+        for (const m of list) {
+          const el = m.getElement();
+          el.style.display = cb.checked ? '' : 'none';
+        }
+      });
+    });
+
     hydrated += 1;
   })();
 
