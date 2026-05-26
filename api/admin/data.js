@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
 
     try {
-        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports] = await Promise.all([
+        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports, shares] = await Promise.all([
             getCollection('waitlist').then(c => c.find({}).sort({ createdAt: -1 }).toArray()),
             getCollection('landbooks').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_contributions').then(c => c.find({}).sort({ created: -1 }).toArray()),
@@ -44,7 +44,31 @@ export default async function handler(req, res) {
                     }},
                 ]).toArray()
             ).catch(() => []),
+            // Share docs — one per landbook the agent has touched the Share page for
+            getCollection('landbook_shares').then(c =>
+                c.find(
+                    {},
+                    { projection: { landbookId: 1, token: 1, createdAt: 1, expiresAt: 1, recipients: 1, activity: 1 } }
+                ).toArray()
+            ).catch(() => []),
         ]);
+
+        // Build per-landbook share summary
+        const shareIndex = {};
+        for (const s of shares) {
+            const recipientCount = (s.recipients || []).length;
+            const views = (s.activity || []).filter(a => a?.kind === 'viewed').length;
+            shareIndex[s.landbookId] = {
+                token: s.token,
+                createdAt: s.createdAt,
+                expiresAt: s.expiresAt,
+                recipientCount,
+                views,
+                lastActivity: (s.activity || [])
+                    .slice()
+                    .sort((a, b) => (b?.at || '').localeCompare(a?.at || ''))[0] || null,
+            };
+        }
 
         // Build pipeline status index keyed by landbookId
         const pipelineStatus = {};
@@ -123,6 +147,7 @@ export default async function handler(req, res) {
             submissions,
             reportVersions,
             pipelineStatus,
+            shareIndex,
         });
     } catch (err) {
         console.error('Admin data error:', err);

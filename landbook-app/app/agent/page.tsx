@@ -35,14 +35,17 @@ async function loadItems(): Promise<AgentItem[]> {
 
   const books = bookDocs.map((d): AgentItem => {
     const plain = JSON.parse(JSON.stringify(d)) as Landbook;
+    // Pipeline-complete is no longer the same as Ready — an admin has to
+    // release each one before the agent sees it as such.
+    const released = Boolean(plain.releasedAt);
     return {
       id: plain.id,
-      href: `/agent/${plain.id}/edit`,
+      href: released ? `/agent/${plain.id}/edit` : "/agent",
       display: bookDisplayName(plain),
       subline: plain.address || "No address yet",
-      status: deriveStatus(plain),
+      status: released ? deriveStatus(plain) : "Processing",
       updated: plain.updated || plain.created,
-      isSubmission: false,
+      isSubmission: !released,
     };
   });
 
@@ -53,18 +56,16 @@ async function loadItems(): Promise<AgentItem[]> {
     const subline = plain.clientName
       ? `${plain.address || plain.postcode} · ${plain.clientName}`
       : plain.address || plain.postcode || "Pending review";
-    // The v1 refresh pipeline writes `data` back to the submissions
-    // collection when no landbook exists for the id. Once data is present,
-    // it's effectively ready — same status semantics as a landbook.
-    const ready = Boolean(plain.data);
+    // Ready iff: pipeline has populated `data` AND an admin has released it.
+    const released = Boolean(plain.data && plain.releasedAt);
     return {
       id: plain.id,
-      href: ready ? `/agent/${plain.id}/edit` : "/agent",
+      href: released ? `/agent/${plain.id}/edit` : "/agent",
       display: name,
       subline,
-      status: ready ? "Ready" : "Processing",
+      status: released ? "Ready" : "Processing",
       updated: plain.dataUpdated || plain.updated || plain.created,
-      isSubmission: !ready,
+      isSubmission: !released,
     };
   });
 

@@ -4,6 +4,7 @@ import '../styles/main.css';
 let data = {};
 let reportVersions = []; // keyed by submission_id string
 let pipelineStatusIndex = {}; // 3-layer status per landbookId from server
+let shareIndex = {}; // landbook_shares summary per landbookId from server
 let activeTab = 'submissions';
 let pipelineResults = null;
 let pipelineTesting = false;
@@ -182,6 +183,7 @@ async function loadData() {
     // Store report versions indexed by submission_id
     reportVersions = (raw.reportVersions || []);
     pipelineStatusIndex = raw.pipelineStatus || {};
+    shareIndex = raw.shareIndex || {};
 
     // Merge waitlist, landbooks, submissions into one unified list
     const merged = [
@@ -618,9 +620,78 @@ function renderDetailPanel(landbookId, row, colSpan) {
                     </button>
                     <div class="detail-action-result" id="result-pdf-${escapeHtml(landbookId)}"></div>
                 </div>
+                <!-- Release to agent -->
+                ${renderReleaseCard(landbookId, row)}
+                <!-- Share status -->
+                ${renderShareCard(landbookId)}
             </div>
         </div>
     </td></tr>`;
+}
+
+function renderReleaseCard(landbookId, row) {
+    const released = !!row.releasedAt;
+    const releasedTime = row.releasedAt ? formatDateShort(row.releasedAt) : '—';
+    const releasedBy = row.releasedBy || '—';
+    const hasData = !!row.data;
+    const statusCls = released ? 'detail-status-ok' : (hasData ? 'detail-status-warn' : 'detail-status-none');
+    const statusLabel = released ? 'Released' : (hasData ? 'Pipeline done · not released' : 'Awaiting pipeline');
+    return `<div class="detail-card">
+        <div class="detail-card-header">
+            <span class="detail-card-title">Release to agent</span>
+            <span class="detail-card-badge ${statusCls}">${escapeHtml(statusLabel)}</span>
+        </div>
+        <div class="detail-card-meta">
+            <span class="detail-meta-label">Released at:</span>
+            <span class="detail-meta-value">${releasedTime}</span>
+        </div>
+        <div class="detail-card-meta">
+            <span class="detail-meta-label">Released by:</span>
+            <span class="detail-meta-value">${escapeHtml(releasedBy)}</span>
+        </div>
+        <p class="detail-card-desc">Until released, the agent's dashboard shows this LandBook as <strong>Processing</strong>. Release flips it to <strong>Ready</strong>.</p>
+        ${released
+            ? `<button class="detail-action-btn" data-action="unrelease" data-landbook-id="${escapeHtml(landbookId)}">↩ Move back to Processing</button>`
+            : `<button class="detail-action-btn" data-action="release" data-landbook-id="${escapeHtml(landbookId)}" ${hasData ? '' : 'disabled title="Run the pipeline first"'}>✓ Release to agent</button>`
+        }
+        <div class="detail-action-result" id="result-release-${escapeHtml(landbookId)}"></div>
+    </div>`;
+}
+
+function renderShareCard(landbookId) {
+    const s = shareIndex[landbookId];
+    if (!s) {
+        return `<div class="detail-card">
+            <div class="detail-card-header">
+                <span class="detail-card-title">Share with buyer</span>
+                <span class="detail-card-badge detail-status-none">Not shared</span>
+            </div>
+            <p class="detail-card-desc">The agent hasn't generated a share link yet.</p>
+        </div>`;
+    }
+    const recips = s.recipientCount || 0;
+    const views = s.views || 0;
+    const badgeCls = recips > 0 ? 'detail-status-ok' : 'detail-status-warn';
+    const badge = recips > 0
+        ? `${recips} recipient${recips === 1 ? '' : 's'} · ${views} view${views === 1 ? '' : 's'}`
+        : `Link created · ${views} view${views === 1 ? '' : 's'}`;
+    const last = s.lastActivity?.at ? formatDateShort(s.lastActivity.at) : '—';
+    const lastKind = s.lastActivity?.kind || '—';
+    return `<div class="detail-card">
+        <div class="detail-card-header">
+            <span class="detail-card-title">Share with buyer</span>
+            <span class="detail-card-badge ${badgeCls}">${escapeHtml(badge)}</span>
+        </div>
+        <div class="detail-card-meta">
+            <span class="detail-meta-label">Share URL:</span>
+            <span class="detail-meta-value"><a href="https://landbook.landlibrary.co/share/${escapeHtml(s.token)}" target="_blank">/share/${escapeHtml(String(s.token).slice(0, 8))}…</a></span>
+        </div>
+        <div class="detail-card-meta">
+            <span class="detail-meta-label">Last activity:</span>
+            <span class="detail-meta-value">${escapeHtml(lastKind)} · ${last}</span>
+        </div>
+        <p class="detail-card-desc">Recipients + view activity are tracked on the share doc. Buyers see the same /[id] page; activity is logged on /share/&lt;token&gt;.</p>
+    </div>`;
 }
 
 function bindDetailPanelActions(container) {
@@ -638,6 +709,8 @@ function bindDetailPanelActions(container) {
                 'generate-narratives': `result-nar-${landbookId}`,
                 'generate-pdf': `result-pdf-${landbookId}`,
                 'download-pdf': `result-pdf-${landbookId}`,
+                'release': `result-release-${landbookId}`,
+                'unrelease': `result-release-${landbookId}`,
             };
             const resultEl = document.getElementById(resultElIdByAction[action]);
 
@@ -755,6 +828,18 @@ function bindDetailPanelActions(container) {
                     btn.classList.remove('running');
                     btn.disabled = false;
                     return;
+                } else if (action === 'release' || action === 'unrelease') {
+                    res = await fetch(`/api/landbooks/${landbookId}/release`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ released: action === 'release' }),
+                    });
+                    result = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(result.error || 'Release toggle failed');
+                    if (resultEl) {
+                        resultEl.innerHTML = `<div class="detail-result-ok">✓ ${action === 'release' ? 'Released to agent' : 'Moved back to Processing'}</div>`;
+                    }
                 }
 
                 btn.textContent = originalText.replace('▶', '↻').replace('Fetch Data', 'Re-fetch Data').replace('Generate', 'Regenerate');
