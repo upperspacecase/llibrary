@@ -5,28 +5,18 @@ import {
   Eyebrow,
   SerifTitle,
   PillButton,
-  StatusPill,
   Icon,
 } from "@/components/agent/primitives";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import type { Landbook, Submission } from "@/lib/types";
-import { bookDisplayName, deriveStatus, type LandbookStatus } from "@/lib/landbook-status";
+import { bookDisplayName, deriveStatus } from "@/lib/landbook-status";
+import BooksList, { type AgentItem } from "./BooksList";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "My LandBooks · Agents",
-};
-
-type AgentItem = {
-  id: string;
-  href: string;
-  display: string;
-  subline: string;
-  status: LandbookStatus;
-  updated?: string;
-  isSubmission: boolean;
 };
 
 async function loadItems(): Promise<AgentItem[]> {
@@ -78,22 +68,7 @@ async function loadItems(): Promise<AgentItem[]> {
     };
   });
 
-  return [...submissions, ...books].sort((a, b) => {
-    const av = a.updated || "";
-    const bv = b.updated || "";
-    return bv.localeCompare(av);
-  });
-}
-
-function formatDate(value?: string): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  return [...submissions, ...books];
 }
 
 export default async function MyLandBooksPage() {
@@ -155,64 +130,7 @@ export default async function MyLandBooksPage() {
               </div>
             </div>
           ) : (
-            <ul className="mt-6 divide-y divide-brand-sage/25 overflow-hidden rounded-lg border border-brand-sage/30 bg-white">
-              {items.map((item) => (
-                <li
-                  key={`${item.isSubmission ? "s" : "b"}:${item.id}`}
-                  className="flex items-center gap-6 px-6 py-5 transition hover:bg-brand-cream/40"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      {item.isSubmission ? (
-                        <span
-                          className="font-serif text-lg font-bold text-brand-charcoal/80"
-                          style={{ fontFamily: "var(--font-libre), serif" }}
-                        >
-                          {item.display}
-                        </span>
-                      ) : (
-                        <Link
-                          href={item.href}
-                          className="font-serif text-lg font-bold text-brand-charcoal hover:underline"
-                          style={{ fontFamily: "var(--font-libre), serif" }}
-                        >
-                          {item.display}
-                        </Link>
-                      )}
-                      <StatusPill status={item.status} />
-                    </div>
-                    <p className="mt-1 truncate text-[12px] text-brand-charcoal/55">
-                      {item.subline}
-                    </p>
-                  </div>
-                  <div className="hidden text-right text-[11px] text-brand-charcoal/55 md:block">
-                    <p className="font-semibold uppercase tracking-[0.12em] text-brand-charcoal/45">
-                      {item.isSubmission ? "Submitted" : "Updated"}
-                    </p>
-                    <p className="mt-1">{formatDate(item.updated)}</p>
-                  </div>
-                  {!item.isSubmission && (
-                    <div className="flex items-center gap-2">
-                      <Link href={`/agent/${item.id}/upload`}>
-                        <PillButton variant="light" icon={<Icon.Upload />}>
-                          Upload
-                        </PillButton>
-                      </Link>
-                      <Link href={`/agent/${item.id}/share`}>
-                        <PillButton variant="ghost" icon={<Icon.Share />}>
-                          Share
-                        </PillButton>
-                      </Link>
-                    </div>
-                  )}
-                  {item.isSubmission && (
-                    <span className="text-[11px] uppercase tracking-[0.15em] text-brand-charcoal/45">
-                      Awaiting analyst
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <BooksList items={items} />
           )}
         </div>
       </div>
