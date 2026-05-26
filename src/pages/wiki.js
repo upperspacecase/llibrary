@@ -569,6 +569,10 @@ function lucide(name, size = 18) {
       '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
     'map-pin':
       '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+    'radio':
+      '<path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>',
+    'grid':
+      '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>',
   };
   const d = paths[name] || '';
   return `<svg class="ed-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -642,13 +646,38 @@ function renderEnvironmentalDashboard() {
   return `
     <section class="ed-root" id="environmental-dashboard">
 
-      <!-- Region overview map: data input stations layered by source -->
-      <section class="ed-panel ed-region-map-block">
-        <div class="ed-panel-head">${lucide('map-pin')} DATA INPUT STATIONS</div>
-        <div class="ed-region-map-body">
-          <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
-          <div class="ed-station-toggles" id="ed-station-toggles" role="group" aria-label="Toggle station layers">
-            <span class="ed-station-toggles-empty">Loading stations…</span>
+      <!-- Region overview map: satellite basemap, custom letter-badge markers,
+           left-side toggles, sensor legend bottom-right. -->
+      <section class="ed-region-map-block">
+        <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
+
+        <div class="ed-map-toggles" role="group" aria-label="Map layer toggles">
+          <label class="ed-map-toggle" data-toggle="sensors">
+            <span class="ed-map-toggle-icon">${lucide('radio', 16)}</span>
+            <span class="ed-map-toggle-label">Sensor Network</span>
+            <span class="ed-map-toggle-switch"><input type="checkbox" checked /><i></i></span>
+          </label>
+          <label class="ed-map-toggle" data-toggle="landuse">
+            <span class="ed-map-toggle-icon">${lucide('grid', 16)}</span>
+            <span class="ed-map-toggle-label">Land Use</span>
+            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
+          </label>
+          <label class="ed-map-toggle" data-toggle="hydro">
+            <span class="ed-map-toggle-icon">${lucide('droplet', 16)}</span>
+            <span class="ed-map-toggle-label">Hydrological Map</span>
+            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
+          </label>
+          <label class="ed-map-toggle" data-toggle="bio">
+            <span class="ed-map-toggle-icon">${lucide('leaf', 16)}</span>
+            <span class="ed-map-toggle-label">Biodiversity</span>
+            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
+          </label>
+        </div>
+
+        <div class="ed-map-legend" id="ed-map-legend">
+          <div class="ed-map-legend-title">SENSOR LEGEND</div>
+          <div class="ed-map-legend-body" id="ed-map-legend-body">
+            <span class="ed-map-legend-empty">Loading…</span>
           </div>
         </div>
       </section>
@@ -1370,13 +1399,13 @@ async function hydrateEnvironmentalDashboard() {
     hydrated += 1;
   })();
 
-  // Region overview map — stations from /api/regions/odemira/stations, with
-  // a tickbox per source. Falls back silently when Mapbox or the endpoint
-  // is unavailable.
+  // Region overview map — satellite basemap, letter-badge markers, left-
+  // side toggles, sensor legend in the bottom-right.
   (async () => {
     const container = document.getElementById('ed-station-map');
-    const togglesEl = document.getElementById('ed-station-toggles');
-    if (!container || !togglesEl) return;
+    const legendEl  = document.getElementById('ed-map-legend-body');
+    const togglesEl = document.querySelector('.ed-map-toggles');
+    if (!container || !legendEl || !togglesEl) return;
     let payloadStations;
     try {
       const res = await fetch('/api/regions/odemira/stations');
@@ -1387,109 +1416,166 @@ async function hydrateEnvironmentalDashboard() {
 
     const features = payloadStations.features;
     if (!features.length) {
-      togglesEl.innerHTML = '<span class="ed-station-toggles-empty">No stations catalogued yet — run scripts/odemira-stations-ingest.mjs.</span>';
+      legendEl.innerHTML = '<span class="ed-map-legend-empty">No stations catalogued yet.</span>';
       return;
     }
 
+    // The five SNIRH networks we ship in the legend — same order as the
+    // mockup; counts come from the live stations endpoint.
     const sourceMeta = {
-      snirh_piezometria:    { color: '#3d6b8c', label: 'Piezometers' },
-      snirh_hidrometrica:   { color: '#1B3A2F', label: 'River gauges' },
-      snirh_nascentes:      { color: '#5a7256', label: 'Springs' },
-      snirh_qualidade_sub:  { color: '#8b4789', label: 'Groundwater quality' },
-      snirh_meteorologica:  { color: '#c97e6b', label: 'Weather stations' },
-      glofas_basin:         { color: '#d49a4a', label: 'GloFAS basin sample' },
-      wiki_landmark:        { color: '#888888', label: 'Landmarks' },
+      snirh_meteorologica:  { color: '#e58a3a', glyph: 'W', label: 'Weather Station' },
+      snirh_hidrometrica:   { color: '#3d8e9a', glyph: 'R', label: 'River Gauge' },
+      snirh_piezometria:    { color: '#3d6b8c', glyph: 'P', label: 'Piezometer' },
+      snirh_qualidade_sub:  { color: '#8b4789', glyph: 'Q', label: 'Groundwater Quality' },
+      snirh_nascentes:      { color: '#5a7256', glyph: 'S', label: 'Spring' },
     };
+    const LEGEND_ORDER = ['snirh_meteorologica','snirh_hidrometrica','snirh_piezometria','snirh_qualidade_sub','snirh_nascentes'];
 
-    // Group features by source so we can toggle layer-by-layer.
     const grouped = {};
     for (const f of features) {
+      if (!sourceMeta[f.source]) continue; // GloFAS / landmarks not on this map
       (grouped[f.source] = grouped[f.source] || []).push(f);
     }
-    const sourcesPresent = Object.keys(grouped).sort((a, b) =>
-      (grouped[b].length - grouped[a].length));
 
-    // Build the toggle UI
-    togglesEl.innerHTML = sourcesPresent.map(s => {
-      const meta = sourceMeta[s] || { color: '#888', label: s };
-      return `
-        <label class="ed-station-toggle">
-          <input type="checkbox" data-source="${s}" checked />
-          <i class="ed-station-toggle-swatch" style="background:${meta.color}"></i>
-          <span class="ed-station-toggle-label">${meta.label}</span>
-          <span class="ed-station-toggle-count">${grouped[s].length}</span>
-        </label>`;
-    }).join('');
+    // Populate the bottom-right legend
+    legendEl.innerHTML = LEGEND_ORDER
+      .filter(s => grouped[s] && grouped[s].length)
+      .map(s => {
+        const meta = sourceMeta[s];
+        const n = grouped[s].length;
+        return `
+          <div class="ed-map-legend-row">
+            <span class="ed-map-marker-badge" style="background:${meta.color}">${meta.glyph}</span>
+            <span class="ed-map-legend-label">${meta.label}</span>
+            <span class="ed-map-legend-count">(${n})</span>
+          </div>`;
+      }).join('');
 
-    // Initialise the map
+    // Satellite-streets basemap
     const map = createMap('ed-station-map', {
-      center: [-8.6400, 37.5967],
+      center: [-8.6400, 37.5500],
       zoom: 9,
       scrollZoom: false,
+      satellite: true,
     });
 
-    // Markers, keyed by source for the toggles + by (source, externalId) for
-    // the highlight cross-talk (the Reservoirs card emits a custom event when
-    // the dropdown changes; we tag the matching marker with .highlighted).
+    // Markers grouped by source for layer toggling
     const markersBySource = {};
     const markerByKey     = new Map();
     let pendingHighlight  = null;
 
     const applyHighlight = ({ source, externalId } = {}) => {
-      markerByKey.forEach(m => m.getElement().classList.remove('ed-station-dot--highlighted'));
+      markerByKey.forEach(m => m.getElement().classList.remove('ed-station-marker--highlighted'));
       if (!source || !externalId) return;
       const m = markerByKey.get(`${source}:${externalId}`);
-      if (m) m.getElement().classList.add('ed-station-dot--highlighted');
+      if (m) m.getElement().classList.add('ed-station-marker--highlighted');
     };
-
     document.addEventListener('station:highlight', (ev) => {
       const detail = ev.detail || {};
       if (markerByKey.size) applyHighlight(detail);
       else pendingHighlight = detail;
     });
 
+    let odemiraPolygonPromise = null;
+    function loadOdemiraPolygon() {
+      // Lazy fetch of the Odemira concelho boundary from DGT's OGC API —
+      // pulled only when the Hydrology toggle is first switched on.
+      if (odemiraPolygonPromise) return odemiraPolygonPromise;
+      odemiraPolygonPromise = fetch(
+        'https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?municipio=Odemira&f=json&limit=1'
+      ).then(r => r.ok ? r.json() : null).catch(() => null);
+      return odemiraPolygonPromise;
+    }
+
     map.on('load', () => {
-      for (const source of sourcesPresent) {
-        const meta = sourceMeta[source] || { color: '#888', label: source };
+      // Heighten Mapbox's built-in waterway lines — they'll be muted by
+      // default on the satellite style; we keep them at base opacity so a
+      // user can still see them when Hydrology is off but bump them when
+      // the toggle is on.
+      try {
+        if (map.getLayer('waterway')) {
+          map.setPaintProperty('waterway', 'line-opacity', 0.6);
+        }
+      } catch (_) { /* layer name may vary by style; ignore */ }
+
+      for (const source of LEGEND_ORDER) {
+        const list = grouped[source]; if (!list) continue;
+        const meta = sourceMeta[source];
         markersBySource[source] = [];
-        for (const f of grouped[source]) {
+        for (const f of list) {
           const el = document.createElement('div');
-          el.className = 'ed-station-dot';
+          el.className = 'ed-station-marker';
           el.style.background = meta.color;
+          el.textContent = meta.glyph;
           el.dataset.externalId = f.externalId;
           const popupName = f.displayName || f.name || f.externalId;
           el.title = `${meta.label} · ${popupName}`;
+          const popupHtml = `
+            <div class="ed-map-popup">
+              <div class="ed-map-popup-row"><strong>ID:</strong> ${f.code || f.externalId}</div>
+              <div class="ed-map-popup-row"><strong>Type:</strong> ${meta.label}</div>
+              <div class="ed-map-popup-row"><strong>Name:</strong> ${popupName}</div>
+            </div>`;
           const m = new mapboxgl.Marker({ element: el })
             .setLngLat([f.lng, f.lat])
-            .setPopup(new mapboxgl.Popup({ offset: 8 }).setHTML(`
-              <strong>${popupName}</strong><br/>
-              <span style="color:#888">${meta.label}</span>
-              ${f.parameters && f.parameters.length
-                ? `<br/><small>${f.parameters.slice(0, 4).map(p => p.name).filter(Boolean).join(' · ')}</small>`
-                : ''}
-            `))
+            .setPopup(new mapboxgl.Popup({ offset: 12, closeButton: false }).setHTML(popupHtml))
             .addTo(map);
           markersBySource[source].push(m);
           markerByKey.set(`${source}:${f.externalId}`, m);
         }
       }
-      if (pendingHighlight) {
-        applyHighlight(pendingHighlight);
-        pendingHighlight = null;
-      }
+      if (pendingHighlight) { applyHighlight(pendingHighlight); pendingHighlight = null; }
     });
 
-    // Wire toggles
-    togglesEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const src = cb.getAttribute('data-source');
-        const list = markersBySource[src] || [];
-        for (const m of list) {
-          const el = m.getElement();
-          el.style.display = cb.checked ? '' : 'none';
+    // ---- Toggle wiring ----
+    const sensorsToggle = togglesEl.querySelector('[data-toggle="sensors"] input');
+    const hydroToggle   = togglesEl.querySelector('[data-toggle="hydro"] input');
+    // Land Use + Biodiversity are placeholders for now; the switches
+    // animate but the layers don't exist yet.
+
+    if (sensorsToggle) {
+      sensorsToggle.addEventListener('change', () => {
+        const visible = sensorsToggle.checked;
+        for (const src of Object.keys(markersBySource)) {
+          for (const m of markersBySource[src]) {
+            m.getElement().style.display = visible ? '' : 'none';
+          }
+        }
+        if (legendEl.parentElement) {
+          legendEl.parentElement.style.display = visible ? '' : 'none';
         }
       });
-    });
+    }
+
+    if (hydroToggle) {
+      hydroToggle.addEventListener('change', async () => {
+        const on = hydroToggle.checked;
+        try {
+          if (map.getLayer('waterway')) {
+            map.setPaintProperty('waterway', 'line-opacity', on ? 1 : 0.6);
+            map.setPaintProperty('waterway', 'line-color', on ? '#3aa1c4' : null);
+          }
+        } catch (_) {}
+        if (on) {
+          const fc = await loadOdemiraPolygon();
+          if (fc && fc.features && fc.features.length) {
+            if (!map.getSource('odemira-boundary')) {
+              map.addSource('odemira-boundary', { type: 'geojson', data: fc });
+              map.addLayer({
+                id: 'odemira-boundary-line',
+                type: 'line',
+                source: 'odemira-boundary',
+                paint: { 'line-color': '#ffeb3b', 'line-width': 2, 'line-opacity': 0.85 },
+              });
+            } else if (map.getLayer('odemira-boundary-line')) {
+              map.setLayoutProperty('odemira-boundary-line', 'visibility', 'visible');
+            }
+          }
+        } else if (map.getLayer('odemira-boundary-line')) {
+          map.setLayoutProperty('odemira-boundary-line', 'visibility', 'none');
+        }
+      });
+    }
 
     hydrated += 1;
   })();
