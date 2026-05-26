@@ -10,10 +10,17 @@ type OverrideFields = LandbookOverride["fields"];
 
 const FIELD_KEYS: ReadonlyArray<keyof OverrideFields> = [
   "name",
-  "narrative",
+  "narrativeIntro",
+  "narrativeCallout",
   "area",
   "naturalCapital",
-  "carbonStock",
+  "longTermValue",
+  "waterSecurity",
+  "biodiversityScore",
+  "energyIndependence",
+  "fireRisk",
+  "floodRisk",
+  "droughtRisk",
 ];
 
 export async function saveOverridesAction(
@@ -52,6 +59,9 @@ export async function saveOverridesAction(
     $set: { updated: new Date().toISOString() },
   });
 
+  // The public viewer at /[id] reads overrides too — bust its cache so the
+  // buyer sees the new values immediately.
   revalidatePath(`/agent/${landbookId}/edit`);
+  revalidatePath(`/${landbookId}`);
   return { ok: true };
 }

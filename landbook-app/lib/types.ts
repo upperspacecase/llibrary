@@ -349,14 +349,35 @@ export interface Landbook {
 export interface LandbookOverride {
   landbookId: string;
   ownerId: string;
-  fields: {
-    name?: string;
-    narrative?: string;
-    area?: string;
-    naturalCapital?: string;
-    carbonStock?: string;
-  };
+  fields: LandbookOverrideFields;
   updatedAt: string;
+}
+
+/**
+ * Override values mirror the fields actually shown on the public Overview
+ * section. Each is stored as the raw string the agent typed; merging logic
+ * parses + scales when assembling the rendered ReportData (see
+ * lib/landbook-overrides.ts).
+ *
+ * Display scales:
+ *   - area: hectares
+ *   - naturalCapital / longTermValue: euros
+ *   - waterSecurity / biodiversityScore / energyIndependence: 0–10
+ *   - fireRisk / floodRisk / droughtRisk: 1–5
+ */
+export interface LandbookOverrideFields {
+  name?: string;
+  narrativeIntro?: string;
+  narrativeCallout?: string;
+  area?: string;
+  naturalCapital?: string;
+  longTermValue?: string;
+  waterSecurity?: string;
+  biodiversityScore?: string;
+  energyIndependence?: string;
+  fireRisk?: string;
+  floodRisk?: string;
+  droughtRisk?: string;
 }
 
 export interface ShareRecipient {

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCollection } from "@/lib/db";
+import { applyOverrides, loadOverrideFields } from "@/lib/landbook-overrides";
 import type { Landbook, ReportData } from "@/lib/types";
 
 import { SideNav } from "@/components/landbook/SideNav";
@@ -129,8 +130,14 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
 
   // Try 3-layer read first, fall back to blob
   const layerResult = await getReportDataFromLayers(id);
-  const data = layerResult?.data || landbook.data;
+  const baseData = layerResult?.data || landbook.data;
   const narrativesStale = layerResult?.narrativesStale ?? false;
+
+  // Layer the agent's overrides on top so the buyer sees what the agent
+  // intends. Overrides are stored as the raw strings the agent typed;
+  // applyOverrides parses + scales them into the underlying data shape.
+  const overrides = baseData ? await loadOverrideFields(id) : null;
+  const data = baseData ? applyOverrides(baseData, overrides) : null;
 
   if (!data) {
     return (

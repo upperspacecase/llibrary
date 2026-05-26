@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "project": {
+    "merchantId": "acct_1TazhsRaZadMbfPH",
+    "merchantDisplayName": null,
+    "projectId": "project_61UkNld9xpaXo1v5J16UkNfESvE9FodMPZhNcSDhIWF6",
+    "projectName": "landbook-app",
+    "initializedAt": "2026-05-25T14:48:54.153Z"
+  },
+  "providers": {},
+  "resources": {}
+}
