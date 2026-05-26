@@ -745,7 +745,7 @@ function renderEnvironmentalDashboard() {
 
             <div class="ed-card ed-card--span-12 ed-reservoirs">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Reservoir storage <span>(SNIRH · % of historical max)</span></div>
+                <div class="ed-card-title">Reservoir storage <span>(% of historical max)</span></div>
                 <div class="ed-reservoirs-picker">
                   <label for="ed-reservoir-select">Highlight</label>
                   <select id="ed-reservoir-select" disabled>
@@ -766,7 +766,7 @@ function renderEnvironmentalDashboard() {
 
             <div class="ed-card ed-card--span-12 ed-groundwater">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Groundwater depth <span>(SNIRH piezometers · m below ground)</span></div>
+                <div class="ed-card-title">Groundwater depth <span>(piezometers · m below ground)</span></div>
                 <div class="ed-reservoirs-picker">
                   <label for="ed-groundwater-select">Highlight</label>
                   <select id="ed-groundwater-select" disabled>
@@ -801,7 +801,7 @@ function renderEnvironmentalDashboard() {
 
             <div class="ed-card ed-card--span-12 ed-water-stack">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Surface water storage by reservoir <span>(SNIRH · m³ end-of-month)</span></div>
+                <div class="ed-card-title">Surface water storage by reservoir <span>(m³ end-of-month)</span></div>
               </div>
               <svg class="ed-water-stack-chart" id="ed-water-stack-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
                 <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
@@ -813,7 +813,7 @@ function renderEnvironmentalDashboard() {
 
             <div class="ed-card ed-card--span-12 ed-wq-card">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Nitrate over time <span>(SNIRH · groundwater)</span></div>
+                <div class="ed-card-title">Nitrate over time <span>(groundwater)</span></div>
                 <div class="ed-wq-stats" id="ed-wq-nitrate-stats">—</div>
               </div>
               <p class="ed-wq-note">High nitrate levels in groundwater are a marker for agricultural run-off (fertiliser, manure). Drinking-water guideline is 50 mg/l NO₃ (WHO / EU); chronic exceedance harms infant health and indicates an over-fertilised catchment.</p>
@@ -829,7 +829,7 @@ function renderEnvironmentalDashboard() {
 
             <div class="ed-card ed-card--span-12 ed-wq-card">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Heavy metals over time <span>(SNIRH · groundwater, mg/l)</span></div>
+                <div class="ed-card-title">Heavy metals over time <span>(groundwater · mg/l)</span></div>
                 <div class="ed-wq-stats" id="ed-wq-metals-stats">—</div>
               </div>
               <p class="ed-wq-note">Trace metals in groundwater above guideline values (Pb 0.01 / Hg 0.001 / As 0.01 mg/l, WHO drinking-water) indicate industrial or mining contamination and are persistent: most don't degrade and bio-accumulate up the food chain.</p>
@@ -964,8 +964,8 @@ function renderEnvironmentalDashboard() {
       </div>
 
       <section class="ed-snirh-panel">
-        <h3>SNIRH sensors in Odemira</h3>
-        <p>Portuguese national water-resources network — every station catalogued inside the Odemira polygon, what each measures, and how often.</p>
+        <h3>Water sensors in Odemira</h3>
+        <p>Portuguese national water-resources network — stations catalogued inside the Odemira polygon, what each measures, and how often.</p>
         <div class="ed-snirh-grid" id="ed-snirh-grid">
           ${['snirh_piezometria','snirh_hidrometrica','snirh_nascentes','snirh_qualidade_sub'].map(src => `
             <div class="ed-snirh-card" data-source="${src}">
@@ -1324,10 +1324,10 @@ async function hydrateEnvironmentalDashboard() {
     }
 
     const sourceMeta = {
-      snirh_piezometria:    { color: '#3d6b8c', label: 'Piezometers (SNIRH)' },
-      snirh_hidrometrica:   { color: '#1B3A2F', label: 'River gauges (SNIRH)' },
-      snirh_nascentes:      { color: '#5a7256', label: 'Springs (SNIRH)' },
-      snirh_qualidade_sub:  { color: '#8b4789', label: 'Groundwater quality (SNIRH)' },
+      snirh_piezometria:    { color: '#3d6b8c', label: 'Piezometers' },
+      snirh_hidrometrica:   { color: '#1B3A2F', label: 'River gauges' },
+      snirh_nascentes:      { color: '#5a7256', label: 'Springs' },
+      snirh_qualidade_sub:  { color: '#8b4789', label: 'Groundwater quality' },
       glofas_basin:         { color: '#d49a4a', label: 'GloFAS basin sample' },
       wiki_landmark:        { color: '#888888', label: 'Landmarks' },
     };
