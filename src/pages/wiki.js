@@ -696,6 +696,60 @@ function renderEnvironmentalDashboard() {
                 </div>
               </div>
             </div>
+
+            <div class="ed-card ed-card--span-12 ed-met-rainfall">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Annual rainfall by station <span>(in-situ pluviometers · mm/yr)</span></div>
+                <div class="ed-reservoirs-picker">
+                  <label for="ed-met-rainfall-select">Highlight</label>
+                  <select id="ed-met-rainfall-select" disabled><option>Loading…</option></select>
+                </div>
+              </div>
+              <div class="ed-reservoirs-legend">
+                <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-met-rainfall-hero-label">Selected station</span></span>
+                <span class="ed-reservoirs-leg-other"><i></i>Other stations in Odemira</span>
+              </div>
+              <svg class="ed-reservoirs-chart" id="ed-met-rainfall-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-reservoirs-readings" id="ed-met-rainfall-readings"></div>
+            </div>
+
+            <div class="ed-card ed-card--span-12 ed-met-maxdaily">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Wettest day per year <span>(max daily rainfall · mm)</span></div>
+                <div class="ed-reservoirs-picker">
+                  <label for="ed-met-maxdaily-select">Station</label>
+                  <select id="ed-met-maxdaily-select" disabled><option>Loading…</option></select>
+                </div>
+              </div>
+              <div class="ed-reservoirs-legend">
+                <span class="ed-maxdaily-leg-bar"><i></i>Annual max daily rainfall (mm)</span>
+                <span class="ed-maxdaily-leg-trend"><i></i>Linear trend</span>
+              </div>
+              <svg class="ed-maxdaily-chart" id="ed-met-maxdaily-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-reservoirs-readings" id="ed-met-maxdaily-readings"></div>
+            </div>
+
+            <div class="ed-card ed-card--span-12 ed-met-evap">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Pan evaporation <span>(Piche / Class-A tank · mm/yr)</span></div>
+                <div class="ed-reservoirs-picker">
+                  <label for="ed-met-evap-select">Highlight</label>
+                  <select id="ed-met-evap-select" disabled><option>Loading…</option></select>
+                </div>
+              </div>
+              <div class="ed-reservoirs-legend">
+                <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-met-evap-hero-label">Selected station</span></span>
+                <span class="ed-reservoirs-leg-other"><i></i>Other stations</span>
+              </div>
+              <svg class="ed-reservoirs-chart" id="ed-met-evap-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-reservoirs-readings" id="ed-met-evap-readings"></div>
+            </div>
           </div>
         </section>
 
@@ -2249,6 +2303,234 @@ async function hydrateEnvironmentalDashboard() {
       yearsEl.innerHTML = ticks.map(y => `<span>${y}</span>`).join('');
       if (rangeEl) rangeEl.textContent = `(drought index, ${first}–${last})`;
     }
+    hydrated += 1;
+  })();
+
+  // Generic "overlaid annual lines" card hydrator — used by rainfall + pan
+  // evaporation. Each station gets a line; the hero is bright + on top, the
+  // others muted. Dropdown + click-tile drive hero selection and emit a
+  // station:highlight event so the map dot lights up.
+  async function hydrateAnnualLinesCard({ endpoint, ids, source, unit, decimals = 0 }) {
+    const chart    = document.getElementById(ids.chart);
+    const select   = document.getElementById(ids.select);
+    const readings = document.getElementById(ids.readings);
+    const heroLbl  = ids.heroLabel ? document.getElementById(ids.heroLabel) : null;
+    if (!chart || !select || !readings) return;
+
+    let data;
+    try {
+      const res = await fetch(endpoint);
+      if (!res.ok) return;
+      data = await res.json();
+      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
+    } catch { return; }
+    const features = data.features;
+    const labelFor = (f) => f.displayName || f.code || f.externalId;
+
+    // Common X-domain: min first year → max last year across all features.
+    const firstYear = Math.min(...features.map(f => f.first));
+    const lastYear  = Math.max(...features.map(f => f.last));
+    // Y-domain: 0 → max value across all series, padded 10%.
+    const yMax = Math.max(...features.flatMap(f => f.series.map(s => s.value))) * 1.1;
+
+    select.disabled = false;
+    select.innerHTML = features.map(f =>
+      `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)} · ${f.count} yr</option>`
+    ).join('');
+    const initialHero = (features.find(f => f.hero) || features[0]).externalId;
+
+    function drawChart(heroId) {
+      const W = 1000, H = 280, PAD = { l: 40, r: 14, t: 14, b: 28 };
+      const cW = W - PAD.l - PAD.r;
+      const cH = H - PAD.t - PAD.b;
+      const xFor = y => PAD.l + ((y - firstYear) / Math.max(1, (lastYear - firstYear))) * cW;
+      const yFor = v => PAD.t + (1 - v / yMax) * cH;
+
+      let grid = '';
+      const yTicks = 5;
+      for (let i = 0; i <= yTicks; i++) {
+        const v = (yMax / yTicks) * i;
+        const y = yFor(v);
+        grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+        grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${Math.round(v)}</text>`;
+      }
+      let xLabels = '';
+      const step = (lastYear - firstYear) > 60 ? 20 : 10;
+      for (let y = Math.ceil(firstYear / step) * step; y <= lastYear; y += step) {
+        const x = xFor(y);
+        if (x < PAD.l || x > W - PAD.r) continue;
+        xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
+      }
+
+      const heroColor  = '#1d9e75';
+      const otherColor = '#b4b2a9';
+      let lines = '';
+      const ordered = [...features].sort((a, b) => (a.externalId === heroId ? 1 : 0) - (b.externalId === heroId ? 1 : 0));
+      for (const f of ordered) {
+        const isHero = f.externalId === heroId;
+        const pts = f.series
+          .map(s => `${xFor(s.year).toFixed(1)},${yFor(s.value).toFixed(1)}`)
+          .join(' ');
+        if (!pts) continue;
+        lines += `<polyline fill="none" stroke="${isHero ? heroColor : otherColor}" stroke-width="${isHero ? 1.6 : 0.8}" opacity="${isHero ? 1 : 0.45}" points="${pts}" />`;
+      }
+      chart.innerHTML = `${grid}${xLabels}${lines}`;
+    }
+
+    function renderTiles(heroId) {
+      readings.innerHTML = features.map(f => {
+        const isHero = f.externalId === heroId;
+        const last   = f.series[f.series.length - 1];
+        const v      = last ? last.value.toFixed(decimals) : '—';
+        const meanV  = f.mean != null ? f.mean.toFixed(decimals) : '—';
+        return `
+          <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
+            <div class="ed-reservoirs-reading-name">
+              <strong>${f.displayName || f.code}</strong>
+            </div>
+            <div class="ed-reservoirs-reading-pct">${v} ${unit}</div>
+            <div class="ed-reservoirs-reading-meta">
+              <span class="ed-reservoirs-reading-date">${last?.year ?? '—'}</span>
+              <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--neutral">mean ${meanV} ${unit}</span>
+            </div>
+          </button>`;
+      }).join('');
+      readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-external-id');
+          if (id && id !== heroId) { select.value = id; applySelection(id); }
+        });
+      });
+    }
+
+    function applySelection(heroId) {
+      const f = features.find(x => x.externalId === heroId) || features[0];
+      if (heroLbl) heroLbl.textContent = labelFor(f);
+      drawChart(f.externalId);
+      renderTiles(f.externalId);
+      document.dispatchEvent(new CustomEvent('station:highlight', {
+        detail: { source, externalId: f.externalId },
+      }));
+    }
+    select.addEventListener('change', () => applySelection(select.value));
+    applySelection(initialHero);
+    hydrated += 1;
+  }
+
+  hydrateAnnualLinesCard({
+    endpoint: '/api/regions/odemira/rainfall-stations',
+    ids: { chart: 'ed-met-rainfall-chart', select: 'ed-met-rainfall-select', readings: 'ed-met-rainfall-readings', heroLabel: 'ed-met-rainfall-hero-label' },
+    source: 'snirh_meteorologica',
+    unit: 'mm',
+  });
+  hydrateAnnualLinesCard({
+    endpoint: '/api/regions/odemira/evaporation',
+    ids: { chart: 'ed-met-evap-chart', select: 'ed-met-evap-select', readings: 'ed-met-evap-readings', heroLabel: 'ed-met-evap-hero-label' },
+    source: 'snirh_meteorologica',
+    unit: 'mm',
+  });
+
+  // Wettest day per year — single-station bar chart with a linear-trend
+  // overlay. Dropdown switches station; clicking a tile selects it and
+  // dispatches a station:highlight event for the map.
+  (async () => {
+    const chart    = document.getElementById('ed-met-maxdaily-chart');
+    const select   = document.getElementById('ed-met-maxdaily-select');
+    const readings = document.getElementById('ed-met-maxdaily-readings');
+    if (!chart || !select || !readings) return;
+
+    let data;
+    try {
+      const res = await fetch('/api/regions/odemira/max-daily-rainfall');
+      if (!res.ok) return;
+      data = await res.json();
+      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
+    } catch { return; }
+    const features = data.features;
+    const labelFor = (f) => f.displayName || f.code || f.externalId;
+
+    select.disabled = false;
+    select.innerHTML = features.map(f =>
+      `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)} · ${f.count} yr</option>`
+    ).join('');
+    const initialHero = (features.find(f => f.hero) || features[0]).externalId;
+
+    function drawChart(heroId) {
+      const f = features.find(x => x.externalId === heroId) || features[0];
+      const W = 1000, H = 240, PAD = { l: 40, r: 14, t: 14, b: 28 };
+      const cW = W - PAD.l - PAD.r;
+      const cH = H - PAD.t - PAD.b;
+      const firstYear = f.first;
+      const lastYear  = f.last;
+      const yMax = Math.max(...f.series.map(s => s.value)) * 1.1;
+      const xFor = y => PAD.l + ((y - firstYear) / Math.max(1, (lastYear - firstYear))) * cW;
+      const yFor = v => PAD.t + (1 - v / yMax) * cH;
+      const barW = Math.max(1.5, cW / Math.max(1, lastYear - firstYear) * 0.8);
+
+      let grid = '';
+      const yTicks = 5;
+      for (let i = 0; i <= yTicks; i++) {
+        const v = (yMax / yTicks) * i;
+        const y = yFor(v);
+        grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+        grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${Math.round(v)}</text>`;
+      }
+      let xLabels = '';
+      const step = (lastYear - firstYear) > 60 ? 20 : 10;
+      for (let y = Math.ceil(firstYear / step) * step; y <= lastYear; y += step) {
+        const x = xFor(y);
+        if (x < PAD.l || x > W - PAD.r) continue;
+        xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
+      }
+      let bars = '';
+      for (const s of f.series) {
+        const x = xFor(s.year) - barW / 2;
+        const y = yFor(s.value);
+        bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${(yFor(0) - y).toFixed(1)}" fill="#3d6b8c" opacity="0.85"/>`;
+      }
+      let trendLine = '';
+      if (f.trend) {
+        const y0 = f.trend.intercept + f.trend.slope * firstYear;
+        const y1 = f.trend.intercept + f.trend.slope * lastYear;
+        trendLine = `<line x1="${xFor(firstYear).toFixed(1)}" y1="${yFor(Math.max(0, y0)).toFixed(1)}" x2="${xFor(lastYear).toFixed(1)}" y2="${yFor(Math.max(0, y1)).toFixed(1)}" stroke="#b85a3a" stroke-width="1.4" stroke-dasharray="4 3" />`;
+      }
+      chart.innerHTML = `${grid}${xLabels}${bars}${trendLine}`;
+    }
+
+    function renderTiles(heroId) {
+      readings.innerHTML = features.map(f => {
+        const isHero = f.externalId === heroId;
+        const trendStr = f.trend ? `${f.trend.slope >= 0 ? '+' : ''}${(f.trend.slope * 10).toFixed(1)} mm/decade` : '—';
+        const trendCls = f.trend ? (f.trend.slope > 0 ? 'up' : f.trend.slope < 0 ? 'down' : 'neutral') : 'neutral';
+        return `
+          <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
+            <div class="ed-reservoirs-reading-name">
+              <strong>${f.displayName || f.code}</strong>
+            </div>
+            <div class="ed-reservoirs-reading-pct">${f.max} mm</div>
+            <div class="ed-reservoirs-reading-meta">
+              <span class="ed-reservoirs-reading-date">peak ${f.maxYear ?? '—'}</span>
+              <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${trendCls}">${trendStr}</span>
+            </div>
+          </button>`;
+      }).join('');
+      readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-external-id');
+          if (id && id !== heroId) { select.value = id; applySelection(id); }
+        });
+      });
+    }
+
+    function applySelection(heroId) {
+      drawChart(heroId);
+      renderTiles(heroId);
+      document.dispatchEvent(new CustomEvent('station:highlight', {
+        detail: { source: 'snirh_meteorologica', externalId: heroId },
+      }));
+    }
+    select.addEventListener('change', () => applySelection(select.value));
+    applySelection(initialHero);
     hydrated += 1;
   })();
 

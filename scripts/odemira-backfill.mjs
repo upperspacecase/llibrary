@@ -43,6 +43,13 @@ const SNIRH_SOURCES = new Set([
   'snirh_meteorologica',
 ]);
 
+// Skip these high-frequency parameters — we have daily/monthly/annual
+// aggregates and the hourly rows blew through 350 MB of Atlas free-tier
+// quota. Pruned on 2026-05-26; the regex matches any name containing
+// "horária" / "horário" / "horaria" / "horario" (Portuguese accents
+// vary). Idempotent — re-runs won't re-fetch these.
+const PARAMETER_NAME_BLOCKLIST = /hor(á|a)ri(o|a)/i;
+
 function arg(name, fallback) {
   const i = process.argv.indexOf(name);
   return i >= 0 ? process.argv[i + 1] : fallback;
@@ -52,6 +59,10 @@ const hasFlag = (n) => process.argv.includes(n);
 async function backfillSnirhStation(session, station, since, until, dry) {
   for (const param of station.parameters || []) {
     if (!param.uid) continue;
+    if (PARAMETER_NAME_BLOCKLIST.test(param.name || '')) {
+      console.log(`    ⊘ ${station.externalId}:${param.uid} (${param.name}) blocklisted`);
+      continue;
+    }
     let readings;
     try {
       readings = await fetchTimeseries(session, station.externalId, param.uid, since, until);

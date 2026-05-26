@@ -8910,6 +8910,21 @@ a {
   border-top: 2px dashed #1B3A2F;
 }
 
+/* Wettest-day-per-year card: blue bars + terra-cotta trend overlay */
+.ed-maxdaily-chart { width: 100%; height: auto; display: block; }
+.ed-maxdaily-leg-bar i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #3d6b8c;
+}
+.ed-maxdaily-leg-trend i {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 1.5px dashed #b85a3a;
+}
+
 /* Surface storage stack */
 .ed-water-stack { padding: 16px; }
 .ed-water-stack-chart {
