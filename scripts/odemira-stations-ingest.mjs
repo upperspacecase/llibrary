@@ -32,6 +32,7 @@ const SNIRH_NETWORKS = [
   { uid: '920123705', source: 'snirh_hidrometrica',  label: 'SNIRH Hidrométrica' },
   { uid: '100290943', source: 'snirh_nascentes',     label: 'SNIRH Nascentes' },
   { uid: '100290952', source: 'snirh_qualidade_sub', label: 'SNIRH Qualidade Subt.' },
+  { uid: '920123704', source: 'snirh_meteorologica', label: 'SNIRH Meteorológica' },
 ];
 
 // Static reference points — known landmarks pulled from src/lib/wiki-data.js

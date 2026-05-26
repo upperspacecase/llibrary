@@ -40,6 +40,7 @@ const SNIRH_SOURCES = new Set([
   'snirh_hidrometrica',
   'snirh_nascentes',
   'snirh_qualidade_sub',
+  'snirh_meteorologica',
 ]);
 
 function arg(name, fallback) {

@@ -967,7 +967,7 @@ function renderEnvironmentalDashboard() {
         <h3>Water sensors in Odemira</h3>
         <p>Portuguese national water-resources network — stations catalogued inside the Odemira polygon, what each measures, and how often.</p>
         <div class="ed-snirh-grid" id="ed-snirh-grid">
-          ${['snirh_piezometria','snirh_hidrometrica','snirh_nascentes','snirh_qualidade_sub'].map(src => `
+          ${['snirh_piezometria','snirh_hidrometrica','snirh_nascentes','snirh_qualidade_sub','snirh_meteorologica'].map(src => `
             <div class="ed-snirh-card" data-source="${src}">
               <div class="ed-snirh-card-head">
                 <div class="ed-snirh-card-title" data-snirh-title></div>
@@ -1328,6 +1328,7 @@ async function hydrateEnvironmentalDashboard() {
       snirh_hidrometrica:   { color: '#1B3A2F', label: 'River gauges' },
       snirh_nascentes:      { color: '#5a7256', label: 'Springs' },
       snirh_qualidade_sub:  { color: '#8b4789', label: 'Groundwater quality' },
+      snirh_meteorologica:  { color: '#c97e6b', label: 'Weather stations' },
       glofas_basin:         { color: '#d49a4a', label: 'GloFAS basin sample' },
       wiki_landmark:        { color: '#888888', label: 'Landmarks' },
     };
@@ -1985,6 +1986,7 @@ async function hydrateEnvironmentalDashboard() {
       snirh_hidrometrica:  { title: 'River gauges',         subtitle: 'In-situ river level / discharge',     cadence: 'Daily → monthly · multi-decade' },
       snirh_nascentes:     { title: 'Springs',              subtitle: 'Nascentes (spring outflows)',          cadence: 'Variable cadence · by station' },
       snirh_qualidade_sub: { title: 'Groundwater quality',  subtitle: 'Nitrates, conductivity, pH, …',        cadence: 'Monthly → quarterly campaigns' },
+      snirh_meteorologica: { title: 'Weather stations',     subtitle: 'Rainfall, temperature, humidity, wind, evaporation', cadence: 'Hourly → annual · multi-decade' },
     };
 
     grid.querySelectorAll('.ed-snirh-card').forEach(card => {
