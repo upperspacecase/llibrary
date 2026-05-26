@@ -30,12 +30,14 @@ export function Donut({
   thickness = 56,
   centerLabel,
   centerValue,
+  showLegend = true,
 }: {
   segments: DonutSegment[];
   size?: number;
   thickness?: number;
   centerLabel?: string;
   centerValue?: string;
+  showLegend?: boolean;
 }) {
   const filtered = segments.filter((s) => s.value > 0);
   const total = filtered.reduce((a, s) => a + s.value, 0);
@@ -56,7 +58,7 @@ export function Donut({
   });
 
   return (
-    <div className="flex flex-col md:flex-row items-center md:items-start gap-10 mb-8">
+    <div className={`flex ${showLegend ? "flex-col md:flex-row items-center md:items-start gap-10" : "flex-col items-center"} mb-8`}>
       <div className="relative shrink-0" style={{ width: size, height: size }}>
         <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
           {arcs.length === 1 ? (
@@ -90,26 +92,28 @@ export function Donut({
         )}
       </div>
 
-      <ul className="flex-1 w-full space-y-3 font-body">
-        {arcs
-          .slice()
-          .sort((a, b) => b.value - a.value)
-          .map((a) => (
-            <li key={a.name} className="flex items-center justify-between gap-4 text-sm">
-              <span className="flex items-center gap-3 text-brand-forest">
-                <span
-                  className="inline-block w-3 h-3 shrink-0"
-                  style={{ backgroundColor: a.fill }}
-                  aria-hidden="true"
-                />
-                <span className="font-bold">{a.name}</span>
-              </span>
-              <span className="text-brand-charcoal tabular-nums">
-                {Math.round(a.frac * 100)}% &middot; &euro;{Math.round(a.value).toLocaleString()}
-              </span>
-            </li>
-          ))}
-      </ul>
+      {showLegend && (
+        <ul className="flex-1 w-full space-y-3 font-body">
+          {arcs
+            .slice()
+            .sort((a, b) => b.value - a.value)
+            .map((a) => (
+              <li key={a.name} className="flex items-center justify-between gap-4 text-sm">
+                <span className="flex items-center gap-3 text-brand-forest">
+                  <span
+                    className="inline-block w-3 h-3 shrink-0"
+                    style={{ backgroundColor: a.fill }}
+                    aria-hidden="true"
+                  />
+                  <span className="font-bold">{a.name}</span>
+                </span>
+                <span className="text-brand-charcoal tabular-nums">
+                  {Math.round(a.frac * 100)}% &middot; &euro;{Math.round(a.value).toLocaleString()}
+                </span>
+              </li>
+            ))}
+        </ul>
+      )}
     </div>
   );
 }

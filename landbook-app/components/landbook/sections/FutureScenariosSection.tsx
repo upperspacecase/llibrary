@@ -305,7 +305,7 @@ export function FutureScenariosSection({
                       <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">
                         {sc.name} · €{Math.round(sc.total).toLocaleString()}
                       </p>
-                      <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} />
+                      <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} showLegend={false} />
                     </div>
                   ))}
                 </div>
