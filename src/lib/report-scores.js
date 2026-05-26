@@ -364,6 +364,9 @@ export function computeNaturalCapitalPremiums(areaHa, biomeGroup, waterFeatures)
       valueComposition,
       confidence,
       matchType,
+      // Propagate the per-class allocation so downstream (implicit scenarios)
+      // can distribute the uplift across the 5 ES classes.
+      affectsServices: it.affectsServices || null,
     };
 
     if (it.annualPerHa) {
@@ -435,20 +438,30 @@ export function computeServiceSensitivity(esClass, waterSecurity10) {
 
 // ---------------------------------------------------------------------------
 // Implicit-layer scenarios — show how the €/yr ecosystem-services baseline
-// shifts under stewardship. BAU = baseline; Conservative gets a small uplift
-// (passive stewardship); Moderate applies high-confidence interventions at
-// mid uplift; Optimized applies all per-hectare interventions at high uplift.
-// Component values distribute the per-intervention uplift across 5 ES classes
-// using each intervention's affectsServices allocation.
+// shifts under stewardship. BAU = baseline; Conservative applies all matched
+// per-hectare interventions at low tier, scaled down (passive stewardship);
+// Moderate applies all matched interventions at mid tier; Optimized applies
+// all matched interventions at high tier. Component values distribute each
+// intervention's uplift across 5 ES classes via its affectsServices allocation.
+//
+// Confidence is reflected in scenario risk labels, not by excluding analogue
+// or lower-confidence interventions — a property whose only viable
+// intervention is an analogue match still has that stewardship lever
+// available, and gating it out leaves Moderate/Optimized identical to BAU.
 // ---------------------------------------------------------------------------
 
 const SCENARIO_INTENSITY = {
-  conservative: { tierKey: 'low',  fraction: 0.15, useSubset: 'high-confidence-only' },
-  moderate:     { tierKey: 'mid',  fraction: 1.00, useSubset: 'high-confidence-only' },
-  optimized:    { tierKey: 'high', fraction: 1.00, useSubset: 'all' },
+  conservative: { tierKey: 'low',  fraction: 0.30 },
+  moderate:     { tierKey: 'mid',  fraction: 1.00 },
+  optimized:    { tierKey: 'high', fraction: 1.00 },
 };
 
 const ES_CLASSES = ['regulating', 'food', 'cultural', 'soil', 'water'];
+
+// Default allocation used when an intervention's affectsServices is missing —
+// keeps the pipeline producing meaningful uplifts even if a definition isn't
+// yet tagged. Weighted toward regulating to match the typical SEEA-EA story.
+const DEFAULT_ALLOCATION = { regulating: 0.55, food: 0.15, cultural: 0.10, soil: 0.15, water: 0.05 };
 
 /**
  * Build the implicit-layer scenarios used by Value & Benefits' Long Term Value
@@ -481,7 +494,6 @@ export function computeImplicitScenarios(areaHa, svcKeyed, interventions) {
   const quantitative = (interventions || []).filter(
     (it) => it.basis === 'per-hectare' && it.annualPerHa,
   );
-  const highConfidence = quantitative.filter((it) => it.confidence === 'high' || it.confidence === 'medium');
 
   const buildScenario = (key, name) => {
     if (key === 'bau') {
@@ -494,12 +506,11 @@ export function computeImplicitScenarios(areaHa, svcKeyed, interventions) {
       };
     }
     const cfg = SCENARIO_INTENSITY[key];
-    const pool = cfg.useSubset === 'all' ? quantitative : highConfidence;
     const components = { ...baseline };
-    for (const it of pool) {
+    for (const it of quantitative) {
       const ratePerHa = it.annualPerHa[cfg.tierKey] ?? 0;
       const upliftTotal = ratePerHa * areaHa * cfg.fraction;
-      const alloc = it.affectsServices || {};
+      const alloc = it.affectsServices || DEFAULT_ALLOCATION;
       for (const esClass of ES_CLASSES) {
         components[esClass] += upliftTotal * (alloc[esClass] ?? 0);
       }

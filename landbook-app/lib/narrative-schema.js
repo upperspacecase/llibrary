@@ -119,16 +119,16 @@ export const NARRATIVE_SCHEMA = {
 
   valueBenefits: {
     intro: {
-      maxWords: 40,
-      prompt: "1 paragraph. SEEA-EA valuation framework briefly, then the economic significance of ecosystem services here.",
+      maxWords: 50,
+      prompt: "1 paragraph. SEEA-EA briefly, then frame the property's annual ecosystem-services total as the IMPLICIT BASELINE LAYER of a three-layer value stack (implicit + realized agriculture + monetizable carbon/premium markets). Do NOT call this figure 'annual revenue' — it is annual ecosystem-services value delivered regardless of monetization.",
     },
     callout: {
       maxWords: 20,
-      prompt: "1 sentence capturing the economic significance.",
+      prompt: "1 sentence capturing the economic significance of the implicit ecosystem-services layer.",
     },
     assetCallout: {
       maxWords: 20,
-      prompt: "1 sentence about the 30-year NPV and what it represents as a long-term asset stock value.",
+      prompt: "1 sentence about the 30-year implicit-layer NPV as a long-term asset stock value (not total stack — that's covered in Future Scenarios).",
     },
   },
 
@@ -171,8 +171,8 @@ export const NARRATIVE_SCHEMA = {
 
   futureScenarios: {
     intro: {
-      maxWords: 40,
-      prompt: "1 paragraph. Compare revenue scenarios and flag the carbon credit opportunity.",
+      maxWords: 50,
+      prompt: "1 paragraph. Compare scenarios using the three-layer model (REALIZED agriculture + MONETIZABLE carbon/premium markets + IMPLICIT ecosystem services). Reference the active-revenue figures (realized + monetizable) when discussing scenario differences. Do NOT call the implicit ecosystem-services total 'annual revenue' — that term is reserved for the realized agriculture layer.",
     },
     callout: {
       maxWords: 20,

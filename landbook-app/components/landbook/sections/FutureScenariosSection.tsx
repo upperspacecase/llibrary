@@ -6,7 +6,7 @@ import type {
   LayerNpvRow,
 } from "@/lib/types";
 import {
-  SectionTitle, KPI, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
+  SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -34,9 +34,11 @@ const SCENARIO_RISK: Record<string, string> = {
   optimized: "Medium-High",
 };
 
+// Implicit acts as a muted foundation so the active layers (where
+// stewardship decisions actually live) carry the visual weight.
 const LAYER_FILLS = {
-  implicit: "#1B3A2F",
-  realized: "#8B9A7E",
+  implicit: "rgba(139, 154, 126, 0.28)",
+  realized: "#1B3A2F",
   monetizable: "#C4705A",
 };
 
@@ -272,13 +274,22 @@ export function FutureScenariosSection({
       </p>
       <div className="grid grid-cols-3 gap-8 mb-8">
         {activeCards.map((card) => (
-          <KPI
-            key={card.key}
-            value={card.active > 0 ? `€${card.active.toLocaleString()}` : null}
-            unit="/yr"
-            label={card.name}
-            size="sm"
-          />
+          <div key={card.key} className="border-t border-brand-sage/30 pt-4">
+            <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">
+              {card.name}
+            </div>
+            <div className="font-serif text-3xl font-bold text-brand-forest leading-none tracking-tighter">
+              {card.active > 0 ? `€${card.active.toLocaleString()}` : "—"}
+              <span className="text-sm font-body font-medium ml-1 text-brand-sage">/yr</span>
+            </div>
+            {card.active > 0 && (
+              <div className="mt-3 text-[11px] text-brand-charcoal/80 font-body leading-snug">
+                <span className="font-bold text-brand-forest">€{card.realized.toLocaleString()}</span> realized
+                <span className="text-brand-sage"> + </span>
+                <span className="font-bold text-brand-forest">€{card.monetizable.toLocaleString()}</span> monetizable
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
@@ -432,32 +443,43 @@ export function FutureScenariosSection({
 
       <Hairline />
 
-      {/* 11.6 Scenario Risk Profiles */}
+      {/* 11.6 Scenario Risk Profiles — operates on total-stack annuals */}
       <PlaceholderBox
         id="11.6"
         title="Uncertainty quantification and scenario spread"
-        status="DERIVED FROM scenario range (conservative to optimized)"
+        status="DERIVED FROM total-stack scenario range (BAU to Optimized)"
         variant="mixed"
-        note="Spread (Optimized − Conservative) is real. Downside floor (×0.5 of Conservative) and confidence band (±spread/2) are heuristic, not statistical."
+        note="Operates on total annual value (realized + monetizable + implicit) to match the layered scenario model. Downside floor uses BAU; confidence band is centered on Moderate as a ±spread/2 heuristic."
       >
         {(() => {
-          const spread = opt - cons;
-          const spreadPct = cons > 0 ? Math.round((spread / cons) * 100) : 0;
-          const downside = Math.round(cons * 0.5);
+          const totalAnnual = (key: string) => {
+            const row = stackedRows.find((r) => r.key === key);
+            if (!row) return 0;
+            return row.implicit + row.realized + row.monetizable;
+          };
+          const totalBau = totalAnnual("bau");
+          const totalCons = totalAnnual("conservative");
+          const totalMod = totalAnnual("moderate");
+          const totalOpt = totalAnnual("optimized");
+          const spread = totalOpt - totalBau;
+          const spreadPct = totalBau > 0 ? Math.round((spread / totalBau) * 100) : 0;
+          const upsidePct = totalBau > 0 ? Math.round(((totalOpt - totalBau) / totalBau) * 100) : 0;
+          const consDelta = totalCons - totalBau;
           return (
             <div className="space-y-3 text-sm text-brand-charcoal">
               <DataTable
                 headers={["Metric", "Value"]}
                 rows={[
-                  ["Scenario spread (Optimized − Conservative)", spread > 0 ? `€${spread.toLocaleString()} (${spreadPct}% range)` : "—"],
-                  ["Downside floor (BAU baseline)", downside > 0 ? `€${downside.toLocaleString()}/yr` : "—"],
-                  ["Upside potential vs BAU", opt > 0 && downside > 0 ? `${Math.round(((opt - downside) / downside) * 100)}% improvement` : "—"],
-                  ["Confidence band", spread > 0 ? `±${Math.round(spread / 2).toLocaleString()} around moderate (€${mod.toLocaleString()})` : "—"],
+                  ["Scenario spread (Optimized − BAU, total stack)", spread > 0 ? `€${spread.toLocaleString()} (${spreadPct}% range)` : "—"],
+                  ["Downside floor (BAU total)", totalBau > 0 ? `€${totalBau.toLocaleString()}/yr` : "—"],
+                  ["Conservative delta vs BAU", consDelta > 0 ? `+€${consDelta.toLocaleString()}/yr` : "—"],
+                  ["Upside potential vs BAU", totalBau > 0 && totalOpt > 0 ? `${upsidePct}% improvement` : "—"],
+                  ["Confidence band", spread > 0 ? `±${Math.round(spread / 2).toLocaleString()} around Moderate (€${totalMod.toLocaleString()})` : "—"],
                 ]}
               />
               {spread > 0 && (
                 <p className="text-brand-sage text-xs">
-                  Wider scenario spread indicates higher sensitivity to management decisions and investment levels.
+                  Spread is narrower as a percentage than on active revenue alone because the implicit baseline anchors all scenarios &mdash; the more honest picture.
                 </p>
               )}
             </div>
