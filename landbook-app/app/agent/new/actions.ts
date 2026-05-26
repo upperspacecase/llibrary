@@ -113,5 +113,16 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
     );
   }
 
+  // Kick off the v1 pipeline (22-source fetch + facts/reports/narratives).
+  // It falls back to submissions when the id isn't in landbooks, writing
+  // `data` back to whichever collection it came from. Fire-and-forget so
+  // the agent isn't blocked — the refresh can take minutes.
+  const v1 = process.env.V1_API_BASE_URL;
+  if (v1) {
+    void fetch(`${v1}/api/landbooks/${id}/refresh`, { method: "POST" }).catch(
+      (err) => console.warn("[createLandbook] refresh kick-off failed:", err)
+    );
+  }
+
   redirect(`/agent?submitted=${id}`);
 }

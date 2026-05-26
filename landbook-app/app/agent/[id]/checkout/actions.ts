@@ -4,8 +4,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCollection } from "@/lib/db";
 import { requireCurrentUser } from "@/lib/firebase/admin";
+import { assertAgentOwns } from "@/lib/agent-book";
 import { PLANS, stripe } from "@/lib/stripe/server";
-import type { AgentStripe, Landbook, LandbookPayment, Submission } from "@/lib/types";
+import type { AgentStripe, LandbookPayment } from "@/lib/types";
 
 async function getOrigin(): Promise<string> {
   const h = await headers();
@@ -24,13 +25,9 @@ export async function startReportCheckout(landbookId: string): Promise<void> {
     throw new Error(`${plan.priceEnv} environment variable is not set`);
   }
 
-  // Confirm the landbook belongs to this user (it may be in submissions or landbooks).
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id: landbookId, ownerId: user.uid });
-  if (!book) {
-    const submissions = await getCollection<Submission>("submissions");
-    const sub = await submissions.findOne({ id: landbookId, ownerId: user.uid });
-    if (!sub) throw new Error("LandBook not found");
+  // Confirm the landbook belongs to this user (in either landbooks or submissions).
+  if (!(await assertAgentOwns(landbookId, user.uid))) {
+    throw new Error("LandBook not found");
   }
 
   // Persist (or look up) a Stripe customer for this user so subscription + one-off

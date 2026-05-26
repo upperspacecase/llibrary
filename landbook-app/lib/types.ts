@@ -465,5 +465,11 @@ export interface Submission {
   notes?: string;
   files?: Array<{ name: string; size: number; type: string; url: string }>;
   created: string;
+  updated?: string;
   landbookId?: string;
+  // Populated by v1's /api/landbooks/[id]/refresh pipeline when it writes
+  // back to the submissions collection (no landbook exists yet for this id).
+  data?: ReportData | null;
+  dataUpdated?: string;
+  agentNotes?: string;
 }

@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getCollection } from "@/lib/db";
 import { requireCurrentUser } from "@/lib/firebase/admin";
-import type { Landbook, LandbookOverride } from "@/lib/types";
+import { assertAgentOwns, updateAgentBook } from "@/lib/agent-book";
+import type { LandbookOverride } from "@/lib/types";
 
 type OverrideFields = LandbookOverride["fields"];
 
@@ -20,10 +21,9 @@ export async function saveOverridesAction(
   input: Partial<OverrideFields>
 ): Promise<{ ok: boolean; error?: string }> {
   const user = await requireCurrentUser();
-
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id: landbookId, ownerId: user.uid });
-  if (!book) return { ok: false, error: "LandBook not found" };
+  if (!(await assertAgentOwns(landbookId, user.uid))) {
+    return { ok: false, error: "LandBook not found" };
+  }
 
   const cleaned: OverrideFields = {};
   for (const key of FIELD_KEYS) {
@@ -48,10 +48,9 @@ export async function saveOverridesAction(
     { upsert: true }
   );
 
-  await books.updateOne(
-    { id: landbookId, ownerId: user.uid },
-    { $set: { updated: new Date().toISOString() } }
-  );
+  await updateAgentBook(landbookId, user.uid, {
+    $set: { updated: new Date().toISOString() },
+  });
 
   revalidatePath(`/agent/${landbookId}/edit`);
   return { ok: true };

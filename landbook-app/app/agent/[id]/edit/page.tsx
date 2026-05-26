@@ -2,10 +2,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
-import type {
-  Landbook,
-  LandbookOverride,
-} from "@/lib/types";
+import { findAgentBook } from "@/lib/agent-book";
+import type { LandbookOverride } from "@/lib/types";
 import EditorClient, {
   type EditorComputed,
   type EditorOverrides,
@@ -44,9 +42,8 @@ export default async function EditorPage({
   const user = await getCurrentUser();
   if (!user) notFound();
 
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id, ownerId: user.uid });
-  if (!book) notFound();
+  const plainBook = await findAgentBook(id, user.uid);
+  if (!plainBook) notFound();
 
   const overridesCol = await getCollection<LandbookOverride>(
     "landbook_overrides"
@@ -56,7 +53,6 @@ export default async function EditorPage({
     ownerId: user.uid,
   });
 
-  const plainBook = JSON.parse(JSON.stringify(book)) as Landbook;
   const plainOverrides = overrideDoc
     ? (JSON.parse(JSON.stringify(overrideDoc.fields || {})) as EditorOverrides)
     : {};

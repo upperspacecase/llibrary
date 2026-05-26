@@ -3,14 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getCollection } from "@/lib/db";
 import { requireCurrentUser } from "@/lib/firebase/admin";
-import type { Landbook, LandbookFile } from "@/lib/types";
-
-async function assertOwned(landbookId: string, ownerId: string): Promise<Landbook> {
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id: landbookId, ownerId });
-  if (!book) throw new Error("LandBook not found");
-  return book;
-}
+import { assertAgentOwns, updateAgentBook } from "@/lib/agent-book";
+import type { LandbookFile } from "@/lib/types";
 
 export interface RecordFileInput {
   name: string;
@@ -24,10 +18,8 @@ export async function recordFileAction(
   input: RecordFileInput
 ): Promise<{ ok: boolean; error?: string }> {
   const user = await requireCurrentUser();
-  try {
-    await assertOwned(landbookId, user.uid);
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
+  if (!(await assertAgentOwns(landbookId, user.uid))) {
+    return { ok: false, error: "LandBook not found" };
   }
 
   const doc: LandbookFile = {
@@ -51,22 +43,10 @@ export async function saveAgentNotesAction(
   notes: string
 ): Promise<{ ok: boolean; error?: string }> {
   const user = await requireCurrentUser();
-  try {
-    await assertOwned(landbookId, user.uid);
-  } catch (e) {
-    return { ok: false, error: (e as Error).message };
-  }
-
-  const books = await getCollection<Landbook>("landbooks");
-  await books.updateOne(
-    { id: landbookId, ownerId: user.uid },
-    {
-      $set: {
-        agentNotes: notes,
-        updated: new Date().toISOString(),
-      },
-    }
-  );
+  const matched = await updateAgentBook(landbookId, user.uid, {
+    $set: { agentNotes: notes, updated: new Date().toISOString() },
+  });
+  if (!matched) return { ok: false, error: "LandBook not found" };
   revalidatePath(`/agent/${landbookId}/upload`);
   return { ok: true };
 }

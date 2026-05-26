@@ -19,8 +19,6 @@ export const metadata: Metadata = {
   title: "My LandBooks · Agents",
 };
 
-const FILTERS = ["All", "Drafts", "Processing", "Ready", "Shared", "Archived"];
-
 type AgentItem = {
   id: string;
   href: string;
@@ -129,25 +127,6 @@ export default async function MyLandBooksPage() {
                   New LandBook
                 </PillButton>
               </Link>
-            </div>
-          </div>
-
-          <div className="mt-8 flex items-center gap-2 text-[11px] font-medium tracking-wide text-brand-charcoal/60">
-            {FILTERS.map((f, i) => (
-              <button
-                key={f}
-                type="button"
-                className={
-                  i === 0
-                    ? "rounded-full border border-brand-charcoal bg-brand-charcoal px-3 py-1.5 text-brand-cream"
-                    : "rounded-full border border-brand-sage/40 bg-white px-3 py-1.5 hover:border-brand-charcoal/60"
-                }
-              >
-                {f}
-              </button>
-            ))}
-            <div className="ml-auto text-brand-charcoal/40">
-              Sort: Last updated ↓
             </div>
           </div>
 

@@ -5,7 +5,8 @@ import { AgentHeader } from "@/components/agent/AgentHeader";
 import { Eyebrow, SerifTitle } from "@/components/agent/primitives";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
-import type { Landbook, LandbookShare } from "@/lib/types";
+import { findAgentBook } from "@/lib/agent-book";
+import type { LandbookShare } from "@/lib/types";
 import { randomUUID } from "crypto";
 import ShareClient from "./ShareClient";
 
@@ -26,8 +27,7 @@ export default async function SharePage({
   const user = await getCurrentUser();
   if (!user) notFound();
 
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id, ownerId: user.uid });
+  const book = await findAgentBook(id, user.uid);
   if (!book) notFound();
 
   const shares = await getCollection<LandbookShare>("landbook_shares");

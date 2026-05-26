@@ -4,17 +4,17 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { getCollection } from "@/lib/db";
 import { requireCurrentUser } from "@/lib/firebase/admin";
+import { assertAgentOwns } from "@/lib/agent-book";
 import type {
-  Landbook,
   LandbookShare,
   ShareActivity,
   ShareRecipient,
 } from "@/lib/types";
 
 async function assertOwned(landbookId: string, ownerId: string) {
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id: landbookId, ownerId });
-  if (!book) throw new Error("LandBook not found");
+  if (!(await assertAgentOwns(landbookId, ownerId))) {
+    throw new Error("LandBook not found");
+  }
 }
 
 export async function ensureShareAction(landbookId: string): Promise<

@@ -5,7 +5,8 @@ import { AgentHeader } from "@/components/agent/AgentHeader";
 import { PillButton, SerifTitle, Icon } from "@/components/agent/primitives";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
-import type { Landbook, LandbookFile } from "@/lib/types";
+import { findAgentBook } from "@/lib/agent-book";
+import type { LandbookFile } from "@/lib/types";
 import UploadClient from "./UploadClient";
 
 export const dynamic = "force-dynamic";
@@ -23,8 +24,7 @@ export default async function UploadPage({
   const user = await getCurrentUser();
   if (!user) notFound();
 
-  const books = await getCollection<Landbook>("landbooks");
-  const book = await books.findOne({ id, ownerId: user.uid });
+  const book = await findAgentBook(id, user.uid);
   if (!book) notFound();
 
   const filesCol = await getCollection<LandbookFile>("landbook_files");
