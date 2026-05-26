@@ -637,29 +637,6 @@ function renderEnvironmentalDashboard() {
   const habitatRows = ['Mosaic cropland','Forests','Shrubland','Grassland','Other']
     .map(c => `<div class="ed-habitat-row"><span>${c}</span>${P('ESA WorldCover (aggregated)')}</div>`).join('');
 
-  const gapLedger = [
-    ['Regional 8-pt Baseline → Portugal national baseline', 'Wired @ point only. Need national aggregation across Portugal grid.'],
-    ['Open-Meteo 50yr Archive (climate trajectory)', 'Wired @ point. Need /api/regions/odemira/climate-trajectory.'],
-    ['Open-Meteo Climate Averages (monthly normals)', 'Wired @ point. Need /api/regions/odemira/monthly-normals.'],
-    ['Open-Meteo Solar/Wind', 'Wired @ point. Region-mean over Odemira grid.'],
-    ['SoilGrids Properties (pH, OC, BD, depth)', 'Wired @ point. Need zonal stats over Odemira bbox.'],
-    ['SoilGrids Classification (WRB texture)', 'Wired @ point. Need dominant class over Odemira bbox.'],
-    ['Macrostrat Geology', 'Wired. 8-point sample across the polygon; dominant lithology by frequency surfaces as primary.'],
-    ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
-    ['GloFAS Flood Forecast (discharge anomaly)', 'Wired. Highest-mean-flow station across the Mira basin (Milfontes mouth / Odemira town / Santa Clara reservoir).'],
-    ['SPI-12 (1940–today)', 'Wired. ERA5-backed Open-Meteo archive precip, gamma-fit per calendar month, Wilson-Hilferty Z transform. Pre-1940 would need NOAA GHCN-monthly for Beja / Sines.'],
-    ['iNaturalist Species (top species + total)', 'Wired. bbox query across the Odemira polygon.'],
-    ['iNaturalist Threatened (IUCN badges)', 'Wired. bbox query across the Odemira polygon.'],
-    ['iNaturalist trend windows', 'Wired. 13 rolling 5-yr windows from 1970 → current year, all bbox-aggregated.'],
-    ['Esri Living Atlas Sentinel-2 LandCover', 'Wired. Annual histogram per polygon via computeHistograms. Source = Impact Observatory + Esri + Microsoft.'],
-    ['NASA FIRMS Historical', 'Failing (HTTP 400). Not in current mockup but needs rotating/repaired endpoint before historical fire trend can be added.'],
-  ].map(([k,v]) => `
-    <div class="ed-gap-row">
-      <div class="ed-gap-key">${k}</div>
-      <div class="ed-gap-val">${v}</div>
-    </div>
-  `).join('');
-
   return `
     <section class="ed-root" id="environmental-dashboard">
 
@@ -914,46 +891,19 @@ function renderEnvironmentalDashboard() {
         </section>
       </div>
 
-      <section class="ed-gap-ledger">
-        <h3>Data gap ledger</h3>
-        <p>Every cell flagged <strong>DATA?</strong> above corresponds to a row below. Sources marked “wired @ point” exist in the pipeline but do not yet have a region-aggregate endpoint for Odemira.</p>
-        <div class="ed-gap-grid">${gapLedger}</div>
-      </section>
-
-      <section class="ed-sources">
-        <h3>Data sources</h3>
-        <p>Each card on the dashboard is fed by one or more of the sensors / archives below.</p>
-        <div class="ed-sources-table" role="table">
-          <div class="ed-sources-row ed-sources-row--head" role="row">
-            <span role="columnheader">Source</span>
-            <span role="columnheader">Measures</span>
-            <span role="columnheader">Cadence</span>
-            <span role="columnheader">Used in</span>
-          </div>
-          ${[
-            ['Open-Meteo Archive (ERA5)',  'Air temp, precipitation, ET₀, wind, radiation',  'Daily · 1940 → today',         'Climate trajectory · Monthly normals · Water balance · SPI-12'],
-            ['Open-Meteo Forecast',        'Temp, precip, wind for the coming week',          'Hourly · 7-day forecast',      '(internal — not currently surfaced)'],
-            ['Open-Meteo Solar/Wind',      'Annual GHI (kWh/m²) + wind speed @ 100 m',       'Annual mean · last full year', 'Solar potential · Wind potential'],
-            ['Open-Meteo Flood (GloFAS)',  'River discharge',                                 'Daily · ~240 d past + 30 d fc','GloFAS discharge anomaly · Flood risk'],
-            ['SNIRH Piezometria',          'Groundwater level + depth to water',              'Monthly readings · up to 50 yr','Map · backfilled to station_observations'],
-            ['SNIRH Hidrométrica',         'River level + flow (in-situ gauges)',             'Daily → monthly · multi-decade','Map · backfilled to station_observations'],
-            ['SNIRH Nascentes',            'Spring discharge',                                'Variable',                      'Map'],
-            ['SNIRH Qualidade subt.',      'Groundwater quality (nitrates, conductivity…)',   'Monthly · varies by station',   'Map'],
-            ['Esri Living Atlas Sentinel-2','10 m LULC class probabilities',                  'Annual rasters · 2017 → today', 'Land cover time series'],
-            ['NASA FIRMS',                 'Active-fire pixel detections (VIIRS/MODIS)',      'Near-real-time (~3 h latency)', 'Fire risk · active fires count'],
-            ['iNaturalist',                'Research-grade species observations + photos',    'Continuous community uploads',  'Top species · Total species · 13 trend windows · IUCN badges'],
-            ['GBIF',                       'Aggregated species occurrence records',           'Continuous (snapshot per call)','Cross-check on species totals'],
-            ['Macrostrat',                 'Geologic units (lithology, age, environment)',    'Static · geological time',      'Geology card (dominant lithology, 8-pt sample)'],
-            ['SoilGrids 2.0 (ISRIC)',      'pH, OC, bulk density, texture (0–30 cm)',         'Static raster',                 'Soil summary'],
-            ['Mapbox Static + GL',         'Basemap tiles + geocoding',                       'Live tiles',                    'Hydrology context · Fire risk · Stations map'],
-            ['Overpass (OpenStreetMap)',   'Streams, lakes, springs, infrastructure',         'Live (community edits)',        'Nearest stream / reservoir · feature counts'],
-            ['DGT CAOP',                   'Portuguese admin boundaries + parish polygons',   'Static · refreshed annually',   'Region polygon + parish name'],
-          ].map(([src, what, freq, used]) => `
-            <div class="ed-sources-row" role="row">
-              <span role="cell"><strong>${src}</strong></span>
-              <span role="cell">${what}</span>
-              <span role="cell">${freq}</span>
-              <span role="cell">${used}</span>
+      <section class="ed-snirh-panel">
+        <h3>SNIRH sensors in Odemira</h3>
+        <p>Portuguese national water-resources network — every station catalogued inside the Odemira polygon, what each measures, and how often.</p>
+        <div class="ed-snirh-grid" id="ed-snirh-grid">
+          ${['snirh_piezometria','snirh_hidrometrica','snirh_nascentes','snirh_qualidade_sub'].map(src => `
+            <div class="ed-snirh-card" data-source="${src}">
+              <div class="ed-snirh-card-head">
+                <div class="ed-snirh-card-title" data-snirh-title></div>
+                <div class="ed-snirh-card-cadence" data-snirh-cadence></div>
+              </div>
+              <div class="ed-snirh-card-meta" data-snirh-meta></div>
+              <div class="ed-snirh-card-params" data-snirh-params></div>
+              <div class="ed-snirh-card-stations" data-snirh-stations></div>
             </div>
           `).join('')}
         </div>
@@ -1375,6 +1325,60 @@ async function hydrateEnvironmentalDashboard() {
       });
     });
 
+    hydrated += 1;
+  })();
+
+  // SNIRH panel — populate the four network cards from the stations catalog
+  (async () => {
+    const grid = document.getElementById('ed-snirh-grid');
+    if (!grid) return;
+    let stations;
+    try {
+      const res = await fetch('/api/regions/odemira/stations');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.ok || !Array.isArray(data.features)) return;
+      stations = data.features;
+    } catch { return; }
+
+    const NETWORKS = {
+      snirh_piezometria:   { title: 'Piezometers',          subtitle: 'Groundwater level + depth to water', cadence: 'Monthly readings · up to 50-yr history' },
+      snirh_hidrometrica:  { title: 'River gauges',         subtitle: 'In-situ river level / discharge',     cadence: 'Daily → monthly · multi-decade' },
+      snirh_nascentes:     { title: 'Springs',              subtitle: 'Nascentes (spring outflows)',          cadence: 'Variable cadence · by station' },
+      snirh_qualidade_sub: { title: 'Groundwater quality',  subtitle: 'Nitrates, conductivity, pH, …',        cadence: 'Monthly → quarterly campaigns' },
+    };
+
+    grid.querySelectorAll('.ed-snirh-card').forEach(card => {
+      const source = card.getAttribute('data-source');
+      const meta = NETWORKS[source];
+      if (!meta) return;
+      const list = stations.filter(s => s.source === source);
+
+      // Dedup parameter names across all stations of this network
+      const paramNames = new Set();
+      for (const s of list) {
+        for (const p of (s.parameters || [])) {
+          if (p && p.name) paramNames.add(p.name);
+        }
+      }
+
+      // Truncate station codes for display
+      const codes = list.map(s => s.code || s.name).filter(Boolean).slice(0, 10);
+      const overflow = Math.max(0, list.length - codes.length);
+
+      card.querySelector('[data-snirh-title]').innerHTML = `
+        <strong>${meta.title}</strong>
+        <span class="ed-snirh-card-count">${list.length} station${list.length === 1 ? '' : 's'}</span>
+      `;
+      card.querySelector('[data-snirh-cadence]').textContent = meta.cadence;
+      card.querySelector('[data-snirh-meta]').textContent = meta.subtitle;
+      card.querySelector('[data-snirh-params]').innerHTML = paramNames.size
+        ? `<span class="ed-snirh-card-pname">Measures</span> ${[...paramNames].map(n => `<em>${n}</em>`).join(' · ')}`
+        : '';
+      card.querySelector('[data-snirh-stations]').innerHTML = codes.length
+        ? `<span class="ed-snirh-card-pname">Stations</span> ${codes.join(', ')}${overflow ? ` <span class="ed-snirh-card-overflow">+ ${overflow} more</span>` : ''}`
+        : '<span class="ed-snirh-card-empty">No stations in Odemira bbox.</span>';
+    });
     hydrated += 1;
   })();
 
