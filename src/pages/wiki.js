@@ -919,6 +919,45 @@ function renderEnvironmentalDashboard() {
         <p>Every cell flagged <strong>DATA?</strong> above corresponds to a row below. Sources marked “wired @ point” exist in the pipeline but do not yet have a region-aggregate endpoint for Odemira.</p>
         <div class="ed-gap-grid">${gapLedger}</div>
       </section>
+
+      <section class="ed-sources">
+        <h3>Data sources</h3>
+        <p>Each card on the dashboard is fed by one or more of the sensors / archives below.</p>
+        <div class="ed-sources-table" role="table">
+          <div class="ed-sources-row ed-sources-row--head" role="row">
+            <span role="columnheader">Source</span>
+            <span role="columnheader">Measures</span>
+            <span role="columnheader">Cadence</span>
+            <span role="columnheader">Used in</span>
+          </div>
+          ${[
+            ['Open-Meteo Archive (ERA5)',  'Air temp, precipitation, ET₀, wind, radiation',  'Daily · 1940 → today',         'Climate trajectory · Monthly normals · Water balance · SPI-12'],
+            ['Open-Meteo Forecast',        'Temp, precip, wind for the coming week',          'Hourly · 7-day forecast',      '(internal — not currently surfaced)'],
+            ['Open-Meteo Solar/Wind',      'Annual GHI (kWh/m²) + wind speed @ 100 m',       'Annual mean · last full year', 'Solar potential · Wind potential'],
+            ['Open-Meteo Flood (GloFAS)',  'River discharge',                                 'Daily · ~240 d past + 30 d fc','GloFAS discharge anomaly · Flood risk'],
+            ['SNIRH Piezometria',          'Groundwater level + depth to water',              'Monthly readings · up to 50 yr','Map · backfilled to station_observations'],
+            ['SNIRH Hidrométrica',         'River level + flow (in-situ gauges)',             'Daily → monthly · multi-decade','Map · backfilled to station_observations'],
+            ['SNIRH Nascentes',            'Spring discharge',                                'Variable',                      'Map'],
+            ['SNIRH Qualidade subt.',      'Groundwater quality (nitrates, conductivity…)',   'Monthly · varies by station',   'Map'],
+            ['Esri Living Atlas Sentinel-2','10 m LULC class probabilities',                  'Annual rasters · 2017 → today', 'Land cover time series'],
+            ['NASA FIRMS',                 'Active-fire pixel detections (VIIRS/MODIS)',      'Near-real-time (~3 h latency)', 'Fire risk · active fires count'],
+            ['iNaturalist',                'Research-grade species observations + photos',    'Continuous community uploads',  'Top species · Total species · 13 trend windows · IUCN badges'],
+            ['GBIF',                       'Aggregated species occurrence records',           'Continuous (snapshot per call)','Cross-check on species totals'],
+            ['Macrostrat',                 'Geologic units (lithology, age, environment)',    'Static · geological time',      'Geology card (dominant lithology, 8-pt sample)'],
+            ['SoilGrids 2.0 (ISRIC)',      'pH, OC, bulk density, texture (0–30 cm)',         'Static raster',                 'Soil summary'],
+            ['Mapbox Static + GL',         'Basemap tiles + geocoding',                       'Live tiles',                    'Hydrology context · Fire risk · Stations map'],
+            ['Overpass (OpenStreetMap)',   'Streams, lakes, springs, infrastructure',         'Live (community edits)',        'Nearest stream / reservoir · feature counts'],
+            ['DGT CAOP',                   'Portuguese admin boundaries + parish polygons',   'Static · refreshed annually',   'Region polygon + parish name'],
+          ].map(([src, what, freq, used]) => `
+            <div class="ed-sources-row" role="row">
+              <span role="cell"><strong>${src}</strong></span>
+              <span role="cell">${what}</span>
+              <span role="cell">${freq}</span>
+              <span role="cell">${used}</span>
+            </div>
+          `).join('')}
+        </div>
+      </section>
     </section>
   `;
 }
