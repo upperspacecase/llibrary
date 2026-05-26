@@ -1372,8 +1372,11 @@ async function hydrateEnvironmentalDashboard() {
       `;
       card.querySelector('[data-snirh-cadence]').textContent = meta.cadence;
       card.querySelector('[data-snirh-meta]').textContent = meta.subtitle;
-      card.querySelector('[data-snirh-params]').innerHTML = paramNames.size
-        ? `<span class="ed-snirh-card-pname">Measures</span> ${[...paramNames].map(n => `<em>${n}</em>`).join(' · ')}`
+      const paramArr = [...paramNames];
+      const paramShown = paramArr.slice(0, 10);
+      const paramOverflow = Math.max(0, paramArr.length - paramShown.length);
+      card.querySelector('[data-snirh-params]').innerHTML = paramShown.length
+        ? `<span class="ed-snirh-card-pname">Measures</span> ${paramShown.map(n => `<em>${n}</em>`).join(' · ')}${paramOverflow ? ` <span class="ed-snirh-card-overflow">+ ${paramOverflow} more</span>` : ''}`
         : '';
       card.querySelector('[data-snirh-stations]').innerHTML = codes.length
         ? `<span class="ed-snirh-card-pname">Stations</span> ${codes.join(', ')}${overflow ? ` <span class="ed-snirh-card-overflow">+ ${overflow} more</span>` : ''}`
