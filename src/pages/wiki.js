@@ -646,7 +646,7 @@ function renderEnvironmentalDashboard() {
     ['SoilGrids Classification (WRB texture)', 'Wired @ point. Need dominant class over Odemira bbox.'],
     ['Macrostrat Geology', 'Wired. 8-point sample across the polygon; dominant lithology by frequency surfaces as primary.'],
     ['Water balance P − ET₀ (50-yr)', 'Wired. Annual ET₀ uses Open-Meteo Archive et0_fao_evapotranspiration (FAO-56). P − ET₀ rendered per year over the 50-yr archive.'],
-    ['GloFAS Flood Forecast (discharge anomaly)', 'Wired @ point. Need basin-mean over Mira/Foupana/Sado.'],
+    ['GloFAS Flood Forecast (discharge anomaly)', 'Wired. Highest-mean-flow station across the Mira basin (Milfontes mouth / Odemira town / Santa Clara reservoir).'],
     ['SPI-12 (1940–today)', 'Wired. ERA5-backed Open-Meteo archive precip, gamma-fit per calendar month, Wilson-Hilferty Z transform. Pre-1940 would need NOAA GHCN-monthly for Beja / Sines.'],
     ['iNaturalist Species (top species + total)', 'Wired. bbox query across the Odemira polygon.'],
     ['iNaturalist Threatened (IUCN badges)', 'Wired. bbox query across the Odemira polygon.'],
@@ -765,7 +765,7 @@ function renderEnvironmentalDashboard() {
                     <div class="ed-mini-sub">this week · ${P('GloFAS Flood Forecast', 'water.floodDischarge', '1f', ' m³/s')}</div>
                   </div>
                 </div>
-                <div class="ed-mini-sub">vs trailing 8mo mean at Odemira sample point</div>
+                <div class="ed-mini-sub">vs trailing 8mo mean · <span data-cell="water.floodBasinStation" data-fmt="str">Odemira sample point</span></div>
               </div>
             </div>
             <div class="ed-card ed-card--span-12">

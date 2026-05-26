@@ -40,6 +40,7 @@ import {
 
 import {
   getFloodForecastWithHistory,
+  getFloodBasin,
   analyzeFloodRisk,
 } from '../api/flood.js';
 
@@ -245,6 +246,14 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['threatened', () => getThreatenedSpecies(lat, lng, 25, { bbox: inatBbox })],
     ['gbif', () => getSpeciesOccurrences(lat, lng)],
     ['flood', () => getFloodForecastWithHistory(lat, lng)],
+    // Mainstem signal across the Mira basin (mouth → mid-river → reservoir).
+    // The basin reading is the highest-mean-flow station, so a centroid that
+    // happens to sit between rivers doesn't read as 0 m³/s.
+    ['floodBasin', () => getFloodBasin([
+      { name: 'Mira at Vila Nova de Milfontes', lat: 37.7268, lng: -8.7828 },
+      { name: 'Mira at Odemira',                 lat: 37.5967, lng: -8.6400 },
+      { name: 'Barragem de Santa Clara',         lat: 37.4900, lng: -8.4400 },
+    ])],
     ['water', () => getWaterFeatures(bbox)],
     ['infrastructure', () => getInfrastructure(bbox)],
     ['protectedAreas', () => getProtectedAreas(bbox)],
@@ -733,6 +742,19 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     ? Math.round((parcelMinElev - drainageElevation) * 10) / 10
     : null;
 
+  // Prefer the basin reading (mainstem of the Mira system) over the centroid
+  // point — the centroid often snaps to an empty GloFAS cell. Falls back to
+  // the centroid analysis if the basin call failed.
+  const basinRaw = raw.floodBasin?.ok ? raw.floodBasin.data : null;
+  const basinReading = basinRaw?.basin ?? null;
+  const floodDischarge =
+    basinReading?.current != null ? +basinReading.current.toFixed(1)
+    : floodAnalysis?.current ?? null;
+  const floodAnomalyPct =
+    basinReading?.anomalyPct != null ? basinReading.anomalyPct
+    : floodAnalysis?.anomalyPct ?? null;
+  const floodBasinStation = basinReading?.name ?? null;
+
   const water = {
     springs, wells, waterways, waterBodies,
     features: waterFeatures,
@@ -740,8 +762,10 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     nearestNamedStream,
     nearestNamedBody,
     securityIndex: Math.round(waterSecurityIndex * 10) / 10,
-    floodDischarge: floodAnalysis?.current ?? null,
-    floodAnomalyPct: floodAnalysis?.anomalyPct ?? null,
+    floodDischarge,
+    floodAnomalyPct,
+    floodBasinStation,
+    floodBasinStations: basinRaw?.stations ?? null,
   };
 
   // ── Species ───────────────────────────────────────────

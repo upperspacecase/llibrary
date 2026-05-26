@@ -50,6 +50,44 @@ export async function getFloodForecastWithHistory(lat, lng) {
 }
 
 /**
+ * Sample GloFAS discharge at multiple basin stations and return the strongest
+ * (highest mean-flow) signal as the basin reading. The Open-Meteo flood API
+ * snaps to its ~10 km cell, so a centroid sample on farmland between rivers
+ * reads 0 m³/s even when the basin's mainstem is active downstream. Picking
+ * the station with the highest mean discharge surfaces the actual hydrologic
+ * signal for the region.
+ *
+ * @param {{name: string, lat: number, lng: number}[]} stations
+ * @returns {Promise<null | {basin: object, stations: object[]}>}
+ */
+export async function getFloodBasin(stations) {
+    if (!Array.isArray(stations) || !stations.length) return null;
+    const settled = await Promise.allSettled(
+        stations.map(s => getFloodForecastWithHistory(s.lat, s.lng))
+    );
+    const readings = [];
+    for (let i = 0; i < settled.length; i++) {
+        if (settled[i].status !== 'fulfilled') continue;
+        const a = analyzeFloodRisk(settled[i].value);
+        if (a.current == null) continue;
+        readings.push({
+            name: stations[i].name,
+            lat: stations[i].lat,
+            lng: stations[i].lng,
+            current: parseFloat(a.current),
+            average: parseFloat(a.average),
+            max: parseFloat(a.max),
+            anomalyPct: a.anomalyPct,
+            level: a.level,
+        });
+    }
+    if (!readings.length) return null;
+    // Highest mean-flow station — the mainstem signal for the basin.
+    const ranked = readings.slice().sort((a, b) => b.average - a.average);
+    return { basin: ranked[0], stations: readings };
+}
+
+/**
  * Analyze flood risk from discharge data.
  * Compares current discharge against recent averages.
  */
