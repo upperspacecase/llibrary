@@ -8805,6 +8805,86 @@ a {
 .ed-reservoirs-reading-delta--down  { color: #b85a3a; font-weight: 600; }
 .ed-reservoirs-reading-delta--neutral { color: #888; }
 
+/* Groundwater reuses the reservoirs visual scaffold, but the hero colour
+   is blue (water table) instead of teal (reservoir), and "down" means the
+   water table dropped further — that's bad, so use the worse colour. */
+.ed-reservoirs-reading--gw {
+  border-color: #3d6b8c;
+  background: rgba(61, 107, 140, 0.06);
+}
+.ed-groundwater-axis-note {
+  color: #888;
+  font-size: 10px;
+  margin-left: auto;
+}
+
+/* Rainfall card */
+.ed-rainfall { padding: 16px; }
+.ed-rainfall-summary {
+  font-size: 12px;
+  color: #2C2C2C;
+}
+.ed-rainfall-summary strong {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+}
+.ed-rainfall-delta-up    { color: #1d9e75; font-weight: 600; }
+.ed-rainfall-delta-down  { color: #b85a3a; font-weight: 600; }
+.ed-rainfall-delta-neutral { color: #888; }
+.ed-rainfall-chart {
+  width: 100%;
+  height: 240px;
+  display: block;
+}
+.ed-rainfall-legend {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+  align-items: center;
+}
+.ed-rainfall-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ed-rainfall-leg-bar i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #7a9ab5;
+}
+.ed-rainfall-leg-normal i {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: #1B3A2F;
+  border-top: 2px dashed #1B3A2F;
+}
+
+/* Surface storage stack */
+.ed-water-stack { padding: 16px; }
+.ed-water-stack-chart {
+  width: 100%;
+  height: 240px;
+  display: block;
+}
+.ed-water-stack-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+}
+.ed-water-stack-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.ed-water-stack-chip i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
 /* Biodiversity: 13-window species trend */
 .ed-bio-trend {
   width: 100%;
