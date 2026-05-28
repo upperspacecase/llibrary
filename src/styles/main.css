@@ -8662,6 +8662,30 @@ a {
   color: #888;
   font-variant-numeric: tabular-nums;
 }
+.ed-region-map-bar--below {
+  margin: 12px 0 0;
+  gap: 12px;
+  align-items: center;
+}
+.ed-add-sensor-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: #1B3A2F;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+.ed-add-sensor-btn:hover { background: #16302a; }
+.ed-add-sensor-hint {
+  font-size: 11px;
+  color: #888;
+}
 
 .ed-region-map-block {
   position: relative;
@@ -8781,6 +8805,18 @@ a {
   height: 14px;
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,0.08);
+}
+.ed-map-legend-gradient {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(180deg,
+    rgba(178,24,43,1) 0%,
+    rgba(239,138,98,0.95) 25%,
+    rgba(253,219,199,0.9) 50%,
+    rgba(209,229,240,0.8) 75%,
+    rgba(103,169,207,0.6) 100%);
 }
 
 /* Letter-badge sensor markers ------------------------------------------ */
@@ -9598,6 +9634,83 @@ a {
   font-family: 'Inter', system-ui, monospace;
   font-variant-numeric: tabular-nums;
 }
+
+/* Add Sensor form modal ------------------------------------------------ */
+.ed-modal-card--narrow { width: min(520px, 92vw); }
+.ed-add-sensor-form {
+  padding: 18px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: auto;
+}
+.ed-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.ed-form-row > span {
+  font-weight: 600;
+  color: #2C2C2C;
+}
+.ed-form-row em {
+  font-style: normal;
+  font-weight: 400;
+  color: #888;
+}
+.ed-form-row--split {
+  flex-direction: row;
+  gap: 12px;
+}
+.ed-form-row--split > label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.ed-form-row--split > label > span { font-weight: 600; color: #2C2C2C; }
+.ed-add-sensor-form input,
+.ed-add-sensor-form select,
+.ed-add-sensor-form textarea {
+  border: 1px solid #ddd2bf;
+  border-radius: 5px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  background: #fff;
+  color: #2C2C2C;
+}
+.ed-add-sensor-form input:focus,
+.ed-add-sensor-form select:focus,
+.ed-add-sensor-form textarea:focus {
+  outline: 2px solid #1d9e75;
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.ed-add-sensor-form textarea { resize: vertical; }
+.ed-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+.ed-form-submit {
+  padding: 8px 18px;
+  background: #1B3A2F;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ed-form-submit:disabled { opacity: 0.55; cursor: progress; }
+.ed-form-msg { font-size: 11px; color: #555; }
+.ed-form-msg--error { color: #b85a3a; font-weight: 600; }
+.ed-form-msg--ok    { color: #147a52; font-weight: 600; }
 
 /* iNaturalist observation heatmap card */
 .ed-obs-card { padding: 16px; }

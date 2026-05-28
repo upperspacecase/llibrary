@@ -677,9 +677,13 @@ function renderEnvironmentalDashboard() {
               <span class="ed-map-view-icon">${lucide('droplet', 14)}</span>
               <span>Hydrological Map</span>
             </button>
-            <button type="button" class="ed-map-view-btn" data-view="bio" aria-pressed="false" disabled>
+            <button type="button" class="ed-map-view-btn" data-view="bio" aria-pressed="false">
               <span class="ed-map-view-icon">${lucide('leaf', 14)}</span>
               <span>Biodiversity</span>
+            </button>
+            <button type="button" class="ed-map-view-btn" data-view="rainfall" aria-pressed="false">
+              <span class="ed-map-view-icon">${lucide('cloud-sun', 14)}</span>
+              <span>Rainfall</span>
             </button>
           </div>
 
@@ -698,7 +702,23 @@ function renderEnvironmentalDashboard() {
             <div class="ed-map-lulc-meta">Land cover · <strong id="ed-map-lulc-year">—</strong></div>
           </div>
         </div>
+
+        <div class="ed-map-lulc-controls" id="ed-map-rain-controls" hidden>
+          <button type="button" class="ed-map-lulc-play" id="ed-map-rain-play" aria-label="Play / pause">▶</button>
+          <div class="ed-map-lulc-track">
+            <input type="range" class="ed-map-lulc-slider" id="ed-map-rain-slider" min="0" max="0" step="1" value="0" aria-label="Rainfall year" />
+            <div class="ed-map-lulc-meta">Rainfall · <strong id="ed-map-rain-year">—</strong></div>
+          </div>
+        </div>
       </section>
+
+      <!-- Below-map bar: Add Sensor button opens the proposal form modal. -->
+      <div class="ed-region-map-bar ed-region-map-bar--below">
+        <button type="button" class="ed-add-sensor-btn" id="ed-add-sensor-btn" aria-haspopup="dialog">
+          + Add a sensor to the dashboard
+        </button>
+        <span class="ed-add-sensor-hint">Propose a new station — community-installed sensors welcome.</span>
+      </div>
 
       <div class="ed-grid">
         <!-- WEATHER -->
@@ -1097,6 +1117,65 @@ function renderEnvironmentalDashboard() {
           `).join('')}
         </div>
       </section>
+
+      <!-- Add Sensor modal: simple proposal form posted to
+           /api/regions/odemira/sensor-proposals — a curator follows up. -->
+      <div class="ed-modal" id="ed-add-sensor-modal" role="dialog" aria-modal="true" aria-labelledby="ed-add-sensor-title" hidden>
+        <div class="ed-modal-backdrop" data-close></div>
+        <div class="ed-modal-card ed-modal-card--narrow">
+          <div class="ed-modal-head">
+            <h2 class="ed-modal-title" id="ed-add-sensor-title">Add a sensor</h2>
+            <button type="button" class="ed-modal-close" data-close aria-label="Close">&times;</button>
+          </div>
+          <form class="ed-add-sensor-form" id="ed-add-sensor-form">
+            <label class="ed-form-row">
+              <span>Sensor type</span>
+              <select name="sensorType" required>
+                <option value="">Choose…</option>
+                <option value="weather">Weather Station</option>
+                <option value="river">River Gauge</option>
+                <option value="piezometer">Piezometer (groundwater level)</option>
+                <option value="groundwater_quality">Groundwater Quality</option>
+                <option value="spring">Spring</option>
+                <option value="soil">Soil Moisture / Temperature</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label class="ed-form-row">
+              <span>Location <em>(address, place name, or coordinates)</em></span>
+              <input name="location" type="text" required maxlength="280" placeholder="e.g. Quinta dos Cravos, São Teotónio" />
+            </label>
+            <div class="ed-form-row ed-form-row--split">
+              <label>
+                <span>Latitude <em>(optional)</em></span>
+                <input name="lat" type="number" step="0.000001" min="-90" max="90" placeholder="37.5500" />
+              </label>
+              <label>
+                <span>Longitude <em>(optional)</em></span>
+                <input name="lng" type="number" step="0.000001" min="-180" max="180" placeholder="-8.6400" />
+              </label>
+            </div>
+            <div class="ed-form-row ed-form-row--split">
+              <label>
+                <span>Your name</span>
+                <input name="contactName" type="text" maxlength="120" />
+              </label>
+              <label>
+                <span>Email <em>(required)</em></span>
+                <input name="contactEmail" type="email" required maxlength="200" />
+              </label>
+            </div>
+            <label class="ed-form-row">
+              <span>Notes <em>(optional)</em></span>
+              <textarea name="note" rows="3" maxlength="600" placeholder="What does it measure, how often, who owns it?"></textarea>
+            </label>
+            <div class="ed-form-actions">
+              <span class="ed-form-msg" id="ed-add-sensor-msg" aria-live="polite"></span>
+              <button type="submit" class="ed-form-submit" id="ed-add-sensor-submit">Submit proposal</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       <!-- Sensor Status modal: opens from the button above the map. Lists every
            sensor grouped by network with a status dot + latest reading date. -->
@@ -1684,6 +1763,194 @@ async function hydrateEnvironmentalDashboard() {
         }
       } catch (_) {}
     };
+    // Rainfall yearly map: SNIRH meteorological station precipitation per
+    // year, rendered as colored dots that change with the year slider.
+    let rainfallPromise = null;
+    const loadRainfallStations = () => {
+      if (rainfallPromise) return rainfallPromise;
+      rainfallPromise = fetch('/api/regions/odemira/rainfall-stations')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => {
+          if (!d || !d.ok || !Array.isArray(d.features) || !d.features.length) return null;
+          // Build a per-year FeatureCollection so swapping years is O(1) source setData.
+          const byYear = new Map();
+          let minYear = Infinity, maxYear = -Infinity;
+          for (const s of d.features) {
+            for (const r of s.series) {
+              if (!r.year || r.value == null) continue;
+              if (r.year < minYear) minYear = r.year;
+              if (r.year > maxYear) maxYear = r.year;
+              if (!byYear.has(r.year)) byYear.set(r.year, { type: 'FeatureCollection', features: [] });
+              byYear.get(r.year).features.push({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [s.lng, s.lat] },
+                properties: {
+                  value: r.value,
+                  displayName: s.displayName,
+                  unit: d.unit || 'mm/yr',
+                },
+              });
+            }
+          }
+          const years = [];
+          for (let y = minYear; y <= maxYear; y++) if (byYear.has(y)) years.push(y);
+          return { byYear, years, unit: d.unit || 'mm/yr' };
+        })
+        .catch(() => null);
+      return rainfallPromise;
+    };
+
+    const rainCtrls  = document.getElementById('ed-map-rain-controls');
+    const rainSlider = document.getElementById('ed-map-rain-slider');
+    const rainPlay   = document.getElementById('ed-map-rain-play');
+    const rainYearLbl = document.getElementById('ed-map-rain-year');
+    let rainData = null;
+    let rainPlayTimer = null;
+
+    const stopRainPlay = () => {
+      if (rainPlayTimer) { clearInterval(rainPlayTimer); rainPlayTimer = null; }
+      if (rainPlay) rainPlay.textContent = '▶';
+    };
+    const setRainYearIdx = (idx) => {
+      if (!rainData) return;
+      const year = rainData.years[Math.max(0, Math.min(idx, rainData.years.length - 1))];
+      if (year == null) return;
+      const src = map.getSource('rainfall');
+      if (src && src.setData) src.setData(rainData.byYear.get(year));
+      if (rainYearLbl) rainYearLbl.textContent = String(year);
+    };
+    const setRainfallVisible = async (on) => {
+      if (on) {
+        if (!rainData) rainData = await loadRainfallStations();
+        if (!rainData) return false;
+        const latestIdx = rainData.years.length - 1;
+        const initialYear = rainData.years[latestIdx];
+        if (!map.getSource('rainfall')) {
+          map.addSource('rainfall', { type: 'geojson', data: rainData.byYear.get(initialYear) });
+          map.addLayer({
+            id: 'rainfall-circles',
+            type: 'circle',
+            source: 'rainfall',
+            paint: {
+              'circle-radius': [
+                'interpolate', ['linear'], ['zoom'],
+                7, 6, 11, 12, 14, 20,
+              ],
+              'circle-color': [
+                'interpolate', ['linear'], ['get', 'value'],
+                400,  '#7d2a14',
+                600,  '#b85a3a',
+                800,  '#d6ad6a',
+                1000, '#a3b86c',
+                1200, '#3d8e6e',
+                1500, '#1d4e8e',
+              ],
+              'circle-opacity': 0.85,
+              'circle-stroke-color': '#fff',
+              'circle-stroke-width': 1.5,
+            },
+          });
+        } else {
+          map.setLayoutProperty('rainfall-circles', 'visibility', 'visible');
+        }
+        if (rainSlider) {
+          rainSlider.min = '0';
+          rainSlider.max = String(latestIdx);
+          rainSlider.value = String(latestIdx);
+        }
+        if (rainYearLbl) rainYearLbl.textContent = String(initialYear);
+        if (rainCtrls) rainCtrls.hidden = false;
+        return true;
+      }
+      stopRainPlay();
+      if (map.getLayer('rainfall-circles')) {
+        map.setLayoutProperty('rainfall-circles', 'visibility', 'none');
+      }
+      if (rainCtrls) rainCtrls.hidden = true;
+      return true;
+    };
+
+    if (rainSlider) {
+      rainSlider.addEventListener('input', () => {
+        stopRainPlay();
+        setRainYearIdx(Number(rainSlider.value));
+      });
+    }
+    if (rainPlay) {
+      rainPlay.addEventListener('click', () => {
+        if (rainPlayTimer) { stopRainPlay(); return; }
+        rainPlay.textContent = '❚❚';
+        rainPlayTimer = setInterval(() => {
+          if (!rainSlider) return;
+          const max = Number(rainSlider.max);
+          let next = Number(rainSlider.value) + 1;
+          if (next > max) next = 0;
+          rainSlider.value = String(next);
+          setRainYearIdx(next);
+        }, 600);
+      });
+    }
+
+    // Biodiversity heatmap (iNaturalist observations across all years) ----
+    let bioGeoJsonPromise = null;
+    const loadBioGeoJson = () => {
+      if (bioGeoJsonPromise) return bioGeoJsonPromise;
+      bioGeoJsonPromise = fetch('/api/regions/odemira/observations')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => (d && d.ok && d.geojson?.features?.length) ? d : null)
+        .catch(() => null);
+      return bioGeoJsonPromise;
+    };
+    const setBioVisible = async (on) => {
+      if (on) {
+        const data = await loadBioGeoJson();
+        if (!data) return false;
+        if (!map.getSource('bio-obs')) {
+          map.addSource('bio-obs', { type: 'geojson', data: data.geojson });
+          map.addLayer({
+            id: 'bio-heat',
+            type: 'heatmap',
+            source: 'bio-obs',
+            maxzoom: 14,
+            paint: {
+              'heatmap-weight': 1,
+              'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.6, 12, 1.8],
+              'heatmap-radius':    ['interpolate', ['linear'], ['zoom'], 7, 8, 10, 16, 13, 26],
+              'heatmap-opacity':   ['interpolate', ['linear'], ['zoom'], 7, 0.85, 14, 0.65],
+              'heatmap-color': [
+                'interpolate', ['linear'], ['heatmap-density'],
+                0,    'rgba(33,102,172,0)',
+                0.15, 'rgba(103,169,207,0.6)',
+                0.4,  'rgba(209,229,240,0.8)',
+                0.6,  'rgba(253,219,199,0.9)',
+                0.8,  'rgba(239,138,98,0.95)',
+                1.0,  'rgba(178,24,43,1)',
+              ],
+            },
+          });
+          map.addLayer({
+            id: 'bio-points',
+            type: 'circle',
+            source: 'bio-obs',
+            minzoom: 11,
+            paint: {
+              'circle-radius':       ['interpolate', ['linear'], ['zoom'], 11, 1.5, 14, 3.5],
+              'circle-color':        '#7a3220',
+              'circle-opacity':      0.55,
+              'circle-stroke-width': 0,
+            },
+          });
+        } else {
+          if (map.getLayer('bio-heat'))   map.setLayoutProperty('bio-heat',   'visibility', 'visible');
+          if (map.getLayer('bio-points')) map.setLayoutProperty('bio-points', 'visibility', 'visible');
+        }
+        return true;
+      }
+      if (map.getLayer('bio-heat'))   map.setLayoutProperty('bio-heat',   'visibility', 'none');
+      if (map.getLayer('bio-points')) map.setLayoutProperty('bio-points', 'visibility', 'none');
+      return true;
+    };
+
     const setLulcVisible = async (on) => {
       if (on) {
         if (!lulcYears.length) lulcYears = await loadLulcYears();
@@ -1762,13 +2029,40 @@ async function hydrateEnvironmentalDashboard() {
           <span class="ed-map-legend-label">${l}</span>
         </div>`).join('');
     };
-    const bioLegendHtml = () => `<span class="ed-map-legend-empty">Coming soon.</span>`;
+    const bioLegendHtml = () => `
+      <div class="ed-map-legend-row">
+        <span class="ed-map-legend-gradient"></span>
+        <span class="ed-map-legend-label">Observation density</span>
+      </div>
+      <div class="ed-map-legend-row" style="font-size:10px;color:#888;display:block;">
+        Source: iNaturalist · zoom in to see individual points
+      </div>`;
+
+    const rainLegendHtml = () => {
+      const chips = [
+        ['#7d2a14', '< 500 mm'],
+        ['#b85a3a', '500–700'],
+        ['#d6ad6a', '700–900'],
+        ['#a3b86c', '900–1100'],
+        ['#3d8e6e', '1100–1300'],
+        ['#1d4e8e', '> 1300'],
+      ];
+      return chips.map(([c, l]) =>
+        `<div class="ed-map-legend-row">
+          <span class="ed-map-legend-chip" style="background:${c}"></span>
+          <span class="ed-map-legend-label">${l}</span>
+        </div>`).join('') +
+        `<div class="ed-map-legend-row" style="font-size:10px;color:#888;display:block;">
+          Annual rainfall per SNIRH station (mm/yr)
+        </div>`;
+    };
 
     const VIEW_META = {
-      sensors: { title: 'SENSOR LEGEND',     body: sensorLegendHtml },
-      landuse: { title: 'LAND COVER LEGEND', body: lulcLegendHtml },
-      hydro:   { title: 'HYDROLOGY LEGEND',  body: hydroLegendHtml },
-      bio:     { title: 'BIODIVERSITY',      body: bioLegendHtml },
+      sensors:  { title: 'SENSOR LEGEND',     body: sensorLegendHtml },
+      landuse:  { title: 'LAND COVER LEGEND', body: lulcLegendHtml },
+      hydro:    { title: 'HYDROLOGY LEGEND',  body: hydroLegendHtml },
+      bio:      { title: 'BIODIVERSITY',      body: bioLegendHtml },
+      rainfall: { title: 'RAINFALL LEGEND',   body: rainLegendHtml },
     };
 
     let currentView = null;
@@ -1778,6 +2072,8 @@ async function hydrateEnvironmentalDashboard() {
       setMarkersVisible(view === 'sensors');
       setHydroHighlight(view === 'hydro');
       await setLulcVisible(view === 'landuse');
+      await setBioVisible(view === 'bio');
+      await setRainfallVisible(view === 'rainfall');
       currentView = view;
       // Sync button pressed states + active style
       viewBtns.forEach(btn => {
@@ -3146,6 +3442,58 @@ async function hydrateEnvironmentalDashboard() {
       const externalId = row.dataset.externalId;
       document.dispatchEvent(new CustomEvent('station:highlight', { detail: { source, externalId } }));
       closeModal();
+    });
+  })();
+
+  // ---- Add Sensor button + form -----------------------------------------
+  (() => {
+    const btn   = document.getElementById('ed-add-sensor-btn');
+    const modal = document.getElementById('ed-add-sensor-modal');
+    const form  = document.getElementById('ed-add-sensor-form');
+    const msg   = document.getElementById('ed-add-sensor-msg');
+    const submit = document.getElementById('ed-add-sensor-submit');
+    if (!btn || !modal || !form) return;
+
+    const openModal  = () => { modal.hidden = false; document.body.style.overflow = 'hidden'; };
+    const closeModal = () => { modal.hidden = true;  document.body.style.overflow = '';      };
+
+    btn.addEventListener('click', () => {
+      if (msg) { msg.textContent = ''; msg.className = 'ed-form-msg'; }
+      form.reset();
+      openModal();
+    });
+    modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeModal));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!submit || !msg) return;
+      submit.disabled = true;
+      msg.textContent = 'Submitting…';
+      msg.className = 'ed-form-msg';
+      const data = Object.fromEntries(new FormData(form).entries());
+      try {
+        const res = await fetch('/api/regions/odemira/sensor-proposals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const j = await res.json().catch(() => ({}));
+        if (!res.ok || !j.ok) {
+          msg.textContent = j.error || `Submission failed (HTTP ${res.status}).`;
+          msg.className = 'ed-form-msg ed-form-msg--error';
+          submit.disabled = false;
+          return;
+        }
+        msg.textContent = 'Thanks — a curator will follow up.';
+        msg.className = 'ed-form-msg ed-form-msg--ok';
+        form.reset();
+        setTimeout(() => { closeModal(); submit.disabled = false; }, 1500);
+      } catch (err) {
+        msg.textContent = err.message || 'Network error.';
+        msg.className = 'ed-form-msg ed-form-msg--error';
+        submit.disabled = false;
+      }
     });
   })();
 
