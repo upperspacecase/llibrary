@@ -646,6 +646,16 @@ function renderEnvironmentalDashboard() {
   return `
     <section class="ed-root" id="environmental-dashboard">
 
+      <!-- Top bar above the map: sensor status button (opens modal of every
+           sensor + its latest reading date). -->
+      <div class="ed-region-map-bar">
+        <button type="button" class="ed-sensor-status-btn" id="ed-sensor-status-btn" aria-haspopup="dialog">
+          <span class="ed-sensor-status-dot" id="ed-sensor-status-dot"></span>
+          <span>Sensor Status</span>
+          <span class="ed-sensor-status-meta" id="ed-sensor-status-meta">—</span>
+        </button>
+      </div>
+
       <!-- Region overview map: satellite basemap, custom letter-badge markers,
            top-left view buttons (exclusive), legend underneath that swaps with
            the active view, LULC year scrubber bottom-center when Land Use is on. -->
@@ -1087,6 +1097,20 @@ function renderEnvironmentalDashboard() {
           `).join('')}
         </div>
       </section>
+
+      <!-- Sensor Status modal: opens from the button above the map. Lists every
+           sensor grouped by network with a status dot + latest reading date. -->
+      <div class="ed-modal" id="ed-sensor-status-modal" role="dialog" aria-modal="true" aria-labelledby="ed-sensor-status-title" hidden>
+        <div class="ed-modal-backdrop" data-close></div>
+        <div class="ed-modal-card">
+          <div class="ed-modal-head">
+            <h2 class="ed-modal-title" id="ed-sensor-status-title">Sensor Status</h2>
+            <button type="button" class="ed-modal-close" data-close aria-label="Close">&times;</button>
+          </div>
+          <div class="ed-modal-sub" id="ed-sensor-status-sub">Loading sensor inventory…</div>
+          <div class="ed-modal-body" id="ed-sensor-status-body"></div>
+        </div>
+      </div>
     </section>
   `;
 }
@@ -2996,6 +3020,133 @@ async function hydrateEnvironmentalDashboard() {
     renderSpark();
     renderStats(maxYear);
     hydrated += 1;
+  })();
+
+  // ---- Sensor Status button + modal --------------------------------------
+  // Pulls /api/regions/odemira/station-status (one row per SNIRH station, with
+  // the latest reading timestamp across any parameter + a freshness bucket).
+  (async () => {
+    const btn   = document.getElementById('ed-sensor-status-btn');
+    const modal = document.getElementById('ed-sensor-status-modal');
+    if (!btn || !modal) return;
+
+    const dot      = document.getElementById('ed-sensor-status-dot');
+    const meta     = document.getElementById('ed-sensor-status-meta');
+    const subEl    = document.getElementById('ed-sensor-status-sub');
+    const bodyEl   = document.getElementById('ed-sensor-status-body');
+
+    let data = null;
+    try {
+      const res = await fetch('/api/regions/odemira/station-status');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'unknown');
+    } catch (e) {
+      if (meta) meta.textContent = 'unavailable';
+      console.warn('[sensor-status] fetch failed:', e.message);
+      return;
+    }
+
+    const c = data.counts || {};
+    const onlinePct = c.total ? Math.round((c.online / c.total) * 100) : 0;
+    const summary   = `${c.online}/${c.total} online`;
+    if (meta) meta.textContent = summary;
+    if (dot) {
+      // Aggregate dot color: green if >=80% online, amber if >=50%, red otherwise.
+      dot.style.background = onlinePct >= 80 ? '#1db073'
+        : onlinePct >= 50 ? '#e58a3a' : '#b85a3a';
+    }
+
+    const STATUS_META = {
+      online: { color: '#1db073', label: 'Online' },
+      stale:  { color: '#e58a3a', label: 'Stale' },
+      dead:   { color: '#b85a3a', label: 'Dead' },
+      never:  { color: '#9aa0a6', label: 'No data' },
+    };
+
+    function fmtAge(iso) {
+      if (!iso) return 'never';
+      const ms = Date.now() - new Date(iso).getTime();
+      const days = ms / 86400000;
+      if (days < 1) return 'today';
+      if (days < 30) return `${Math.round(days)} d ago`;
+      if (days < 365) return `${Math.round(days / 30)} mo ago`;
+      return `${Math.round(days / 365)} yr ago`;
+    }
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      return new Date(iso).toISOString().slice(0, 10);
+    }
+
+    // Group stations by type, preserving the sensor-legend ordering.
+    const TYPE_ORDER = ['Weather Station', 'River Gauge', 'Piezometer', 'Groundwater Quality', 'Spring'];
+    const grouped = {};
+    for (const s of data.stations) {
+      (grouped[s.type] = grouped[s.type] || []).push(s);
+    }
+    for (const t of Object.keys(grouped)) {
+      grouped[t].sort((a, b) => {
+        // Online → stale → dead → never. Within each, recent first.
+        const rank = { online: 0, stale: 1, dead: 2, never: 3 };
+        const r = rank[a.status] - rank[b.status];
+        if (r !== 0) return r;
+        return (b.lastReadingAt || '').localeCompare(a.lastReadingAt || '');
+      });
+    }
+
+    if (subEl) {
+      subEl.innerHTML = `
+        <span class="ed-modal-pill" style="background:#1db07322;color:#147a52">${c.online} online</span>
+        <span class="ed-modal-pill" style="background:#e58a3a22;color:#a26323">${c.stale} stale</span>
+        <span class="ed-modal-pill" style="background:#b85a3a22;color:#7d3a22">${c.dead} dead</span>
+        <span class="ed-modal-pill" style="background:#9aa0a622;color:#5e6368">${c.never} no data</span>
+        <span class="ed-modal-sub-time">Latest reading per station · refreshed ${fmtDate(data.generatedAt)}</span>
+      `;
+    }
+    if (bodyEl) {
+      bodyEl.innerHTML = TYPE_ORDER
+        .filter(t => grouped[t])
+        .map(t => {
+          const rows = grouped[t].map(s => {
+            const m = STATUS_META[s.status];
+            return `
+              <li class="ed-sensor-row" data-source="${s.source}" data-external-id="${s.externalId}">
+                <span class="ed-sensor-dot" style="background:${m.color}" title="${m.label}"></span>
+                <span class="ed-sensor-name">
+                  <strong>${s.displayName}</strong>
+                  ${s.parish ? `<span>${s.parish}</span>` : ''}
+                </span>
+                <span class="ed-sensor-age">${fmtAge(s.lastReadingAt)}</span>
+                <span class="ed-sensor-date">${fmtDate(s.lastReadingAt)}</span>
+              </li>`;
+          }).join('');
+          return `
+            <section class="ed-sensor-group">
+              <header class="ed-sensor-group-head">
+                <span>${t}</span>
+                <span class="ed-sensor-group-count">${grouped[t].length}</span>
+              </header>
+              <ul class="ed-sensor-list">${rows}</ul>
+            </section>`;
+        }).join('');
+    }
+
+    // Open / close wiring
+    const openModal  = () => { modal.hidden = false; document.body.style.overflow = 'hidden'; };
+    const closeModal = () => { modal.hidden = true;  document.body.style.overflow = '';      };
+    btn.addEventListener('click', openModal);
+    modal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeModal));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeModal(); });
+
+    // Click a row → highlight the matching marker on the satellite map
+    bodyEl?.addEventListener('click', (e) => {
+      const row = e.target.closest('.ed-sensor-row');
+      if (!row) return;
+      const source = row.dataset.source;
+      const externalId = row.dataset.externalId;
+      document.dispatchEvent(new CustomEvent('station:highlight', { detail: { source, externalId } }));
+      closeModal();
+    });
   })();
 
   console.log(`[dashboard] hydrated ${hydrated} cell${hydrated === 1 ? '' : 's'} from /api/regions/odemira (runId ${payload.runId})`);

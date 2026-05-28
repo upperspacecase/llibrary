@@ -8629,6 +8629,40 @@ a {
 
 /* Region overview map — satellite basemap with overlaid toggle column +
    sensor legend pill. No outer panel chrome; the map IS the panel. */
+.ed-region-map-bar {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 0 10px;
+}
+.ed-sensor-status-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #2C2C2C;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  transition: background 0.12s ease;
+}
+.ed-sensor-status-btn:hover { background: #f5f1e8; }
+.ed-sensor-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1db073;
+}
+.ed-sensor-status-meta {
+  font-weight: 500;
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
 .ed-region-map-block {
   position: relative;
   border: 1px solid var(--card-border);
@@ -9440,6 +9474,129 @@ a {
 .ed-map-lulc-meta strong {
   color: #fff;
   font-weight: 700;
+}
+
+/* Sensor Status modal -------------------------------------------------- */
+.ed-modal { position: fixed; inset: 0; z-index: 100; }
+.ed-modal[hidden] { display: none; }
+.ed-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.55);
+}
+.ed-modal-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  width: min(720px, 92vw);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+}
+.ed-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 8px;
+  border-bottom: 1px solid #eee5d8;
+}
+.ed-modal-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: #2C2C2C;
+  margin: 0;
+}
+.ed-modal-close {
+  background: transparent;
+  border: 0;
+  font-size: 22px;
+  cursor: pointer;
+  color: #888;
+  line-height: 1;
+  padding: 2px 8px;
+}
+.ed-modal-close:hover { color: #2C2C2C; }
+.ed-modal-sub {
+  padding: 10px 22px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  border-bottom: 1px solid #eee5d8;
+}
+.ed-modal-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+}
+.ed-modal-sub-time {
+  margin-left: auto;
+  font-size: 11px;
+  color: #888;
+}
+.ed-modal-body {
+  padding: 16px 22px 22px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ed-sensor-group-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 6px;
+}
+.ed-sensor-group-count { color: #888; font-variant-numeric: tabular-nums; }
+.ed-sensor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #eee5d8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.ed-sensor-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  border-top: 1px solid #f3ecdd;
+}
+.ed-sensor-row:first-child { border-top: 0; }
+.ed-sensor-row:hover { background: #f9f5ec; }
+.ed-sensor-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.ed-sensor-name strong { display: block; color: #2C2C2C; font-weight: 600; }
+.ed-sensor-name span { display: block; font-size: 10px; color: #888; }
+.ed-sensor-age {
+  font-size: 11px;
+  color: #555;
+  font-variant-numeric: tabular-nums;
+}
+.ed-sensor-date {
+  font-size: 10px;
+  color: #888;
+  font-family: 'Inter', system-ui, monospace;
+  font-variant-numeric: tabular-nums;
 }
 
 /* iNaturalist observation heatmap card */
