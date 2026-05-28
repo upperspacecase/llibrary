@@ -647,37 +647,37 @@ function renderEnvironmentalDashboard() {
     <section class="ed-root" id="environmental-dashboard">
 
       <!-- Region overview map: satellite basemap, custom letter-badge markers,
-           left-side toggles, sensor legend bottom-right. -->
+           top-left view buttons (exclusive), legend underneath that swaps with
+           the active view, LULC year scrubber bottom-center when Land Use is on. -->
       <section class="ed-region-map-block">
         <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
 
-        <div class="ed-map-toggles" role="group" aria-label="Map layer toggles">
-          <label class="ed-map-toggle" data-toggle="sensors">
-            <span class="ed-map-toggle-icon">${lucide('radio', 16)}</span>
-            <span class="ed-map-toggle-label">Sensor Network</span>
-            <span class="ed-map-toggle-switch"><input type="checkbox" checked /><i></i></span>
-          </label>
-          <label class="ed-map-toggle" data-toggle="landuse">
-            <span class="ed-map-toggle-icon">${lucide('grid', 16)}</span>
-            <span class="ed-map-toggle-label">Land Use</span>
-            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
-          </label>
-          <label class="ed-map-toggle" data-toggle="hydro">
-            <span class="ed-map-toggle-icon">${lucide('droplet', 16)}</span>
-            <span class="ed-map-toggle-label">Hydrological Map</span>
-            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
-          </label>
-          <label class="ed-map-toggle" data-toggle="bio">
-            <span class="ed-map-toggle-icon">${lucide('leaf', 16)}</span>
-            <span class="ed-map-toggle-label">Biodiversity</span>
-            <span class="ed-map-toggle-switch"><input type="checkbox" /><i></i></span>
-          </label>
-        </div>
+        <div class="ed-map-overlay">
+          <div class="ed-map-views" role="group" aria-label="Map view">
+            <div class="ed-map-views-title">MAP LAYERS</div>
+            <button type="button" class="ed-map-view-btn is-active" data-view="sensors" aria-pressed="true">
+              <span class="ed-map-view-icon">${lucide('radio', 14)}</span>
+              <span>Sensor Network</span>
+            </button>
+            <button type="button" class="ed-map-view-btn" data-view="landuse" aria-pressed="false">
+              <span class="ed-map-view-icon">${lucide('grid', 14)}</span>
+              <span>Land Use</span>
+            </button>
+            <button type="button" class="ed-map-view-btn" data-view="hydro" aria-pressed="false">
+              <span class="ed-map-view-icon">${lucide('droplet', 14)}</span>
+              <span>Hydrological Map</span>
+            </button>
+            <button type="button" class="ed-map-view-btn" data-view="bio" aria-pressed="false" disabled>
+              <span class="ed-map-view-icon">${lucide('leaf', 14)}</span>
+              <span>Biodiversity</span>
+            </button>
+          </div>
 
-        <div class="ed-map-legend" id="ed-map-legend">
-          <div class="ed-map-legend-title">SENSOR LEGEND</div>
-          <div class="ed-map-legend-body" id="ed-map-legend-body">
-            <span class="ed-map-legend-empty">Loading…</span>
+          <div class="ed-map-legend" id="ed-map-legend">
+            <div class="ed-map-legend-title" id="ed-map-legend-title">SENSOR LEGEND</div>
+            <div class="ed-map-legend-body" id="ed-map-legend-body">
+              <span class="ed-map-legend-empty">Loading…</span>
+            </div>
           </div>
         </div>
 
@@ -1488,7 +1488,7 @@ async function hydrateEnvironmentalDashboard() {
   (async () => {
     const container = document.getElementById('ed-station-map');
     const legendEl  = document.getElementById('ed-map-legend-body');
-    const togglesEl = document.querySelector('.ed-map-toggles');
+    const togglesEl = document.querySelector('.ed-map-views');
     if (!container || !legendEl || !togglesEl) return;
     let payloadStations;
     try {
@@ -1598,68 +1598,14 @@ async function hydrateEnvironmentalDashboard() {
         }
       }
       if (pendingHighlight) { applyHighlight(pendingHighlight); pendingHighlight = null; }
+      // Re-apply current view now that markers + style are ready (markers
+      // mount async after first setView call).
+      if (currentView) setView(currentView);
     });
 
-    // ---- Toggle wiring ----
-    const sensorsToggle = togglesEl.querySelector('[data-toggle="sensors"] input');
-    const hydroToggle   = togglesEl.querySelector('[data-toggle="hydro"] input');
-    const landuseToggle = togglesEl.querySelector('[data-toggle="landuse"] input');
-    // Biodiversity is a placeholder for now; the switch animates but the
-    // layer doesn't exist yet.
-
-    if (sensorsToggle) {
-      sensorsToggle.addEventListener('change', () => {
-        const visible = sensorsToggle.checked;
-        for (const src of Object.keys(markersBySource)) {
-          for (const m of markersBySource[src]) {
-            m.getElement().style.display = visible ? '' : 'none';
-          }
-        }
-        if (legendEl.parentElement) {
-          legendEl.parentElement.style.display = visible ? '' : 'none';
-        }
-      });
-    }
-
-    if (hydroToggle) {
-      hydroToggle.addEventListener('change', () => {
-        const on = hydroToggle.checked;
-        try {
-          // Rivers / streams / canals
-          if (map.getLayer('waterway')) {
-            map.setPaintProperty('waterway', 'line-opacity', on ? 1 : 0.6);
-            map.setPaintProperty('waterway', 'line-color', on ? '#38bdf8' : null);
-            map.setPaintProperty('waterway', 'line-width', on
-              ? ['interpolate', ['linear'], ['zoom'], 8, 0.8, 12, 1.8, 16, 3]
-              : null);
-          }
-          // Lakes / reservoirs / coast (polygon fill in satellite-streets-v12)
-          if (map.getLayer('water')) {
-            map.setPaintProperty('water', 'fill-color', on ? '#0c4a6e' : null);
-            map.setPaintProperty('water', 'fill-opacity', on ? 0.55 : null);
-          }
-          // Bright stroke around every water polygon — added once, visibility toggled.
-          if (!map.getLayer('ed-water-outline')) {
-            map.addLayer({
-              id: 'ed-water-outline',
-              type: 'line',
-              source: 'composite',
-              'source-layer': 'water',
-              paint: {
-                'line-color': '#38bdf8',
-                'line-width': 1.5,
-                'line-opacity': 0.95,
-              },
-              layout: { visibility: on ? 'visible' : 'none' },
-            });
-          } else {
-            map.setLayoutProperty('ed-water-outline', 'visibility', on ? 'visible' : 'none');
-          }
-        } catch (_) {}
-      });
-    }
-
-    // ---- Land Use toggle: Esri Living Atlas Sentinel-2 10m raster + scrubber ----
+    // ---- View buttons (exclusive — one map view at a time) ----
+    const viewBtns    = togglesEl.querySelectorAll('.ed-map-view-btn');
+    const legendTitle = document.getElementById('ed-map-legend-title');
     const lulcCtrls   = document.getElementById('ed-map-lulc-controls');
     const lulcSlider  = document.getElementById('ed-map-lulc-slider');
     const lulcPlayBtn = document.getElementById('ed-map-lulc-play');
@@ -1680,44 +1626,153 @@ async function hydrateEnvironmentalDashboard() {
       if (lulcYearLbl) lulcYearLbl.textContent = String(y.year);
     };
 
-    if (landuseToggle) {
-      landuseToggle.addEventListener('change', async () => {
-        const on = landuseToggle.checked;
-        if (on) {
-          if (!lulcYears.length) lulcYears = await loadLulcYears();
-          if (!lulcYears.length) { landuseToggle.checked = false; return; }
-          const latestIdx = lulcYears.length - 1;
-          if (!map.getSource('lulc-top')) {
-            map.addSource('lulc-top', {
-              type: 'raster',
-              tiles: [lulcTileUrl(lulcYears[latestIdx].oid)],
-              tileSize: 512,
-            });
-            map.addLayer({
-              id: 'lulc-top-layer',
-              type: 'raster',
-              source: 'lulc-top',
-              paint: { 'raster-opacity': 0.7 },
-            });
-          } else {
-            map.setLayoutProperty('lulc-top-layer', 'visibility', 'visible');
-          }
-          if (lulcSlider) {
-            lulcSlider.min = '0';
-            lulcSlider.max = String(latestIdx);
-            lulcSlider.value = String(latestIdx);
-          }
-          if (lulcYearLbl) lulcYearLbl.textContent = String(lulcYears[latestIdx].year);
-          if (lulcCtrls) lulcCtrls.hidden = false;
-        } else {
-          stopLulcPlay();
-          if (map.getLayer('lulc-top-layer')) {
-            map.setLayoutProperty('lulc-top-layer', 'visibility', 'none');
-          }
-          if (lulcCtrls) lulcCtrls.hidden = true;
+    const setMarkersVisible = (visible) => {
+      for (const src of Object.keys(markersBySource)) {
+        for (const m of markersBySource[src]) {
+          m.getElement().style.display = visible ? '' : 'none';
         }
+      }
+    };
+    const setHydroHighlight = (on) => {
+      try {
+        if (map.getLayer('waterway')) {
+          map.setPaintProperty('waterway', 'line-opacity', on ? 1 : 0.6);
+          map.setPaintProperty('waterway', 'line-color', on ? '#38bdf8' : null);
+          map.setPaintProperty('waterway', 'line-width', on
+            ? ['interpolate', ['linear'], ['zoom'], 8, 0.8, 12, 1.8, 16, 3]
+            : null);
+        }
+        if (map.getLayer('water')) {
+          map.setPaintProperty('water', 'fill-color', on ? '#0c4a6e' : null);
+          map.setPaintProperty('water', 'fill-opacity', on ? 0.55 : null);
+        }
+        if (!map.getLayer('ed-water-outline')) {
+          map.addLayer({
+            id: 'ed-water-outline',
+            type: 'line',
+            source: 'composite',
+            'source-layer': 'water',
+            paint: { 'line-color': '#38bdf8', 'line-width': 1.5, 'line-opacity': 0.95 },
+            layout: { visibility: on ? 'visible' : 'none' },
+          });
+        } else {
+          map.setLayoutProperty('ed-water-outline', 'visibility', on ? 'visible' : 'none');
+        }
+      } catch (_) {}
+    };
+    const setLulcVisible = async (on) => {
+      if (on) {
+        if (!lulcYears.length) lulcYears = await loadLulcYears();
+        if (!lulcYears.length) return false;
+        const latestIdx = lulcYears.length - 1;
+        if (!map.getSource('lulc-top')) {
+          map.addSource('lulc-top', {
+            type: 'raster',
+            tiles: [lulcTileUrl(lulcYears[latestIdx].oid)],
+            tileSize: 512,
+          });
+          map.addLayer({
+            id: 'lulc-top-layer',
+            type: 'raster',
+            source: 'lulc-top',
+            paint: { 'raster-opacity': 0.75 },
+          });
+        } else {
+          map.setLayoutProperty('lulc-top-layer', 'visibility', 'visible');
+        }
+        if (lulcSlider) {
+          lulcSlider.min = '0';
+          lulcSlider.max = String(latestIdx);
+          lulcSlider.value = String(latestIdx);
+        }
+        if (lulcYearLbl) lulcYearLbl.textContent = String(lulcYears[latestIdx].year);
+        if (lulcCtrls) lulcCtrls.hidden = false;
+        return true;
+      }
+      stopLulcPlay();
+      if (map.getLayer('lulc-top-layer')) {
+        map.setLayoutProperty('lulc-top-layer', 'visibility', 'none');
+      }
+      if (lulcCtrls) lulcCtrls.hidden = true;
+      return true;
+    };
+
+    // Per-view legend bodies — class chips for Land Use, water types for Hydro,
+    // and the sensor-network letter badges for Sensors (rebuilt from `grouped`).
+    const sensorLegendHtml = () => LEGEND_ORDER
+      .filter(s => grouped[s] && grouped[s].length)
+      .map(s => {
+        const meta = sourceMeta[s];
+        const n = grouped[s].length;
+        return `
+          <div class="ed-map-legend-row">
+            <span class="ed-map-marker-badge" style="background:${meta.color}">${meta.glyph}</span>
+            <span class="ed-map-legend-label">${meta.label}</span>
+            <span class="ed-map-legend-count">(${n})</span>
+          </div>`;
+      }).join('');
+    const lulcLegendHtml = () => {
+      const chips = [
+        ['#3d6b48', 'Trees'],
+        ['#c9c08a', 'Rangeland'],
+        ['#d4a574', 'Crops'],
+        ['#9d6360', 'Built Area'],
+        ['#3d6b8c', 'Water'],
+        ['#7a9a6e', 'Flooded Vegetation'],
+        ['#a89580', 'Bare Ground'],
+      ];
+      return chips.map(([c, l]) =>
+        `<div class="ed-map-legend-row">
+          <span class="ed-map-legend-chip" style="background:${c}"></span>
+          <span class="ed-map-legend-label">${l}</span>
+        </div>`).join('');
+    };
+    const hydroLegendHtml = () => {
+      const chips = [
+        ['#0c4a6e', 'Lakes / reservoirs / coast'],
+        ['#38bdf8', 'Rivers / streams / canals'],
+      ];
+      return chips.map(([c, l]) =>
+        `<div class="ed-map-legend-row">
+          <span class="ed-map-legend-chip" style="background:${c}"></span>
+          <span class="ed-map-legend-label">${l}</span>
+        </div>`).join('');
+    };
+    const bioLegendHtml = () => `<span class="ed-map-legend-empty">Coming soon.</span>`;
+
+    const VIEW_META = {
+      sensors: { title: 'SENSOR LEGEND',     body: sensorLegendHtml },
+      landuse: { title: 'LAND COVER LEGEND', body: lulcLegendHtml },
+      hydro:   { title: 'HYDROLOGY LEGEND',  body: hydroLegendHtml },
+      bio:     { title: 'BIODIVERSITY',      body: bioLegendHtml },
+    };
+
+    let currentView = null;
+    const setView = async (view) => {
+      // Re-runnable: idempotent across markers/layers/legend, so map.on('load')
+      // can call it again to apply the chosen view once markers are mounted.
+      setMarkersVisible(view === 'sensors');
+      setHydroHighlight(view === 'hydro');
+      await setLulcVisible(view === 'landuse');
+      currentView = view;
+      // Sync button pressed states + active style
+      viewBtns.forEach(btn => {
+        const active = btn.dataset.view === view;
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.classList.toggle('is-active', active);
       });
-    }
+      // Swap legend
+      const meta = VIEW_META[view];
+      if (meta) {
+        if (legendTitle) legendTitle.textContent = meta.title;
+        if (legendEl)    legendEl.innerHTML = meta.body();
+      }
+    };
+
+    viewBtns.forEach(btn => {
+      if (btn.disabled) return;
+      btn.addEventListener('click', () => { setView(btn.dataset.view); });
+    });
 
     if (lulcSlider) {
       lulcSlider.addEventListener('input', () => {
@@ -1739,6 +1794,9 @@ async function hydrateEnvironmentalDashboard() {
         }, 900);
       });
     }
+
+    // Boot into the sensor view (matches the default is-active button).
+    setView('sensors');
 
     hydrated += 1;
   })();
