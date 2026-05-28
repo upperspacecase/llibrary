@@ -8,7 +8,7 @@
 
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
-import { fetchJson } from '../lib/dashboard-fetch.js';
+import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
@@ -1100,7 +1100,7 @@ function renderDashboardError(message) {
 async function hydrateEnvironmentalDashboard() {
   let payload;
   try {
-    payload = await fetchJson('/api/regions/odemira');
+    payload = await fetchDashboard('/data/odemira/facts.json', '/api/regions/odemira');
     if (!payload?.ok) throw new Error(payload?.error || 'payload not ok');
   } catch (e) {
     console.warn('[dashboard] fetch failed:', e.message);
@@ -1576,7 +1576,7 @@ async function hydrateEnvironmentalDashboard() {
     if (!container || !legendEl || !togglesEl) return;
     let payloadStations;
     try {
-      payloadStations = await fetchJson('/api/regions/odemira/stations');
+      payloadStations = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
       if (!payloadStations?.ok || !Array.isArray(payloadStations.features)) return;
     } catch { return; }
 
@@ -1762,7 +1762,7 @@ async function hydrateEnvironmentalDashboard() {
     let rainfallPromise = null;
     const loadRainfallStations = () => {
       if (rainfallPromise) return rainfallPromise;
-      rainfallPromise = fetchJson('/api/regions/odemira/rainfall-stations')
+      rainfallPromise = fetchDashboard('/data/odemira/rainfall-stations.json', '/api/regions/odemira/rainfall-stations')
         .catch(() => null)
         .then(d => {
           if (!d || !d.ok || !Array.isArray(d.features) || !d.features.length) return null;
@@ -1937,7 +1937,7 @@ async function hydrateEnvironmentalDashboard() {
 
     const loadBioGeoJson = () => {
       if (bioGeoJsonPromise) return bioGeoJsonPromise;
-      bioGeoJsonPromise = fetchJson('/api/regions/odemira/observations')
+      bioGeoJsonPromise = fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations')
         .then(d => (d && d.ok && d.geojson?.features?.length) ? d : null)
         .catch(() => null);
       return bioGeoJsonPromise;
@@ -2301,7 +2301,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let payloadResv;
     try {
-      payloadResv = await fetchJson('/api/regions/odemira/reservoirs');
+      payloadResv = await fetchDashboard('/data/odemira/reservoirs.json', '/api/regions/odemira/reservoirs');
       if (!payloadResv?.ok || !Array.isArray(payloadResv.features) || !payloadResv.features.length) return;
     } catch { return; }
     const features = payloadResv.features;
@@ -2448,7 +2448,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchJson('/api/regions/odemira/groundwater');
+      data = await fetchDashboard('/data/odemira/groundwater.json', '/api/regions/odemira/groundwater');
       if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
@@ -2553,7 +2553,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchJson('/api/regions/odemira/rainfall');
+      data = await fetchDashboard('/data/odemira/rainfall.json', '/api/regions/odemira/rainfall');
       if (!data?.ok || !Array.isArray(data.years) || !data.years.length) return;
     } catch { return; }
 
@@ -2616,7 +2616,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchJson('/api/regions/odemira/reservoirs');
+      data = await fetchDashboard('/data/odemira/reservoirs.json', '/api/regions/odemira/reservoirs');
       if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
@@ -2700,7 +2700,7 @@ async function hydrateEnvironmentalDashboard() {
     if (!nChart && !mChart) return;
     let data;
     try {
-      data = await fetchJson('/api/regions/odemira/water-quality');
+      data = await fetchDashboard('/data/odemira/water-quality.json', '/api/regions/odemira/water-quality');
       if (!data?.ok) return;
     } catch { return; }
 
@@ -2824,7 +2824,7 @@ async function hydrateEnvironmentalDashboard() {
     if (!grid) return;
     let stations;
     try {
-      const data = await fetchJson('/api/regions/odemira/stations');
+      const data = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
       if (!data?.ok || !Array.isArray(data.features)) return;
       stations = data.features;
     } catch { return; }
@@ -3029,7 +3029,7 @@ async function hydrateEnvironmentalDashboard() {
     // ---- iNaturalist observations: per-year stacked bars + species table --
     let obs;
     try {
-      obs = await fetchJson('/api/regions/odemira/observations');
+      obs = await fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations');
     } catch { obs = null; }
 
     const svg = document.getElementById('ed-bio-yearbars');
@@ -3221,7 +3221,7 @@ async function hydrateEnvironmentalDashboard() {
   // evaporation. Each station gets a line; the hero is bright + on top, the
   // others muted. Dropdown + click-tile drive hero selection and emit a
   // station:highlight event so the map dot lights up.
-  async function hydrateAnnualLinesCard({ endpoint, ids, source, unit, decimals = 0 }) {
+  async function hydrateAnnualLinesCard({ endpoint, staticEndpoint, ids, source, unit, decimals = 0 }) {
     const chart    = document.getElementById(ids.chart);
     const select   = document.getElementById(ids.select);
     const readings = ids.readings  ? document.getElementById(ids.readings)  : null;
@@ -3231,7 +3231,9 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchJson(endpoint);
+      data = staticEndpoint
+        ? await fetchDashboard(staticEndpoint, endpoint)
+        : await fetchJson(endpoint);
       if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
@@ -3369,6 +3371,7 @@ async function hydrateEnvironmentalDashboard() {
   }
 
   hydrateAnnualLinesCard({
+    staticEndpoint: '/data/odemira/rainfall-stations.json',
     endpoint: '/api/regions/odemira/rainfall-stations',
     ids: {
       chart: 'ed-met-rainfall-chart',
@@ -3395,7 +3398,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data = null;
     try {
-      data = await fetchJson('/api/regions/odemira/station-status');
+      data = await fetchDashboard('/data/odemira/station-status.json', '/api/regions/odemira/station-status');
       if (!data?.ok) throw new Error(data?.error || 'unknown');
     } catch (e) {
       if (meta) meta.textContent = 'unavailable';

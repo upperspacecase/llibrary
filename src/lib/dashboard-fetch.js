@@ -28,3 +28,20 @@ export async function fetchJson(url, { timeoutMs = 8000, retries = 1 } = {}) {
   }
   throw lastError;
 }
+
+/**
+ * Read a baked dashboard dataset, falling back to the live API endpoint if
+ * the static file is missing (e.g. local dev where `npm run bake:odemira`
+ * hasn't been run, or a build where the bake step skipped a target).
+ *
+ * Static read uses no retries — if the file 404s we want to fail fast and
+ * fall through to /api which has its own retry.
+ */
+export async function fetchDashboard(staticUrl, apiUrl, opts = {}) {
+  try {
+    return await fetchJson(staticUrl, { ...opts, retries: 0, timeoutMs: opts.timeoutMs ?? 4000 });
+  } catch (err) {
+    if (!apiUrl) throw err;
+    return await fetchJson(apiUrl, opts);
+  }
+}
