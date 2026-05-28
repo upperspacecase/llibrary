@@ -1589,8 +1589,19 @@ async function hydrateEnvironmentalDashboard() {
       if (!lulcYears.length) return;
       const y = lulcYears[Math.max(0, Math.min(idx, lulcYears.length - 1))];
       if (!y) return;
-      const src = map.getSource('lulc-top');
-      if (src && src.setTiles) src.setTiles([lulcTileUrl(y.oid)]);
+      // Ping-pong the inactive raster source onto the new year, then crossfade.
+      const inactive = lulcActive === 'a' ? 'b' : 'a';
+      const inactiveSrc = map.getSource(`lulc-top-${inactive}`);
+      if (inactiveSrc && inactiveSrc.setTiles) {
+        inactiveSrc.setTiles([lulcTileUrl(y.oid)]);
+      }
+      if (map.getLayer(`lulc-top-${inactive}-layer`)) {
+        map.setPaintProperty(`lulc-top-${inactive}-layer`, 'raster-opacity', 0.75);
+      }
+      if (map.getLayer(`lulc-top-${lulcActive}-layer`)) {
+        map.setPaintProperty(`lulc-top-${lulcActive}-layer`, 'raster-opacity', 0);
+      }
+      lulcActive = inactive;
       if (lulcYearLbl) lulcYearLbl.textContent = String(y.year);
     };
 
@@ -1692,31 +1703,50 @@ async function hydrateEnvironmentalDashboard() {
         const initialYear = rainData.years[latestIdx];
         if (!map.getSource('rainfall')) {
           map.addSource('rainfall', { type: 'geojson', data: rainData.byYear.get(initialYear) });
+          // Diffuse heatmap: weight by mm/yr so wet stations push more
+          // density. Big radius so a sparse station network reads as a
+          // regional rainfall surface, not isolated dots.
           map.addLayer({
-            id: 'rainfall-circles',
+            id: 'rainfall-heat',
+            type: 'heatmap',
+            source: 'rainfall',
+            paint: {
+              'heatmap-weight': [
+                'interpolate', ['linear'], ['get', 'value'],
+                300, 0.1,
+                1500, 1,
+              ],
+              'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.9, 12, 1.4],
+              'heatmap-radius':    ['interpolate', ['linear'], ['zoom'], 7, 60, 10, 110, 13, 180],
+              'heatmap-opacity':   0.75,
+              'heatmap-color': [
+                'interpolate', ['linear'], ['heatmap-density'],
+                0,    'rgba(125,42,20,0)',
+                0.15, 'rgba(184,90,58,0.55)',
+                0.35, 'rgba(214,173,106,0.75)',
+                0.55, 'rgba(163,184,108,0.85)',
+                0.75, 'rgba(61,142,110,0.9)',
+                1.0,  'rgba(29,78,142,0.95)',
+              ],
+            },
+          });
+          // Tiny dots at the actual station coordinates so the diffusion is
+          // anchored to real measurements, not invented.
+          map.addLayer({
+            id: 'rainfall-points',
             type: 'circle',
             source: 'rainfall',
             paint: {
-              'circle-radius': [
-                'interpolate', ['linear'], ['zoom'],
-                7, 6, 11, 12, 14, 20,
-              ],
-              'circle-color': [
-                'interpolate', ['linear'], ['get', 'value'],
-                400,  '#7d2a14',
-                600,  '#b85a3a',
-                800,  '#d6ad6a',
-                1000, '#a3b86c',
-                1200, '#3d8e6e',
-                1500, '#1d4e8e',
-              ],
-              'circle-opacity': 0.85,
+              'circle-radius': 3,
+              'circle-color': '#1B3A2F',
+              'circle-opacity': 0.9,
               'circle-stroke-color': '#fff',
-              'circle-stroke-width': 1.5,
+              'circle-stroke-width': 1,
             },
           });
         } else {
-          map.setLayoutProperty('rainfall-circles', 'visibility', 'visible');
+          if (map.getLayer('rainfall-heat'))   map.setLayoutProperty('rainfall-heat',   'visibility', 'visible');
+          if (map.getLayer('rainfall-points')) map.setLayoutProperty('rainfall-points', 'visibility', 'visible');
         }
         if (rainSlider) {
           rainSlider.min = '0';
@@ -1728,9 +1758,8 @@ async function hydrateEnvironmentalDashboard() {
         return true;
       }
       stopRainPlay();
-      if (map.getLayer('rainfall-circles')) {
-        map.setLayoutProperty('rainfall-circles', 'visibility', 'none');
-      }
+      if (map.getLayer('rainfall-heat'))   map.setLayoutProperty('rainfall-heat',   'visibility', 'none');
+      if (map.getLayer('rainfall-points')) map.setLayoutProperty('rainfall-points', 'visibility', 'none');
       if (rainCtrls) rainCtrls.hidden = true;
       return true;
     };
@@ -1756,8 +1785,38 @@ async function hydrateEnvironmentalDashboard() {
       });
     }
 
-    // Biodiversity heatmap (iNaturalist observations across all years) ----
+    // Biodiversity heatmaps — one Mapbox heatmap layer per iconic taxon,
+    // colored to match the "Observations per year" stacked bars below.
+    // Legend renders a checkbox per taxon; toggle flips that layer's
+    // visibility.
+    const TAXON_COLOR = {
+      Plantae:        '#3d6b48',
+      Aves:           '#3d6b8c',
+      Insecta:        '#c9a14a',
+      Mollusca:       '#9d6360',
+      Reptilia:       '#b85a3a',
+      Amphibia:       '#7a9a6e',
+      Arachnida:      '#7a2a14',
+      Mammalia:       '#5a4632',
+      Actinopterygii: '#5dcaa5',
+      Fungi:          '#a89580',
+      Chromista:      '#8b9a7e',
+      Animalia:       '#b4b2a9',
+    };
+    const TAXON_ORDER = Object.keys(TAXON_COLOR);
+    const hexToRgba = (hex, a) => {
+      const h = hex.replace('#', '');
+      const r = parseInt(h.slice(0, 2), 16);
+      const g = parseInt(h.slice(2, 4), 16);
+      const b = parseInt(h.slice(4, 6), 16);
+      return `rgba(${r},${g},${b},${a})`;
+    };
+    const bioLayerIdFor = (t) => `bio-heat-${t.toLowerCase()}`;
+
     let bioGeoJsonPromise = null;
+    let bioData = null;            // { totals: Map, taxonsOrdered: string[], geojson }
+    let bioActiveTaxons = new Set();
+
     const loadBioGeoJson = () => {
       if (bioGeoJsonPromise) return bioGeoJsonPromise;
       bioGeoJsonPromise = fetchJson('/api/regions/odemira/observations')
@@ -1767,73 +1826,108 @@ async function hydrateEnvironmentalDashboard() {
     };
     const setBioVisible = async (on) => {
       if (on) {
-        const data = await loadBioGeoJson();
-        if (!data) return false;
+        const raw = await loadBioGeoJson();
+        if (!raw) return false;
+        if (!bioData) {
+          // Count per taxon, drop unknowns from the layer set entirely.
+          const totals = new Map();
+          for (const f of raw.geojson.features) {
+            const t = TAXON_COLOR[f.properties?.tx] ? f.properties.tx : null;
+            if (!t) continue;
+            totals.set(t, (totals.get(t) || 0) + 1);
+          }
+          const taxonsOrdered = TAXON_ORDER.filter(t => totals.has(t))
+            .sort((a, b) => (totals.get(b) || 0) - (totals.get(a) || 0));
+          bioData = { totals, taxonsOrdered, geojson: raw.geojson };
+          bioActiveTaxons = new Set(taxonsOrdered);
+        }
         if (!map.getSource('bio-obs')) {
-          map.addSource('bio-obs', { type: 'geojson', data: data.geojson });
-          map.addLayer({
-            id: 'bio-heat',
-            type: 'heatmap',
-            source: 'bio-obs',
-            maxzoom: 14,
-            paint: {
-              'heatmap-weight': 1,
-              'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.6, 12, 1.8],
-              'heatmap-radius':    ['interpolate', ['linear'], ['zoom'], 7, 8, 10, 16, 13, 26],
-              'heatmap-opacity':   ['interpolate', ['linear'], ['zoom'], 7, 0.85, 14, 0.65],
-              'heatmap-color': [
-                'interpolate', ['linear'], ['heatmap-density'],
-                0,    'rgba(33,102,172,0)',
-                0.15, 'rgba(103,169,207,0.6)',
-                0.4,  'rgba(209,229,240,0.8)',
-                0.6,  'rgba(253,219,199,0.9)',
-                0.8,  'rgba(239,138,98,0.95)',
-                1.0,  'rgba(178,24,43,1)',
-              ],
-            },
-          });
-          map.addLayer({
-            id: 'bio-points',
-            type: 'circle',
-            source: 'bio-obs',
-            minzoom: 11,
-            paint: {
-              'circle-radius':       ['interpolate', ['linear'], ['zoom'], 11, 1.5, 14, 3.5],
-              'circle-color':        '#7a3220',
-              'circle-opacity':      0.55,
-              'circle-stroke-width': 0,
-            },
-          });
-        } else {
-          if (map.getLayer('bio-heat'))   map.setLayoutProperty('bio-heat',   'visibility', 'visible');
-          if (map.getLayer('bio-points')) map.setLayoutProperty('bio-points', 'visibility', 'visible');
+          map.addSource('bio-obs', { type: 'geojson', data: bioData.geojson });
+        }
+        for (const t of bioData.taxonsOrdered) {
+          const layerId = bioLayerIdFor(t);
+          const color = TAXON_COLOR[t];
+          if (!map.getLayer(layerId)) {
+            map.addLayer({
+              id: layerId,
+              type: 'heatmap',
+              source: 'bio-obs',
+              maxzoom: 14,
+              filter: ['==', ['get', 'tx'], t],
+              paint: {
+                'heatmap-weight': 1,
+                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.6, 12, 1.6],
+                'heatmap-radius':    ['interpolate', ['linear'], ['zoom'], 7, 10, 10, 18, 13, 28],
+                'heatmap-opacity':   ['interpolate', ['linear'], ['zoom'], 7, 0.75, 14, 0.55],
+                'heatmap-color': [
+                  'interpolate', ['linear'], ['heatmap-density'],
+                  0,    hexToRgba(color, 0),
+                  0.2,  hexToRgba(color, 0.45),
+                  0.6,  hexToRgba(color, 0.75),
+                  1.0,  hexToRgba(color, 0.95),
+                ],
+              },
+            });
+          }
+          map.setLayoutProperty(layerId, 'visibility',
+            bioActiveTaxons.has(t) ? 'visible' : 'none');
         }
         return true;
       }
-      if (map.getLayer('bio-heat'))   map.setLayoutProperty('bio-heat',   'visibility', 'none');
-      if (map.getLayer('bio-points')) map.setLayoutProperty('bio-points', 'visibility', 'none');
+      if (bioData) {
+        for (const t of bioData.taxonsOrdered) {
+          const layerId = bioLayerIdFor(t);
+          if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', 'none');
+        }
+      }
       return true;
     };
+    const wireBioLegendCheckboxes = () => {
+      if (!legendEl) return;
+      legendEl.querySelectorAll('input[type=checkbox][data-taxon]').forEach(el => {
+        el.addEventListener('change', () => {
+          const t = el.dataset.taxon;
+          if (el.checked) bioActiveTaxons.add(t); else bioActiveTaxons.delete(t);
+          const layerId = bioLayerIdFor(t);
+          if (map.getLayer(layerId)) {
+            map.setLayoutProperty(layerId, 'visibility', el.checked ? 'visible' : 'none');
+          }
+        });
+      });
+    };
 
+    // Two raster sources ping-ponged on year change so the new year's tiles
+    // can paint over the old set instead of blanking. raster-opacity-transition
+    // animates the crossfade.
+    const LULC_FADE_MS = 450;
+    let lulcActive = 'a';
+    const lulcOpacityFor = (visible) => visible ? 0.75 : 0;
     const setLulcVisible = async (on) => {
       if (on) {
         if (!lulcYears.length) lulcYears = await loadLulcYears();
         if (!lulcYears.length) return false;
         const latestIdx = lulcYears.length - 1;
-        if (!map.getSource('lulc-top')) {
-          map.addSource('lulc-top', {
-            type: 'raster',
-            tiles: [lulcTileUrl(lulcYears[latestIdx].oid)],
-            tileSize: 512,
-          });
-          map.addLayer({
-            id: 'lulc-top-layer',
-            type: 'raster',
-            source: 'lulc-top',
-            paint: { 'raster-opacity': 0.75 },
-          });
-        } else {
-          map.setLayoutProperty('lulc-top-layer', 'visibility', 'visible');
+        const initialUrl = lulcTileUrl(lulcYears[latestIdx].oid);
+        // Initial setup: source/layer pair A starts visible, B starts at 0.
+        for (const slot of ['a', 'b']) {
+          const srcId = `lulc-top-${slot}`;
+          const layerId = `${srcId}-layer`;
+          if (!map.getSource(srcId)) {
+            map.addSource(srcId, { type: 'raster', tiles: [initialUrl], tileSize: 512 });
+            map.addLayer({
+              id: layerId,
+              type: 'raster',
+              source: srcId,
+              paint: {
+                'raster-opacity': slot === 'a' ? 0.75 : 0,
+                'raster-opacity-transition': { duration: LULC_FADE_MS },
+              },
+            });
+          } else {
+            map.setLayoutProperty(layerId, 'visibility', 'visible');
+            map.setPaintProperty(layerId, 'raster-opacity',
+              slot === lulcActive ? 0.75 : 0);
+          }
         }
         if (lulcSlider) {
           lulcSlider.min = '0';
@@ -1845,8 +1939,9 @@ async function hydrateEnvironmentalDashboard() {
         return true;
       }
       stopLulcPlay();
-      if (map.getLayer('lulc-top-layer')) {
-        map.setLayoutProperty('lulc-top-layer', 'visibility', 'none');
+      for (const slot of ['a', 'b']) {
+        const layerId = `lulc-top-${slot}-layer`;
+        if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', 'none');
       }
       if (lulcCtrls) lulcCtrls.hidden = true;
       return true;
@@ -1866,15 +1961,18 @@ async function hydrateEnvironmentalDashboard() {
             <span class="ed-map-legend-count">(${n})</span>
           </div>`;
       }).join('');
+    // Esri Sentinel-2 10m LULC official palette so legend chips actually
+    // match what the raster paints.
     const lulcLegendHtml = () => {
       const chips = [
-        ['#3d6b48', 'Trees'],
-        ['#c9c08a', 'Rangeland'],
-        ['#d4a574', 'Crops'],
-        ['#9d6360', 'Built Area'],
-        ['#3d6b8c', 'Water'],
-        ['#7a9a6e', 'Flooded Vegetation'],
-        ['#a89580', 'Bare Ground'],
+        ['#1A5BAB', 'Water'],
+        ['#358221', 'Trees'],
+        ['#87D19E', 'Flooded Vegetation'],
+        ['#FFDB5C', 'Crops'],
+        ['#ED022A', 'Built Area'],
+        ['#EDE9E4', 'Bare Ground'],
+        ['#C8C8C8', 'Clouds'],
+        ['#C6AD8D', 'Rangeland'],
       ];
       return chips.map(([c, l]) =>
         `<div class="ed-map-legend-row">
@@ -1893,14 +1991,21 @@ async function hydrateEnvironmentalDashboard() {
           <span class="ed-map-legend-label">${l}</span>
         </div>`).join('');
     };
-    const bioLegendHtml = () => `
-      <div class="ed-map-legend-row">
-        <span class="ed-map-legend-gradient"></span>
-        <span class="ed-map-legend-label">Observation density</span>
-      </div>
-      <div class="ed-map-legend-row" style="font-size:10px;color:#888;display:block;">
-        Source: iNaturalist · zoom in to see individual points
-      </div>`;
+    const bioLegendHtml = () => {
+      if (!bioData) return '<span class="ed-map-legend-empty">Loading taxa…</span>';
+      return bioData.taxonsOrdered.map(t => {
+        const color = TAXON_COLOR[t] || '#888';
+        const count = bioData.totals.get(t) || 0;
+        const checked = bioActiveTaxons.has(t) ? 'checked' : '';
+        return `
+          <label class="ed-bio-legend-row">
+            <input type="checkbox" data-taxon="${t}" ${checked} />
+            <span class="ed-map-legend-chip" style="background:${color}"></span>
+            <span class="ed-map-legend-label">${t}</span>
+            <span class="ed-map-legend-count">${count.toLocaleString()}</span>
+          </label>`;
+      }).join('') + `<div class="ed-map-legend-row" style="font-size:10px;color:#888;display:block;margin-top:4px;">Source: iNaturalist · tick to toggle taxon</div>`;
+    };
 
     const rainLegendHtml = () => {
       const chips = [
@@ -1980,6 +2085,7 @@ async function hydrateEnvironmentalDashboard() {
         if (legendTitle) legendTitle.textContent = meta.title;
         if (legendEl)    legendEl.innerHTML = meta.body();
       }
+      if (view === 'bio') wireBioLegendCheckboxes();
     };
 
     viewBtns.forEach(btn => {

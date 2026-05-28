@@ -8904,6 +8904,41 @@ a {
     rgba(209,229,240,0.8) 75%,
     rgba(103,169,207,0.6) 100%);
 }
+.ed-bio-legend-row {
+  display: grid;
+  grid-template-columns: 14px 14px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 1px 0;
+}
+.ed-bio-legend-row input[type=checkbox] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  position: relative;
+}
+.ed-bio-legend-row input[type=checkbox]:checked {
+  background: #1B3A2F;
+  border-color: #1B3A2F;
+}
+.ed-bio-legend-row input[type=checkbox]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
 
 /* Letter-badge sensor markers ------------------------------------------ */
 .ed-station-marker {
