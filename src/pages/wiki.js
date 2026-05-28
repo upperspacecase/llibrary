@@ -956,6 +956,8 @@ function renderEnvironmentalDashboard() {
                 <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
+              <div class="ed-landcover-map-title" id="ed-landcover-map-title">Latest year overlay <span>(loading…)</span></div>
+              <div class="ed-landcover-map" id="ed-landcover-map" aria-label="Land cover map of Odemira"></div>
             </div>
 
             <div class="ed-card ed-card--span-12 ed-obs-card">
@@ -1380,6 +1382,64 @@ async function hydrateEnvironmentalDashboard() {
     hydrated += 1;
   })();
 
+  // Land cover overlay map — Esri Living Atlas Sentinel-2 10m raster.
+  // Looks up the latest annual raster, renders it as a Mapbox raster source
+  // via the ImageServer's exportImage endpoint.
+  (async () => {
+    const container = document.getElementById('ed-landcover-map');
+    const titleEl   = document.getElementById('ed-landcover-map-title');
+    if (!container || !mapboxgl.accessToken) return;
+
+    const IMAGE_SERVER = 'https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer';
+    let latest;
+    try {
+      const res = await fetch(
+        `${IMAGE_SERVER}/query?where=1%3D1&outFields=OBJECTID,Name&returnGeometry=false&f=json`
+      );
+      if (!res.ok) return;
+      const d = await res.json();
+      const rows = (d.features || []).map(f => {
+        const m = /(\d{4})$/.exec(f.attributes?.Name || '');
+        return m ? { year: Number(m[1]), oid: f.attributes.OBJECTID } : null;
+      }).filter(Boolean).sort((a, b) => a.year - b.year);
+      latest = rows[rows.length - 1];
+    } catch { return; }
+    if (!latest) return;
+
+    if (titleEl) {
+      titleEl.innerHTML = `Latest year overlay <span>(Sentinel-2 10m · ${latest.year})</span>`;
+    }
+
+    const mosaicRule = encodeURIComponent(JSON.stringify({
+      mosaicMethod: 'esriMosaicLockRaster',
+      lockRasterIds: [latest.oid],
+    }));
+    const tileUrl =
+      `${IMAGE_SERVER}/exportImage` +
+      `?bbox={bbox-epsg-3857}` +
+      `&bboxSR=3857&imageSR=3857` +
+      `&size=512,512&format=png&transparent=true&f=image` +
+      `&mosaicRule=${mosaicRule}`;
+
+    const map = createMap('ed-landcover-map', {
+      center: [-8.6400, 37.5500],
+      zoom: 9,
+      scrollZoom: false,
+      satellite: true,
+    });
+
+    map.on('load', () => {
+      map.addSource('lulc', { type: 'raster', tiles: [tileUrl], tileSize: 512 });
+      map.addLayer({
+        id: 'lulc-layer',
+        type: 'raster',
+        source: 'lulc',
+        paint: { 'raster-opacity': 0.75 },
+      });
+    });
+    hydrated += 1;
+  })();
+
   // Flood overlay labels (drop + callout copy) — driven by |HAND|
   (() => {
     const hand = payload.flood && typeof payload.flood.hand === 'number' ? payload.flood.hand : null;
@@ -1476,17 +1536,6 @@ async function hydrateEnvironmentalDashboard() {
       else pendingHighlight = detail;
     });
 
-    let odemiraPolygonPromise = null;
-    function loadOdemiraPolygon() {
-      // Lazy fetch of the Odemira concelho boundary from DGT's OGC API —
-      // pulled only when the Hydrology toggle is first switched on.
-      if (odemiraPolygonPromise) return odemiraPolygonPromise;
-      odemiraPolygonPromise = fetch(
-        'https://ogcapi.dgterritorio.gov.pt/collections/municipios/items?municipio=Odemira&f=json&limit=1'
-      ).then(r => r.ok ? r.json() : null).catch(() => null);
-      return odemiraPolygonPromise;
-    }
-
     map.on('load', () => {
       // Heighten Mapbox's built-in waterway lines — they'll be muted by
       // default on the satellite style; we keep them at base opacity so a
@@ -1548,32 +1597,40 @@ async function hydrateEnvironmentalDashboard() {
     }
 
     if (hydroToggle) {
-      hydroToggle.addEventListener('change', async () => {
+      hydroToggle.addEventListener('change', () => {
         const on = hydroToggle.checked;
         try {
+          // Rivers / streams / canals
           if (map.getLayer('waterway')) {
             map.setPaintProperty('waterway', 'line-opacity', on ? 1 : 0.6);
-            map.setPaintProperty('waterway', 'line-color', on ? '#3aa1c4' : null);
+            map.setPaintProperty('waterway', 'line-color', on ? '#38bdf8' : null);
+            map.setPaintProperty('waterway', 'line-width', on
+              ? ['interpolate', ['linear'], ['zoom'], 8, 0.8, 12, 1.8, 16, 3]
+              : null);
+          }
+          // Lakes / reservoirs / coast (polygon fill in satellite-streets-v12)
+          if (map.getLayer('water')) {
+            map.setPaintProperty('water', 'fill-color', on ? '#0c4a6e' : null);
+            map.setPaintProperty('water', 'fill-opacity', on ? 0.55 : null);
+          }
+          // Bright stroke around every water polygon — added once, visibility toggled.
+          if (!map.getLayer('ed-water-outline')) {
+            map.addLayer({
+              id: 'ed-water-outline',
+              type: 'line',
+              source: 'composite',
+              'source-layer': 'water',
+              paint: {
+                'line-color': '#38bdf8',
+                'line-width': 1.5,
+                'line-opacity': 0.95,
+              },
+              layout: { visibility: on ? 'visible' : 'none' },
+            });
+          } else {
+            map.setLayoutProperty('ed-water-outline', 'visibility', on ? 'visible' : 'none');
           }
         } catch (_) {}
-        if (on) {
-          const fc = await loadOdemiraPolygon();
-          if (fc && fc.features && fc.features.length) {
-            if (!map.getSource('odemira-boundary')) {
-              map.addSource('odemira-boundary', { type: 'geojson', data: fc });
-              map.addLayer({
-                id: 'odemira-boundary-line',
-                type: 'line',
-                source: 'odemira-boundary',
-                paint: { 'line-color': '#ffeb3b', 'line-width': 2, 'line-opacity': 0.85 },
-              });
-            } else if (map.getLayer('odemira-boundary-line')) {
-              map.setLayoutProperty('odemira-boundary-line', 'visibility', 'visible');
-            }
-          }
-        } else if (map.getLayer('odemira-boundary-line')) {
-          map.setLayoutProperty('odemira-boundary-line', 'visibility', 'none');
-        }
       });
     }
 
