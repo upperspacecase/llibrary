@@ -7,7 +7,10 @@ const OPTIONS = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 5000,
   socketTimeoutMS: 30000,
-  maxPoolSize: 1,
+  // Pool larger than the previous 1 so parallel API routes inside the same
+  // warm Vercel function don't serialize on a single socket — concretely
+  // the dashboard fires ~7 reads in parallel on every page load.
+  maxPoolSize: 10,
 };
 
 let cached = global.__mongoClientPromise;

@@ -8,6 +8,7 @@
 
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
+import { fetchJson } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
@@ -652,6 +653,12 @@ function renderEnvironmentalDashboard() {
         <p class="ed-insights-count"><strong id="ed-regional-sensor-count">—</strong> sensors live across Odemira.</p>
       </header>
 
+      <div class="ed-error-banner" id="ed-error-banner" hidden role="alert">
+        <strong>Couldn't load live data.</strong>
+        <span id="ed-error-banner-msg"></span>
+        <button type="button" class="ed-error-banner-retry" id="ed-error-banner-retry">Retry</button>
+      </div>
+
       <!-- Region overview map: satellite basemap, custom letter-badge markers,
            top-left view buttons (exclusive), legend underneath that swaps with
            the active view, LULC year scrubber bottom-center when Land Use is on. -->
@@ -1067,24 +1074,32 @@ function lulcTileUrl(oid) {
   );
 }
 
+function renderDashboardError(message) {
+  const banner = document.getElementById('ed-error-banner');
+  const msgEl  = document.getElementById('ed-error-banner-msg');
+  if (!banner) return;
+  if (msgEl) msgEl.textContent = ` ${message} — usually a cold serverless connection. Retrying often works.`;
+  banner.hidden = false;
+  const retry = document.getElementById('ed-error-banner-retry');
+  if (retry) {
+    retry.onclick = () => {
+      banner.hidden = true;
+      hydrateEnvironmentalDashboard();
+    };
+  }
+}
+
 // Hydrate the dashboard cells with real values from /api/regions/odemira.
 // Every cell tagged with [data-cell="<dot.path>"] is resolved against the
 // response; null/undefined values keep their DATA? placeholder.
 async function hydrateEnvironmentalDashboard() {
   let payload;
   try {
-    const res = await fetch('/api/regions/odemira', { headers: { accept: 'application/json' } });
-    if (!res.ok) {
-      console.warn('[dashboard] /api/regions/odemira →', res.status);
-      return;
-    }
-    payload = await res.json();
-    if (!payload.ok) {
-      console.warn('[dashboard] payload not ok:', payload.error);
-      return;
-    }
+    payload = await fetchJson('/api/regions/odemira');
+    if (!payload?.ok) throw new Error(payload?.error || 'payload not ok');
   } catch (e) {
     console.warn('[dashboard] fetch failed:', e.message);
+    renderDashboardError(e.message);
     return;
   }
 
@@ -1457,10 +1472,8 @@ async function hydrateEnvironmentalDashboard() {
     if (!container || !legendEl || !togglesEl) return;
     let payloadStations;
     try {
-      const res = await fetch('/api/regions/odemira/stations');
-      if (!res.ok) return;
-      payloadStations = await res.json();
-      if (!payloadStations.ok || !Array.isArray(payloadStations.features)) return;
+      payloadStations = await fetchJson('/api/regions/odemira/stations');
+      if (!payloadStations?.ok || !Array.isArray(payloadStations.features)) return;
     } catch { return; }
 
     const features = payloadStations.features;
@@ -1634,8 +1647,8 @@ async function hydrateEnvironmentalDashboard() {
     let rainfallPromise = null;
     const loadRainfallStations = () => {
       if (rainfallPromise) return rainfallPromise;
-      rainfallPromise = fetch('/api/regions/odemira/rainfall-stations')
-        .then(r => (r.ok ? r.json() : null))
+      rainfallPromise = fetchJson('/api/regions/odemira/rainfall-stations')
+        .catch(() => null)
         .then(d => {
           if (!d || !d.ok || !Array.isArray(d.features) || !d.features.length) return null;
           // Build a per-year FeatureCollection so swapping years is O(1) source setData.
@@ -1761,8 +1774,7 @@ async function hydrateEnvironmentalDashboard() {
     let bioGeoJsonPromise = null;
     const loadBioGeoJson = () => {
       if (bioGeoJsonPromise) return bioGeoJsonPromise;
-      bioGeoJsonPromise = fetch('/api/regions/odemira/observations')
-        .then(r => (r.ok ? r.json() : null))
+      bioGeoJsonPromise = fetchJson('/api/regions/odemira/observations')
         .then(d => (d && d.ok && d.geojson?.features?.length) ? d : null)
         .catch(() => null);
       return bioGeoJsonPromise;
@@ -2027,10 +2039,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let payloadResv;
     try {
-      const res = await fetch('/api/regions/odemira/reservoirs');
-      if (!res.ok) return;
-      payloadResv = await res.json();
-      if (!payloadResv.ok || !Array.isArray(payloadResv.features) || !payloadResv.features.length) return;
+      payloadResv = await fetchJson('/api/regions/odemira/reservoirs');
+      if (!payloadResv?.ok || !Array.isArray(payloadResv.features) || !payloadResv.features.length) return;
     } catch { return; }
     const features = payloadResv.features;
 
@@ -2176,10 +2186,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      const res = await fetch('/api/regions/odemira/groundwater');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
+      data = await fetchJson('/api/regions/odemira/groundwater');
+      if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
 
@@ -2283,10 +2291,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      const res = await fetch('/api/regions/odemira/rainfall');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !Array.isArray(data.years) || !data.years.length) return;
+      data = await fetchJson('/api/regions/odemira/rainfall');
+      if (!data?.ok || !Array.isArray(data.years) || !data.years.length) return;
     } catch { return; }
 
     const W = 1000, H = 240, PAD = { l: 44, r: 14, t: 14, b: 28 };
@@ -2348,10 +2354,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      const res = await fetch('/api/regions/odemira/reservoirs');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
+      data = await fetchJson('/api/regions/odemira/reservoirs');
+      if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
 
@@ -2434,10 +2438,8 @@ async function hydrateEnvironmentalDashboard() {
     if (!nChart && !mChart) return;
     let data;
     try {
-      const res = await fetch('/api/regions/odemira/water-quality');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok) return;
+      data = await fetchJson('/api/regions/odemira/water-quality');
+      if (!data?.ok) return;
     } catch { return; }
 
     const XMIN = new Date(Date.UTC(1990, 0, 1)).getTime();
@@ -2560,10 +2562,8 @@ async function hydrateEnvironmentalDashboard() {
     if (!grid) return;
     let stations;
     try {
-      const res = await fetch('/api/regions/odemira/stations');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data.ok || !Array.isArray(data.features)) return;
+      const data = await fetchJson('/api/regions/odemira/stations');
+      if (!data?.ok || !Array.isArray(data.features)) return;
       stations = data.features;
     } catch { return; }
 
@@ -2852,10 +2852,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      const res = await fetch(endpoint);
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
+      data = await fetchJson(endpoint);
+      if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
     const labelFor = (f) => f.displayName || f.code || f.externalId;
@@ -3016,10 +3014,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      const res = await fetch('/api/regions/odemira/observations');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !data.geojson?.features?.length) return;
+      data = await fetchJson('/api/regions/odemira/observations');
+      if (!data?.ok || !data.geojson?.features?.length) return;
     } catch { return; }
 
     const minYear = data.minYear, maxYear = data.maxYear;
@@ -3161,10 +3157,8 @@ async function hydrateEnvironmentalDashboard() {
 
     let data = null;
     try {
-      const res = await fetch('/api/regions/odemira/station-status');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'unknown');
+      data = await fetchJson('/api/regions/odemira/station-status');
+      if (!data?.ok) throw new Error(data?.error || 'unknown');
     } catch (e) {
       if (meta) meta.textContent = 'unavailable';
       console.warn('[sensor-status] fetch failed:', e.message);

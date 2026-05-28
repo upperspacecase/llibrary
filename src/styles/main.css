@@ -8198,6 +8198,32 @@ a {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+.ed-error-banner {
+  background: #fef2f2;
+  border: 1px solid #f3c1c1;
+  color: #7d2a14;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.ed-error-banner[hidden] { display: none; }
+.ed-error-banner strong { font-weight: 700; }
+.ed-error-banner span { flex: 1; }
+.ed-error-banner-retry {
+  background: #7d2a14;
+  color: #fff;
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ed-error-banner-retry:hover { background: #5c1f0e; }
 
 .ed-card {
   background: var(--white);
