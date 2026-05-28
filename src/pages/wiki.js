@@ -918,42 +918,60 @@ function renderEnvironmentalDashboard() {
         <!-- BIODIVERSITY -->
         <section class="ed-panel ed-panel--bio">
           <div class="ed-panel-head">${lucide('sprout')} Biodiversity</div>
-          <div class="ed-bio-grid">
-            <div class="ed-card ed-card--span-7">
-              <div class="ed-card-title">Top species <span>(by observations)</span></div>
-              <div class="ed-species-grid">
-                ${Array(8).fill(0).map(() => speciesCard()).join('')}
-              </div>
-              <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
+
+          <p class="ed-card-desc">Odemira spans a rich gradient of ecosystems from Atlantic cliffs to Mediterranean woodlands.</p>
+
+          <!-- Wiki ecology stats -->
+          <div class="ed-bio-stats" id="ed-bio-stats"></div>
+
+          <!-- Top species (image grid, no labels) -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Top species <span>(by observations)</span></div>
+            <div class="ed-species-grid" id="ed-bio-top-grid">
+              ${Array(8).fill(0).map(() => `<div class="ed-species-card"><div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div></div></div>`).join('')}
             </div>
-            <div class="ed-card ed-card--span-5">
-              <div class="ed-card-title">Species observations <span>(5-yr windows · iNaturalist research-grade)</span></div>
-              <svg class="ed-bio-trend" id="ed-bio-trend" viewBox="0 0 400 180" preserveAspectRatio="none" aria-hidden="true">
-                <text x="200" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-years" id="ed-bio-years"></div>
+          </div>
+
+          <!-- Observations per year (1995→) stacked by iconic taxon -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Observations per year <span>(iNaturalist · 1995 → today)</span></div>
+            <p class="ed-card-desc">How many wildlife observations were submitted to iNaturalist each year, broken down by taxon group. Reflects observer activity as well as biodiversity — surges typically follow citizen-science campaigns.</p>
+            <svg class="ed-bio-yearbars" id="ed-bio-yearbars" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
+              <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+            </svg>
+            <div class="ed-bio-yearbars-legend" id="ed-bio-yearbars-legend"></div>
+          </div>
+
+          <!-- Flora & Fauna table -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Flora &amp; Fauna <span>(observed in Odemira)</span></div>
+            <div class="ed-bio-table-wrap">
+              <table class="ed-bio-table" id="ed-bio-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Species</th>
+                    <th>Group</th>
+                    <th class="ed-bio-th-num">Observations</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody><tr><td colspan="5" class="ed-bio-table-empty">Loading…</td></tr></tbody>
+              </table>
             </div>
-            <div class="ed-card ed-card--span-5">
-              <div class="ed-card-title">Total species</div>
-              <div class="ed-mini-row">
-                ${P('iNaturalist Species', 'species.total', 'int')}
-                ${D('Parish baseline')}
-              </div>
-              <div class="ed-mini-sub">unique taxa observed · vs Odemira parish baseline</div>
-            </div>
-            <div class="ed-card ed-card--span-12 ed-obs-card">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Observation heatmap <span>(iNaturalist · cumulative through <span id="ed-obs-yearlabel">—</span>)</span></div>
-                <div class="ed-obs-stats" id="ed-obs-stats">—</div>
-              </div>
-              <div class="ed-obs-map" id="ed-obs-map" aria-label="iNaturalist observation heatmap"></div>
-              <div class="ed-obs-controls">
-                <button type="button" class="ed-obs-play" id="ed-obs-play" aria-label="Play / pause">▶</button>
-                <input type="range" class="ed-obs-slider" id="ed-obs-slider" min="0" max="0" step="1" value="0" />
-                <svg class="ed-obs-spark" id="ed-obs-spark" viewBox="0 0 1000 60" preserveAspectRatio="none" aria-hidden="true"></svg>
-              </div>
-              <p class="ed-obs-note">Where iNaturalist users have observed and photographed wildlife. Reflects observer activity — denser heat means more people uploaded, not necessarily more biodiversity. Sensitive species are auto-obscured by iNat to a ~10 km box.</p>
-            </div>
+            <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
+          </div>
+
+          <!-- Wiki ecology articles -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Ecology background</div>
+            <div class="ed-bio-articles" id="ed-bio-articles"></div>
+          </div>
+
+          <!-- Sources -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Sources</div>
+            <ul class="ed-bio-sources" id="ed-bio-sources"></ul>
           </div>
         </section>
 
@@ -1154,19 +1172,14 @@ async function hydrateEnvironmentalDashboard() {
         const badge = iucn
           ? `<span class="ed-species-iucn" style="background:${badgeBg}">${iucn}</span>`
           : (sp.threatened ? `<span class="ed-species-iucn" style="background:#c9a14a">VU?</span>` : '');
+        const tooltip = `${sp.name || sp.scientificName || '—'}${sp.scientificName && sp.scientificName !== sp.name ? ' (' + sp.scientificName + ')' : ''} · ${sp.count} obs`;
         return `
-          <div class="ed-species-card">
+          <div class="ed-species-card" title="${tooltip}">
             <div class="ed-species-photo-wrap">
               ${sp.photoUrl
                 ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
                 : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
               ${badge}
-            </div>
-            <div class="ed-species-name">
-              <strong>${sp.name || sp.scientificName || '—'}</strong>
-              ${sp.scientificName && sp.name && sp.scientificName !== sp.name
-                ? `<em>${sp.scientificName}</em>` : ''}
-              <span class="ed-species-count">${sp.count} obs</span>
             </div>
           </div>
         `;
@@ -2749,47 +2762,177 @@ async function hydrateEnvironmentalDashboard() {
     hydrated += 1;
   })();
 
-  // Biodiversity: species observations across 13 rolling 5-yr windows
-  (() => {
-    const svg = document.getElementById('ed-bio-trend');
-    const yearsEl = document.getElementById('ed-bio-years');
-    if (!svg) return;
-    const wins = payload.species && payload.species.trends && Array.isArray(payload.species.trends.windows)
-      ? payload.species.trends.windows : null;
-    if (!wins || !wins.length) return;
-    const vals = wins.map(w => (typeof w.count === 'number' ? w.count : null));
-    if (vals.every(v => v == null)) return;
+  // Biodiversity: wiki ecology cards (stats, articles, sources) + observations-
+  // per-year stacked bar chart + Flora & Fauna table fed by iNaturalist data.
+  (async () => {
+    // ---- Wiki ecology stats / articles / sources --------------------------
+    const ecology = getSectionById('ecology');
+    const statsEl    = document.getElementById('ed-bio-stats');
+    const articlesEl = document.getElementById('ed-bio-articles');
+    const sourcesEl  = document.getElementById('ed-bio-sources');
+    if (statsEl && ecology?.visuals?.stats) {
+      statsEl.innerHTML = ecology.visuals.stats.map(s => `
+        <div class="ed-bio-stat">
+          <div class="ed-bio-stat-value">${s.value}</div>
+          <div class="ed-bio-stat-label">${s.label}</div>
+          ${s.sublabel ? `<div class="ed-bio-stat-sub">${s.sublabel}</div>` : ''}
+        </div>`).join('');
+    }
+    if (articlesEl && Array.isArray(ecology?.articles)) {
+      articlesEl.innerHTML = ecology.articles.map(a => `
+        <article class="ed-bio-article">
+          <h4>${a.title}</h4>
+          <p>${a.content}</p>
+        </article>`).join('');
+    }
+    if (sourcesEl && Array.isArray(ecology?.references)) {
+      sourcesEl.innerHTML = ecology.references.map(r => `
+        <li><a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a></li>`).join('');
+    }
 
-    const W = 400, H = 180, PAD_X = 28, PAD_Y = 12;
-    const innerW = W - PAD_X * 2;
-    const innerH = H - PAD_Y * 2 - 4;
-    const n = wins.length;
-    const maxV = Math.max(...vals.filter(v => v != null));
-    const xFor = i => PAD_X + (i / Math.max(1, n - 1)) * innerW;
-    const yFor = v => v == null ? null : PAD_Y + innerH - (v / maxV) * innerH;
+    // ---- iNaturalist observations: per-year stacked bars + species table --
+    let obs;
+    try {
+      obs = await fetchJson('/api/regions/odemira/observations');
+    } catch { obs = null; }
 
-    // Area under the line
-    const linePts = vals.map((v, i) => v == null ? null : `${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).filter(Boolean);
-    const areaPts = [`${xFor(0).toFixed(1)},${PAD_Y + innerH}`, ...linePts, `${xFor(n - 1).toFixed(1)},${PAD_Y + innerH}`];
-    const dots = vals.map((v, i) => v == null
-      ? ''
-      : `<circle cx="${xFor(i).toFixed(1)}" cy="${yFor(v).toFixed(1)}" r="2.5" fill="#3d6b48"><title>${wins[i].label}: ${v} taxa</title></circle>`).join('');
+    const svg = document.getElementById('ed-bio-yearbars');
+    const legendEl = document.getElementById('ed-bio-yearbars-legend');
+    if (svg && obs?.ok && obs.geojson?.features?.length) {
+      // Aggregate per (year, iconicTaxon)
+      const taxonColor = {
+        Plantae:    '#3d6b48',
+        Aves:       '#3d6b8c',
+        Insecta:    '#c9a14a',
+        Mollusca:   '#9d6360',
+        Reptilia:   '#b85a3a',
+        Amphibia:   '#7a9a6e',
+        Arachnida:  '#7a2a14',
+        Mammalia:   '#5a4632',
+        Actinopterygii: '#5dcaa5',
+        Fungi:      '#a89580',
+        Chromista:  '#8b9a7e',
+        Animalia:   '#b4b2a9',
+        Other:      '#cccccc',
+      };
+      const startYear = 1995;
+      const endYear = obs.maxYear || new Date().getFullYear();
+      const byYearTaxon = new Map();
+      const taxonTotals = new Map();
+      for (const f of obs.geojson.features) {
+        const y = f.properties?.y;
+        if (!Number.isFinite(y) || y < startYear) continue;
+        const tx = taxonColor[f.properties?.tx] ? f.properties.tx : 'Other';
+        if (!byYearTaxon.has(y)) byYearTaxon.set(y, new Map());
+        const m = byYearTaxon.get(y);
+        m.set(tx, (m.get(tx) || 0) + 1);
+        taxonTotals.set(tx, (taxonTotals.get(tx) || 0) + 1);
+      }
+      const taxons = [...taxonTotals.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t);
+      const years = [];
+      for (let y = startYear; y <= endYear; y++) years.push(y);
+      const totals = years.map(y => {
+        const m = byYearTaxon.get(y);
+        if (!m) return 0;
+        return [...m.values()].reduce((a, b) => a + b, 0);
+      });
+      const maxTotal = Math.max(1, ...totals);
 
-    svg.innerHTML = `
-      <polygon fill="#3d6b48" fill-opacity="0.18" stroke="none" points="${areaPts.join(' ')}" />
-      <polyline fill="none" stroke="#3d6b48" stroke-width="1.5" points="${linePts.join(' ')}" />
-      ${dots}
-      <text x="${PAD_X - 4}" y="${(PAD_Y + 4).toFixed(1)}" font-size="9" fill="#888" text-anchor="end">${maxV}</text>
-      <text x="${PAD_X - 4}" y="${(PAD_Y + innerH).toFixed(1)}" font-size="9" fill="#888" text-anchor="end">0</text>
-    `;
+      const W = 1000, H = 280, PAD = { l: 44, r: 14, t: 14, b: 28 };
+      const cW = W - PAD.l - PAD.r;
+      const cH = H - PAD.t - PAD.b;
+      const slot = cW / years.length;
+      const barW = Math.min(slot * 0.78, 32);
+      const yFor = v => PAD.t + (1 - v / maxTotal) * cH;
 
-    if (yearsEl) {
-      // Show first / mid / last labels
-      const firstY = wins[0].label.split('-')[0];
-      const midI   = Math.floor(n / 2);
-      const midY   = wins[midI].label.split('-')[0];
-      const lastY  = wins[n - 1].label.split('-')[1] || wins[n - 1].label.split('-')[0];
-      yearsEl.innerHTML = `<span>${firstY}</span><span>${midY}</span><span>${lastY}</span>`;
+      // Y gridlines on nice tick steps
+      const niceMax = (() => {
+        const exp = Math.pow(10, Math.floor(Math.log10(maxTotal || 1)));
+        const n = maxTotal / exp;
+        const stepped = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+        return stepped * exp;
+      })();
+      let grid = '';
+      const yTicks = 4;
+      for (let i = 0; i <= yTicks; i++) {
+        const v = (niceMax / yTicks) * i;
+        const y = yFor(v);
+        grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+        grid += `<text x="${(PAD.l - 8).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${Math.round(v).toLocaleString()}</text>`;
+      }
+
+      // Stacked bars
+      let bars = '';
+      for (let i = 0; i < years.length; i++) {
+        const y = years[i];
+        const m = byYearTaxon.get(y);
+        if (!m) continue;
+        const xCenter = PAD.l + slot * i + slot / 2;
+        const x = xCenter - barW / 2;
+        let cum = 0;
+        for (const t of taxons) {
+          const v = m.get(t) || 0;
+          if (!v) continue;
+          const yTop = yFor(cum + v);
+          const yBot = yFor(cum);
+          bars += `<rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${(yBot - yTop).toFixed(1)}" fill="${taxonColor[t]}"><title>${y} · ${t}: ${v}</title></rect>`;
+          cum += v;
+        }
+      }
+
+      let xLabels = '';
+      const step = years.length > 20 ? 5 : 2;
+      for (let i = 0; i < years.length; i += step) {
+        const x = PAD.l + slot * i + slot / 2;
+        xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${years[i]}</text>`;
+      }
+
+      svg.innerHTML = `${grid}${bars}${xLabels}`;
+
+      if (legendEl) {
+        legendEl.innerHTML = taxons.map(t => `
+          <span class="ed-bio-yearbars-chip">
+            <i style="background:${taxonColor[t]}"></i>${t} <em>${taxonTotals.get(t).toLocaleString()}</em>
+          </span>`).join('');
+      }
+    }
+
+    // ---- Flora & Fauna table — top species by observation count -----------
+    const tableEl = document.querySelector('#ed-bio-table tbody');
+    const top = Array.isArray(payload.species?.top10) ? payload.species.top10 : [];
+    if (tableEl) {
+      if (!top.length) {
+        tableEl.innerHTML = '<tr><td colspan="5" class="ed-bio-table-empty">No species data yet.</td></tr>';
+      } else {
+        const iucnColors = {
+          LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
+          EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
+        };
+        const groupOf = (g) => g === 'Plantae' || g === 'Fungi' ? 'Flora' : (g ? 'Fauna' : '—');
+        tableEl.innerHTML = top
+          .slice()
+          .sort((a, b) => (b.count || 0) - (a.count || 0))
+          .map(sp => {
+            const iucn = sp.iucn;
+            const badge = iucn
+              ? `<span class="ed-bio-iucn-badge" style="background:${iucnColors[iucn] || '#888'}">${iucn}</span>`
+              : (sp.threatened ? `<span class="ed-bio-iucn-badge" style="background:#c9a14a">VU?</span>` : '<span class="ed-bio-iucn-badge ed-bio-iucn-badge--none">—</span>');
+            return `
+              <tr>
+                <td class="ed-bio-cell-img">
+                  ${sp.photoUrl ? `<img src="${sp.photoUrl}" alt="" loading="lazy" />` : '<span class="ed-bio-cell-img-empty"></span>'}
+                </td>
+                <td class="ed-bio-cell-name">
+                  <strong>${sp.name || sp.scientificName || '—'}</strong>
+                  ${sp.scientificName && sp.scientificName !== sp.name
+                    ? `<em>${sp.scientificName}</em>` : ''}
+                </td>
+                <td>${groupOf(sp.group)}<div class="ed-bio-cell-sub">${sp.group || ''}</div></td>
+                <td class="ed-bio-cell-num">${(sp.count || 0).toLocaleString()}</td>
+                <td>${badge}</td>
+              </tr>`;
+          }).join('');
+      }
     }
     hydrated += 1;
   })();
@@ -3000,147 +3143,6 @@ async function hydrateEnvironmentalDashboard() {
     source: 'snirh_meteorologica',
     unit: 'mm',
   });
-
-  // iNaturalist observation heatmap — cumulative through year X. Mapbox
-  // `heatmap` layer driven by a year slider; play button steps through.
-  (async () => {
-    const mapEl   = document.getElementById('ed-obs-map');
-    const slider  = document.getElementById('ed-obs-slider');
-    const playBtn = document.getElementById('ed-obs-play');
-    const stats   = document.getElementById('ed-obs-stats');
-    const spark   = document.getElementById('ed-obs-spark');
-    const yearLbl = document.getElementById('ed-obs-yearlabel');
-    if (!mapEl || !slider || !playBtn) return;
-
-    let data;
-    try {
-      data = await fetchJson('/api/regions/odemira/observations');
-      if (!data?.ok || !data.geojson?.features?.length) return;
-    } catch { return; }
-
-    const minYear = data.minYear, maxYear = data.maxYear;
-    slider.min   = String(minYear);
-    slider.max   = String(maxYear);
-    slider.value = String(maxYear);
-
-    const map = createMap('ed-obs-map', {
-      center: [-8.6400, 37.5500],
-      zoom: 8.8,
-      scrollZoom: false,
-    });
-
-    function cumulativeCount(year) {
-      let n = 0;
-      for (const r of data.yearCounts) if (r.year <= year) n += r.count;
-      return n;
-    }
-    function renderStats(year) {
-      const total = cumulativeCount(year);
-      const yearCount = data.yearCounts.find(r => r.year === year)?.count ?? 0;
-      if (yearLbl) yearLbl.textContent = String(year);
-      if (stats) stats.innerHTML = `<strong>${total.toLocaleString()}</strong> observations through ${year} <span>·</span> <span>${yearCount.toLocaleString()} in ${year}</span>`;
-    }
-
-    function renderSpark() {
-      if (!spark) return;
-      const W = 1000, H = 60, PAD = { l: 0, r: 0, t: 4, b: 12 };
-      const cW = W - PAD.l - PAD.r;
-      const cH = H - PAD.t - PAD.b;
-      const xFor = y => PAD.l + ((y - minYear) / Math.max(1, maxYear - minYear)) * cW;
-      const yMax = Math.max(...data.yearCounts.map(r => r.count)) || 1;
-      const yFor = v => PAD.t + (1 - v / yMax) * cH;
-      const yearMap = new Map(data.yearCounts.map(r => [r.year, r.count]));
-      const barW = Math.max(1, cW / Math.max(1, maxYear - minYear) * 0.8);
-      let bars = '';
-      for (let y = minYear; y <= maxYear; y++) {
-        const c = yearMap.get(y) || 0;
-        if (!c) continue;
-        const x = xFor(y) - barW / 2;
-        const h = yFor(0) - yFor(c);
-        bars += `<rect x="${x.toFixed(1)}" y="${yFor(c).toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="#5a7256"/>`;
-      }
-      spark.innerHTML = bars;
-    }
-
-    map.on('load', () => {
-      map.addSource('obs', { type: 'geojson', data: data.geojson });
-      map.addLayer({
-        id: 'obs-heat',
-        type: 'heatmap',
-        source: 'obs',
-        maxzoom: 14,
-        paint: {
-          'heatmap-weight': 1,
-          'heatmap-intensity': [
-            'interpolate', ['linear'], ['zoom'],
-            7, 0.6, 12, 1.8,
-          ],
-          'heatmap-radius': [
-            'interpolate', ['linear'], ['zoom'],
-            7, 8, 10, 16, 13, 26,
-          ],
-          'heatmap-opacity': [
-            'interpolate', ['linear'], ['zoom'],
-            7, 0.85, 14, 0.65,
-          ],
-          'heatmap-color': [
-            'interpolate', ['linear'], ['heatmap-density'],
-            0,    'rgba(33,102,172,0)',
-            0.15, 'rgba(103,169,207,0.6)',
-            0.4,  'rgba(209,229,240,0.8)',
-            0.6,  'rgba(253,219,199,0.9)',
-            0.8,  'rgba(239,138,98,0.95)',
-            1.0,  'rgba(178,24,43,1)',
-          ],
-        },
-      });
-      // Above heatmap, dots at high zoom so individual observations are visible.
-      map.addLayer({
-        id: 'obs-points',
-        type: 'circle',
-        source: 'obs',
-        minzoom: 11,
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 1.5, 14, 3.5],
-          'circle-color': '#7a3220',
-          'circle-opacity': 0.55,
-          'circle-stroke-width': 0,
-        },
-      });
-      applyYearFilter(Number(slider.value));
-    });
-
-    function applyYearFilter(year) {
-      const f = ['<=', ['get', 'y'], year];
-      if (map.getLayer('obs-heat'))   map.setFilter('obs-heat', f);
-      if (map.getLayer('obs-points')) map.setFilter('obs-points', f);
-      renderStats(year);
-    }
-
-    slider.addEventListener('input', () => applyYearFilter(Number(slider.value)));
-
-    let playing = false;
-    let playTimer = null;
-    function setPlaying(on) {
-      playing = on;
-      playBtn.textContent = on ? '❚❚' : '▶';
-      if (on) {
-        playTimer = setInterval(() => {
-          const cur = Number(slider.value);
-          const next = cur >= maxYear ? minYear : cur + 1;
-          slider.value = String(next);
-          applyYearFilter(next);
-        }, 350);
-      } else if (playTimer) {
-        clearInterval(playTimer); playTimer = null;
-      }
-    }
-    playBtn.addEventListener('click', () => setPlaying(!playing));
-
-    renderSpark();
-    renderStats(maxYear);
-    hydrated += 1;
-  })();
 
   // ---- Sensor Status button + modal --------------------------------------
   // Pulls /api/regions/odemira/station-status (one row per SNIRH station, with

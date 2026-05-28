@@ -9004,6 +9004,187 @@ a {
   margin: -4px 0 12px;
   max-width: 720px;
 }
+
+/* Biodiversity ---------------------------------------------------------- */
+.ed-bio-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 0 0 32px;
+}
+@media (max-width: 700px) {
+  .ed-bio-stats { grid-template-columns: repeat(2, 1fr); }
+}
+.ed-bio-stat {
+  background: #fafaf3;
+  border-left: 3px solid #3d6b48;
+  padding: 12px 14px;
+}
+.ed-bio-stat-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: #1B3A2F;
+  line-height: 1;
+}
+.ed-bio-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #555;
+  margin-top: 6px;
+}
+.ed-bio-stat-sub {
+  font-size: 10px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.ed-bio-yearbars {
+  width: 100%;
+  height: 320px;
+  display: block;
+}
+.ed-bio-yearbars-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #555;
+}
+.ed-bio-yearbars-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ed-bio-yearbars-chip i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+.ed-bio-yearbars-chip em {
+  font-style: normal;
+  font-weight: 700;
+  color: #2C2C2C;
+  margin-left: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ed-bio-table-wrap {
+  overflow-x: auto;
+}
+.ed-bio-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ed-bio-table thead th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid #eee5d8;
+  padding: 8px 10px;
+}
+.ed-bio-table th.ed-bio-th-num,
+.ed-bio-table td.ed-bio-cell-num { text-align: right; font-variant-numeric: tabular-nums; }
+.ed-bio-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f3ecdd;
+  vertical-align: middle;
+  color: #2C2C2C;
+}
+.ed-bio-table tbody tr:last-child td { border-bottom: 0; }
+.ed-bio-cell-img img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+.ed-bio-cell-img-empty {
+  display: block;
+  width: 44px;
+  height: 44px;
+  background: #f3ecdd;
+  border-radius: 4px;
+}
+.ed-bio-cell-name strong { display: block; font-weight: 600; }
+.ed-bio-cell-name em {
+  font-style: italic;
+  font-size: 11px;
+  color: #888;
+  display: block;
+}
+.ed-bio-cell-sub { font-size: 10px; color: #888; }
+.ed-bio-iucn-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 4px;
+  min-width: 28px;
+  text-align: center;
+}
+.ed-bio-iucn-badge--none {
+  background: transparent;
+  color: #aaa;
+  font-weight: 400;
+}
+.ed-bio-table-empty {
+  color: #888;
+  text-align: center;
+  font-style: italic;
+}
+
+.ed-bio-articles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 24px;
+}
+@media (max-width: 700px) {
+  .ed-bio-articles { grid-template-columns: 1fr; }
+}
+.ed-bio-article h4 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: #1B3A2F;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+.ed-bio-article p {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #444;
+  margin: 0;
+}
+
+.ed-bio-sources {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 24px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .ed-bio-sources { grid-template-columns: 1fr; }
+}
+.ed-bio-sources a {
+  color: #1B3A2F;
+  text-decoration: underline;
+  text-decoration-color: rgba(27, 58, 47, 0.3);
+  text-underline-offset: 2px;
+}
+.ed-bio-sources a:hover {
+  text-decoration-color: #1B3A2F;
+}
 .ed-reservoirs-leg-drought i { height: 8px; background: #faeeda; opacity: 1; }
 
 /* Station picker — chip buttons under the rainfall chart */
