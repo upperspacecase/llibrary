@@ -343,7 +343,7 @@ export const en = {
 
   // Wiki section titles
   "wiki.sections.bioregion": "Region Overview",
-  "wiki.sections.dashboard": "Environmental Dashboard",
+  "wiki.sections.dashboard": "Regional Dashboard",
   "wiki.sections.ecology": "Ecology",
   "wiki.sections.land": "Land",
   "wiki.sections.soil": "Soil",

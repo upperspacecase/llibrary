@@ -319,7 +319,7 @@ export const pt = {
 
   // Títulos das secções wiki
   "wiki.sections.bioregion": "Vis\u00E3o Geral da Regi\u00E3o",
-  "wiki.sections.dashboard": "Painel Ambiental",
+  "wiki.sections.dashboard": "Painel Regional",
   "wiki.sections.ecology": "Ecologia",
   "wiki.sections.land": "Terra",
   "wiki.sections.soil": "Solo",

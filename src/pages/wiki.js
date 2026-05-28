@@ -2875,7 +2875,7 @@ async function renderSection(sectionId) {
       <!-- Left column: main content -->
       <div class="wiki-section-main">
         <h1 class="wiki-section-title">${t('wiki.sections.' + section.id) || section.title}</h1>
-        <p class="wiki-section-subtitle">${section.intro}</p>
+        ${section.intro ? `<p class="wiki-section-subtitle">${section.intro}</p>` : ''}
 
         ${sectionId === 'dashboard' ? '' : `
         <div class="wiki-section-meta">

@@ -68,13 +68,13 @@ export const SECTIONS = {
 
   dashboard: {
     id: 'dashboard',
-    title: 'Environmental Dashboard',
-    subtitle: 'Region-wide environmental snapshot vs Portugal national baseline',
+    title: 'Regional Dashboard',
+    subtitle: '',
     color: '#1B3A2F',
     icon: 'activity',
-    description: 'Region-wide environmental snapshot vs Portugal national baseline',
+    description: '',
     accentColor: '#1B3A2F',
-    intro: `A region-wide environmental snapshot of Odemira covering weather trajectories, soil composition, water balance and biodiversity, sampled from the LandLibrary data pipeline. Every cell on this page is sourced from a named API or model — see the data gap ledger below for what is wired today vs what still needs a regional aggregation endpoint.`,
+    intro: '',
     articles: [],
     mapLayers: [],
     visuals: {},
