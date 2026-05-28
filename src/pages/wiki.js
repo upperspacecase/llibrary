@@ -680,6 +680,14 @@ function renderEnvironmentalDashboard() {
             <span class="ed-map-legend-empty">Loading…</span>
           </div>
         </div>
+
+        <div class="ed-map-lulc-controls" id="ed-map-lulc-controls" hidden>
+          <button type="button" class="ed-map-lulc-play" id="ed-map-lulc-play" aria-label="Play / pause">▶</button>
+          <div class="ed-map-lulc-track">
+            <input type="range" class="ed-map-lulc-slider" id="ed-map-lulc-slider" min="0" max="0" step="1" value="0" aria-label="Land cover year" />
+            <div class="ed-map-lulc-meta">Land cover · <strong id="ed-map-lulc-year">—</strong></div>
+          </div>
+        </div>
       </section>
 
       <div class="ed-grid">
@@ -1083,6 +1091,45 @@ function renderEnvironmentalDashboard() {
   `;
 }
 
+// Esri Living Atlas Sentinel-2 10m Annual Land Cover — one helper shared by
+// the bottom card map and the top-map Land Use toggle. The catalog enumerates
+// per-year rasters; their OBJECTIDs feed the mosaicRule that pins exportImage
+// to a single year.
+const LULC_IMAGE_SERVER = 'https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer';
+let lulcYearsPromise = null;
+function loadLulcYears() {
+  if (lulcYearsPromise) return lulcYearsPromise;
+  lulcYearsPromise = fetch(
+    `${LULC_IMAGE_SERVER}/query?where=1%3D1&outFields=OBJECTID,Name&returnGeometry=false&f=json`
+  )
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => {
+      if (!d) return [];
+      return (d.features || [])
+        .map(f => {
+          const m = /(\d{4})$/.exec(f.attributes?.Name || '');
+          return m ? { year: Number(m[1]), oid: f.attributes.OBJECTID } : null;
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.year - b.year);
+    })
+    .catch(() => []);
+  return lulcYearsPromise;
+}
+function lulcTileUrl(oid) {
+  const mosaicRule = encodeURIComponent(JSON.stringify({
+    mosaicMethod: 'esriMosaicLockRaster',
+    lockRasterIds: [oid],
+  }));
+  return (
+    `${LULC_IMAGE_SERVER}/exportImage` +
+    `?bbox={bbox-epsg-3857}` +
+    `&bboxSR=3857&imageSR=3857` +
+    `&size=512,512&format=png&transparent=true&f=image` +
+    `&mosaicRule=${mosaicRule}`
+  );
+}
+
 // Hydrate the dashboard cells with real values from /api/regions/odemira.
 // Every cell tagged with [data-cell="<dot.path>"] is resolved against the
 // response; null/undefined values keep their DATA? placeholder.
@@ -1390,36 +1437,13 @@ async function hydrateEnvironmentalDashboard() {
     const titleEl   = document.getElementById('ed-landcover-map-title');
     if (!container || !mapboxgl.accessToken) return;
 
-    const IMAGE_SERVER = 'https://ic.imagery1.arcgis.com/arcgis/rest/services/Sentinel2_10m_LandCover/ImageServer';
-    let latest;
-    try {
-      const res = await fetch(
-        `${IMAGE_SERVER}/query?where=1%3D1&outFields=OBJECTID,Name&returnGeometry=false&f=json`
-      );
-      if (!res.ok) return;
-      const d = await res.json();
-      const rows = (d.features || []).map(f => {
-        const m = /(\d{4})$/.exec(f.attributes?.Name || '');
-        return m ? { year: Number(m[1]), oid: f.attributes.OBJECTID } : null;
-      }).filter(Boolean).sort((a, b) => a.year - b.year);
-      latest = rows[rows.length - 1];
-    } catch { return; }
-    if (!latest) return;
+    const years = await loadLulcYears();
+    if (!years.length) return;
+    const latest = years[years.length - 1];
 
     if (titleEl) {
       titleEl.innerHTML = `Latest year overlay <span>(Sentinel-2 10m · ${latest.year})</span>`;
     }
-
-    const mosaicRule = encodeURIComponent(JSON.stringify({
-      mosaicMethod: 'esriMosaicLockRaster',
-      lockRasterIds: [latest.oid],
-    }));
-    const tileUrl =
-      `${IMAGE_SERVER}/exportImage` +
-      `?bbox={bbox-epsg-3857}` +
-      `&bboxSR=3857&imageSR=3857` +
-      `&size=512,512&format=png&transparent=true&f=image` +
-      `&mosaicRule=${mosaicRule}`;
 
     const map = createMap('ed-landcover-map', {
       center: [-8.6400, 37.5500],
@@ -1429,7 +1453,7 @@ async function hydrateEnvironmentalDashboard() {
     });
 
     map.on('load', () => {
-      map.addSource('lulc', { type: 'raster', tiles: [tileUrl], tileSize: 512 });
+      map.addSource('lulc', { type: 'raster', tiles: [lulcTileUrl(latest.oid)], tileSize: 512 });
       map.addLayer({
         id: 'lulc-layer',
         type: 'raster',
@@ -1579,8 +1603,9 @@ async function hydrateEnvironmentalDashboard() {
     // ---- Toggle wiring ----
     const sensorsToggle = togglesEl.querySelector('[data-toggle="sensors"] input');
     const hydroToggle   = togglesEl.querySelector('[data-toggle="hydro"] input');
-    // Land Use + Biodiversity are placeholders for now; the switches
-    // animate but the layers don't exist yet.
+    const landuseToggle = togglesEl.querySelector('[data-toggle="landuse"] input');
+    // Biodiversity is a placeholder for now; the switch animates but the
+    // layer doesn't exist yet.
 
     if (sensorsToggle) {
       sensorsToggle.addEventListener('change', () => {
@@ -1631,6 +1656,87 @@ async function hydrateEnvironmentalDashboard() {
             map.setLayoutProperty('ed-water-outline', 'visibility', on ? 'visible' : 'none');
           }
         } catch (_) {}
+      });
+    }
+
+    // ---- Land Use toggle: Esri Living Atlas Sentinel-2 10m raster + scrubber ----
+    const lulcCtrls   = document.getElementById('ed-map-lulc-controls');
+    const lulcSlider  = document.getElementById('ed-map-lulc-slider');
+    const lulcPlayBtn = document.getElementById('ed-map-lulc-play');
+    const lulcYearLbl = document.getElementById('ed-map-lulc-year');
+    let lulcYears = [];
+    let lulcPlayTimer = null;
+
+    const stopLulcPlay = () => {
+      if (lulcPlayTimer) { clearInterval(lulcPlayTimer); lulcPlayTimer = null; }
+      if (lulcPlayBtn) lulcPlayBtn.textContent = '▶';
+    };
+    const setLulcYearIdx = (idx) => {
+      if (!lulcYears.length) return;
+      const y = lulcYears[Math.max(0, Math.min(idx, lulcYears.length - 1))];
+      if (!y) return;
+      const src = map.getSource('lulc-top');
+      if (src && src.setTiles) src.setTiles([lulcTileUrl(y.oid)]);
+      if (lulcYearLbl) lulcYearLbl.textContent = String(y.year);
+    };
+
+    if (landuseToggle) {
+      landuseToggle.addEventListener('change', async () => {
+        const on = landuseToggle.checked;
+        if (on) {
+          if (!lulcYears.length) lulcYears = await loadLulcYears();
+          if (!lulcYears.length) { landuseToggle.checked = false; return; }
+          const latestIdx = lulcYears.length - 1;
+          if (!map.getSource('lulc-top')) {
+            map.addSource('lulc-top', {
+              type: 'raster',
+              tiles: [lulcTileUrl(lulcYears[latestIdx].oid)],
+              tileSize: 512,
+            });
+            map.addLayer({
+              id: 'lulc-top-layer',
+              type: 'raster',
+              source: 'lulc-top',
+              paint: { 'raster-opacity': 0.7 },
+            });
+          } else {
+            map.setLayoutProperty('lulc-top-layer', 'visibility', 'visible');
+          }
+          if (lulcSlider) {
+            lulcSlider.min = '0';
+            lulcSlider.max = String(latestIdx);
+            lulcSlider.value = String(latestIdx);
+          }
+          if (lulcYearLbl) lulcYearLbl.textContent = String(lulcYears[latestIdx].year);
+          if (lulcCtrls) lulcCtrls.hidden = false;
+        } else {
+          stopLulcPlay();
+          if (map.getLayer('lulc-top-layer')) {
+            map.setLayoutProperty('lulc-top-layer', 'visibility', 'none');
+          }
+          if (lulcCtrls) lulcCtrls.hidden = true;
+        }
+      });
+    }
+
+    if (lulcSlider) {
+      lulcSlider.addEventListener('input', () => {
+        stopLulcPlay();
+        setLulcYearIdx(Number(lulcSlider.value));
+      });
+    }
+    if (lulcPlayBtn) {
+      lulcPlayBtn.addEventListener('click', () => {
+        if (lulcPlayTimer) { stopLulcPlay(); return; }
+        lulcPlayBtn.textContent = '❚❚';
+        lulcPlayTimer = setInterval(() => {
+          if (!lulcSlider) return;
+          const max = Number(lulcSlider.max);
+          let next = Number(lulcSlider.value) + 1;
+          if (next > max) next = 0;
+          lulcSlider.value = String(next);
+          setLulcYearIdx(next);
+        }, 900);
       });
     }
 

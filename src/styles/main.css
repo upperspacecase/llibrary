@@ -9366,6 +9366,81 @@ a {
   display: block;
 }
 
+/* Land Use year scrubber overlayed on the top region map ---------------- */
+.ed-map-lulc-controls {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+  background: rgba(43, 43, 43, 0.92);
+  border-radius: 999px;
+  padding: 6px 18px 6px 6px;
+  color: #fafafa;
+  backdrop-filter: blur(6px);
+  z-index: 5;
+  width: min(440px, 60vw);
+}
+.ed-map-lulc-controls[hidden] { display: none; }
+.ed-map-lulc-play {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: #2C2C2C;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ed-map-lulc-play:hover { background: #f5f1e8; }
+.ed-map-lulc-track {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.ed-map-lulc-slider {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 4px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+.ed-map-lulc-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #1d9e75;
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.ed-map-lulc-slider::-moz-range-thumb {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #1d9e75;
+  border: 2px solid #fff;
+  cursor: pointer;
+}
+.ed-map-lulc-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.78);
+  letter-spacing: 0.04em;
+}
+.ed-map-lulc-meta strong {
+  color: #fff;
+  font-weight: 700;
+}
+
 /* iNaturalist observation heatmap card */
 .ed-obs-card { padding: 16px; }
 .ed-obs-stats {
