@@ -688,6 +688,10 @@ function renderEnvironmentalDashboard() {
               <span class="ed-map-view-icon">${lucide('cloud-sun', 14)}</span>
               <span>Rainfall</span>
             </button>
+            <button type="button" class="ed-map-view-btn" data-view="soil" aria-pressed="false">
+              <span class="ed-map-view-icon">${lucide('sprout', 14)}</span>
+              <span>Soil</span>
+            </button>
           </div>
 
           <div class="ed-map-legend" id="ed-map-legend">
@@ -803,6 +807,16 @@ function renderEnvironmentalDashboard() {
               <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
             </svg>
             <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Soil temperature &amp; moisture <span>(Open-Meteo ERA5 archive · 0–7 cm · last 5 yr)</span></div>
+            <svg class="ed-soil-series" id="ed-soil-series" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
+              <text x="500" y="120" text-anchor="middle" fill="#888">Loading…</text>
+            </svg>
+            <div class="ed-soil-series-legend">
+              <span><i style="background:#b85a3a"></i>Soil temp (°C)</span>
+              <span><i style="background:#3d6b8c"></i>Soil moisture (m³/m³)</span>
+            </div>
           </div>
         </section>
 
@@ -1395,6 +1409,110 @@ async function hydrateEnvironmentalDashboard() {
     hydrated += 1;
   })();
 
+  // Soil temperature + moisture (Open-Meteo ERA5 archive, daily mean 0–7 cm,
+  // last ~5 years). Fetched directly from the browser — Open-Meteo allows
+  // CORS and the response is small (~45 KB). Charted with two Y-axes: temp
+  // °C on the left in terracotta, moisture m³/m³ on the right in blue.
+  (async () => {
+    const svg = document.getElementById('ed-soil-series');
+    if (!svg) return;
+
+    let coords = payload.property?.coords;
+    if (Array.isArray(coords)) coords = { lat: coords[0], lng: coords[1] };
+    if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
+      // Fall back to Odemira town centre.
+      coords = { lat: 37.55, lng: -8.64 };
+    }
+
+    const today = new Date();
+    const end = today.toISOString().slice(0, 10);
+    const startD = new Date(today.getTime() - 5 * 365 * 86400000).toISOString().slice(0, 10);
+    let data;
+    try {
+      data = await fetchJson(
+        'https://archive-api.open-meteo.com/v1/archive' +
+        `?latitude=${coords.lat.toFixed(4)}&longitude=${coords.lng.toFixed(4)}` +
+        `&start_date=${startD}&end_date=${end}` +
+        '&daily=soil_temperature_0_to_7cm_mean,soil_moisture_0_to_7cm_mean' +
+        '&timezone=auto'
+      );
+    } catch {
+      svg.innerHTML = '<text x="500" y="120" text-anchor="middle" fill="#888">Soil archive unavailable.</text>';
+      return;
+    }
+    const daily = data?.daily;
+    const times = daily?.time;
+    const temps = daily?.soil_temperature_0_to_7cm_mean;
+    const moist = daily?.soil_moisture_0_to_7cm_mean;
+    if (!Array.isArray(times) || !Array.isArray(temps) || !Array.isArray(moist) || !times.length) {
+      svg.innerHTML = '<text x="500" y="120" text-anchor="middle" fill="#888">No soil data returned.</text>';
+      return;
+    }
+
+    const W = 1000, H = 240, PAD = { l: 44, r: 44, t: 14, b: 22 };
+    const cW = W - PAD.l - PAD.r;
+    const cH = H - PAD.t - PAD.b;
+
+    const validTemps = temps.filter(v => v != null);
+    const validMoist = moist.filter(v => v != null);
+    if (!validTemps.length || !validMoist.length) {
+      svg.innerHTML = '<text x="500" y="120" text-anchor="middle" fill="#888">No soil data returned.</text>';
+      return;
+    }
+    const tMin = Math.floor(Math.min(...validTemps) / 5) * 5;
+    const tMax = Math.ceil(Math.max(...validTemps) / 5) * 5;
+    const mMax = Math.max(0.5, Math.ceil(Math.max(...validMoist) * 10) / 10);
+
+    const xFor = i => PAD.l + (i / (times.length - 1)) * cW;
+    const yTemp = v => PAD.t + (1 - (v - tMin) / (tMax - tMin)) * cH;
+    const yMoist = v => PAD.t + (1 - v / mMax) * cH;
+
+    // Grid + axes
+    const ticks = 4;
+    let grid = '';
+    for (let i = 0; i <= ticks; i++) {
+      const tv = tMin + ((tMax - tMin) / ticks) * i;
+      const mv = (mMax / ticks) * i;
+      const y = yTemp(tv);
+      grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+      grid += `<text x="${(PAD.l - 8).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#888" text-anchor="end">${Math.round(tv)}</text>`;
+      grid += `<text x="${(W - PAD.r + 8).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#888" text-anchor="start">${mv.toFixed(2)}</text>`;
+    }
+    grid += `<text x="${PAD.l - 8}" y="${PAD.t - 6}" font-size="11" font-weight="700" fill="#b85a3a" text-anchor="end">°C</text>`;
+    grid += `<text x="${W - PAD.r + 8}" y="${PAD.t - 6}" font-size="11" font-weight="700" fill="#3d6b8c" text-anchor="start">m³/m³</text>`;
+
+    // X labels (year markers)
+    let xLabels = '';
+    const yearsSeen = new Set();
+    for (let i = 0; i < times.length; i += Math.floor(times.length / 6)) {
+      const y = times[i].slice(0, 4);
+      if (yearsSeen.has(y)) continue;
+      yearsSeen.add(y);
+      const x = xFor(i);
+      xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
+    }
+
+    // Polylines — skip null spans so the line breaks cleanly.
+    function buildPolylines(values, yFor, stroke) {
+      let out = '';
+      let pts = [];
+      for (let i = 0; i < values.length; i++) {
+        const v = values[i];
+        if (v == null) {
+          if (pts.length > 1) out += `<polyline fill="none" stroke="${stroke}" stroke-width="1" opacity="0.85" points="${pts.join(' ')}" />`;
+          pts = [];
+          continue;
+        }
+        pts.push(`${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`);
+      }
+      if (pts.length > 1) out += `<polyline fill="none" stroke="${stroke}" stroke-width="1" opacity="0.85" points="${pts.join(' ')}" />`;
+      return out;
+    }
+
+    svg.innerHTML = `${grid}${xLabels}${buildPolylines(temps, yTemp, '#b85a3a')}${buildPolylines(moist, yMoist, '#3d6b8c')}`;
+    hydrated += 1;
+  })();
+
   // Land cover overlay map — Esri Living Atlas Sentinel-2 10m raster.
   // Looks up the latest annual raster, renders it as a Mapbox raster source
   // via the ImageServer's exportImage endpoint.
@@ -1896,6 +2014,36 @@ async function hydrateEnvironmentalDashboard() {
       });
     };
 
+    // Soil view: SoilGrids WMS overlay (WRB Reference Soil Group Most
+    // Probable, 250 m ISRIC). Drop-in raster source via {bbox-epsg-3857}.
+    const setSoilVisible = (on) => {
+      if (on) {
+        if (!map.getSource('soilgrids-wrb')) {
+          const tileUrl =
+            'https://maps.isric.org/mapserv?map=/map/wrb.map' +
+            '&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap' +
+            '&LAYERS=MostProbable&STYLES=' +
+            '&FORMAT=image/png&TRANSPARENT=true' +
+            '&SRS=EPSG:3857&BBOX={bbox-epsg-3857}' +
+            '&WIDTH=512&HEIGHT=512';
+          map.addSource('soilgrids-wrb', { type: 'raster', tiles: [tileUrl], tileSize: 512 });
+          map.addLayer({
+            id: 'soilgrids-wrb-layer',
+            type: 'raster',
+            source: 'soilgrids-wrb',
+            paint: { 'raster-opacity': 0.7 },
+          });
+        } else {
+          map.setLayoutProperty('soilgrids-wrb-layer', 'visibility', 'visible');
+        }
+        return true;
+      }
+      if (map.getLayer('soilgrids-wrb-layer')) {
+        map.setLayoutProperty('soilgrids-wrb-layer', 'visibility', 'none');
+      }
+      return true;
+    };
+
     // Two raster sources ping-ponged on year change so the new year's tiles
     // can paint over the old set instead of blanking. raster-opacity-transition
     // animates the crossfade.
@@ -2026,12 +2174,32 @@ async function hydrateEnvironmentalDashboard() {
         </div>`;
     };
 
+    // SoilGrids WRB Reference Soil Groups likely to appear over Iberia.
+    // Colors taken from the WMS palette to match the raster.
+    const soilLegendHtml = () => {
+      const chips = [
+        ['#d4a574', 'Cambisols'],
+        ['#a89580', 'Luvisols'],
+        ['#b4b2a9', 'Leptosols'],
+        ['#c9c08a', 'Regosols'],
+        ['#7a9ab5', 'Fluvisols'],
+        ['#e8d098', 'Arenosols'],
+      ];
+      return chips.map(([c, l]) =>
+        `<div class="ed-map-legend-row">
+          <span class="ed-map-legend-chip" style="background:${c}"></span>
+          <span class="ed-map-legend-label">${l}</span>
+        </div>`).join('') +
+        `<div class="ed-map-legend-row" style="font-size:10px;color:#888;display:block;margin-top:4px;">SoilGrids WRB · 250 m · ISRIC</div>`;
+    };
+
     const VIEW_META = {
       sensors:  { title: 'SENSOR LEGEND',     body: sensorLegendHtml },
       landuse:  { title: 'LAND COVER LEGEND', body: lulcLegendHtml },
       hydro:    { title: 'HYDROLOGY LEGEND',  body: hydroLegendHtml },
       bio:      { title: 'BIODIVERSITY',      body: bioLegendHtml },
       rainfall: { title: 'RAINFALL LEGEND',   body: rainLegendHtml },
+      soil:     { title: 'SOIL LEGEND',       body: soilLegendHtml },
     };
 
     // Hydrology view reads better against the topographic outdoors basemap;
@@ -2045,6 +2213,7 @@ async function hydrateEnvironmentalDashboard() {
       hydro:    'outdoors',
       bio:      'satellite',
       rainfall: 'satellite',
+      soil:     'satellite',
     };
     const STYLE_URLS = {
       satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -2058,6 +2227,7 @@ async function hydrateEnvironmentalDashboard() {
       await setLulcVisible(view === 'landuse');
       await setBioVisible(view === 'bio');
       await setRainfallVisible(view === 'rainfall');
+      setSoilVisible(view === 'soil');
     };
 
     let currentView = null;
