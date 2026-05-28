@@ -2220,18 +2220,18 @@ async function hydrateEnvironmentalDashboard() {
         </div>`;
     };
 
-    // SoilGrids WRB Reference Soil Group official palette (ISRIC).
-    // Showing the groups that actually appear over Odemira — Cambisols
-    // (the dominant salmon-pink), Arenosols on the dunes, plus the
-    // smaller patches of Luvisols / Leptosols / Regosols / Fluvisols.
+    // Colors sampled directly from the SoilGrids WRB MostProbable raster
+    // as it actually paints over Odemira (82% salmon Luvisols, 17% golden
+    // Cambisols, plus trace Fluvisols/Plinthosols/Phaeozems). Showing
+    // only the classes that visibly appear so legend chips line up with
+    // what's on the map.
     const soilLegendHtml = () => {
       const chips = [
-        ['#FF99CC', 'Cambisols'],
-        ['#FFFF99', 'Arenosols'],
-        ['#66FF66', 'Luvisols'],
-        ['#999999', 'Leptosols'],
-        ['#66CC99', 'Regosols'],
-        ['#00CCCC', 'Fluvisols'],
+        ['#F48385', 'Luvisols'],
+        ['#FECD67', 'Cambisols'],
+        ['#01B0EF', 'Fluvisols'],
+        ['#9E567C', 'Plinthosols'],
+        ['#BA6850', 'Phaeozems'],
       ];
       return chips.map(([c, l]) =>
         `<div class="ed-map-legend-row">
