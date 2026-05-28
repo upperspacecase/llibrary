@@ -803,8 +803,6 @@ function renderEnvironmentalDashboard() {
               <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
             </svg>
             <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
-            <div class="ed-landcover-map-title" id="ed-landcover-map-title">Latest year overlay <span>(loading…)</span></div>
-            <div class="ed-landcover-map" id="ed-landcover-map" aria-label="Land cover map of Odemira"></div>
           </div>
         </section>
 
@@ -867,20 +865,6 @@ function renderEnvironmentalDashboard() {
                 <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-reservoirs-readings" id="ed-groundwater-readings"></div>
-            </div>
-
-            <div class="ed-card ed-card--span-12 ed-rainfall">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Annual rainfall <span>(Open-Meteo ERA5 archive · 1940 → today)</span></div>
-                <div class="ed-rainfall-summary" id="ed-rainfall-summary">—</div>
-              </div>
-              <svg class="ed-rainfall-chart" id="ed-rainfall-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
-                <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-rainfall-legend">
-                <span class="ed-rainfall-leg-bar"><i></i>Annual rainfall (mm)</span>
-                <span class="ed-rainfall-leg-normal"><i></i>1991–2020 normal (<span id="ed-rainfall-normal">—</span> mm)</span>
-              </div>
             </div>
 
             <div class="ed-subhead ed-card--span-12">Water quality</div>
@@ -962,17 +946,6 @@ function renderEnvironmentalDashboard() {
             <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
           </div>
 
-          <!-- Wiki ecology articles -->
-          <div class="ed-weather-block">
-            <div class="ed-card-title">Ecology background</div>
-            <div class="ed-bio-articles" id="ed-bio-articles"></div>
-          </div>
-
-          <!-- Sources -->
-          <div class="ed-weather-block">
-            <div class="ed-card-title">Sources</div>
-            <ul class="ed-bio-sources" id="ed-bio-sources"></ul>
-          </div>
         </section>
 
       </div>
@@ -2765,11 +2738,9 @@ async function hydrateEnvironmentalDashboard() {
   // Biodiversity: wiki ecology cards (stats, articles, sources) + observations-
   // per-year stacked bar chart + Flora & Fauna table fed by iNaturalist data.
   (async () => {
-    // ---- Wiki ecology stats / articles / sources --------------------------
+    // ---- Wiki ecology stats ------------------------------------------------
     const ecology = getSectionById('ecology');
-    const statsEl    = document.getElementById('ed-bio-stats');
-    const articlesEl = document.getElementById('ed-bio-articles');
-    const sourcesEl  = document.getElementById('ed-bio-sources');
+    const statsEl = document.getElementById('ed-bio-stats');
     if (statsEl && ecology?.visuals?.stats) {
       statsEl.innerHTML = ecology.visuals.stats.map(s => `
         <div class="ed-bio-stat">
@@ -2777,17 +2748,6 @@ async function hydrateEnvironmentalDashboard() {
           <div class="ed-bio-stat-label">${s.label}</div>
           ${s.sublabel ? `<div class="ed-bio-stat-sub">${s.sublabel}</div>` : ''}
         </div>`).join('');
-    }
-    if (articlesEl && Array.isArray(ecology?.articles)) {
-      articlesEl.innerHTML = ecology.articles.map(a => `
-        <article class="ed-bio-article">
-          <h4>${a.title}</h4>
-          <p>${a.content}</p>
-        </article>`).join('');
-    }
-    if (sourcesEl && Array.isArray(ecology?.references)) {
-      sourcesEl.innerHTML = ecology.references.map(r => `
-        <li><a href="${r.url}" target="_blank" rel="noopener noreferrer">${r.title}</a></li>`).join('');
     }
 
     // ---- iNaturalist observations: per-year stacked bars + species table --
