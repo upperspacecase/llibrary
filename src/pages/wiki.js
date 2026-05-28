@@ -719,99 +719,59 @@ function renderEnvironmentalDashboard() {
         <!-- WEATHER -->
         <section class="ed-panel ed-panel--weather">
           <div class="ed-panel-head">${lucide('cloud-sun')} Weather</div>
-          <div class="ed-weather-grid">
-            <div class="ed-card ed-card--span-6">
-              <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
-              <div class="ed-traj-head">
-                <div></div><div>1975–84</div><div>2015–24</div><div>Last 5 yr</div><div class="ed-traj-delta">vs Baseline</div>
-              </div>
-              ${trajectoryRows}
-            </div>
-            <div class="ed-card ed-card--span-6">
-              <div class="ed-card-title">Monthly normals <span>(1991–2020)</span></div>
-              <svg class="ed-monthly" id="ed-monthly-chart" viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true">
-                <text x="180" y="70" text-anchor="middle" class="ed-monthly-empty" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              ${monthsRow}
-              <div class="ed-monthly-legend">
-                <span><i style="background:#8b9a7e"></i>Rainfall (mm)</span>
-                <span><i style="background:#b85a3a"></i>Temperature (°C)</span>
-              </div>
-            </div>
-            <div class="ed-card ed-card--span-3">
-              <div class="ed-card-title">Solar potential</div>
-              <div class="ed-mini-row">
-                <span class="ed-mini-icon">${lucide('sun', 22)}</span>
-                <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.solar.kWhPerM2Yr', 'int', ' kWh/m²/yr')}
-                  <div class="ed-mini-sub">annual mean · GHI</div>
-                </div>
-              </div>
-            </div>
-            <div class="ed-card ed-card--span-3">
-              <div class="ed-card-title">Wind potential</div>
-              <div class="ed-mini-row">
-                <span class="ed-mini-icon">${lucide('wind', 22)}</span>
-                <div class="ed-mini-stack">
-                  ${P('Open-Meteo Solar/Wind', 'energy.wind.ms100m', '1f', ' m/s')}
-                  <div class="ed-mini-sub">at 100 m · annual mean</div>
-                </div>
-              </div>
-            </div>
 
-            <div class="ed-card ed-card--span-12 ed-met-rainfall">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Annual rainfall by station <span>(in-situ pluviometers · mm/yr)</span></div>
-                <div class="ed-reservoirs-picker">
-                  <label for="ed-met-rainfall-select">Highlight</label>
-                  <select id="ed-met-rainfall-select" disabled><option>Loading…</option></select>
-                </div>
-              </div>
-              <div class="ed-reservoirs-legend">
-                <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-met-rainfall-hero-label">Selected station</span></span>
-                <span class="ed-reservoirs-leg-other"><i></i>Other stations in Odemira</span>
-              </div>
-              <svg class="ed-reservoirs-chart" id="ed-met-rainfall-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
-                <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-reservoirs-readings" id="ed-met-rainfall-readings"></div>
+          <!-- Regional Weather Average — full-width climograph -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Regional Weather Average <span>(1991–2020 monthly normals)</span></div>
+            <svg class="ed-monthly ed-monthly--wide" id="ed-monthly-chart" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-hidden="true">
+              <text x="500" y="130" text-anchor="middle" class="ed-monthly-empty" fill="#b91c1c" font-weight="900">DATA?</text>
+            </svg>
+            ${monthsRow}
+            <div class="ed-monthly-legend">
+              <span><i style="background:#8b9a7e"></i>Rainfall (mm)</span>
+              <span><i style="background:#b85a3a"></i>Temperature (°C)</span>
             </div>
+          </div>
 
-            <div class="ed-card ed-card--span-12 ed-met-maxdaily">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Wettest day per year <span>(max daily rainfall · mm)</span></div>
-                <div class="ed-reservoirs-picker">
-                  <label for="ed-met-maxdaily-select">Station</label>
-                  <select id="ed-met-maxdaily-select" disabled><option>Loading…</option></select>
-                </div>
-              </div>
-              <div class="ed-reservoirs-legend">
-                <span class="ed-maxdaily-leg-bar"><i></i>Annual max daily rainfall (mm)</span>
-                <span class="ed-maxdaily-leg-trend"><i></i>Linear trend</span>
-              </div>
-              <svg class="ed-maxdaily-chart" id="ed-met-maxdaily-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
-                <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-reservoirs-readings" id="ed-met-maxdaily-readings"></div>
+          <!-- Climate Trajectory — full-width table with dedicated sparkline column -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
+            <div class="ed-traj-head">
+              <div></div>
+              <div>1975–84</div>
+              <div>2015–24</div>
+              <div>Last 5 yr</div>
+              <div class="ed-traj-delta">vs Baseline</div>
+              <div class="ed-traj-spark-head">Trend</div>
             </div>
+            ${trajectoryRows}
+          </div>
 
-            <div class="ed-card ed-card--span-12 ed-met-evap">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Pan evaporation <span>(Piche / Class-A tank · mm/yr)</span></div>
-                <div class="ed-reservoirs-picker">
-                  <label for="ed-met-evap-select">Highlight</label>
-                  <select id="ed-met-evap-select" disabled><option>Loading…</option></select>
-                </div>
-              </div>
-              <div class="ed-reservoirs-legend">
-                <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-met-evap-hero-label">Selected station</span></span>
-                <span class="ed-reservoirs-leg-other"><i></i>Other stations</span>
-              </div>
-              <svg class="ed-reservoirs-chart" id="ed-met-evap-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
-                <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-reservoirs-readings" id="ed-met-evap-readings"></div>
+          <!-- Annual rainfall by station -->
+          <div class="ed-weather-block ed-met-rainfall">
+            <div class="ed-card-title">Annual rainfall by station <span>(in-situ pluviometers)</span></div>
+            <div class="ed-reservoirs-legend">
+              <span class="ed-reservoirs-leg-mean"><i></i>Regional mean</span>
+              <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-met-rainfall-hero-label">Selected station</span></span>
+              <span class="ed-reservoirs-leg-other"><i></i>Other stations</span>
             </div>
+            <svg class="ed-reservoirs-chart" id="ed-met-rainfall-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
+              <text x="500" y="140" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+            </svg>
+            <div class="ed-station-picker-label">Select a station to highlight</div>
+            <div class="ed-station-picker" id="ed-met-rainfall-stations"></div>
+            <select id="ed-met-rainfall-select" hidden></select>
+          </div>
+
+          <!-- SPI-12 drought index — moved from Water section -->
+          <div class="ed-weather-block">
+            <div class="ed-card-title">Drought Index — SPI-12 <span id="ed-spi-range">(12-month standardized precipitation index)</span></div>
+            <svg class="ed-spi-ribbon" id="ed-spi-ribbon" viewBox="0 0 1000 32" preserveAspectRatio="none" aria-hidden="true">
+              <rect width="1000" height="32" fill="#fef2f2"/>
+              <text x="500" y="20" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+            </svg>
+            <div class="ed-legend-row">${spiLegend}</div>
+            <div class="ed-years ed-years--wide" id="ed-spi-years"></div>
           </div>
         </section>
 
@@ -848,15 +808,6 @@ function renderEnvironmentalDashboard() {
                 <text x="350" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-years" id="ed-wb-years"></div>
-            </div>
-            <div class="ed-card ed-card--span-12">
-              <div class="ed-card-title">SPI-12 <span id="ed-spi-range">(drought index)</span></div>
-              <svg class="ed-spi-ribbon" id="ed-spi-ribbon" viewBox="0 0 1000 32" preserveAspectRatio="none" aria-hidden="true">
-                <rect width="1000" height="32" fill="#fef2f2"/>
-                <text x="500" y="20" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-legend-row">${spiLegend}</div>
-              <div class="ed-years ed-years--wide" id="ed-spi-years"></div>
             </div>
 
             <div class="ed-card ed-card--span-12 ed-reservoirs">
@@ -1421,7 +1372,9 @@ async function hydrateEnvironmentalDashboard() {
     }
   });
 
-  // Monthly normals: bars (precip) + line (temp)
+  // Monthly normals climograph: precipitation bars + temperature line.
+  // Wide layout (1000x260) with mm tick labels on the left Y-axis and
+  // °C tick labels on the right Y-axis.
   (() => {
     const svg = document.getElementById('ed-monthly-chart');
     if (!svg) return;
@@ -1432,37 +1385,63 @@ async function hydrateEnvironmentalDashboard() {
     if (precip.length !== 12 || hi.length !== 12 || lo.length !== 12) return;
     const tempMean = hi.map((h, i) => (h + lo[i]) / 2);
 
-    const W = 360, H = 140, PAD = 20;
-    const innerW = W - PAD * 2;
-    const innerH = H - PAD;
+    const W = 1000, H = 260;
+    const PAD = { l: 48, r: 48, t: 18, b: 22 };
+    const innerW = W - PAD.l - PAD.r;
+    const innerH = H - PAD.t - PAD.b;
     const slot = innerW / 12;
-    const pMax = Math.max(1, ...precip);
-    const tMin = Math.min(...tempMean);
-    const tMax = Math.max(...tempMean);
+
+    // Nice round Y-axis ranges
+    const niceMax = (v) => {
+      const exp = Math.pow(10, Math.floor(Math.log10(v || 1)));
+      const n = v / exp;
+      const stepped = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+      return stepped * exp;
+    };
+    const pMax = niceMax(Math.max(1, ...precip) * 1.05);
+    const tMinRaw = Math.min(0, ...tempMean);
+    const tMaxRaw = Math.max(...tempMean) * 1.05;
+    const tMin = Math.floor(tMinRaw / 5) * 5;
+    const tMax = Math.ceil(tMaxRaw / 5) * 5;
     const tRange = (tMax - tMin) || 1;
 
+    const yPrecip = v => PAD.t + (1 - v / pMax) * innerH;
+    const yTemp   = v => PAD.t + (1 - (v - tMin) / tRange) * innerH;
+
+    // Grid + axis labels (mm on left, °C on right)
+    const ticks = 4;
+    let grid = '';
+    for (let i = 0; i <= ticks; i++) {
+      const pv = (pMax / ticks) * i;
+      const tv = tMin + (tRange / ticks) * i;
+      const y  = yPrecip(pv);
+      grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+      grid += `<text x="${(PAD.l - 8).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#888" text-anchor="end">${Math.round(pv)}</text>`;
+      grid += `<text x="${(W - PAD.r + 8).toFixed(1)}" y="${(y + 4).toFixed(1)}" font-size="11" fill="#888" text-anchor="start">${Math.round(tv)}</text>`;
+    }
+
     const bars = precip.map((p, i) => {
-      const h = (p / pMax) * (innerH - 10);
-      const x = PAD + slot * i + slot * 0.15;
-      const w = slot * 0.7;
-      return `<rect x="${x.toFixed(1)}" y="${(innerH - h).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="#8b9a7e" />`;
+      const h = innerH - (yPrecip(p) - PAD.t);
+      const x = PAD.l + slot * i + slot * 0.18;
+      const w = slot * 0.64;
+      return `<rect x="${x.toFixed(1)}" y="${yPrecip(p).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" fill="#8b9a7e" />`;
     }).join('');
     const linePts = tempMean.map((t, i) => {
-      const x = PAD + slot * i + slot / 2;
-      const y = innerH - ((t - tMin) / tRange) * (innerH - 20) - 10;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
+      const x = PAD.l + slot * i + slot / 2;
+      return `${x.toFixed(1)},${yTemp(t).toFixed(1)}`;
     }).join(' ');
     const dots = tempMean.map((t, i) => {
-      const x = PAD + slot * i + slot / 2;
-      const y = innerH - ((t - tMin) / tRange) * (innerH - 20) - 10;
-      return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="#b85a3a" />`;
+      const x = PAD.l + slot * i + slot / 2;
+      return `<circle cx="${x.toFixed(1)}" cy="${yTemp(t).toFixed(1)}" r="3" fill="#b85a3a" />`;
     }).join('');
+
     svg.innerHTML = `
+      ${grid}
       ${bars}
-      <polyline fill="none" stroke="#b85a3a" stroke-width="1.5" points="${linePts}" />
+      <polyline fill="none" stroke="#b85a3a" stroke-width="2" points="${linePts}" />
       ${dots}
-      <text x="${PAD - 4}" y="${PAD - 4}" font-size="9" fill="#888" text-anchor="end">mm</text>
-      <text x="${W - PAD + 4}" y="${PAD - 4}" font-size="9" fill="#888">°C</text>
+      <text x="${PAD.l - 8}" y="${PAD.t - 6}" font-size="11" font-weight="700" fill="#5a7256" text-anchor="end">mm</text>
+      <text x="${W - PAD.r + 8}" y="${PAD.t - 6}" font-size="11" font-weight="700" fill="#b85a3a" text-anchor="start">°C</text>
     `;
     hydrated += 1;
   })();
@@ -2949,9 +2928,10 @@ async function hydrateEnvironmentalDashboard() {
   async function hydrateAnnualLinesCard({ endpoint, ids, source, unit, decimals = 0 }) {
     const chart    = document.getElementById(ids.chart);
     const select   = document.getElementById(ids.select);
-    const readings = document.getElementById(ids.readings);
+    const readings = ids.readings  ? document.getElementById(ids.readings)  : null;
     const heroLbl  = ids.heroLabel ? document.getElementById(ids.heroLabel) : null;
-    if (!chart || !select || !readings) return;
+    const pickerEl = ids.picker    ? document.getElementById(ids.picker)    : null;
+    if (!chart || !(readings || pickerEl)) return;
 
     let data;
     try {
@@ -2963,20 +2943,35 @@ async function hydrateEnvironmentalDashboard() {
     const features = data.features;
     const labelFor = (f) => f.displayName || f.code || f.externalId;
 
-    // Common X-domain: min first year → max last year across all features.
     const firstYear = Math.min(...features.map(f => f.first));
     const lastYear  = Math.max(...features.map(f => f.last));
-    // Y-domain: 0 → max value across all series, padded 10%.
     const yMax = Math.max(...features.flatMap(f => f.series.map(s => s.value))) * 1.1;
 
-    select.disabled = false;
-    select.innerHTML = features.map(f =>
-      `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)} · ${f.count} yr</option>`
-    ).join('');
-    const initialHero = (features.find(f => f.hero) || features[0]).externalId;
+    // Regional mean line: year → mean across stations that reported that year.
+    const meanByYear = new Map();
+    for (let y = firstYear; y <= lastYear; y++) {
+      const vals = [];
+      for (const f of features) {
+        const r = f.series.find(s => s.year === y);
+        if (r && Number.isFinite(r.value)) vals.push(r.value);
+      }
+      if (vals.length) meanByYear.set(y, vals.reduce((a, b) => a + b, 0) / vals.length);
+    }
+    const meanSeries = [...meanByYear.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([year, value]) => ({ year, value }));
+
+    if (select) {
+      select.disabled = false;
+      select.innerHTML = features.map(f =>
+        `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)} · ${f.count} yr</option>`
+      ).join('');
+    }
+    // Default to the regional mean (no station selected).
+    const initialHero = null;
 
     function drawChart(heroId) {
-      const W = 1000, H = 280, PAD = { l: 40, r: 14, t: 14, b: 28 };
+      const W = 1000, H = 280, PAD = { l: 56, r: 14, t: 14, b: 28 };
       const cW = W - PAD.l - PAD.r;
       const cH = H - PAD.t - PAD.b;
       const xFor = y => PAD.l + ((y - firstYear) / Math.max(1, (lastYear - firstYear))) * cW;
@@ -2988,7 +2983,8 @@ async function hydrateEnvironmentalDashboard() {
         const v = (yMax / yTicks) * i;
         const y = yFor(v);
         grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
-        grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${Math.round(v)}</text>`;
+        const label = `${Math.round(v)}${unit ? ' ' + unit : ''}`;
+        grid += `<text x="${(PAD.l - 8).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${label}</text>`;
       }
       let xLabels = '';
       const step = (lastYear - firstYear) > 60 ? 20 : 10;
@@ -3000,20 +2996,24 @@ async function hydrateEnvironmentalDashboard() {
 
       const heroColor  = '#1d9e75';
       const otherColor = '#b4b2a9';
+      const meanColor  = '#b85a3a'; // terracotta
       let lines = '';
       const ordered = [...features].sort((a, b) => (a.externalId === heroId ? 1 : 0) - (b.externalId === heroId ? 1 : 0));
       for (const f of ordered) {
         const isHero = f.externalId === heroId;
-        const pts = f.series
-          .map(s => `${xFor(s.year).toFixed(1)},${yFor(s.value).toFixed(1)}`)
-          .join(' ');
+        const pts = f.series.map(s => `${xFor(s.year).toFixed(1)},${yFor(s.value).toFixed(1)}`).join(' ');
         if (!pts) continue;
-        lines += `<polyline fill="none" stroke="${isHero ? heroColor : otherColor}" stroke-width="${isHero ? 1.6 : 0.8}" opacity="${isHero ? 1 : 0.45}" points="${pts}" />`;
+        lines += `<polyline fill="none" stroke="${isHero ? heroColor : otherColor}" stroke-width="${isHero ? 1.6 : 0.7}" opacity="${isHero ? 1 : 0.35}" points="${pts}" />`;
+      }
+      const meanPts = meanSeries.map(s => `${xFor(s.year).toFixed(1)},${yFor(s.value).toFixed(1)}`).join(' ');
+      if (meanPts) {
+        lines += `<polyline fill="none" stroke="${meanColor}" stroke-width="2.2" opacity="0.95" points="${meanPts}" />`;
       }
       chart.innerHTML = `${grid}${xLabels}${lines}`;
     }
 
     function renderTiles(heroId) {
+      if (!readings) return;
       readings.innerHTML = features.map(f => {
         const isHero = f.externalId === heroId;
         const last   = f.series[f.series.length - 1];
@@ -3034,141 +3034,57 @@ async function hydrateEnvironmentalDashboard() {
       readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
         el.addEventListener('click', () => {
           const id = el.getAttribute('data-external-id');
-          if (id && id !== heroId) { select.value = id; applySelection(id); }
+          applySelection(id === heroId ? null : id);
+        });
+      });
+    }
+
+    function renderPicker(heroId) {
+      if (!pickerEl) return;
+      pickerEl.innerHTML = `
+        <button type="button" class="ed-station-chip${heroId == null ? ' is-active' : ''}" data-external-id="">
+          All stations
+        </button>` +
+        features.map(f => `
+          <button type="button" class="ed-station-chip${f.externalId === heroId ? ' is-active' : ''}" data-external-id="${f.externalId}">
+            ${f.displayName || f.code || f.externalId}
+          </button>`).join('');
+      pickerEl.querySelectorAll('.ed-station-chip').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-external-id');
+          applySelection(id || null);
         });
       });
     }
 
     function applySelection(heroId) {
-      const f = features.find(x => x.externalId === heroId) || features[0];
-      if (heroLbl) heroLbl.textContent = labelFor(f);
-      drawChart(f.externalId);
-      renderTiles(f.externalId);
-      document.dispatchEvent(new CustomEvent('station:highlight', {
-        detail: { source, externalId: f.externalId },
-      }));
+      const f = heroId ? (features.find(x => x.externalId === heroId) || null) : null;
+      if (heroLbl) heroLbl.textContent = f ? labelFor(f) : 'Regional mean';
+      drawChart(heroId);
+      renderTiles(heroId);
+      renderPicker(heroId);
+      if (f) {
+        document.dispatchEvent(new CustomEvent('station:highlight', {
+          detail: { source, externalId: f.externalId },
+        }));
+      }
     }
-    select.addEventListener('change', () => applySelection(select.value));
+    if (select) select.addEventListener('change', () => applySelection(select.value || null));
     applySelection(initialHero);
     hydrated += 1;
   }
 
   hydrateAnnualLinesCard({
     endpoint: '/api/regions/odemira/rainfall-stations',
-    ids: { chart: 'ed-met-rainfall-chart', select: 'ed-met-rainfall-select', readings: 'ed-met-rainfall-readings', heroLabel: 'ed-met-rainfall-hero-label' },
+    ids: {
+      chart: 'ed-met-rainfall-chart',
+      select: 'ed-met-rainfall-select',
+      picker: 'ed-met-rainfall-stations',
+      heroLabel: 'ed-met-rainfall-hero-label',
+    },
     source: 'snirh_meteorologica',
     unit: 'mm',
   });
-  hydrateAnnualLinesCard({
-    endpoint: '/api/regions/odemira/evaporation',
-    ids: { chart: 'ed-met-evap-chart', select: 'ed-met-evap-select', readings: 'ed-met-evap-readings', heroLabel: 'ed-met-evap-hero-label' },
-    source: 'snirh_meteorologica',
-    unit: 'mm',
-  });
-
-  // Wettest day per year — single-station bar chart with a linear-trend
-  // overlay. Dropdown switches station; clicking a tile selects it and
-  // dispatches a station:highlight event for the map.
-  (async () => {
-    const chart    = document.getElementById('ed-met-maxdaily-chart');
-    const select   = document.getElementById('ed-met-maxdaily-select');
-    const readings = document.getElementById('ed-met-maxdaily-readings');
-    if (!chart || !select || !readings) return;
-
-    let data;
-    try {
-      const res = await fetch('/api/regions/odemira/max-daily-rainfall');
-      if (!res.ok) return;
-      data = await res.json();
-      if (!data.ok || !Array.isArray(data.features) || !data.features.length) return;
-    } catch { return; }
-    const features = data.features;
-    const labelFor = (f) => f.displayName || f.code || f.externalId;
-
-    select.disabled = false;
-    select.innerHTML = features.map(f =>
-      `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)} · ${f.count} yr</option>`
-    ).join('');
-    const initialHero = (features.find(f => f.hero) || features[0]).externalId;
-
-    function drawChart(heroId) {
-      const f = features.find(x => x.externalId === heroId) || features[0];
-      const W = 1000, H = 240, PAD = { l: 40, r: 14, t: 14, b: 28 };
-      const cW = W - PAD.l - PAD.r;
-      const cH = H - PAD.t - PAD.b;
-      const firstYear = f.first;
-      const lastYear  = f.last;
-      const yMax = Math.max(...f.series.map(s => s.value)) * 1.1;
-      const xFor = y => PAD.l + ((y - firstYear) / Math.max(1, (lastYear - firstYear))) * cW;
-      const yFor = v => PAD.t + (1 - v / yMax) * cH;
-      const barW = Math.max(1.5, cW / Math.max(1, lastYear - firstYear) * 0.8);
-
-      let grid = '';
-      const yTicks = 5;
-      for (let i = 0; i <= yTicks; i++) {
-        const v = (yMax / yTicks) * i;
-        const y = yFor(v);
-        grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
-        grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${Math.round(v)}</text>`;
-      }
-      let xLabels = '';
-      const step = (lastYear - firstYear) > 60 ? 20 : 10;
-      for (let y = Math.ceil(firstYear / step) * step; y <= lastYear; y += step) {
-        const x = xFor(y);
-        if (x < PAD.l || x > W - PAD.r) continue;
-        xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
-      }
-      let bars = '';
-      for (const s of f.series) {
-        const x = xFor(s.year) - barW / 2;
-        const y = yFor(s.value);
-        bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${(yFor(0) - y).toFixed(1)}" fill="#3d6b8c" opacity="0.85"/>`;
-      }
-      let trendLine = '';
-      if (f.trend) {
-        const y0 = f.trend.intercept + f.trend.slope * firstYear;
-        const y1 = f.trend.intercept + f.trend.slope * lastYear;
-        trendLine = `<line x1="${xFor(firstYear).toFixed(1)}" y1="${yFor(Math.max(0, y0)).toFixed(1)}" x2="${xFor(lastYear).toFixed(1)}" y2="${yFor(Math.max(0, y1)).toFixed(1)}" stroke="#b85a3a" stroke-width="1.4" stroke-dasharray="4 3" />`;
-      }
-      chart.innerHTML = `${grid}${xLabels}${bars}${trendLine}`;
-    }
-
-    function renderTiles(heroId) {
-      readings.innerHTML = features.map(f => {
-        const isHero = f.externalId === heroId;
-        const trendStr = f.trend ? `${f.trend.slope >= 0 ? '+' : ''}${(f.trend.slope * 10).toFixed(1)} mm/decade` : '—';
-        const trendCls = f.trend ? (f.trend.slope > 0 ? 'up' : f.trend.slope < 0 ? 'down' : 'neutral') : 'neutral';
-        return `
-          <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
-            <div class="ed-reservoirs-reading-name">
-              <strong>${f.displayName || f.code}</strong>
-            </div>
-            <div class="ed-reservoirs-reading-pct">${f.max} mm</div>
-            <div class="ed-reservoirs-reading-meta">
-              <span class="ed-reservoirs-reading-date">peak ${f.maxYear ?? '—'}</span>
-              <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${trendCls}">${trendStr}</span>
-            </div>
-          </button>`;
-      }).join('');
-      readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
-        el.addEventListener('click', () => {
-          const id = el.getAttribute('data-external-id');
-          if (id && id !== heroId) { select.value = id; applySelection(id); }
-        });
-      });
-    }
-
-    function applySelection(heroId) {
-      drawChart(heroId);
-      renderTiles(heroId);
-      document.dispatchEvent(new CustomEvent('station:highlight', {
-        detail: { source: 'snirh_meteorologica', externalId: heroId },
-      }));
-    }
-    select.addEventListener('change', () => applySelection(select.value));
-    applySelection(initialHero);
-    hydrated += 1;
-  })();
 
   // iNaturalist observation heatmap — cumulative through year X. Mapbox
   // `heatmap` layer driven by a year slider; play button steps through.
