@@ -646,16 +646,6 @@ function renderEnvironmentalDashboard() {
   return `
     <section class="ed-root" id="environmental-dashboard">
 
-      <!-- Top bar above the map: sensor status button (opens modal of every
-           sensor + its latest reading date). -->
-      <div class="ed-region-map-bar">
-        <button type="button" class="ed-sensor-status-btn" id="ed-sensor-status-btn" aria-haspopup="dialog">
-          <span class="ed-sensor-status-dot" id="ed-sensor-status-dot"></span>
-          <span>Sensor Status</span>
-          <span class="ed-sensor-status-meta" id="ed-sensor-status-meta">—</span>
-        </button>
-      </div>
-
       <!-- Region overview map: satellite basemap, custom letter-badge markers,
            top-left view buttons (exclusive), legend underneath that swaps with
            the active view, LULC year scrubber bottom-center when Land Use is on. -->
@@ -720,10 +710,15 @@ function renderEnvironmentalDashboard() {
         <span class="ed-add-sensor-hint">Propose a new station — community-installed sensors welcome.</span>
       </div>
 
+      <header class="ed-insights-head">
+        <h2 class="ed-insights-title">Regional Insights</h2>
+        <p class="ed-insights-sub">The following insights are derived from data from the sensor network of Odemira region.</p>
+      </header>
+
       <div class="ed-grid">
         <!-- WEATHER -->
         <section class="ed-panel ed-panel--weather">
-          <div class="ed-panel-head">${lucide('cloud-sun')} WEATHER</div>
+          <div class="ed-panel-head">${lucide('cloud-sun')} Weather</div>
           <div class="ed-weather-grid">
             <div class="ed-card ed-card--span-6">
               <div class="ed-card-title">Climate trajectory <span>(50-yr archival)</span></div>
@@ -822,7 +817,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- SOIL -->
         <section class="ed-panel ed-panel--soil">
-          <div class="ed-panel-head">${lucide('leaf')} SOIL</div>
+          <div class="ed-panel-head">${lucide('leaf')} Soil</div>
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
             ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
@@ -838,7 +833,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- WATER -->
         <section class="ed-panel ed-panel--water">
-          <div class="ed-panel-head">${lucide('droplet')} WATER</div>
+          <div class="ed-panel-head">${lucide('droplet')} Water</div>
           <div class="ed-water-grid">
             <div class="ed-subhead ed-card--span-12">Water quantity</div>
             <div class="ed-card ed-card--span-12">
@@ -964,7 +959,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- BIODIVERSITY -->
         <section class="ed-panel ed-panel--bio">
-          <div class="ed-panel-head">${lucide('sprout')} BIODIVERSITY</div>
+          <div class="ed-panel-head">${lucide('sprout')} Biodiversity</div>
           <div class="ed-bio-grid">
             <div class="ed-card ed-card--span-7">
               <div class="ed-card-title">Top species <span>(by observations)</span></div>
@@ -1016,7 +1011,7 @@ function renderEnvironmentalDashboard() {
 
         <!-- RISK -->
         <section class="ed-panel ed-panel--risk">
-          <div class="ed-panel-head">${lucide('triangle-alert')} RISK</div>
+          <div class="ed-panel-head">${lucide('triangle-alert')} Risk</div>
           <div class="ed-risk-grid">
 
             <!-- Flood -->
