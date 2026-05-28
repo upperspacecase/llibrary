@@ -8971,6 +8971,13 @@ a {
 }
 .ed-reservoirs-leg-hero i { height: 2px; background: #1d9e75; opacity: 1; }
 .ed-reservoirs-leg-mean i { height: 2.5px; background: #b85a3a; opacity: 1; }
+.ed-card-desc {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.5;
+  margin: -4px 0 12px;
+  max-width: 720px;
+}
 .ed-reservoirs-leg-drought i { height: 8px; background: #faeeda; opacity: 1; }
 
 /* Station picker — chip buttons under the rainfall chart */

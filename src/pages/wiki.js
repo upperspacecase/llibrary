@@ -808,29 +808,35 @@ function renderEnvironmentalDashboard() {
             <div class="ed-subhead ed-card--span-12">Water quantity</div>
             <div class="ed-card ed-card--span-12">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Water balance <span>P − ET₀ (mm/yr)</span></div>
+                <div class="ed-card-title">Climatic Water Balance <span>(P − ET₀)</span></div>
                 <div class="ed-water-balance-legend">
                   <span class="ed-wb-leg-surplus">Surplus</span>
                   <span class="ed-wb-leg-deficit">Deficit</span>
                 </div>
               </div>
+              <p class="ed-card-desc">Whether a place is water-surplus or water-deficit at the surface level — precipitation minus evapotranspiration.</p>
               <svg class="ed-water-balance-chart" id="ed-wb-chart" viewBox="0 0 700 180" preserveAspectRatio="none" aria-hidden="true">
                 <text x="350" y="90" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-years" id="ed-wb-years"></div>
             </div>
 
+            <div class="ed-card ed-card--span-12 ed-water-stack">
+              <div class="ed-card-title-row">
+                <div class="ed-card-title">Total Water Storage <span>(% of combined historical max, end-of-month)</span></div>
+              </div>
+              <svg class="ed-water-stack-chart" id="ed-water-stack-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
+                <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+              </svg>
+              <div class="ed-water-stack-legend" id="ed-water-stack-legend"></div>
+            </div>
+
             <div class="ed-card ed-card--span-12 ed-reservoirs">
               <div class="ed-card-title-row">
-                <div class="ed-card-title">Reservoir storage <span>(% of historical max)</span></div>
-                <div class="ed-reservoirs-picker">
-                  <label for="ed-reservoir-select">Highlight</label>
-                  <select id="ed-reservoir-select" disabled>
-                    <option>Loading…</option>
-                  </select>
-                </div>
+                <div class="ed-card-title">Reservoir storage by station <span>(% of historical max)</span></div>
               </div>
               <div class="ed-reservoirs-legend">
+                <span class="ed-reservoirs-leg-mean"><i></i>Regional trend</span>
                 <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-reservoirs-hero-label">Selected reservoir</span></span>
                 <span class="ed-reservoirs-leg-other"><i></i>Other Odemira reservoirs</span>
                 <span class="ed-reservoirs-leg-drought"><i></i>Drought year (SPI-12 &lt; −1.5)</span>
@@ -844,12 +850,6 @@ function renderEnvironmentalDashboard() {
             <div class="ed-card ed-card--span-12 ed-groundwater">
               <div class="ed-card-title-row">
                 <div class="ed-card-title">Groundwater depth <span>(piezometers · m below ground)</span></div>
-                <div class="ed-reservoirs-picker">
-                  <label for="ed-groundwater-select">Highlight</label>
-                  <select id="ed-groundwater-select" disabled>
-                    <option>Loading…</option>
-                  </select>
-                </div>
               </div>
               <div class="ed-reservoirs-legend">
                 <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-groundwater-hero-label">Selected piezometer</span></span>
@@ -874,16 +874,6 @@ function renderEnvironmentalDashboard() {
                 <span class="ed-rainfall-leg-bar"><i></i>Annual rainfall (mm)</span>
                 <span class="ed-rainfall-leg-normal"><i></i>1991–2020 normal (<span id="ed-rainfall-normal">—</span> mm)</span>
               </div>
-            </div>
-
-            <div class="ed-card ed-card--span-12 ed-water-stack">
-              <div class="ed-card-title-row">
-                <div class="ed-card-title">Surface water storage by reservoir <span>(m³ end-of-month)</span></div>
-              </div>
-              <svg class="ed-water-stack-chart" id="ed-water-stack-chart" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-hidden="true">
-                <text x="500" y="120" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-water-stack-legend" id="ed-water-stack-legend"></div>
             </div>
 
             <div class="ed-subhead ed-card--span-12">Water quality</div>
@@ -2031,10 +2021,9 @@ async function hydrateEnvironmentalDashboard() {
   // a station:highlight event that the stations map listens for.
   (async () => {
     const chart    = document.getElementById('ed-reservoirs-chart');
-    const select   = document.getElementById('ed-reservoir-select');
     const readings = document.getElementById('ed-reservoirs-readings');
     const heroLbl  = document.getElementById('ed-reservoirs-hero-label');
-    if (!chart || !select || !readings) return;
+    if (!chart || !readings) return;
 
     let payloadResv;
     try {
@@ -2045,8 +2034,6 @@ async function hydrateEnvironmentalDashboard() {
     } catch { return; }
     const features = payloadResv.features;
 
-    const labelFor = (f) => f.displayName || (f.landmark ? `${f.code} · ${f.landmark}` : f.code);
-
     // Drought years: any month with SPI-12 < -1.5 in our archive.
     const droughtYears = new Set();
     const spi = payload.climate && Array.isArray(payload.climate.spi12Series) ? payload.climate.spi12Series : [];
@@ -2056,16 +2043,26 @@ async function hydrateEnvironmentalDashboard() {
       }
     }
 
-    // Display window: 1990 → today (where ≥5 of 6 reservoirs have data).
+    // Display window: 1990 → today.
     const XMIN = new Date(Date.UTC(1990, 0, 1)).getTime();
     const XMAX = Date.now();
 
-    // Render the dropdown
-    select.disabled = false;
-    select.innerHTML = features.map(f =>
-      `<option value="${f.externalId}"${f.hero ? ' selected' : ''}>${labelFor(f)}</option>`
-    ).join('');
-    const initialHero = (features.find(f => f.hero) || features[0]).externalId;
+    // Regional trend: monthly mean pct across all reservoirs reporting that month.
+    const meanByMonth = new Map();
+    for (const f of features) {
+      for (const s of f.series) {
+        const key = s.date.slice(0, 7);
+        if (!meanByMonth.has(key)) meanByMonth.set(key, []);
+        meanByMonth.get(key).push(s.pct);
+      }
+    }
+    const trendSeries = [...meanByMonth.entries()]
+      .map(([month, vals]) => ({
+        ts: Date.UTC(Number(month.slice(0,4)), Number(month.slice(5,7)) - 1, 15),
+        pct: vals.reduce((a, b) => a + b, 0) / vals.length,
+      }))
+      .filter(p => p.ts >= XMIN && p.ts <= XMAX)
+      .sort((a, b) => a.ts - b.ts);
 
     function drawChart(heroId) {
       const W = 1000, H = 280, PAD = { l: 36, r: 14, t: 14, b: 28 };
@@ -2074,7 +2071,6 @@ async function hydrateEnvironmentalDashboard() {
       const xFor = ts => PAD.l + ((ts - XMIN) / (XMAX - XMIN)) * cW;
       const yFor = pct => PAD.t + (1 - pct / 100) * cH;
 
-      // Drought bands
       let bands = '';
       for (const y of droughtYears) {
         const yi = Number(y);
@@ -2084,7 +2080,6 @@ async function hydrateEnvironmentalDashboard() {
         bands += `<rect x="${Math.max(PAD.l, x0).toFixed(1)}" y="${PAD.t}" width="${Math.max(0, Math.min(W - PAD.r, x1) - Math.max(PAD.l, x0)).toFixed(1)}" height="${cH}" fill="#faeeda" opacity="0.55"/>`;
       }
 
-      // Y gridlines
       let grid = '';
       [0, 25, 50, 75, 100].forEach(v => {
         const y = yFor(v);
@@ -2092,7 +2087,6 @@ async function hydrateEnvironmentalDashboard() {
         grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${v}%</text>`;
       });
 
-      // X labels every 5 years
       let xLabels = '';
       for (let y = 1990; y <= new Date().getFullYear(); y += 5) {
         const x = xFor(Date.UTC(y, 0, 1));
@@ -2100,9 +2094,10 @@ async function hydrateEnvironmentalDashboard() {
         xLabels += `<text x="${x.toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" text-anchor="middle" font-size="10" fill="#888">${y}</text>`;
       }
 
-      // Build lines — others first (so hero draws on top)
+      // Per-station lines first (faded), hero on top, trend line on top of all.
       const heroColor  = '#1d9e75';
       const otherColor = '#b4b2a9';
+      const trendColor = '#b85a3a';
       let lines = '';
       const ordered = [...features].sort((a, b) => (a.externalId === heroId ? 1 : 0) - (b.externalId === heroId ? 1 : 0));
       for (const f of ordered) {
@@ -2116,7 +2111,11 @@ async function hydrateEnvironmentalDashboard() {
           .filter(Boolean)
           .join(' ');
         if (!pts) continue;
-        lines += `<polyline fill="none" stroke="${isHero ? heroColor : otherColor}" stroke-width="${isHero ? 1.6 : 0.8}" opacity="${isHero ? 1 : 0.45}" points="${pts}" />`;
+        lines += `<polyline fill="none" stroke="${isHero ? heroColor : otherColor}" stroke-width="${isHero ? 1.6 : 0.7}" opacity="${isHero ? 1 : 0.35}" points="${pts}" />`;
+      }
+      const trendPts = trendSeries.map(p => `${xFor(p.ts).toFixed(1)},${yFor(p.pct).toFixed(1)}`).join(' ');
+      if (trendPts) {
+        lines += `<polyline fill="none" stroke="${trendColor}" stroke-width="2.2" opacity="0.95" points="${trendPts}" />`;
       }
 
       chart.innerHTML = `${bands}${grid}${xLabels}${lines}`;
@@ -2130,44 +2129,40 @@ async function hydrateEnvironmentalDashboard() {
         const deltaStr = delta != null ? `${delta > 0 ? '+' : ''}${delta} pp y/y` : '—';
         const deltaCls = delta == null ? 'neutral' : delta > 0 ? 'up' : (delta < 0 ? 'down' : 'neutral');
         const displayName = f.displayName || f.code;
-        const subtitle    = f.secondary || (f.landmark ? `· ${f.landmark}` : '');
         return `
           <button type="button" class="ed-reservoirs-reading${isHero ? ' ed-reservoirs-reading--hero' : ''}" data-external-id="${f.externalId}" aria-pressed="${isHero}">
-            <div class="ed-reservoirs-reading-name">
-              <strong>${displayName}</strong>${subtitle ? ` <span>${subtitle}</span>` : ''}
-            </div>
+            <div class="ed-reservoirs-reading-name"><strong>${displayName}</strong></div>
             <div class="ed-reservoirs-reading-pct">${latest ? Math.round(latest.pct) + '%' : '—'}</div>
             <div class="ed-reservoirs-reading-meta">
-              <span class="ed-reservoirs-reading-date">${latest?.date || '—'}</span>
+              <span class="ed-reservoirs-reading-date">Last reading: ${latest?.date || '—'}</span>
               <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${deltaCls}">${deltaStr}</span>
             </div>
           </button>`;
       }).join('');
-      // Click-to-select — same effect as picking from the dropdown.
       readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
         el.addEventListener('click', () => {
           const id = el.getAttribute('data-external-id');
-          if (id && id !== heroId) {
-            select.value = id;
-            applySelection(id);
-          }
+          applySelection(id === heroId ? null : id);
         });
       });
     }
 
     function applySelection(heroId) {
-      const f = features.find(x => x.externalId === heroId) || features[0];
-      if (heroLbl) heroLbl.textContent = labelFor(f);
-      drawChart(f.externalId);
-      renderReadings(f.externalId);
-      document.dispatchEvent(new CustomEvent('station:highlight', {
-        detail: { source: 'snirh_hidrometrica', externalId: f.externalId },
-      }));
+      const f = heroId ? (features.find(x => x.externalId === heroId) || null) : null;
+      if (heroLbl) heroLbl.textContent = f
+        ? (f.displayName || f.code)
+        : 'No reservoir selected';
+      drawChart(heroId);
+      renderReadings(heroId);
+      if (f) {
+        document.dispatchEvent(new CustomEvent('station:highlight', {
+          detail: { source: 'snirh_hidrometrica', externalId: f.externalId },
+        }));
+      }
     }
 
-    select.addEventListener('change', () => applySelection(select.value));
-    // Initial draw + emit so the map picks up the default hero.
-    applySelection(initialHero);
+    // Default: no station selected — the regional trend line is the focus.
+    applySelection(null);
     hydrated += 1;
   })();
 
@@ -2175,10 +2170,9 @@ async function hydrateEnvironmentalDashboard() {
   // (m below ground) and is INVERTED — bigger numbers mean a lower water table.
   (async () => {
     const chart    = document.getElementById('ed-groundwater-chart');
-    const select   = document.getElementById('ed-groundwater-select');
     const readings = document.getElementById('ed-groundwater-readings');
     const heroLbl  = document.getElementById('ed-groundwater-hero-label');
-    if (!chart || !select || !readings) return;
+    if (!chart || !readings) return;
 
     let data;
     try {
@@ -2195,11 +2189,6 @@ async function hydrateEnvironmentalDashboard() {
     const allValues = features.flatMap(f => f.series.map(s => s.value));
     const YMAX = Math.max(...allValues);
     const YMIN = Math.min(0, Math.min(...allValues));
-
-    select.disabled = false;
-    select.innerHTML = features.map((f, i) =>
-      `<option value="${f.externalId}"${i === 0 ? ' selected' : ''}>${f.displayName || f.code} · n=${f.count}</option>`
-    ).join('');
 
     function drawChart(heroId) {
       const W = 1000, H = 280, PAD = { l: 44, r: 14, t: 14, b: 28 };
@@ -2249,7 +2238,6 @@ async function hydrateEnvironmentalDashboard() {
       readings.innerHTML = features.map(f => {
         const isHero = f.externalId === heroId;
         const delta = f.deltaM;
-        // Convention: positive deltaM = water dropped further (worse)
         const deltaCls = delta == null ? 'neutral' : delta > 0 ? 'down' : (delta < 0 ? 'up' : 'neutral');
         const deltaStr = delta != null ? `${delta > 0 ? '+' : ''}${delta} m y/y` : '—';
         const displayName = f.displayName || f.code;
@@ -2258,7 +2246,7 @@ async function hydrateEnvironmentalDashboard() {
             <div class="ed-reservoirs-reading-name"><strong>${displayName}</strong></div>
             <div class="ed-reservoirs-reading-pct">${f.latest ? f.latest.value.toFixed(2) + ' m' : '—'}</div>
             <div class="ed-reservoirs-reading-meta">
-              <span class="ed-reservoirs-reading-date">${f.latest?.date || '—'}</span>
+              <span class="ed-reservoirs-reading-date">Last reading: ${f.latest?.date || '—'}</span>
               <span class="ed-reservoirs-reading-delta ed-reservoirs-reading-delta--${deltaCls}">${deltaStr}</span>
             </div>
           </button>`;
@@ -2266,25 +2254,23 @@ async function hydrateEnvironmentalDashboard() {
       readings.querySelectorAll('.ed-reservoirs-reading').forEach(el => {
         el.addEventListener('click', () => {
           const id = el.getAttribute('data-external-id');
-          if (id && id !== heroId) {
-            select.value = id;
-            applySelection(id);
-          }
+          applySelection(id === heroId ? null : id);
         });
       });
     }
 
     function applySelection(heroId) {
-      const f = features.find(x => x.externalId === heroId) || features[0];
-      if (heroLbl) heroLbl.textContent = f.displayName || f.code;
-      drawChart(f.externalId);
-      renderReadings(f.externalId);
-      document.dispatchEvent(new CustomEvent('station:highlight', {
-        detail: { source: 'snirh_piezometria', externalId: f.externalId },
-      }));
+      const f = heroId ? (features.find(x => x.externalId === heroId) || null) : null;
+      if (heroLbl) heroLbl.textContent = f ? (f.displayName || f.code) : 'No piezometer selected';
+      drawChart(heroId);
+      renderReadings(heroId);
+      if (f) {
+        document.dispatchEvent(new CustomEvent('station:highlight', {
+          detail: { source: 'snirh_piezometria', externalId: f.externalId },
+        }));
+      }
     }
-    select.addEventListener('change', () => applySelection(select.value));
-    applySelection(features[0].externalId);
+    applySelection(null);
     hydrated += 1;
   })();
 
@@ -2389,16 +2375,18 @@ async function hydrateEnvironmentalDashboard() {
     const monthsTrimmed = months.filter(m => m >= cutoff);
     if (!monthsTrimmed.length) return;
 
-    const totals = monthsTrimmed.map(m => monthMap.get(m).reduce((a, b) => a + b, 0));
-    const maxTotal = Math.max(...totals);
+    // Combined historical max across all reservoirs = the "100%" denominator.
+    const combinedMax = features.reduce((s, f) => s + (f.max || 0), 0);
+    if (!combinedMax) return;
 
-    const W = 1000, H = 240, PAD = { l: 60, r: 14, t: 14, b: 28 };
+    const W = 1000, H = 240, PAD = { l: 44, r: 14, t: 14, b: 28 };
     const cW = W - PAD.l - PAD.r;
     const cH = H - PAD.t - PAD.b;
     const xFor = i => PAD.l + (i / (monthsTrimmed.length - 1)) * cW;
-    const yFor = v => PAD.t + (1 - v / maxTotal) * cH;
+    // Y-axis is % of combined historical max — 0 → 100 with a small headroom.
+    const yFor = pct => PAD.t + (1 - pct / 100) * cH;
 
-    // Stacked area: bottom-up cumulative
+    // Stacked area: bottom-up cumulative, each band expressed as % of combinedMax.
     const palette = ['#1d9e75', '#5dcaa5', '#9fe1cb', '#f0997b', '#d49a4a', '#b4b2a9'];
     let bands = '';
     for (let ri = 0; ri < features.length; ri++) {
@@ -2407,22 +2395,20 @@ async function hydrateEnvironmentalDashboard() {
         const arr = monthMap.get(monthsTrimmed[i]);
         let above = 0;
         for (let j = 0; j <= ri; j++) above += arr[j] || 0;
-        let below = above - (arr[ri] || 0);
-        top.push(`${xFor(i).toFixed(1)},${yFor(above).toFixed(1)}`);
-        bot.push(`${xFor(i).toFixed(1)},${yFor(below).toFixed(1)}`);
+        const below = above - (arr[ri] || 0);
+        top.push(`${xFor(i).toFixed(1)},${yFor((above / combinedMax) * 100).toFixed(1)}`);
+        bot.push(`${xFor(i).toFixed(1)},${yFor((below / combinedMax) * 100).toFixed(1)}`);
       }
       const path = top.join(' ') + ' ' + bot.reverse().join(' ');
       bands += `<polygon points="${path}" fill="${palette[ri % palette.length]}" fill-opacity="0.85"/>`;
     }
 
     let grid = '';
-    const yTicks = [0, 0.25, 0.5, 0.75, 1].map(f => f * maxTotal);
-    for (const v of yTicks) {
+    [0, 25, 50, 75, 100].forEach(v => {
       const y = yFor(v);
       grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
-      const labelMm3 = (v / 1e6).toFixed(0);
-      grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${labelMm3} Mm³</text>`;
-    }
+      grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#888">${v}%</text>`;
+    });
     let xLabels = '';
     for (let i = 0; i < monthsTrimmed.length; i += 60) {
       const x = xFor(i);
