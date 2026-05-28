@@ -940,24 +940,14 @@ function renderEnvironmentalDashboard() {
             <div class="ed-bio-yearbars-legend" id="ed-bio-yearbars-legend"></div>
           </div>
 
-          <!-- Flora & Fauna table -->
+          <!-- Flora & Fauna bubble cloud -->
           <div class="ed-weather-block">
             <div class="ed-card-title">Flora &amp; Fauna <span>(observed in Odemira)</span></div>
-            <div class="ed-bio-table-wrap">
-              <table class="ed-bio-table" id="ed-bio-table">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Species</th>
-                    <th>Group</th>
-                    <th class="ed-bio-th-num">Observations</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody><tr><td colspan="5" class="ed-bio-table-empty">Loading…</td></tr></tbody>
-              </table>
-            </div>
-            <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
+            <p class="ed-card-desc">Each circle is a species; size scales with the observation count, color tags the taxon group. IUCN status appears as a small badge on threatened species.</p>
+            <svg class="ed-bio-bubbles" id="ed-bio-bubbles" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+              <text x="500" y="250" text-anchor="middle" fill="#888">Loading…</text>
+            </svg>
+            <div class="ed-bio-bubbles-legend" id="ed-bio-bubbles-legend"></div>
           </div>
 
         </section>
@@ -1159,14 +1149,19 @@ async function hydrateEnvironmentalDashboard() {
         const badge = iucn
           ? `<span class="ed-species-iucn" style="background:${badgeBg}">${iucn}</span>`
           : (sp.threatened ? `<span class="ed-species-iucn" style="background:#c9a14a">VU?</span>` : '');
-        const tooltip = `${sp.name || sp.scientificName || '—'}${sp.scientificName && sp.scientificName !== sp.name ? ' (' + sp.scientificName + ')' : ''} · ${sp.count} obs`;
         return `
-          <div class="ed-species-card" title="${tooltip}">
+          <div class="ed-species-card">
             <div class="ed-species-photo-wrap">
               ${sp.photoUrl
                 ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
                 : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
               ${badge}
+            </div>
+            <div class="ed-species-name">
+              <strong>${sp.name || sp.scientificName || '—'}</strong>
+              ${sp.scientificName && sp.name && sp.scientificName !== sp.name
+                ? `<em>${sp.scientificName}</em>` : ''}
+              <span class="ed-species-count">${(sp.count || 0).toLocaleString()} obs</span>
             </div>
           </div>
         `;
@@ -1372,29 +1367,52 @@ async function hydrateEnvironmentalDashboard() {
     const ORDER = ['Trees','Rangeland','Crops','Built Area','Water',
                    'Flooded Vegetation','Bare Ground','Snow/Ice','Clouds'];
 
-    const W = 360, H = 160, PAD = 22;
-    const innerW = W - PAD * 2;
-    const innerH = H - PAD - 14; // leave 14 for x-axis labels
-    const slot = innerW / years.length;
-    const barW = Math.min(slot * 0.75, 28);
+    // 100% stacked area chart — bands flow continuously between years.
+    const W = 600, H = 240, PAD = { l: 36, r: 12, t: 12, b: 24 };
+    const innerW = W - PAD.l - PAD.r;
+    const innerH = H - PAD.t - PAD.b;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const xFor = i => PAD.l + (years.length > 1 ? (i / (years.length - 1)) * innerW : innerW / 2);
+    const yFor = pct => PAD.t + (1 - pct / 100) * innerH;
 
-    const bars = years.map((y, i) => {
-      const x = PAD + slot * i + (slot - barW) / 2;
-      let cumPct = 0;
-      const segs = ORDER.map(label => {
-        const pct = y.classes?.[label] || 0;
-        if (pct <= 0) return '';
-        const h = (pct / 100) * innerH;
-        const yPos = PAD + innerH - cumPct - h;
-        cumPct += h;
-        return `<rect x="${x.toFixed(1)}" y="${yPos.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${COLORS[label] || '#888'}"><title>${label}: ${pct}%</title></rect>`;
-      }).join('');
-      const labelY = H - 2;
-      const labelX = PAD + slot * i + slot / 2;
-      return segs + `<text x="${labelX.toFixed(1)}" y="${labelY}" font-size="9" fill="#888" text-anchor="middle">${y.year}</text>`;
-    }).join('');
+    // Y gridlines at 0/25/50/75/100%
+    let grid = '';
+    [0, 25, 50, 75, 100].forEach(v => {
+      const y = yFor(v);
+      grid += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#eee5d8" stroke-width="0.5"/>`;
+      grid += `<text x="${(PAD.l - 6).toFixed(1)}" y="${(y + 3).toFixed(1)}" font-size="10" fill="#888" text-anchor="end">${v}%</text>`;
+    });
 
-    svg.innerHTML = bars;
+    // Stacked bands — for each class, build a polygon with the top edge =
+    // cumulative pct through that class, bottom edge = cumulative pct
+    // before it.
+    let bands = '';
+    const tops = ORDER.map(() => years.map(() => 0));
+    const bots = ORDER.map(() => years.map(() => 0));
+    for (let i = 0; i < years.length; i++) {
+      let cum = 0;
+      ORDER.forEach((label, li) => {
+        const pct = years[i].classes?.[label] || 0;
+        bots[li][i] = cum;
+        cum += pct;
+        tops[li][i] = cum;
+      });
+    }
+    ORDER.forEach((label, li) => {
+      const allZero = tops[li].every((t, i) => t === bots[li][i]);
+      if (allZero) return;
+      const topPts = tops[li].map((p, i) => `${xFor(i).toFixed(1)},${yFor(p).toFixed(1)}`);
+      const botPts = bots[li].map((p, i) => `${xFor(i).toFixed(1)},${yFor(p).toFixed(1)}`).reverse();
+      bands += `<polygon points="${[...topPts, ...botPts].join(' ')}" fill="${COLORS[label] || '#888'}" fill-opacity="0.95"><title>${label}</title></polygon>`;
+    });
+
+    let xLabels = '';
+    const step = years.length > 8 ? 2 : 1;
+    for (let i = 0; i < years.length; i += step) {
+      xLabels += `<text x="${xFor(i).toFixed(1)}" y="${(H - PAD.b + 14).toFixed(1)}" font-size="10" fill="#888" text-anchor="middle">${years[i].year}</text>`;
+    }
+
+    svg.innerHTML = `${grid}${bands}${xLabels}`;
 
     if (legend) {
       // Show classes that appear with >1% in any year, sorted by latest-year share
@@ -3133,41 +3151,111 @@ async function hydrateEnvironmentalDashboard() {
       }
     }
 
-    // ---- Flora & Fauna table — top species by observation count -----------
-    const tableEl = document.querySelector('#ed-bio-table tbody');
+    // ---- Flora & Fauna bubble cloud -----------------------------------------
+    // Each species is a circle sized by observation count, colored by taxon
+    // group. Greedy spiral packing — places largest first at center, spirals
+    // outward checking collisions against already-placed bubbles.
+    const bubbleSvg     = document.getElementById('ed-bio-bubbles');
+    const bubbleLegend  = document.getElementById('ed-bio-bubbles-legend');
     const top = Array.isArray(payload.species?.top10) ? payload.species.top10 : [];
-    if (tableEl) {
+
+    const GROUP_COLOR = {
+      Plantae:        '#3d6b48',
+      Aves:           '#3d6b8c',
+      Insecta:        '#c9a14a',
+      Mollusca:       '#9d6360',
+      Reptilia:       '#b85a3a',
+      Amphibia:       '#7a9a6e',
+      Arachnida:      '#7a2a14',
+      Mammalia:       '#5a4632',
+      Actinopterygii: '#5dcaa5',
+      Fungi:          '#a89580',
+      Chromista:      '#8b9a7e',
+      Animalia:       '#b4b2a9',
+    };
+    const colorFor = g => GROUP_COLOR[g] || '#b4b2a9';
+    const iucnColors = {
+      LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
+      EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
+    };
+
+    if (bubbleSvg) {
       if (!top.length) {
-        tableEl.innerHTML = '<tr><td colspan="5" class="ed-bio-table-empty">No species data yet.</td></tr>';
+        bubbleSvg.innerHTML = '<text x="500" y="250" text-anchor="middle" fill="#888">No species data yet.</text>';
       } else {
-        const iucnColors = {
-          LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
-          EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
-        };
-        const groupOf = (g) => g === 'Plantae' || g === 'Fungi' ? 'Flora' : (g ? 'Fauna' : '—');
-        tableEl.innerHTML = top
-          .slice()
-          .sort((a, b) => (b.count || 0) - (a.count || 0))
-          .map(sp => {
-            const iucn = sp.iucn;
-            const badge = iucn
-              ? `<span class="ed-bio-iucn-badge" style="background:${iucnColors[iucn] || '#888'}">${iucn}</span>`
-              : (sp.threatened ? `<span class="ed-bio-iucn-badge" style="background:#c9a14a">VU?</span>` : '<span class="ed-bio-iucn-badge ed-bio-iucn-badge--none">—</span>');
-            return `
-              <tr>
-                <td class="ed-bio-cell-img">
-                  ${sp.photoUrl ? `<img src="${sp.photoUrl}" alt="" loading="lazy" />` : '<span class="ed-bio-cell-img-empty"></span>'}
-                </td>
-                <td class="ed-bio-cell-name">
-                  <strong>${sp.name || sp.scientificName || '—'}</strong>
-                  ${sp.scientificName && sp.scientificName !== sp.name
-                    ? `<em>${sp.scientificName}</em>` : ''}
-                </td>
-                <td>${groupOf(sp.group)}<div class="ed-bio-cell-sub">${sp.group || ''}</div></td>
-                <td class="ed-bio-cell-num">${(sp.count || 0).toLocaleString()}</td>
-                <td>${badge}</td>
-              </tr>`;
-          }).join('');
+        const W = 1000, H = 500;
+        const sorted = [...top].sort((a, b) => (b.count || 0) - (a.count || 0));
+        const maxCount = sorted[0].count || 1;
+        const minR = 18;
+        const maxR = 90;
+        const rFor = c => minR + Math.sqrt((c || 0) / maxCount) * (maxR - minR);
+
+        // Greedy spiral packing.
+        const placed = [];
+        for (const sp of sorted) {
+          const r = rFor(sp.count);
+          let pos = null;
+          if (!placed.length) {
+            pos = { x: W / 2, y: H / 2 };
+          } else {
+            const cx = W / 2, cy = H / 2;
+            for (let step = 0; step < 2500 && !pos; step++) {
+              const angle = step * 0.32;
+              const radius = step * 0.85;
+              const x = cx + radius * Math.cos(angle);
+              const y = cy + radius * Math.sin(angle);
+              if (x - r < 4 || x + r > W - 4 || y - r < 4 || y + r > H - 4) continue;
+              const collides = placed.some(p => {
+                const dx = p.x - x, dy = p.y - y;
+                return Math.sqrt(dx * dx + dy * dy) < p.r + r + 3;
+              });
+              if (!collides) pos = { x, y };
+            }
+          }
+          if (!pos) pos = { x: W / 2, y: H / 2 };
+          placed.push({ ...sp, r, x: pos.x, y: pos.y });
+        }
+
+        const groupsUsed = new Set();
+        const bubbles = placed.map(p => {
+          const color = colorFor(p.group);
+          groupsUsed.add(p.group || 'Animalia');
+          const labelOK = p.r >= 28;
+          const sciOK = p.r >= 42;
+          const iucnOK = p.r >= 24 && (p.iucn || p.threatened);
+          const iucnLabel = p.iucn || (p.threatened ? 'VU?' : null);
+          const iucnFill = iucnLabel ? (iucnColors[p.iucn] || '#c9a14a') : null;
+          const tooltip = `${p.name || p.scientificName || '—'}${p.scientificName && p.scientificName !== p.name ? ' · ' + p.scientificName : ''} · ${p.count} obs${p.iucn ? ' · ' + p.iucn : ''}`;
+          return `
+            <g class="ed-bio-bubble" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
+              <title>${tooltip}</title>
+              <circle r="${p.r.toFixed(1)}" fill="${color}" fill-opacity="0.82" stroke="#fff" stroke-width="1.5"/>
+              ${labelOK ? `<text y="${sciOK ? -4 : 0}" text-anchor="middle" font-size="${Math.max(10, p.r * 0.22).toFixed(1)}" font-weight="700" fill="#fff">${(p.name || p.scientificName || '').slice(0, 16)}</text>` : ''}
+              ${sciOK && p.scientificName && p.scientificName !== p.name
+                ? `<text y="9" text-anchor="middle" font-size="${Math.max(9, p.r * 0.16).toFixed(1)}" font-style="italic" fill="rgba(255,255,255,0.85)">${p.scientificName.slice(0, 20)}</text>` : ''}
+              ${labelOK ? `<text y="${sciOK ? 24 : 14}" text-anchor="middle" font-size="${Math.max(9, p.r * 0.15).toFixed(1)}" fill="rgba(255,255,255,0.85)">${p.count.toLocaleString()} obs</text>` : ''}
+              ${iucnOK ? `<g transform="translate(${(p.r * 0.55).toFixed(1)},${(-p.r * 0.55).toFixed(1)})">
+                <circle r="10" fill="${iucnFill}" stroke="#fff" stroke-width="1.2"/>
+                <text text-anchor="middle" dy="3" font-size="9" font-weight="700" fill="#fff">${iucnLabel}</text>
+              </g>` : ''}
+            </g>`;
+        }).join('');
+
+        bubbleSvg.innerHTML = bubbles;
+
+        if (bubbleLegend) {
+          const groupOrder = Object.keys(GROUP_COLOR).filter(g => groupsUsed.has(g));
+          const groupTotals = new Map();
+          for (const p of placed) {
+            const g = p.group || 'Animalia';
+            groupTotals.set(g, (groupTotals.get(g) || 0) + (p.count || 0));
+          }
+          bubbleLegend.innerHTML = groupOrder.map(g => `
+            <span class="ed-bio-bubbles-chip">
+              <i style="background:${colorFor(g)}"></i>${g}
+              <em>${(groupTotals.get(g) || 0).toLocaleString()}</em>
+            </span>`).join('');
+        }
       }
     }
     hydrated += 1;
