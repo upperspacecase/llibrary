@@ -1874,13 +1874,15 @@ async function hydrateEnvironmentalDashboard() {
           map.addSource('rainfall', { type: 'geojson', data: rainData.byYear.get(initialYear) });
           // Soft colored blobs — circle color maps directly to mm/yr (so the
           // legend tells the truth) and circle-blur:1 + a generous radius
-          // diffuses each station across the surrounding region.
+          // diffuses each station across the surrounding region. Sits on
+          // the light basemap, so we can crank opacity without muddying
+          // the satellite imagery.
           map.addLayer({
             id: 'rainfall-heat',
             type: 'circle',
             source: 'rainfall',
             paint: {
-              'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 70, 10, 110, 13, 170],
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 110, 10, 180, 13, 280],
               'circle-color': [
                 'interpolate', ['linear'], ['get', 'value'],
                 400,  '#7d2a14',
@@ -1891,7 +1893,7 @@ async function hydrateEnvironmentalDashboard() {
                 1500, '#1d4e8e',
               ],
               'circle-blur': 1,
-              'circle-opacity': 0.55,
+              'circle-opacity': 0.85,
             },
           });
           map.addLayer({
@@ -2258,12 +2260,13 @@ async function hydrateEnvironmentalDashboard() {
       landuse:  'satellite',
       hydro:    'outdoors',
       bio:      'satellite',
-      rainfall: 'satellite',
+      rainfall: 'light',
       soil:     'satellite',
     };
     const STYLE_URLS = {
       satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
       outdoors:  'mapbox://styles/mapbox/outdoors-v12',
+      light:     'mapbox://styles/mapbox/light-v11',
     };
     let currentStyleKey = 'satellite';
 
