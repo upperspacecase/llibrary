@@ -776,8 +776,8 @@ function renderEnvironmentalDashboard() {
         </section>
 
         <!-- SOIL -->
-        <section class="ed-panel ed-panel--soil">
-          <div class="ed-panel-head">${lucide('leaf')} Soil</div>
+        <section class="ed-panel ed-panel--land">
+          <div class="ed-panel-head">${lucide('leaf')} Land</div>
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
             ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
@@ -788,6 +788,15 @@ function renderEnvironmentalDashboard() {
           <div class="ed-card">
             <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
             <div class="ed-geology" data-cell="geology.summary" data-fmt="str">${P('Macrostrat Geology')}</div>
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Land cover <span>(Esri Living Atlas · Sentinel-2 10m · 2017→)</span></div>
+            <svg class="ed-landcover" id="ed-landcover-chart" viewBox="0 0 360 160" preserveAspectRatio="none" aria-hidden="true">
+              <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
+            </svg>
+            <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
+            <div class="ed-landcover-map-title" id="ed-landcover-map-title">Latest year overlay <span>(loading…)</span></div>
+            <div class="ed-landcover-map" id="ed-landcover-map" aria-label="Land cover map of Odemira"></div>
           </div>
         </section>
 
@@ -934,16 +943,6 @@ function renderEnvironmentalDashboard() {
               </div>
               <div class="ed-mini-sub">unique taxa observed · vs Odemira parish baseline</div>
             </div>
-            <div class="ed-card ed-card--span-7">
-              <div class="ed-card-title">Land cover <span>(Esri Living Atlas · Sentinel-2 10m · 2017→)</span></div>
-              <svg class="ed-landcover" id="ed-landcover-chart" viewBox="0 0 360 160" preserveAspectRatio="none" aria-hidden="true">
-                <text x="180" y="80" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-              </svg>
-              <div class="ed-landcover-legend" id="ed-landcover-legend"></div>
-              <div class="ed-landcover-map-title" id="ed-landcover-map-title">Latest year overlay <span>(loading…)</span></div>
-              <div class="ed-landcover-map" id="ed-landcover-map" aria-label="Land cover map of Odemira"></div>
-            </div>
-
             <div class="ed-card ed-card--span-12 ed-obs-card">
               <div class="ed-card-title-row">
                 <div class="ed-card-title">Observation heatmap <span>(iNaturalist · cumulative through <span id="ed-obs-yearlabel">—</span>)</span></div>

@@ -8295,8 +8295,8 @@ a {
   gap: 12px;
   align-items: start;
 }
-.ed-panel--soil { display: flex; flex-direction: column; gap: 12px; }
-.ed-panel--soil .ed-panel-head { margin-bottom: 0; }
+.ed-panel--land { display: flex; flex-direction: column; gap: 12px; }
+.ed-panel--land .ed-panel-head { margin-bottom: 0; }
 .ed-card--span-3  { grid-column: span 3; }
 .ed-card--span-4  { grid-column: span 4; }
 .ed-card--span-5  { grid-column: span 5; }
