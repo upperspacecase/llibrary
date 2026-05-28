@@ -3,38 +3,41 @@ import { MongoClient } from 'mongodb';
 const uri = process.env.MONGODB_URI;
 if (!uri) throw new Error('MONGODB_URI environment variable is not set');
 
+// Tuned for Vercel serverless on Atlas M0 (free tier, 500 connection cap).
+// - Tiny pool: every warm function instance opens its own MongoClient, so
+//   the cap is (instances × pool). Keeping pool small means many instances
+//   can coexist before we exhaust the 500. maxPoolSize: 3 lets a single
+//   instance serve ~3 parallel reads without serializing.
+// - maxIdleTimeMS forces unused sockets closed after 30 s so cold-going
+//   instances stop holding the slot for the full Vercel warm window.
+// - waitQueueTimeoutMS prevents a single slow query from blocking the pool
+//   indefinitely.
 const OPTIONS = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 5000,
   socketTimeoutMS: 30000,
-  // Pool larger than the previous 1 so parallel API routes inside the same
-  // warm Vercel function don't serialize on a single socket — concretely
-  // the dashboard fires ~7 reads in parallel on every page load.
-  maxPoolSize: 10,
+  maxPoolSize: 3,
+  minPoolSize: 0,
+  maxIdleTimeMS: 30000,
+  waitQueueTimeoutMS: 5000,
 };
-
-let cached = global.__mongoClientPromise;
 
 function createConnection() {
   const client = new MongoClient(uri, OPTIONS);
   const promise = client.connect().catch((err) => {
-    // Clear cache so next invocation retries instead of reusing rejected promise
+    // Drop the rejected promise so the next call retries with a fresh client.
     global.__mongoClientPromise = null;
-    cached = null;
     throw err;
   });
   global.__mongoClientPromise = promise;
-  cached = promise;
   return promise;
 }
 
-if (!cached) {
-  createConnection();
-}
-
+// Lazy: connect only when getDb is actually called. Previously we connected
+// at module load, which meant every function instance held a socket even
+// when its route never touched Mongo.
 export async function getDb() {
-  if (!cached) createConnection();
-  const client = await cached;
+  const client = await (global.__mongoClientPromise || createConnection());
   return client.db('llibrary');
 }
 
