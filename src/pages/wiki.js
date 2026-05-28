@@ -2039,15 +2039,44 @@ async function hydrateEnvironmentalDashboard() {
       rainfall: { title: 'RAINFALL LEGEND',   body: rainLegendHtml },
     };
 
-    let currentView = null;
-    const setView = async (view) => {
-      // Re-runnable: idempotent across markers/layers/legend, so map.on('load')
-      // can call it again to apply the chosen view once markers are mounted.
+    // Hydrology view reads better against the topographic outdoors basemap;
+    // every other view stays on satellite-streets. setStyle removes custom
+    // sources/layers (LULC, bio, rainfall, water-outline) but markers + the
+    // built-in `water` / `waterway` layers come with the new style, and the
+    // setX helpers re-add their own sources idempotently after style.load.
+    const STYLE_FOR_VIEW = {
+      sensors:  'satellite',
+      landuse:  'satellite',
+      hydro:    'outdoors',
+      bio:      'satellite',
+      rainfall: 'satellite',
+    };
+    const STYLE_URLS = {
+      satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+      outdoors:  'mapbox://styles/mapbox/outdoors-v12',
+    };
+    let currentStyleKey = 'satellite';
+
+    const applyViewLayers = async (view) => {
       setMarkersVisible(view === 'sensors');
       setHydroHighlight(view === 'hydro');
       await setLulcVisible(view === 'landuse');
       await setBioVisible(view === 'bio');
       await setRainfallVisible(view === 'rainfall');
+    };
+
+    let currentView = null;
+    const setView = async (view) => {
+      // Re-runnable: idempotent across markers/layers/legend, so map.on('load')
+      // can call it again to apply the chosen view once markers are mounted.
+      const targetStyleKey = STYLE_FOR_VIEW[view] || 'satellite';
+      if (targetStyleKey !== currentStyleKey) {
+        currentStyleKey = targetStyleKey;
+        map.setStyle(STYLE_URLS[targetStyleKey]);
+        map.once('style.load', () => { applyViewLayers(view); });
+      } else {
+        await applyViewLayers(view);
+      }
       currentView = view;
       // Sync button pressed states + active style
       viewBtns.forEach(btn => {
