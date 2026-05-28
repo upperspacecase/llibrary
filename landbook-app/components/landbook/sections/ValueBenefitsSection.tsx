@@ -290,64 +290,6 @@ export function ValueBenefitsSection({
         )}
       </div>
 
-      {/* ── Calculation Explanation ── */}
-      {economics.premiumMethodology && (
-        <div className="mb-20 p-8 bg-white border-[0.5px] border-brand-sage/30">
-          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-6">
-            How These Numbers Are Calculated
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs leading-relaxed text-brand-charcoal font-body">
-            <div className="space-y-3">
-              <p>
-                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Source:</strong>
-                {economics.premiumMethodology.source}
-              </p>
-              <p>
-                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Discount rate:</strong>
-                {((economics.premiumMethodology.discountRate ?? 0.035) * 100).toFixed(1)}%
-                {" — "}{economics.premiumMethodology.discountSource}
-              </p>
-              <p>
-                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Horizon:</strong>
-                {economics.premiumMethodology.horizonYears ?? 30} years
-              </p>
-              <p>
-                <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">Annuity factor:</strong>
-                {(economics.premiumMethodology.annuityFactor ?? 18.392).toFixed(3)}
-              </p>
-            </div>
-            <div className="space-y-3">
-              <p className="font-mono text-[11px] bg-[#FAF7F2] p-3 border-l-2 border-brand-terracotta">
-                {economics.premiumMethodology.formula}
-              </p>
-              <p className="text-[11px] italic text-brand-sage">
-                {economics.premiumMethodology.benefitTransferNote}
-              </p>
-            </div>
-          </div>
-
-          {/* Worked example for first quantitative premium, if any */}
-          {economics.premiums?.some((p) => p.basis === "per-hectare" && p.annualMid != null) && (() => {
-            const ex = economics.premiums!.find((p) => p.basis === "per-hectare" && p.annualMid != null)!;
-            const exHa = (ex as { annualPerHa?: { mid: number } }).annualPerHa?.mid ?? 0;
-            const af = economics.premiumMethodology?.annuityFactor ?? 18.392;
-            const eligibleHa = ex.annualMid && exHa ? Math.round((ex.annualMid / exHa) * 100) / 100 : property.area;
-            return (
-              <div className="mt-6 pt-6 border-t border-brand-sage/20 text-xs font-body text-brand-charcoal">
-                <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-2">
-                  Worked Example — {ex.name}
-                </p>
-                <p className="font-mono text-[11px]">
-                  {eligibleHa} ha × €{exHa}/ha/yr = €{(ex.annualMid ?? 0).toLocaleString()}/yr annual uplift
-                </p>
-                <p className="font-mono text-[11px]">
-                  €{(ex.annualMid ?? 0).toLocaleString()}/yr × {af.toFixed(2)} = €{(ex.thirtyYearNpvMid ?? 0).toLocaleString()} 30-year NPV uplift
-                </p>
-              </div>
-            );
-          })()}
-        </div>
-      )}
 
       {/* ── Long Term Value (Implicit-layer NPV) ── */}
       <div className="mb-20">
@@ -415,7 +357,7 @@ export function ValueBenefitsSection({
         )}
 
         <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-          Implicit NPV unchanged for BAU; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
+          Implicit NPV unchanged under the Do nothing scenario; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
         </p>
       </div>
 

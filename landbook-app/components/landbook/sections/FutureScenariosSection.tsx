@@ -3,7 +3,6 @@ import type {
   Narratives,
   RevenueLayer,
   ImplicitScenarioRow,
-  LayerNpvRow,
 } from "@/lib/types";
 import {
   SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
@@ -20,7 +19,7 @@ function fmt(v: unknown): string {
 
 const SCENARIO_ORDER = ["bau", "conservative", "moderate", "optimized"] as const;
 const SCENARIO_LABELS: Record<string, string> = {
-  bau: "Business as Usual",
+  bau: "Do nothing",
   conservative: "Conservative",
   moderate: "Moderate",
   optimized: "Optimized",
@@ -89,10 +88,6 @@ export function FutureScenariosSection({
 
   const implicitScenarios: ImplicitScenarioRow[] = economics.implicitScenarios && economics.implicitScenarios.length > 0
     ? economics.implicitScenarios
-    : [];
-
-  const layerNpv: LayerNpvRow[] = economics.layerNpv && economics.layerNpv.length > 0
-    ? economics.layerNpv
     : [];
 
   const byKey = <T extends { key: string }>(arr: T[], key: string) => arr.find((r) => r.key === key);
@@ -339,7 +334,7 @@ export function FutureScenariosSection({
                   <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
                     Compounds to €{Math.round(optCum).toLocaleString()} under Optimized
                     {bauCum > 0 && (
-                      <span className="text-brand-sage font-body font-medium text-lg"> vs €{Math.round(bauCum).toLocaleString()} BAU</span>
+                      <span className="text-brand-sage font-body font-medium text-lg"> vs €{Math.round(bauCum).toLocaleString()} doing nothing</span>
                     )}
                   </p>
                   <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
@@ -355,35 +350,34 @@ export function FutureScenariosSection({
 
       <Hairline />
 
-      {/* 11.2 30-Year NPV — total stack across all three layers */}
-      <SubsectionHeader id="11.2" title="30-Year NPV — Total Stack" sources={["Computed"]} />
-      {layerNpv.length > 0 ? (
+      {/* 11.2 30-Year Cumulative — total stack across all three layers (undiscounted, matches the chart above) */}
+      <SubsectionHeader id="11.2" title="30-Year Cumulative — Total Stack" sources={["Computed"]} />
+      {stackedRows.length > 0 ? (
         <DataTable
-          headers={["Scenario", "Realized NPV", "Monetizable NPV", "Implicit NPV", "Total NPV", "Uplift vs BAU", "Risk Level"]}
-          rows={layerNpv.map((row) => [
-            row.name,
-            `€${row.realizedNpv.toLocaleString()}`,
-            `€${row.monetizableNpv.toLocaleString()}`,
-            `€${row.implicitNpv.toLocaleString()}`,
-            `€${row.totalNpv.toLocaleString()}`,
-            row.upliftVsBau > 0 ? `+€${row.upliftVsBau.toLocaleString()}` : "—",
-            SCENARIO_RISK[row.key] ?? "—",
-          ])}
-        />
-      ) : economics.npv?.scenarios?.length ? (
-        <DataTable
-          headers={["Scenario", "30-Year NPV", "Risk Level"]}
-          rows={economics.npv.scenarios.map((s) => [
-            fmt(s.name),
-            `€${s.npv?.toLocaleString() ?? "—"}`,
-            fmt(s.riskLevel),
-          ])}
+          headers={["Scenario", "Realized (30y)", "Monetizable (30y)", "Implicit (30y)", "Total (30y)", "Uplift vs Do Nothing", "Risk Level"]}
+          rows={(() => {
+            const bauRow = stackedRows.find((r) => r.key === "bau");
+            const bauTotal30 = bauRow ? (bauRow.implicit + bauRow.realized + bauRow.monetizable) * 30 : 0;
+            return stackedRows.map((r) => {
+              const total30 = (r.implicit + r.realized + r.monetizable) * 30;
+              const uplift = total30 - bauTotal30;
+              return [
+                r.name,
+                `€${Math.round(r.realized * 30).toLocaleString()}`,
+                `€${Math.round(r.monetizable * 30).toLocaleString()}`,
+                `€${Math.round(r.implicit * 30).toLocaleString()}`,
+                `€${Math.round(total30).toLocaleString()}`,
+                uplift > 0 ? `+€${Math.round(uplift).toLocaleString()}` : "—",
+                SCENARIO_RISK[r.key] ?? "—",
+              ];
+            });
+          })()}
         />
       ) : (
-        <p className="text-sm text-brand-sage mb-6">NPV scenario data not yet computed.</p>
+        <p className="text-sm text-brand-sage mb-6">Cumulative scenario data not yet computed.</p>
       )}
       <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-        Total NPV reconciles with Value &amp; Benefits&rsquo; implicit-only NPV plus the discounted realized and monetizable annuals at 3.5%.
+        Cumulative undiscounted value at constant annual rate (annual × 30). Numbers reconcile with the 30-year chart above. Discounted present value (3.5%) is shown on Value &amp; Benefits&rsquo; implicit-only NPV.
       </p>
 
       <Hairline />
@@ -450,9 +444,9 @@ export function FutureScenariosSection({
       <PlaceholderBox
         id="11.6"
         title="Uncertainty quantification and scenario spread"
-        status="DERIVED FROM total-stack scenario range (BAU to Optimized)"
+        status="DERIVED FROM total-stack scenario range (Do nothing to Optimized)"
         variant="mixed"
-        note="Operates on total annual value (realized + monetizable + implicit) to match the layered scenario model. Downside floor uses BAU; confidence band is centered on Moderate as a ±spread/2 heuristic."
+        note="Operates on total annual value (realized + monetizable + implicit) to match the layered scenario model. Downside floor uses the Do nothing scenario; confidence band is centered on Moderate as a ±spread/2 heuristic."
       >
         {(() => {
           const totalAnnual = (key: string) => {
@@ -473,10 +467,10 @@ export function FutureScenariosSection({
               <DataTable
                 headers={["Metric", "Value"]}
                 rows={[
-                  ["Scenario spread (Optimized − BAU, total stack)", spread > 0 ? `€${spread.toLocaleString()} (${spreadPct}% range)` : "—"],
-                  ["Downside floor (BAU total)", totalBau > 0 ? `€${totalBau.toLocaleString()}/yr` : "—"],
-                  ["Conservative delta vs BAU", consDelta > 0 ? `+€${consDelta.toLocaleString()}/yr` : "—"],
-                  ["Upside potential vs BAU", totalBau > 0 && totalOpt > 0 ? `${upsidePct}% improvement` : "—"],
+                  ["Scenario spread (Optimized − Do nothing, total stack)", spread > 0 ? `€${spread.toLocaleString()} (${spreadPct}% range)` : "—"],
+                  ["Downside floor (Do nothing total)", totalBau > 0 ? `€${totalBau.toLocaleString()}/yr` : "—"],
+                  ["Conservative delta vs Do nothing", consDelta > 0 ? `+€${consDelta.toLocaleString()}/yr` : "—"],
+                  ["Upside potential vs Do nothing", totalBau > 0 && totalOpt > 0 ? `${upsidePct}% improvement` : "—"],
                   ["Confidence band", spread > 0 ? `±${Math.round(spread / 2).toLocaleString()} around Moderate (€${totalMod.toLocaleString()})` : "—"],
                 ]}
               />

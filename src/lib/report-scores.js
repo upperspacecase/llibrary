@@ -530,7 +530,7 @@ export function computeImplicitScenarios(areaHa, svcKeyed, interventions) {
   };
 
   return [
-    buildScenario('bau', 'Business as Usual'),
+    buildScenario('bau', 'Do nothing'),
     buildScenario('conservative', 'Conservative'),
     buildScenario('moderate', 'Moderate'),
     buildScenario('optimized', 'Optimized'),
@@ -608,7 +608,7 @@ export function computeRevenueLayers(cons, mod, opt) {
   };
 
   return [
-    build('bau', 'Business as Usual', bau),
+    build('bau', 'Do nothing', bau),
     build('conservative', 'Conservative', safe(cons)),
     build('moderate', 'Moderate', safe(mod)),
     build('optimized', 'Optimized', safe(opt)),
