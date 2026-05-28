@@ -646,6 +646,12 @@ function renderEnvironmentalDashboard() {
   return `
     <section class="ed-root" id="environmental-dashboard">
 
+      <header class="ed-insights-head">
+        <h2 class="ed-insights-title">Regional Insights</h2>
+        <p class="ed-insights-sub">The following insights are derived from data from the sensor network of Odemira region.</p>
+        <p class="ed-insights-count"><strong id="ed-regional-sensor-count">—</strong> sensors live across Odemira.</p>
+      </header>
+
       <!-- Region overview map: satellite basemap, custom letter-badge markers,
            top-left view buttons (exclusive), legend underneath that swaps with
            the active view, LULC year scrubber bottom-center when Land Use is on. -->
@@ -709,11 +715,6 @@ function renderEnvironmentalDashboard() {
         </button>
         <span class="ed-add-sensor-hint">Propose a new station — community-installed sensors welcome.</span>
       </div>
-
-      <header class="ed-insights-head">
-        <h2 class="ed-insights-title">Regional Insights</h2>
-        <p class="ed-insights-sub">The following insights are derived from data from the sensor network of Odemira region.</p>
-      </header>
 
       <div class="ed-grid">
         <!-- WEATHER -->
@@ -959,109 +960,7 @@ function renderEnvironmentalDashboard() {
           </div>
         </section>
 
-        <!-- RISK -->
-        <section class="ed-panel ed-panel--risk">
-          <div class="ed-panel-head">${lucide('triangle-alert')} Risk</div>
-          <div class="ed-risk-grid">
-
-            <!-- Flood -->
-            <div class="ed-card ed-risk-card">
-              <div class="ed-risk-head">
-                <div class="ed-risk-title-block">
-                  <div class="ed-card-title">Flood risk</div>
-                  <div class="ed-risk-label" data-cell="flood.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
-                </div>
-                <div class="ed-risk-score">${P('Risk Scores (computed)', 'flood.riskScore', 'int', '/5')}</div>
-              </div>
-              <div class="ed-flood-vis">
-                <img class="ed-flood-img" src="/wiki/flood-crosssection.png" alt="Cross-section showing house above the nearest drainage channel" loading="lazy" />
-                <div class="ed-flood-overlay ed-flood-overlay--drop" id="ed-flood-drop">
-                  <span class="ed-flood-overlay-val">${P('Risk Scores (computed)', null)}</span>
-                  <span class="ed-flood-overlay-sub">drop to drainage</span>
-                </div>
-                <div class="ed-flood-overlay ed-flood-overlay--channel">Drainage channel</div>
-              </div>
-              <div class="ed-info-callout">
-                <span class="ed-info-icon">${lucide('info', 14)}</span>
-                <span id="ed-flood-callout">${P('Risk Scores (computed)', null)}</span>
-              </div>
-              <div class="ed-risk-meta">
-                <div><span>Vertical drop to nearest drainage</span>${P('Risk Scores (computed)', 'flood.hand', 'absM')}</div>
-                <div><span>Nearest drainage</span><span class="ed-risk-meta-named"><strong data-cell="flood.drainageName" data-fmt="str">${P('Overpass Water Features', null)}</strong> <span data-cell="flood.distanceToDrainageM" data-fmt="distanceM">—</span></span></div>
-              </div>
-            </div>
-
-            <!-- Fire -->
-            <div class="ed-card ed-risk-card">
-              <div class="ed-risk-head">
-                <div class="ed-risk-title-block">
-                  <div class="ed-card-title">Fire risk</div>
-                  <div class="ed-risk-label" data-cell="fire.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
-                </div>
-                <div class="ed-risk-score">${P('Risk Scores (computed)', 'fire.riskScore', 'int', '/5')}</div>
-              </div>
-              <div class="ed-fire-vis" id="ed-fire-vis">
-                <div class="ed-fire-img-wrap" id="ed-fire-img-wrap">
-                  ${PB('Mapbox Static map (region with 50 km ring)', '')}
-                </div>
-                <div class="ed-fire-scale">50 km</div>
-              </div>
-              <div class="ed-risk-meta">
-                <div><span>Active fires within 50 km</span>${P('NASA FIRMS Active', 'fire.activeFires', 'int')}</div>
-                <div><span>Historical (10yr) within 25 km</span><span class="ed-risk-unavail">Unavailable</span></div>
-              </div>
-            </div>
-
-            <!-- Drought -->
-            <div class="ed-card ed-risk-card">
-              <div class="ed-risk-head">
-                <div class="ed-risk-title-block">
-                  <div class="ed-card-title">Drought risk</div>
-                  <div class="ed-risk-label" data-cell="drought.riskLevel" data-fmt="riskLevel">${P('Risk Scores (computed)', null)}</div>
-                </div>
-                <div class="ed-risk-score">${P('Risk Scores (computed)', 'drought.riskScore', 'int', '/5')}</div>
-              </div>
-              <div class="ed-drought-block">
-                <div class="ed-drought-title">Rainfall over the last 12 months vs normal</div>
-                <svg class="ed-drought-chart" id="ed-drought-chart" viewBox="0 0 360 140" preserveAspectRatio="none" aria-hidden="true">
-                  <text x="180" y="70" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
-                </svg>
-                <div class="ed-drought-legend">
-                  <span class="ed-drought-leg-up">↑ Wetter than normal</span>
-                  <span class="ed-drought-leg-dn">↓ Drier than normal</span>
-                </div>
-              </div>
-              <div class="ed-info-callout">
-                <span class="ed-info-icon">${lucide('info', 14)}</span>
-                Shows whether the past 12 months were wetter or drier than a typical year for this location.
-              </div>
-              <div class="ed-risk-meta">
-                <div><span>12-month rainfall pattern</span><strong id="ed-drought-summary">${P('Last 12 months of precip', null)}</strong></div>
-                <div><span class="ed-drought-source">Based on month-vs-normal anomaly</span></div>
-              </div>
-            </div>
-
-          </div>
-        </section>
       </div>
-
-      <section class="ed-snirh-panel">
-        <h3>Water sensors in Odemira</h3>
-        <p>Portuguese national water-resources network — stations catalogued inside the Odemira polygon, what each measures, and how often.</p>
-        <div class="ed-snirh-grid" id="ed-snirh-grid">
-          ${['snirh_piezometria','snirh_hidrometrica','snirh_nascentes','snirh_qualidade_sub','snirh_meteorologica'].map(src => `
-            <div class="ed-snirh-card" data-source="${src}">
-              <div class="ed-snirh-card-head">
-                <div class="ed-snirh-card-title" data-snirh-title></div>
-                <div class="ed-snirh-card-cadence" data-snirh-cadence></div>
-              </div>
-              <div class="ed-snirh-card-meta" data-snirh-meta></div>
-              <div class="ed-snirh-card-params" data-snirh-params></div>
-              <div class="ed-snirh-card-stations" data-snirh-stations></div>
-            </div>
-          `).join('')}
-        </div>
-      </section>
 
       <!-- Add Sensor modal: simple proposal form posted to
            /api/regions/odemira/sensor-proposals — a curator follows up. -->
@@ -1579,6 +1478,10 @@ async function hydrateEnvironmentalDashboard() {
       legendEl.innerHTML = '<span class="ed-map-legend-empty">No stations catalogued yet.</span>';
       return;
     }
+
+    // Populate the regional sensor count in the page header (above the map).
+    const countEl = document.getElementById('ed-regional-sensor-count');
+    if (countEl) countEl.textContent = String(payloadStations.count ?? features.length);
 
     // The five SNIRH networks we ship in the legend — same order as the
     // mockup; counts come from the live stations endpoint.

@@ -8171,9 +8171,7 @@ a {
 }
 
 .ed-insights-head {
-  margin: 36px 0 8px;
-  padding-top: 32px;
-  border-top: 1px solid #eee5d8;
+  margin: 0 0 18px;
 }
 .ed-insights-title {
   font-family: 'DM Serif Display', serif;
@@ -8187,8 +8185,18 @@ a {
   font-size: 14px;
   line-height: 1.55;
   color: #555;
-  margin: 0 0 28px;
+  margin: 0 0 6px;
   max-width: 640px;
+}
+.ed-insights-count {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+}
+.ed-insights-count strong {
+  color: #1d9e75;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .ed-card {
