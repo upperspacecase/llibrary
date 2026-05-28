@@ -940,14 +940,24 @@ function renderEnvironmentalDashboard() {
             <div class="ed-bio-yearbars-legend" id="ed-bio-yearbars-legend"></div>
           </div>
 
-          <!-- Flora & Fauna bubble cloud -->
+          <!-- Flora & Fauna table -->
           <div class="ed-weather-block">
             <div class="ed-card-title">Flora &amp; Fauna <span>(observed in Odemira)</span></div>
-            <p class="ed-card-desc">Each circle is a species; size scales with the observation count, color tags the taxon group. IUCN status appears as a small badge on threatened species.</p>
-            <svg class="ed-bio-bubbles" id="ed-bio-bubbles" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-              <text x="500" y="250" text-anchor="middle" fill="#888">Loading…</text>
-            </svg>
-            <div class="ed-bio-bubbles-legend" id="ed-bio-bubbles-legend"></div>
+            <div class="ed-bio-table-wrap">
+              <table class="ed-bio-table" id="ed-bio-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Species</th>
+                    <th>Group</th>
+                    <th class="ed-bio-th-num">Observations</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody><tr><td colspan="5" class="ed-bio-table-empty">Loading…</td></tr></tbody>
+              </table>
+            </div>
+            <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
           </div>
 
         </section>
@@ -1725,20 +1735,43 @@ async function hydrateEnvironmentalDashboard() {
       if (!lulcYears.length) return;
       const y = lulcYears[Math.max(0, Math.min(idx, lulcYears.length - 1))];
       if (!y) return;
-      // Ping-pong the inactive raster source onto the new year, then crossfade.
+      // Ping-pong the inactive raster source onto the new year, but DON'T
+      // start the crossfade until that source has actually loaded tiles —
+      // otherwise the active layer fades out into nothing while the new
+      // tiles are still in flight (the "flash" Tay's seeing).
       const inactive = lulcActive === 'a' ? 'b' : 'a';
-      const inactiveSrc = map.getSource(`lulc-top-${inactive}`);
-      if (inactiveSrc && inactiveSrc.setTiles) {
-        inactiveSrc.setTiles([lulcTileUrl(y.oid)]);
-      }
-      if (map.getLayer(`lulc-top-${inactive}-layer`)) {
-        map.setPaintProperty(`lulc-top-${inactive}-layer`, 'raster-opacity', 0.75);
-      }
-      if (map.getLayer(`lulc-top-${lulcActive}-layer`)) {
-        map.setPaintProperty(`lulc-top-${lulcActive}-layer`, 'raster-opacity', 0);
-      }
-      lulcActive = inactive;
+      const inactiveSrcId = `lulc-top-${inactive}`;
+      const activeSrcId   = `lulc-top-${lulcActive}`;
+      const inactiveSrc = map.getSource(inactiveSrcId);
+      if (!inactiveSrc || !inactiveSrc.setTiles) return;
+      inactiveSrc.setTiles([lulcTileUrl(y.oid)]);
       if (lulcYearLbl) lulcYearLbl.textContent = String(y.year);
+
+      const handleLoaded = (e) => {
+        if (e.sourceId !== inactiveSrcId || !e.isSourceLoaded) return;
+        map.off('sourcedata', handleLoaded);
+        if (map.getLayer(`${inactiveSrcId}-layer`)) {
+          map.setPaintProperty(`${inactiveSrcId}-layer`, 'raster-opacity', 0.75);
+        }
+        if (map.getLayer(`${activeSrcId}-layer`)) {
+          map.setPaintProperty(`${activeSrcId}-layer`, 'raster-opacity', 0);
+        }
+        lulcActive = inactive;
+      };
+      map.on('sourcedata', handleLoaded);
+      // Safety: if the source never reports loaded within 4s (network slow),
+      // fade anyway so the user isn't stuck on the old year.
+      setTimeout(() => {
+        if (lulcActive === inactive) return;
+        map.off('sourcedata', handleLoaded);
+        if (map.getLayer(`${inactiveSrcId}-layer`)) {
+          map.setPaintProperty(`${inactiveSrcId}-layer`, 'raster-opacity', 0.75);
+        }
+        if (map.getLayer(`${activeSrcId}-layer`)) {
+          map.setPaintProperty(`${activeSrcId}-layer`, 'raster-opacity', 0);
+        }
+        lulcActive = inactive;
+      }, 4000);
     };
 
     const setMarkersVisible = (visible) => {
@@ -1839,35 +1872,28 @@ async function hydrateEnvironmentalDashboard() {
         const initialYear = rainData.years[latestIdx];
         if (!map.getSource('rainfall')) {
           map.addSource('rainfall', { type: 'geojson', data: rainData.byYear.get(initialYear) });
-          // Diffuse heatmap: weight by mm/yr so wet stations push more
-          // density. Big radius so a sparse station network reads as a
-          // regional rainfall surface, not isolated dots.
+          // Soft colored blobs — circle color maps directly to mm/yr (so the
+          // legend tells the truth) and circle-blur:1 + a generous radius
+          // diffuses each station across the surrounding region.
           map.addLayer({
             id: 'rainfall-heat',
-            type: 'heatmap',
+            type: 'circle',
             source: 'rainfall',
             paint: {
-              'heatmap-weight': [
+              'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 70, 10, 110, 13, 170],
+              'circle-color': [
                 'interpolate', ['linear'], ['get', 'value'],
-                300, 0.1,
-                1500, 1,
+                400,  '#7d2a14',
+                600,  '#b85a3a',
+                800,  '#d6ad6a',
+                1000, '#a3b86c',
+                1200, '#3d8e6e',
+                1500, '#1d4e8e',
               ],
-              'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.9, 12, 1.4],
-              'heatmap-radius':    ['interpolate', ['linear'], ['zoom'], 7, 60, 10, 110, 13, 180],
-              'heatmap-opacity':   0.75,
-              'heatmap-color': [
-                'interpolate', ['linear'], ['heatmap-density'],
-                0,    'rgba(125,42,20,0)',
-                0.15, 'rgba(184,90,58,0.55)',
-                0.35, 'rgba(214,173,106,0.75)',
-                0.55, 'rgba(163,184,108,0.85)',
-                0.75, 'rgba(61,142,110,0.9)',
-                1.0,  'rgba(29,78,142,0.95)',
-              ],
+              'circle-blur': 1,
+              'circle-opacity': 0.55,
             },
           });
-          // Tiny dots at the actual station coordinates so the diffusion is
-          // anchored to real measurements, not invented.
           map.addLayer({
             id: 'rainfall-points',
             type: 'circle',
@@ -2192,16 +2218,18 @@ async function hydrateEnvironmentalDashboard() {
         </div>`;
     };
 
-    // SoilGrids WRB Reference Soil Groups likely to appear over Iberia.
-    // Colors taken from the WMS palette to match the raster.
+    // SoilGrids WRB Reference Soil Group official palette (ISRIC).
+    // Showing the groups that actually appear over Odemira — Cambisols
+    // (the dominant salmon-pink), Arenosols on the dunes, plus the
+    // smaller patches of Luvisols / Leptosols / Regosols / Fluvisols.
     const soilLegendHtml = () => {
       const chips = [
-        ['#d4a574', 'Cambisols'],
-        ['#a89580', 'Luvisols'],
-        ['#b4b2a9', 'Leptosols'],
-        ['#c9c08a', 'Regosols'],
-        ['#7a9ab5', 'Fluvisols'],
-        ['#e8d098', 'Arenosols'],
+        ['#FF99CC', 'Cambisols'],
+        ['#FFFF99', 'Arenosols'],
+        ['#66FF66', 'Luvisols'],
+        ['#999999', 'Leptosols'],
+        ['#66CC99', 'Regosols'],
+        ['#00CCCC', 'Fluvisols'],
       ];
       return chips.map(([c, l]) =>
         `<div class="ed-map-legend-row">
@@ -2248,32 +2276,39 @@ async function hydrateEnvironmentalDashboard() {
       setSoilVisible(view === 'soil');
     };
 
-    let currentView = null;
-    const setView = async (view) => {
-      // Re-runnable: idempotent across markers/layers/legend, so map.on('load')
-      // can call it again to apply the chosen view once markers are mounted.
-      const targetStyleKey = STYLE_FOR_VIEW[view] || 'satellite';
-      if (targetStyleKey !== currentStyleKey) {
-        currentStyleKey = targetStyleKey;
-        map.setStyle(STYLE_URLS[targetStyleKey]);
-        map.once('style.load', () => { applyViewLayers(view); });
-      } else {
-        await applyViewLayers(view);
-      }
-      currentView = view;
-      // Sync button pressed states + active style
-      viewBtns.forEach(btn => {
-        const active = btn.dataset.view === view;
-        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-        btn.classList.toggle('is-active', active);
-      });
-      // Swap legend
+    // Apply both layers AND the legend after data is ready. Splitting these
+    // matters because the bio legend reads from bioData which only exists
+    // after setBioVisible's await resolves; if we wrote the legend
+    // synchronously after a style swap, it would render "Loading taxa…"
+    // forever.
+    const applyViewState = async (view) => {
+      await applyViewLayers(view);
       const meta = VIEW_META[view];
       if (meta) {
         if (legendTitle) legendTitle.textContent = meta.title;
         if (legendEl)    legendEl.innerHTML = meta.body();
       }
       if (view === 'bio') wireBioLegendCheckboxes();
+    };
+
+    let currentView = null;
+    const setView = async (view) => {
+      // Buttons sync immediately for UI snappiness.
+      viewBtns.forEach(btn => {
+        const active = btn.dataset.view === view;
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.classList.toggle('is-active', active);
+      });
+      currentView = view;
+
+      const targetStyleKey = STYLE_FOR_VIEW[view] || 'satellite';
+      if (targetStyleKey !== currentStyleKey) {
+        currentStyleKey = targetStyleKey;
+        map.setStyle(STYLE_URLS[targetStyleKey]);
+        map.once('style.load', () => { applyViewState(view); });
+      } else {
+        await applyViewState(view);
+      }
     };
 
     viewBtns.forEach(btn => {
@@ -3151,111 +3186,41 @@ async function hydrateEnvironmentalDashboard() {
       }
     }
 
-    // ---- Flora & Fauna bubble cloud -----------------------------------------
-    // Each species is a circle sized by observation count, colored by taxon
-    // group. Greedy spiral packing — places largest first at center, spirals
-    // outward checking collisions against already-placed bubbles.
-    const bubbleSvg     = document.getElementById('ed-bio-bubbles');
-    const bubbleLegend  = document.getElementById('ed-bio-bubbles-legend');
+    // ---- Flora & Fauna table — top species by observation count -----------
+    const tableEl = document.querySelector('#ed-bio-table tbody');
     const top = Array.isArray(payload.species?.top10) ? payload.species.top10 : [];
-
-    const GROUP_COLOR = {
-      Plantae:        '#3d6b48',
-      Aves:           '#3d6b8c',
-      Insecta:        '#c9a14a',
-      Mollusca:       '#9d6360',
-      Reptilia:       '#b85a3a',
-      Amphibia:       '#7a9a6e',
-      Arachnida:      '#7a2a14',
-      Mammalia:       '#5a4632',
-      Actinopterygii: '#5dcaa5',
-      Fungi:          '#a89580',
-      Chromista:      '#8b9a7e',
-      Animalia:       '#b4b2a9',
-    };
-    const colorFor = g => GROUP_COLOR[g] || '#b4b2a9';
-    const iucnColors = {
-      LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
-      EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
-    };
-
-    if (bubbleSvg) {
+    if (tableEl) {
       if (!top.length) {
-        bubbleSvg.innerHTML = '<text x="500" y="250" text-anchor="middle" fill="#888">No species data yet.</text>';
+        tableEl.innerHTML = '<tr><td colspan="5" class="ed-bio-table-empty">No species data yet.</td></tr>';
       } else {
-        const W = 1000, H = 500;
-        const sorted = [...top].sort((a, b) => (b.count || 0) - (a.count || 0));
-        const maxCount = sorted[0].count || 1;
-        const minR = 18;
-        const maxR = 90;
-        const rFor = c => minR + Math.sqrt((c || 0) / maxCount) * (maxR - minR);
-
-        // Greedy spiral packing.
-        const placed = [];
-        for (const sp of sorted) {
-          const r = rFor(sp.count);
-          let pos = null;
-          if (!placed.length) {
-            pos = { x: W / 2, y: H / 2 };
-          } else {
-            const cx = W / 2, cy = H / 2;
-            for (let step = 0; step < 2500 && !pos; step++) {
-              const angle = step * 0.32;
-              const radius = step * 0.85;
-              const x = cx + radius * Math.cos(angle);
-              const y = cy + radius * Math.sin(angle);
-              if (x - r < 4 || x + r > W - 4 || y - r < 4 || y + r > H - 4) continue;
-              const collides = placed.some(p => {
-                const dx = p.x - x, dy = p.y - y;
-                return Math.sqrt(dx * dx + dy * dy) < p.r + r + 3;
-              });
-              if (!collides) pos = { x, y };
-            }
-          }
-          if (!pos) pos = { x: W / 2, y: H / 2 };
-          placed.push({ ...sp, r, x: pos.x, y: pos.y });
-        }
-
-        const groupsUsed = new Set();
-        const bubbles = placed.map(p => {
-          const color = colorFor(p.group);
-          groupsUsed.add(p.group || 'Animalia');
-          const labelOK = p.r >= 28;
-          const sciOK = p.r >= 42;
-          const iucnOK = p.r >= 24 && (p.iucn || p.threatened);
-          const iucnLabel = p.iucn || (p.threatened ? 'VU?' : null);
-          const iucnFill = iucnLabel ? (iucnColors[p.iucn] || '#c9a14a') : null;
-          const tooltip = `${p.name || p.scientificName || '—'}${p.scientificName && p.scientificName !== p.name ? ' · ' + p.scientificName : ''} · ${p.count} obs${p.iucn ? ' · ' + p.iucn : ''}`;
-          return `
-            <g class="ed-bio-bubble" transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)})">
-              <title>${tooltip}</title>
-              <circle r="${p.r.toFixed(1)}" fill="${color}" fill-opacity="0.82" stroke="#fff" stroke-width="1.5"/>
-              ${labelOK ? `<text y="${sciOK ? -4 : 0}" text-anchor="middle" font-size="${Math.max(10, p.r * 0.22).toFixed(1)}" font-weight="700" fill="#fff">${(p.name || p.scientificName || '').slice(0, 16)}</text>` : ''}
-              ${sciOK && p.scientificName && p.scientificName !== p.name
-                ? `<text y="9" text-anchor="middle" font-size="${Math.max(9, p.r * 0.16).toFixed(1)}" font-style="italic" fill="rgba(255,255,255,0.85)">${p.scientificName.slice(0, 20)}</text>` : ''}
-              ${labelOK ? `<text y="${sciOK ? 24 : 14}" text-anchor="middle" font-size="${Math.max(9, p.r * 0.15).toFixed(1)}" fill="rgba(255,255,255,0.85)">${p.count.toLocaleString()} obs</text>` : ''}
-              ${iucnOK ? `<g transform="translate(${(p.r * 0.55).toFixed(1)},${(-p.r * 0.55).toFixed(1)})">
-                <circle r="10" fill="${iucnFill}" stroke="#fff" stroke-width="1.2"/>
-                <text text-anchor="middle" dy="3" font-size="9" font-weight="700" fill="#fff">${iucnLabel}</text>
-              </g>` : ''}
-            </g>`;
-        }).join('');
-
-        bubbleSvg.innerHTML = bubbles;
-
-        if (bubbleLegend) {
-          const groupOrder = Object.keys(GROUP_COLOR).filter(g => groupsUsed.has(g));
-          const groupTotals = new Map();
-          for (const p of placed) {
-            const g = p.group || 'Animalia';
-            groupTotals.set(g, (groupTotals.get(g) || 0) + (p.count || 0));
-          }
-          bubbleLegend.innerHTML = groupOrder.map(g => `
-            <span class="ed-bio-bubbles-chip">
-              <i style="background:${colorFor(g)}"></i>${g}
-              <em>${(groupTotals.get(g) || 0).toLocaleString()}</em>
-            </span>`).join('');
-        }
+        const iucnColors = {
+          LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
+          EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
+        };
+        const groupOf = (g) => g === 'Plantae' || g === 'Fungi' ? 'Flora' : (g ? 'Fauna' : '—');
+        tableEl.innerHTML = top
+          .slice()
+          .sort((a, b) => (b.count || 0) - (a.count || 0))
+          .map(sp => {
+            const iucn = sp.iucn;
+            const badge = iucn
+              ? `<span class="ed-bio-iucn-badge" style="background:${iucnColors[iucn] || '#888'}">${iucn}</span>`
+              : (sp.threatened ? `<span class="ed-bio-iucn-badge" style="background:#c9a14a">VU?</span>` : '<span class="ed-bio-iucn-badge ed-bio-iucn-badge--none">—</span>');
+            return `
+              <tr>
+                <td class="ed-bio-cell-img">
+                  ${sp.photoUrl ? `<img src="${sp.photoUrl}" alt="" loading="lazy" />` : '<span class="ed-bio-cell-img-empty"></span>'}
+                </td>
+                <td class="ed-bio-cell-name">
+                  <strong>${sp.name || sp.scientificName || '—'}</strong>
+                  ${sp.scientificName && sp.scientificName !== sp.name
+                    ? `<em>${sp.scientificName}</em>` : ''}
+                </td>
+                <td>${groupOf(sp.group)}<div class="ed-bio-cell-sub">${sp.group || ''}</div></td>
+                <td class="ed-bio-cell-num">${(sp.count || 0).toLocaleString()}</td>
+                <td>${badge}</td>
+              </tr>`;
+          }).join('');
       }
     }
     hydrated += 1;

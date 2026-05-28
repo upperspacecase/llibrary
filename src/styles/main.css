@@ -9131,38 +9131,74 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-.ed-bio-bubbles {
+.ed-bio-table-wrap {
+  overflow-x: auto;
+}
+.ed-bio-table {
   width: 100%;
-  height: auto;
-  aspect-ratio: 2 / 1;
-  display: block;
-  margin-top: 4px;
+  border-collapse: collapse;
+  font-size: 13px;
 }
-.ed-bio-bubbles-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
-  font-size: 11px;
-  color: #555;
-}
-.ed-bio-bubbles-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-.ed-bio-bubbles-chip i {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.ed-bio-bubbles-chip em {
-  font-style: normal;
-  color: #2C2C2C;
+.ed-bio-table thead th {
+  text-align: left;
+  font-size: 10px;
   font-weight: 700;
-  margin-left: 2px;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  border-bottom: 1px solid #eee5d8;
+  padding: 8px 10px;
+}
+.ed-bio-table th.ed-bio-th-num,
+.ed-bio-table td.ed-bio-cell-num { text-align: right; font-variant-numeric: tabular-nums; }
+.ed-bio-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #f3ecdd;
+  vertical-align: middle;
+  color: #2C2C2C;
+}
+.ed-bio-table tbody tr:last-child td { border-bottom: 0; }
+.ed-bio-cell-img img {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 4px;
+  display: block;
+}
+.ed-bio-cell-img-empty {
+  display: block;
+  width: 44px;
+  height: 44px;
+  background: #f3ecdd;
+  border-radius: 4px;
+}
+.ed-bio-cell-name strong { display: block; font-weight: 600; }
+.ed-bio-cell-name em {
+  font-style: italic;
+  font-size: 11px;
+  color: #888;
+  display: block;
+}
+.ed-bio-cell-sub { font-size: 10px; color: #888; }
+.ed-bio-iucn-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  border-radius: 4px;
+  min-width: 28px;
+  text-align: center;
+}
+.ed-bio-iucn-badge--none {
+  background: transparent;
+  color: #aaa;
+  font-weight: 400;
+}
+.ed-bio-table-empty {
+  color: #888;
+  text-align: center;
+  font-style: italic;
 }
 
 .ed-bio-articles {
