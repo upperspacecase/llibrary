@@ -9132,7 +9132,7 @@ a {
 /* Biodiversity ---------------------------------------------------------- */
 .ed-bio-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   margin: 0 0 32px;
 }
@@ -9263,6 +9263,95 @@ a {
   color: #888;
   text-align: center;
   font-style: italic;
+}
+
+/* Flora & Fauna quadrants */
+.ed-bio-quad {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 28px;
+}
+@media (max-width: 700px) {
+  .ed-bio-quad { grid-template-columns: 1fr; gap: 0; }
+}
+.ed-bio-quad-col-head {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: #1B3A2F;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #3d6b48;
+}
+.ed-bio-quad-cell {
+  padding: 14px 0;
+  border-bottom: 1px solid #f3ecdd;
+}
+.ed-bio-quad-cell:last-child { border-bottom: 0; }
+.ed-bio-quad-cell-head {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 10px;
+}
+.ed-bio-quad-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ed-bio-quad-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ed-bio-quad-row img,
+.ed-bio-quad-row .ed-bio-cell-img-empty {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+.ed-bio-quad-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ed-bio-quad-name strong {
+  display: block;
+  font-weight: 600;
+  font-size: 13px;
+  color: #2C2C2C;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-bio-quad-name em {
+  font-style: italic;
+  font-size: 11px;
+  color: #888;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ed-bio-quad-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-bio-quad-count {
+  font-size: 12px;
+  color: #555;
+  font-variant-numeric: tabular-nums;
+}
+.ed-bio-quad-empty {
+  color: #888;
+  font-style: italic;
+  font-size: 12px;
 }
 
 .ed-bio-articles {

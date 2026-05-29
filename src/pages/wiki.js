@@ -937,14 +937,6 @@ function renderEnvironmentalDashboard() {
           <!-- Wiki ecology stats -->
           <div class="ed-bio-stats" id="ed-bio-stats"></div>
 
-          <!-- Top species (image grid, no labels) -->
-          <div class="ed-weather-block">
-            <div class="ed-card-title">Top species <span>(by observations)</span></div>
-            <div class="ed-species-grid" id="ed-bio-top-grid">
-              ${Array(8).fill(0).map(() => `<div class="ed-species-card"><div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div></div></div>`).join('')}
-            </div>
-          </div>
-
           <!-- Observations per year (1995→) stacked by iconic taxon -->
           <div class="ed-weather-block">
             <div class="ed-card-title">Observations per year <span>(iNaturalist · 1995 → today)</span></div>
@@ -955,22 +947,32 @@ function renderEnvironmentalDashboard() {
             <div class="ed-bio-yearbars-legend" id="ed-bio-yearbars-legend"></div>
           </div>
 
-          <!-- Flora & Fauna table -->
+          <!-- Flora & Fauna quadrants: most observed + most endangered, per column -->
           <div class="ed-weather-block">
             <div class="ed-card-title">Flora &amp; Fauna <span>(observed in Odemira)</span></div>
-            <div class="ed-bio-table-wrap">
-              <table class="ed-bio-table" id="ed-bio-table">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Species</th>
-                    <th>Group</th>
-                    <th class="ed-bio-th-num">Observations</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody><tr><td colspan="5" class="ed-bio-table-empty">Loading…</td></tr></tbody>
-              </table>
+            <div class="ed-bio-quad">
+              <div class="ed-bio-quad-col">
+                <div class="ed-bio-quad-col-head">Flora</div>
+                <div class="ed-bio-quad-cell">
+                  <div class="ed-bio-quad-cell-head">Most observed</div>
+                  <ul class="ed-bio-quad-list" id="ed-bio-flora-observed"><li class="ed-bio-quad-empty">Loading…</li></ul>
+                </div>
+                <div class="ed-bio-quad-cell">
+                  <div class="ed-bio-quad-cell-head">Most endangered</div>
+                  <ul class="ed-bio-quad-list" id="ed-bio-flora-endangered"><li class="ed-bio-quad-empty">Loading…</li></ul>
+                </div>
+              </div>
+              <div class="ed-bio-quad-col">
+                <div class="ed-bio-quad-col-head">Fauna</div>
+                <div class="ed-bio-quad-cell">
+                  <div class="ed-bio-quad-cell-head">Most observed</div>
+                  <ul class="ed-bio-quad-list" id="ed-bio-fauna-observed"><li class="ed-bio-quad-empty">Loading…</li></ul>
+                </div>
+                <div class="ed-bio-quad-cell">
+                  <div class="ed-bio-quad-cell-head">Most endangered</div>
+                  <ul class="ed-bio-quad-list" id="ed-bio-fauna-endangered"><li class="ed-bio-quad-empty">Loading…</li></ul>
+                </div>
+              </div>
             </div>
             <div class="ed-legend-row ed-legend-row--iucn">${iucnLegend}</div>
           </div>
@@ -1157,41 +1159,6 @@ async function hydrateEnvironmentalDashboard() {
   if (g.lithology || g.period) {
     const bits = [g.lithology, g.period && !g.age ? g.period : null, g.age].filter(Boolean);
     payload.geology.summary = bits.join(' — ');
-  }
-
-  // Render the Top species cards (8 cells) if iNat data is available
-  const top10 = Array.isArray(payload.species && payload.species.top10) ? payload.species.top10 : [];
-  if (top10.length) {
-    const iucnColors = {
-      LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
-      EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
-    };
-    const grid = document.querySelector('.ed-species-grid');
-    if (grid) {
-      grid.innerHTML = top10.slice(0, 8).map(sp => {
-        const iucn = sp.iucn || null;
-        const badgeBg = iucn ? (iucnColors[iucn] || '#888') : null;
-        const badge = iucn
-          ? `<span class="ed-species-iucn" style="background:${badgeBg}">${iucn}</span>`
-          : (sp.threatened ? `<span class="ed-species-iucn" style="background:#c9a14a">VU?</span>` : '');
-        return `
-          <div class="ed-species-card">
-            <div class="ed-species-photo-wrap">
-              ${sp.photoUrl
-                ? `<img class="ed-species-photo" src="${sp.photoUrl}" alt="${sp.name || sp.scientificName || ''}" loading="lazy" />`
-                : `<div class="ed-data-block"><div class="ed-data-block-tag">DATA?</div><div class="ed-data-block-src">iNaturalist photo CDN</div></div>`}
-              ${badge}
-            </div>
-            <div class="ed-species-name">
-              <strong>${sp.name || sp.scientificName || '—'}</strong>
-              ${sp.scientificName && sp.name && sp.scientificName !== sp.name
-                ? `<em>${sp.scientificName}</em>` : ''}
-              <span class="ed-species-count">${(sp.count || 0).toLocaleString()} obs</span>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
   }
 
   const walk = (obj, path) => path.split('.').reduce((o, k) => (o == null ? null : o[k]), obj);
@@ -3206,13 +3173,22 @@ async function hydrateEnvironmentalDashboard() {
     // ---- Wiki ecology stats ------------------------------------------------
     const ecology = getSectionById('ecology');
     const statsEl = document.getElementById('ed-bio-stats');
-    if (statsEl && ecology?.visuals?.stats) {
-      statsEl.innerHTML = ecology.visuals.stats.map(s => `
+    if (statsEl) {
+      const total = payload.species?.total;
+      const observedTile = Number.isFinite(total)
+        ? `<div class="ed-bio-stat">
+             <div class="ed-bio-stat-value">${total.toLocaleString()}</div>
+             <div class="ed-bio-stat-label">Species observed</div>
+             <div class="ed-bio-stat-sub">iNaturalist</div>
+           </div>`
+        : '';
+      const staticTiles = (ecology?.visuals?.stats || []).map(s => `
         <div class="ed-bio-stat">
           <div class="ed-bio-stat-value">${s.value}</div>
           <div class="ed-bio-stat-label">${s.label}</div>
           ${s.sublabel ? `<div class="ed-bio-stat-sub">${s.sublabel}</div>` : ''}
         </div>`).join('');
+      statsEl.innerHTML = observedTile + staticTiles;
     }
 
     // ---- iNaturalist observations: per-year stacked bars + species table --
@@ -3322,43 +3298,41 @@ async function hydrateEnvironmentalDashboard() {
       }
     }
 
-    // ---- Flora & Fauna table — top species by observation count -----------
-    const tableEl = document.querySelector('#ed-bio-table tbody');
-    const top = Array.isArray(payload.species?.top10) ? payload.species.top10 : [];
-    if (tableEl) {
-      if (!top.length) {
-        tableEl.innerHTML = '<tr><td colspan="5" class="ed-bio-table-empty">No species data yet.</td></tr>';
-      } else {
-        const iucnColors = {
-          LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
-          EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
-        };
-        const groupOf = (g) => g === 'Plantae' || g === 'Fungi' ? 'Flora' : (g ? 'Fauna' : '—');
-        tableEl.innerHTML = top
-          .slice()
-          .sort((a, b) => (b.count || 0) - (a.count || 0))
-          .map(sp => {
-            const iucn = sp.iucn;
-            const badge = iucn
-              ? `<span class="ed-bio-iucn-badge" style="background:${iucnColors[iucn] || '#888'}">${iucn}</span>`
-              : (sp.threatened ? `<span class="ed-bio-iucn-badge" style="background:#c9a14a">VU?</span>` : '<span class="ed-bio-iucn-badge ed-bio-iucn-badge--none">—</span>');
-            return `
-              <tr>
-                <td class="ed-bio-cell-img">
-                  ${sp.photoUrl ? `<img src="${sp.photoUrl}" alt="" loading="lazy" />` : '<span class="ed-bio-cell-img-empty"></span>'}
-                </td>
-                <td class="ed-bio-cell-name">
-                  <strong>${sp.name || sp.scientificName || '—'}</strong>
-                  ${sp.scientificName && sp.scientificName !== sp.name
-                    ? `<em>${sp.scientificName}</em>` : ''}
-                </td>
-                <td>${groupOf(sp.group)}<div class="ed-bio-cell-sub">${sp.group || ''}</div></td>
-                <td class="ed-bio-cell-num">${(sp.count || 0).toLocaleString()}</td>
-                <td>${badge}</td>
-              </tr>`;
-          }).join('');
-      }
-    }
+    // ---- Flora & Fauna quadrants — most observed + most endangered ---------
+    const iucnColors = {
+      LC: '#5a7256', NT: '#7a9a6e', VU: '#c9a14a',
+      EN: '#b85a3a', CR: '#7a2a14', DD: '#888', EW: '#7a2a14', EX: '#000',
+    };
+    const speciesRow = (sp) => {
+      const iucn = sp.iucn;
+      const badge = iucn
+        ? `<span class="ed-bio-iucn-badge" style="background:${iucnColors[iucn] || '#888'}">${iucn}</span>`
+        : (sp.threatened ? `<span class="ed-bio-iucn-badge" style="background:#c9a14a">VU?</span>` : '');
+      return `
+        <li class="ed-bio-quad-row">
+          ${sp.photoUrl ? `<img src="${sp.photoUrl}" alt="" loading="lazy" />` : '<span class="ed-bio-cell-img-empty"></span>'}
+          <span class="ed-bio-quad-name">
+            <strong>${sp.name || sp.scientificName || '—'}</strong>
+            ${sp.scientificName && sp.scientificName !== sp.name ? `<em>${sp.scientificName}</em>` : ''}
+          </span>
+          <span class="ed-bio-quad-meta">
+            ${Number.isFinite(sp.count) ? `<span class="ed-bio-quad-count">${sp.count.toLocaleString()} obs</span>` : ''}
+            ${badge}
+          </span>
+        </li>`;
+    };
+    const fillQuad = (id, list, emptyMsg) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerHTML = (Array.isArray(list) && list.length)
+        ? list.map(speciesRow).join('')
+        : `<li class="ed-bio-quad-empty">${emptyMsg}</li>`;
+    };
+    const sp = payload.species || {};
+    fillQuad('ed-bio-flora-observed',   sp.floraObserved,   'No flora observations yet.');
+    fillQuad('ed-bio-fauna-observed',   sp.faunaObserved,   'No fauna observations yet.');
+    fillQuad('ed-bio-flora-endangered', sp.floraEndangered, 'No threatened flora recorded.');
+    fillQuad('ed-bio-fauna-endangered', sp.faunaEndangered, 'No threatened fauna recorded.');
     hydrated += 1;
   })();
 

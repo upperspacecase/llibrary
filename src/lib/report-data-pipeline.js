@@ -807,7 +807,7 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     return m[upper] || null;
   };
 
-  const top10 = speciesSummary.species.slice(0, 10).map(s => ({
+  const toSpeciesItem = (s) => ({
     name: s.name,
     scientificName: s.scientificName,
     group: s.group,
@@ -815,7 +815,22 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     photoUrl: s.photoUrl ?? null,
     iucn: iucnCodeOf(s.conservationStatus),
     threatened: !!s.threatened,
-  }));
+  });
+
+  const top10 = speciesSummary.species.slice(0, 10).map(toSpeciesItem);
+
+  // Flora / Fauna quadrants for the dashboard biodiversity card: most-observed
+  // (by observation count) and most-endangered (by IUCN severity) for each.
+  const isFlora = (g) => g === 'Plantae' || g === 'Fungi';
+  const IUCN_SEVERITY = { CR: 5, EW: 5, EX: 5, EN: 4, VU: 3, NT: 2, DD: 1 };
+  const bySeverity = (a, b) =>
+    (IUCN_SEVERITY[b.iucn] || 0) - (IUCN_SEVERITY[a.iucn] || 0) || (b.count || 0) - (a.count || 0);
+  const observedItems = speciesSummary.species.map(toSpeciesItem);
+  const endangeredItems = (threatenedSummary.species || []).map(toSpeciesItem);
+  const floraObserved   = observedItems.filter(s => isFlora(s.group)).slice(0, 6);
+  const faunaObserved   = observedItems.filter(s => !isFlora(s.group)).slice(0, 6);
+  const floraEndangered = endangeredItems.filter(s => isFlora(s.group)).sort(bySeverity).slice(0, 6);
+  const faunaEndangered = endangeredItems.filter(s => !isFlora(s.group)).sort(bySeverity).slice(0, 6);
 
   const gbifKingdoms = Object.entries(gbifSummary.kingdoms).map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
@@ -843,6 +858,10 @@ export async function processRawData(raw, submission, areaHa, options = {}) {
     total: speciesSummary.total,
     groups: groupEntries,
     top10,
+    floraObserved,
+    faunaObserved,
+    floraEndangered,
+    faunaEndangered,
     threatened: threatenedSummary.total,
     gbifTotal: gbifSummary.total,
     gbifKingdoms,

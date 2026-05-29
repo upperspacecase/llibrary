@@ -248,6 +248,10 @@ export function reportDataToFacts(data) {
       gbifTotal: wrap(data.species?.gbifTotal, 'count', 'gbif'),
       groups: wrap(data.species?.groups, null, 'species'),
       top10: wrap(data.species?.top10, null, 'species'),
+      floraObserved: wrap(data.species?.floraObserved, null, 'species'),
+      faunaObserved: wrap(data.species?.faunaObserved, null, 'species'),
+      floraEndangered: wrap(data.species?.floraEndangered, null, 'threatened'),
+      faunaEndangered: wrap(data.species?.faunaEndangered, null, 'threatened'),
       trends: wrap(data.species?.trends, null, 'species'),
     },
     fire: {
@@ -404,6 +408,10 @@ export function factsToReportData(facts) {
       gbifTotal: unwrap(facts.species?.gbifTotal),
       groups: unwrap(facts.species?.groups) || [],
       top10: unwrap(facts.species?.top10) || [],
+      floraObserved: unwrap(facts.species?.floraObserved) || [],
+      faunaObserved: unwrap(facts.species?.faunaObserved) || [],
+      floraEndangered: unwrap(facts.species?.floraEndangered) || [],
+      faunaEndangered: unwrap(facts.species?.faunaEndangered) || [],
       trends: unwrap(facts.species?.trends) || {},
     },
     fire: {
