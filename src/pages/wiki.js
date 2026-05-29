@@ -614,13 +614,6 @@ function renderEnvironmentalDashboard() {
     </div>
   `).join('');
 
-  const soilRow = (label, src, cell, fmt, unit) => `
-    <div class="ed-soil-row">
-      <span class="ed-soil-label">${label}</span>
-      <span class="ed-soil-value">${P(src, cell, fmt, unit)}</span>
-      <span class="ed-soil-delta">${D('National baseline')}</span>
-    </div>
-  `;
 
   const speciesCard = () => `
     <div class="ed-species-card">
@@ -648,9 +641,10 @@ function renderEnvironmentalDashboard() {
     <section class="ed-root" id="environmental-dashboard">
 
       <header class="ed-insights-head">
-        <h2 class="ed-insights-title">Regional Insights</h2>
         <p class="ed-insights-sub">The following insights are derived from data from the sensor network of Odemira region.</p>
-        <p class="ed-insights-count"><strong id="ed-regional-sensor-count">—</strong> sensors live across Odemira.</p>
+        <button type="button" class="ed-insights-count ed-insights-count-btn" id="ed-sensor-status-btn" aria-haspopup="dialog">
+          <strong id="ed-regional-sensor-count">—</strong> sensors live across Odemira
+        </button>
       </header>
 
       <div class="ed-error-banner" id="ed-error-banner" hidden role="alert">
@@ -795,26 +789,23 @@ function renderEnvironmentalDashboard() {
           <div class="ed-bio-stats" id="ed-land-stats"></div>
 
           <div class="ed-card">
-            <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
-            ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
-            ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  'str')}
-            ${soilRow('WRB texture class', 'SoilGrids Classification', 'soil.classification', 'str')}
-            ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    'str')}
-          </div>
-          <div class="ed-card">
-            <div class="ed-card-title">Soil profile <span>(SoilGrids · 0–200 cm · property centroid)</span></div>
-            <p class="ed-card-desc">How pH, organic carbon and clay change with depth at the property centroid. Surface layers are usually the most weathered and biologically active; deeper layers reflect parent material.</p>
+            <div class="ed-card-title">Regional Soil profile <span>(0–200 cm · property centroid)</span></div>
+            <p class="ed-card-desc">How pH, organic carbon and bulk density change with depth at the property centroid. Surface layers are usually the most weathered and biologically active; deeper layers reflect parent material.</p>
             <div class="ed-soil-profile" id="ed-soil-profile">
               <div class="ed-soil-profile-empty">Loading…</div>
             </div>
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Soil Type Distribution <span>(regional · wiki)</span></div>
-            <canvas class="ed-soil-pie" id="ed-soil-pie" width="500" height="280"></canvas>
-          </div>
-          <div class="ed-card">
-            <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
-            <div class="ed-geology" data-cell="geology.summary" data-fmt="str">${P('Macrostrat Geology')}</div>
+            <div class="ed-soil-dist">
+              <canvas class="ed-soil-pie" id="ed-soil-pie" width="500" height="280"></canvas>
+              <div class="ed-soil-dist-clay">
+                <div class="ed-soil-profile ed-soil-profile--single" id="ed-soil-clay-depth">
+                  <div class="ed-soil-profile-empty">Loading…</div>
+                </div>
+                <div class="ed-soil-dist-clay-note">Clay fraction · SoilGrids · 0–200 cm · property centroid</div>
+              </div>
+            </div>
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Land cover <span>(Esri Living Atlas · Sentinel-2 10m · 2017→)</span></div>
@@ -1046,7 +1037,7 @@ function renderEnvironmentalDashboard() {
         <div class="ed-modal-backdrop" data-close></div>
         <div class="ed-modal-card">
           <div class="ed-modal-head">
-            <h2 class="ed-modal-title" id="ed-sensor-status-title">Sensor Status</h2>
+            <h2 class="ed-modal-title" id="ed-sensor-status-title">Sensors</h2>
             <button type="button" class="ed-modal-close" data-close aria-label="Close">&times;</button>
           </div>
           <div class="ed-modal-sub" id="ed-sensor-status-sub">Loading sensor inventory…</div>
@@ -1441,13 +1432,15 @@ async function hydrateEnvironmentalDashboard() {
   })();
 
   // SoilGrids depth profile — six layers (0–5, 5–15, 15–30, 30–60, 60–100,
-  // 100–200 cm) for pH, organic carbon and clay at the property centroid.
+  // 100–200 cm). pH, organic carbon and bulk density go in the profile card;
+  // clay is rendered separately beside the soil type distribution donut.
   // Fetched from ISRIC's REST API (CORS-friendly) with a localStorage cache
   // keyed by rounded coordinates — soil doesn't change on human timescales,
   // so we cache for 30 days.
   (async () => {
-    const wrap = document.getElementById('ed-soil-profile');
-    if (!wrap) return;
+    const wrap     = document.getElementById('ed-soil-profile');
+    const clayWrap = document.getElementById('ed-soil-clay-depth');
+    if (!wrap && !clayWrap) return;
 
     let coords = payload.property?.coords;
     if (Array.isArray(coords)) coords = { lat: coords[0], lng: coords[1] };
@@ -1467,56 +1460,57 @@ async function hydrateEnvironmentalDashboard() {
       }
     } catch { /* ignore */ }
 
+    const fail = (msg) => {
+      const html = `<div class="ed-soil-profile-empty">${msg}</div>`;
+      if (wrap) wrap.innerHTML = html;
+      if (clayWrap) clayWrap.innerHTML = html;
+    };
+
     if (!data) {
       try {
         data = await fetchJson(
           'https://rest.isric.org/soilgrids/v2.0/properties/query' +
           `?lon=${lng}&lat=${lat}` +
-          '&property=phh2o&property=clay&property=soc&value=mean',
+          '&property=phh2o&property=soc&property=bdod&property=clay&value=mean',
           { timeoutMs: 12000 }
         );
         try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), d: data })); } catch {}
       } catch {
-        wrap.innerHTML = '<div class="ed-soil-profile-empty">SoilGrids unavailable.</div>';
+        fail('SoilGrids unavailable.');
         return;
       }
     }
     const layers = data?.properties?.layers;
     if (!Array.isArray(layers) || !layers.length) {
-      wrap.innerHTML = '<div class="ed-soil-profile-empty">No soil profile returned.</div>';
+      fail('No soil profile returned.');
       return;
     }
 
     const props = {
       phh2o: { label: 'pH', unit: '', color: '#b85a3a', fmt: (v) => v.toFixed(1) },
       soc:   { label: 'Organic C', unit: ' g/kg', color: '#3d6b48', fmt: (v) => v.toFixed(0) },
+      bdod:  { label: 'Bulk density', unit: ' g/cm³', color: '#8a6d3b', fmt: (v) => v.toFixed(2) },
       clay:  { label: 'Clay', unit: '%', color: '#a89580', fmt: (v) => v.toFixed(0) },
     };
 
-    const columns = ['phh2o', 'soc', 'clay'].map(key => {
+    const ROW_H = 26;
+    const buildColumn = (key) => {
       const layer = layers.find(l => l.name === key);
       if (!layer) return null;
       const df = layer.unit_measure?.d_factor || 1;
       const depths = layer.depths.map(dp => ({
-        label: dp.label,
         top: dp.range.top_depth,
         bottom: dp.range.bottom_depth,
         value: dp.values.mean != null ? dp.values.mean / df : null,
       }));
       return { key, ...props[key], depths };
-    }).filter(Boolean);
-
-    const allDepths = columns[0]?.depths || [];
-    const maxDepth = Math.max(...allDepths.map(d => d.bottom));
-    const ROW_H = 26;
-    const SVG_H = allDepths.length * ROW_H + 30;
-
-    wrap.innerHTML = columns.map(col => {
+    };
+    const renderColumn = (col) => {
       const allValid = col.depths.filter(d => d.value != null).map(d => d.value);
       const vMax = Math.max(...allValid, 0);
       const vMin = Math.min(...allValid, 0);
       const range = (vMax - vMin) || 1;
-      const bars = col.depths.map((d, i) => {
+      const bars = col.depths.map(d => {
         if (d.value == null) return '';
         const widthPct = range > 0 ? ((d.value - vMin) / range) * 88 + 8 : 50;
         return `
@@ -1533,7 +1527,20 @@ async function hydrateEnvironmentalDashboard() {
           <div class="ed-soil-profile-title" style="color:${col.color}">${col.label}</div>
           ${bars}
         </div>`;
-    }).join('');
+    };
+
+    if (wrap) {
+      const cols = ['phh2o', 'soc', 'bdod'].map(buildColumn).filter(Boolean);
+      wrap.innerHTML = cols.length
+        ? cols.map(renderColumn).join('')
+        : '<div class="ed-soil-profile-empty">No soil profile returned.</div>';
+    }
+    if (clayWrap) {
+      const clayCol = buildColumn('clay');
+      clayWrap.innerHTML = clayCol
+        ? renderColumn(clayCol)
+        : '<div class="ed-soil-profile-empty">No clay profile returned.</div>';
+    }
     hydrated += 1;
   })();
 
@@ -3546,58 +3553,25 @@ async function hydrateEnvironmentalDashboard() {
     unit: 'mm',
   });
 
-  // ---- Sensor Status button + modal --------------------------------------
-  // Pulls /api/regions/odemira/station-status (one row per SNIRH station, with
-  // the latest reading timestamp across any parameter + a freshness bucket).
+  // ---- Sensors button + modal --------------------------------------------
+  // Pulls /api/regions/odemira/station-status (one row per SNIRH station) and
+  // lists every sensor grouped by type — name + parish only, no status.
   (async () => {
     const btn   = document.getElementById('ed-sensor-status-btn');
     const modal = document.getElementById('ed-sensor-status-modal');
     if (!btn || !modal) return;
 
-    const dot      = document.getElementById('ed-sensor-status-dot');
-    const meta     = document.getElementById('ed-sensor-status-meta');
-    const subEl    = document.getElementById('ed-sensor-status-sub');
-    const bodyEl   = document.getElementById('ed-sensor-status-body');
+    const subEl  = document.getElementById('ed-sensor-status-sub');
+    const bodyEl = document.getElementById('ed-sensor-status-body');
 
     let data = null;
     try {
       data = await fetchDashboard('/data/odemira/station-status.json', '/api/regions/odemira/station-status');
       if (!data?.ok) throw new Error(data?.error || 'unknown');
     } catch (e) {
-      if (meta) meta.textContent = 'unavailable';
-      console.warn('[sensor-status] fetch failed:', e.message);
+      if (subEl) subEl.textContent = 'Sensor inventory unavailable.';
+      console.warn('[sensors] fetch failed:', e.message);
       return;
-    }
-
-    const c = data.counts || {};
-    const onlinePct = c.total ? Math.round((c.online / c.total) * 100) : 0;
-    const summary   = `${c.online}/${c.total} online`;
-    if (meta) meta.textContent = summary;
-    if (dot) {
-      // Aggregate dot color: green if >=80% online, amber if >=50%, red otherwise.
-      dot.style.background = onlinePct >= 80 ? '#1db073'
-        : onlinePct >= 50 ? '#e58a3a' : '#b85a3a';
-    }
-
-    const STATUS_META = {
-      online: { color: '#1db073', label: 'Online' },
-      stale:  { color: '#e58a3a', label: 'Stale' },
-      dead:   { color: '#b85a3a', label: 'Dead' },
-      never:  { color: '#9aa0a6', label: 'No data' },
-    };
-
-    function fmtAge(iso) {
-      if (!iso) return 'never';
-      const ms = Date.now() - new Date(iso).getTime();
-      const days = ms / 86400000;
-      if (days < 1) return 'today';
-      if (days < 30) return `${Math.round(days)} d ago`;
-      if (days < 365) return `${Math.round(days / 30)} mo ago`;
-      return `${Math.round(days / 365)} yr ago`;
-    }
-    function fmtDate(iso) {
-      if (!iso) return '—';
-      return new Date(iso).toISOString().slice(0, 10);
     }
 
     // Group stations by type, preserving the sensor-legend ordering.
@@ -3607,41 +3581,24 @@ async function hydrateEnvironmentalDashboard() {
       (grouped[s.type] = grouped[s.type] || []).push(s);
     }
     for (const t of Object.keys(grouped)) {
-      grouped[t].sort((a, b) => {
-        // Online → stale → dead → never. Within each, recent first.
-        const rank = { online: 0, stale: 1, dead: 2, never: 3 };
-        const r = rank[a.status] - rank[b.status];
-        if (r !== 0) return r;
-        return (b.lastReadingAt || '').localeCompare(a.lastReadingAt || '');
-      });
+      grouped[t].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
     }
 
     if (subEl) {
-      subEl.innerHTML = `
-        <span class="ed-modal-pill" style="background:#1db07322;color:#147a52">${c.online} online</span>
-        <span class="ed-modal-pill" style="background:#e58a3a22;color:#a26323">${c.stale} stale</span>
-        <span class="ed-modal-pill" style="background:#b85a3a22;color:#7d3a22">${c.dead} dead</span>
-        <span class="ed-modal-pill" style="background:#9aa0a622;color:#5e6368">${c.never} no data</span>
-        <span class="ed-modal-sub-time">Latest reading per station · refreshed ${fmtDate(data.generatedAt)}</span>
-      `;
+      const total = data.stations.length;
+      subEl.textContent = `${total} sensor${total === 1 ? '' : 's'} across Odemira`;
     }
     if (bodyEl) {
       bodyEl.innerHTML = TYPE_ORDER
         .filter(t => grouped[t])
         .map(t => {
-          const rows = grouped[t].map(s => {
-            const m = STATUS_META[s.status];
-            return `
+          const rows = grouped[t].map(s => `
               <li class="ed-sensor-row" data-source="${s.source}" data-external-id="${s.externalId}">
-                <span class="ed-sensor-dot" style="background:${m.color}" title="${m.label}"></span>
                 <span class="ed-sensor-name">
                   <strong>${s.displayName}</strong>
                   ${s.parish ? `<span>${s.parish}</span>` : ''}
                 </span>
-                <span class="ed-sensor-age">${fmtAge(s.lastReadingAt)}</span>
-                <span class="ed-sensor-date">${fmtDate(s.lastReadingAt)}</span>
-              </li>`;
-          }).join('');
+              </li>`).join('');
           return `
             <section class="ed-sensor-group">
               <header class="ed-sensor-group-head">

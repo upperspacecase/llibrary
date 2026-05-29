@@ -8198,6 +8198,21 @@ a {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+.ed-insights-count-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: #c9d6cf;
+  transition: text-decoration-color 0.15s ease;
+}
+.ed-insights-count-btn:hover { text-decoration-color: #1d9e75; }
 .ed-error-banner {
   background: #fef2f2;
   border: 1px solid #f3c1c1;
@@ -8949,6 +8964,21 @@ a {
 }
 @media (max-width: 700px) {
   .ed-soil-profile { grid-template-columns: 1fr; }
+}
+.ed-soil-profile--single { grid-template-columns: 1fr; }
+.ed-soil-dist {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .ed-soil-dist { grid-template-columns: 1fr; }
+}
+.ed-soil-dist-clay-note {
+  font-size: 10px;
+  color: #888;
+  margin-top: 10px;
 }
 .ed-soil-profile-col {
   display: flex;
@@ -10127,7 +10157,7 @@ a {
 }
 .ed-sensor-row {
   display: grid;
-  grid-template-columns: 14px 1fr auto auto;
+  grid-template-columns: 1fr;
   align-items: center;
   gap: 12px;
   padding: 8px 12px;

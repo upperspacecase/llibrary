@@ -63,7 +63,12 @@ export default async function handler(req, res) {
       // Best human label: "584/4 · Aljezur" (parish in the same municipality
       // as Odemira is implied; outside Odemira we include the municipality).
       const inOdemira    = (municipality || '').toLowerCase() === 'odemira';
-      const friendlyTail = inOdemira ? parish : [parish, municipality].filter(Boolean).join(' · ');
+      // Dedupe so a station whose parish equals its municipality (e.g. Aljezur)
+      // doesn't render "Aljezur · Aljezur".
+      const tailParts    = (inOdemira ? [parish] : [parish, municipality]).filter(Boolean);
+      const tail         = tailParts.filter((part, i) =>
+        tailParts.findIndex(p2 => p2.toLowerCase() === part.toLowerCase()) === i);
+      const friendlyTail = tail.join(' · ');
       const displayName  = friendlyTail ? `${p.code} · ${friendlyTail}` : (p.code || p.externalId);
 
       features.push({
