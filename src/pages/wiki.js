@@ -790,12 +790,27 @@ function renderEnvironmentalDashboard() {
         <!-- SOIL -->
         <section class="ed-panel ed-panel--land">
           <div class="ed-panel-head">${lucide('leaf')} Land</div>
+
+          <!-- Regional soil stats lifted from the wiki Soil section -->
+          <div class="ed-bio-stats" id="ed-land-stats"></div>
+
           <div class="ed-card">
             <div class="ed-card-title">Soil summary <span>(0–30 cm)</span></div>
             ${soilRow('pH (H₂O)',          'SoilGrids Properties',     'soil.ph',             '1f')}
             ${soilRow('Organic carbon',    'SoilGrids Properties',     'soil.organicCarbon',  'str')}
             ${soilRow('WRB texture class', 'SoilGrids Classification', 'soil.classification', 'str')}
             ${soilRow('Bulk density',      'SoilGrids Properties',     'soil.bulkDensity',    'str')}
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Soil profile <span>(SoilGrids · 0–200 cm · property centroid)</span></div>
+            <p class="ed-card-desc">How pH, organic carbon and clay change with depth at the property centroid. Surface layers are usually the most weathered and biologically active; deeper layers reflect parent material.</p>
+            <div class="ed-soil-profile" id="ed-soil-profile">
+              <div class="ed-soil-profile-empty">Loading…</div>
+            </div>
+          </div>
+          <div class="ed-card">
+            <div class="ed-card-title">Soil Type Distribution <span>(regional · wiki)</span></div>
+            <canvas class="ed-soil-pie" id="ed-soil-pie" width="500" height="280"></canvas>
           </div>
           <div class="ed-card">
             <div class="ed-card-title">Geology <span>(Macrostrat)</span></div>
@@ -1434,6 +1449,124 @@ async function hydrateEnvironmentalDashboard() {
         return `<span><i style="background:${COLORS[l] || '#888'}"></i>${l} <em>${pct}</em></span>`;
       }).join('');
     }
+    hydrated += 1;
+  })();
+
+  // Wiki Soil stats + Soil Type Distribution donut — both lifted from
+  // src/lib/wiki-data.js so the Land section gets the same regional context
+  // that the wiki Soil tab carries.
+  (() => {
+    const soilWiki = getSectionById('soil');
+    const statsEl = document.getElementById('ed-land-stats');
+    if (statsEl && soilWiki?.visuals?.stats) {
+      statsEl.innerHTML = soilWiki.visuals.stats.map(s => `
+        <div class="ed-bio-stat"${s.color ? ` style="border-left-color:${s.color}"` : ''}>
+          <div class="ed-bio-stat-value"${s.color ? ` style="color:${s.color}"` : ''}>${s.value}</div>
+          <div class="ed-bio-stat-label">${s.label}</div>
+          ${s.sublabel ? `<div class="ed-bio-stat-sub">${s.sublabel}</div>` : ''}
+        </div>`).join('');
+    }
+    const pie = document.getElementById('ed-soil-pie');
+    const pieData = soilWiki?.visuals?.charts?.[0]?.data;
+    if (pie && Array.isArray(pieData) && pieData.length) {
+      drawPieChart(pie, pieData);
+    }
+  })();
+
+  // SoilGrids depth profile — six layers (0–5, 5–15, 15–30, 30–60, 60–100,
+  // 100–200 cm) for pH, organic carbon and clay at the property centroid.
+  // Fetched from ISRIC's REST API (CORS-friendly) with a localStorage cache
+  // keyed by rounded coordinates — soil doesn't change on human timescales,
+  // so we cache for 30 days.
+  (async () => {
+    const wrap = document.getElementById('ed-soil-profile');
+    if (!wrap) return;
+
+    let coords = payload.property?.coords;
+    if (Array.isArray(coords)) coords = { lat: coords[0], lng: coords[1] };
+    if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
+      coords = { lat: 37.55, lng: -8.64 };
+    }
+    const lat = +coords.lat.toFixed(3);
+    const lng = +coords.lng.toFixed(3);
+    const cacheKey = `soilgrids-profile:${lat},${lng}`;
+    const CACHE_TTL = 30 * 86400 * 1000;
+
+    let data;
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+      if (cached && Date.now() - cached.t < CACHE_TTL) {
+        data = cached.d;
+      }
+    } catch { /* ignore */ }
+
+    if (!data) {
+      try {
+        data = await fetchJson(
+          'https://rest.isric.org/soilgrids/v2.0/properties/query' +
+          `?lon=${lng}&lat=${lat}` +
+          '&property=phh2o&property=clay&property=soc&value=mean',
+          { timeoutMs: 12000 }
+        );
+        try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), d: data })); } catch {}
+      } catch {
+        wrap.innerHTML = '<div class="ed-soil-profile-empty">SoilGrids unavailable.</div>';
+        return;
+      }
+    }
+    const layers = data?.properties?.layers;
+    if (!Array.isArray(layers) || !layers.length) {
+      wrap.innerHTML = '<div class="ed-soil-profile-empty">No soil profile returned.</div>';
+      return;
+    }
+
+    const props = {
+      phh2o: { label: 'pH', unit: '', color: '#b85a3a', fmt: (v) => v.toFixed(1) },
+      soc:   { label: 'Organic C', unit: ' g/kg', color: '#3d6b48', fmt: (v) => v.toFixed(0) },
+      clay:  { label: 'Clay', unit: '%', color: '#a89580', fmt: (v) => v.toFixed(0) },
+    };
+
+    const columns = ['phh2o', 'soc', 'clay'].map(key => {
+      const layer = layers.find(l => l.name === key);
+      if (!layer) return null;
+      const df = layer.unit_measure?.d_factor || 1;
+      const depths = layer.depths.map(dp => ({
+        label: dp.label,
+        top: dp.range.top_depth,
+        bottom: dp.range.bottom_depth,
+        value: dp.values.mean != null ? dp.values.mean / df : null,
+      }));
+      return { key, ...props[key], depths };
+    }).filter(Boolean);
+
+    const allDepths = columns[0]?.depths || [];
+    const maxDepth = Math.max(...allDepths.map(d => d.bottom));
+    const ROW_H = 26;
+    const SVG_H = allDepths.length * ROW_H + 30;
+
+    wrap.innerHTML = columns.map(col => {
+      const allValid = col.depths.filter(d => d.value != null).map(d => d.value);
+      const vMax = Math.max(...allValid, 0);
+      const vMin = Math.min(...allValid, 0);
+      const range = (vMax - vMin) || 1;
+      const bars = col.depths.map((d, i) => {
+        if (d.value == null) return '';
+        const widthPct = range > 0 ? ((d.value - vMin) / range) * 88 + 8 : 50;
+        return `
+          <div class="ed-soil-profile-row" style="height:${ROW_H - 4}px">
+            <span class="ed-soil-profile-depth">${d.top}–${d.bottom} cm</span>
+            <div class="ed-soil-profile-track">
+              <div class="ed-soil-profile-bar" style="width:${widthPct.toFixed(1)}%;background:${col.color}"></div>
+            </div>
+            <span class="ed-soil-profile-value">${col.fmt(d.value)}${col.unit}</span>
+          </div>`;
+      }).join('');
+      return `
+        <div class="ed-soil-profile-col">
+          <div class="ed-soil-profile-title" style="color:${col.color}">${col.label}</div>
+          ${bars}
+        </div>`;
+    }).join('');
     hydrated += 1;
   })();
 

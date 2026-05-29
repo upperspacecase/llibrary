@@ -8940,6 +8940,70 @@ a {
   transform: rotate(45deg);
 }
 
+/* SoilGrids depth profile (Land section) ----------------------------- */
+.ed-soil-profile {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 8px;
+}
+@media (max-width: 700px) {
+  .ed-soil-profile { grid-template-columns: 1fr; }
+}
+.ed-soil-profile-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ed-soil-profile-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ed-soil-profile-row {
+  display: grid;
+  grid-template-columns: 68px 1fr 56px;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.ed-soil-profile-depth {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+.ed-soil-profile-track {
+  background: #f3ecdd;
+  border-radius: 3px;
+  height: 12px;
+  overflow: hidden;
+}
+.ed-soil-profile-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.ed-soil-profile-value {
+  text-align: right;
+  font-weight: 600;
+  color: #2C2C2C;
+  font-variant-numeric: tabular-nums;
+}
+.ed-soil-profile-empty {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  padding: 24px;
+}
+.ed-soil-pie {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  display: block;
+  margin: 4px auto 0;
+}
+
 /* Soil temperature + moisture time series ----------------------------- */
 .ed-soil-series {
   width: 100%;
