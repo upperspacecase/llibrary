@@ -8995,7 +8995,7 @@ a {
 }
 .ed-soil-profile-row {
   display: grid;
-  grid-template-columns: 68px 1fr 56px;
+  grid-template-columns: 60px 1fr 72px;
   align-items: center;
   gap: 8px;
   font-size: 11px;
@@ -9020,6 +9020,7 @@ a {
   font-weight: 600;
   color: #2C2C2C;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .ed-soil-profile-empty {
   color: #888;
