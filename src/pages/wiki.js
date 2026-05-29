@@ -1449,7 +1449,9 @@ async function hydrateEnvironmentalDashboard() {
     }
     const lat = +coords.lat.toFixed(3);
     const lng = +coords.lng.toFixed(3);
-    const cacheKey = `soilgrids-profile:${lat},${lng}`;
+    // Cache key carries the property set so adding a property (e.g. bulk
+    // density) busts stale caches that lack the new layer.
+    const cacheKey = `soilgrids-profile:phh2o-soc-bdod-clay:${lat},${lng}`;
     const CACHE_TTL = 30 * 86400 * 1000;
 
     let data;
@@ -1721,9 +1723,11 @@ async function hydrateEnvironmentalDashboard() {
       return;
     }
 
-    // Populate the regional sensor count in the page header (above the map).
+    // Header count is set below from the five SNIRH sensor networks actually
+    // shown (see networkCount after grouping). payloadStations.count includes
+    // non-sensor rows (e.g. GloFAS flood points), which is why it over-counted
+    // vs the Sensors modal.
     const countEl = document.getElementById('ed-regional-sensor-count');
-    if (countEl) countEl.textContent = String(payloadStations.count ?? features.length);
 
     // The five SNIRH networks we ship in the legend — same order as the
     // mockup; counts come from the live stations endpoint.
@@ -1741,6 +1745,11 @@ async function hydrateEnvironmentalDashboard() {
       if (!sourceMeta[f.source]) continue; // GloFAS / landmarks not on this map
       (grouped[f.source] = grouped[f.source] || []).push(f);
     }
+
+    // Count only the five sensor networks (= the markers on the map and the
+    // rows in the Sensors modal) so the header, map and modal all agree.
+    const networkCount = Object.values(grouped).reduce((n, arr) => n + arr.length, 0);
+    if (countEl) countEl.textContent = String(networkCount);
 
     // Populate the bottom-right legend
     legendEl.innerHTML = LEGEND_ORDER
@@ -1842,43 +1851,41 @@ async function hydrateEnvironmentalDashboard() {
       if (!lulcYears.length) return;
       const y = lulcYears[Math.max(0, Math.min(idx, lulcYears.length - 1))];
       if (!y) return;
-      // Ping-pong the inactive raster source onto the new year, but DON'T
-      // start the crossfade until that source has actually loaded tiles —
-      // otherwise the active layer fades out into nothing while the new
-      // tiles are still in flight (the "flash" Tay's seeing).
+      // Load the new year into the inactive source, then — once its tiles are
+      // ready — move that layer on top of the current frame and fade it IN.
+      // The current frame stays fully opaque underneath until the fade lands,
+      // so nothing (satellite or backdrop) ever shows through mid-transition.
       const inactive = lulcActive === 'a' ? 'b' : 'a';
       const inactiveSrcId = `lulc-top-${inactive}`;
-      const activeSrcId   = `lulc-top-${lulcActive}`;
+      const inactiveLayer = `${inactiveSrcId}-layer`;
+      const activeLayer   = `lulc-top-${lulcActive}-layer`;
       const inactiveSrc = map.getSource(inactiveSrcId);
       if (!inactiveSrc || !inactiveSrc.setTiles) return;
       inactiveSrc.setTiles([lulcTileUrl(y.oid)]);
       if (lulcYearLbl) lulcYearLbl.textContent = String(y.year);
 
-      const handleLoaded = (e) => {
-        if (e.sourceId !== inactiveSrcId || !e.isSourceLoaded) return;
+      let done = false;
+      const reveal = () => {
+        if (done) return;
+        done = true;
         map.off('sourcedata', handleLoaded);
-        if (map.getLayer(`${inactiveSrcId}-layer`)) {
-          map.setPaintProperty(`${inactiveSrcId}-layer`, 'raster-opacity', 0.75);
+        if (map.getLayer(inactiveLayer)) {
+          map.moveLayer(inactiveLayer); // bring incoming frame to the top
+          map.setPaintProperty(inactiveLayer, 'raster-opacity', LULC_OPACITY);
         }
-        if (map.getLayer(`${activeSrcId}-layer`)) {
-          map.setPaintProperty(`${activeSrcId}-layer`, 'raster-opacity', 0);
-        }
+        // Hide the previous frame once the fade-in has finished.
+        setTimeout(() => {
+          if (map.getLayer(activeLayer)) map.setPaintProperty(activeLayer, 'raster-opacity', 0);
+        }, LULC_FADE_MS);
         lulcActive = inactive;
       };
+      const handleLoaded = (e) => {
+        if (e.sourceId !== inactiveSrcId || !e.isSourceLoaded) return;
+        reveal();
+      };
       map.on('sourcedata', handleLoaded);
-      // Safety: if the source never reports loaded within 4s (network slow),
-      // fade anyway so the user isn't stuck on the old year.
-      setTimeout(() => {
-        if (lulcActive === inactive) return;
-        map.off('sourcedata', handleLoaded);
-        if (map.getLayer(`${inactiveSrcId}-layer`)) {
-          map.setPaintProperty(`${inactiveSrcId}-layer`, 'raster-opacity', 0.75);
-        }
-        if (map.getLayer(`${activeSrcId}-layer`)) {
-          map.setPaintProperty(`${activeSrcId}-layer`, 'raster-opacity', 0);
-        }
-        lulcActive = inactive;
-      }, 4000);
+      // Safety: reveal anyway if the source never reports loaded (slow network).
+      setTimeout(reveal, 4000);
     };
 
     const setMarkersVisible = (visible) => {
@@ -2201,15 +2208,23 @@ async function hydrateEnvironmentalDashboard() {
     // can paint over the old set instead of blanking. raster-opacity-transition
     // animates the crossfade.
     const LULC_FADE_MS = 450;
+    const LULC_OPACITY = 1;
     let lulcActive = 'a';
-    const lulcOpacityFor = (visible) => visible ? 0.75 : 0;
     const setLulcVisible = async (on) => {
       if (on) {
         if (!lulcYears.length) lulcYears = await loadLulcYears();
         if (!lulcYears.length) return false;
         const latestIdx = lulcYears.length - 1;
         const initialUrl = lulcTileUrl(lulcYears[latestIdx].oid);
-        // Initial setup: source/layer pair A starts visible, B starts at 0.
+        // Opaque backdrop so the satellite basemap never shows under or between
+        // land-cover frames — this view is just the land-cover raster.
+        if (!map.getLayer('lulc-bg')) {
+          map.addLayer({ id: 'lulc-bg', type: 'background', paint: { 'background-color': '#e7e1d6' } });
+        } else {
+          map.setLayoutProperty('lulc-bg', 'visibility', 'visible');
+        }
+        // Two raster sources ping-ponged on year change; the incoming frame is
+        // moved on top and faded in over the current one (see setLulcYearIdx).
         for (const slot of ['a', 'b']) {
           const srcId = `lulc-top-${slot}`;
           const layerId = `${srcId}-layer`;
@@ -2220,14 +2235,14 @@ async function hydrateEnvironmentalDashboard() {
               type: 'raster',
               source: srcId,
               paint: {
-                'raster-opacity': slot === 'a' ? 0.75 : 0,
+                'raster-opacity': slot === 'a' ? LULC_OPACITY : 0,
                 'raster-opacity-transition': { duration: LULC_FADE_MS },
               },
             });
           } else {
             map.setLayoutProperty(layerId, 'visibility', 'visible');
             map.setPaintProperty(layerId, 'raster-opacity',
-              slot === lulcActive ? 0.75 : 0);
+              slot === lulcActive ? LULC_OPACITY : 0);
           }
         }
         if (lulcSlider) {
@@ -2240,6 +2255,7 @@ async function hydrateEnvironmentalDashboard() {
         return true;
       }
       stopLulcPlay();
+      if (map.getLayer('lulc-bg')) map.setLayoutProperty('lulc-bg', 'visibility', 'none');
       for (const slot of ['a', 'b']) {
         const layerId = `lulc-top-${slot}-layer`;
         if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', 'none');
@@ -3177,32 +3193,35 @@ async function hydrateEnvironmentalDashboard() {
   // Biodiversity: wiki ecology cards (stats, articles, sources) + observations-
   // per-year stacked bar chart + Flora & Fauna table fed by iNaturalist data.
   (async () => {
-    // ---- Wiki ecology stats ------------------------------------------------
+    // ---- iNaturalist observations (fetched first so the stats tiles can show
+    // the total observation count) ------------------------------------------
+    let obs;
+    try {
+      obs = await fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations');
+    } catch { obs = null; }
+
+    // ---- Wiki ecology stats + live counts ----------------------------------
     const ecology = getSectionById('ecology');
     const statsEl = document.getElementById('ed-bio-stats');
     if (statsEl) {
-      const total = payload.species?.total;
-      const observedTile = Number.isFinite(total)
-        ? `<div class="ed-bio-stat">
-             <div class="ed-bio-stat-value">${total.toLocaleString()}</div>
-             <div class="ed-bio-stat-label">Species observed</div>
-             <div class="ed-bio-stat-sub">iNaturalist</div>
-           </div>`
-        : '';
+      const obsCount = obs?.ok && Number.isFinite(obs.count)
+        ? obs.count : (obs?.geojson?.features?.length ?? null);
+      const speciesTotal = payload.species?.total;
+      const tile = (value, label) =>
+        `<div class="ed-bio-stat">
+           <div class="ed-bio-stat-value">${value}</div>
+           <div class="ed-bio-stat-label">${label}</div>
+         </div>`;
+      const obsTile = Number.isFinite(obsCount) ? tile(obsCount.toLocaleString(), 'Observations') : '';
+      const observedTile = Number.isFinite(speciesTotal) ? tile(speciesTotal.toLocaleString(), 'Species observed') : '';
       const staticTiles = (ecology?.visuals?.stats || []).map(s => `
         <div class="ed-bio-stat">
           <div class="ed-bio-stat-value">${s.value}</div>
           <div class="ed-bio-stat-label">${s.label}</div>
           ${s.sublabel ? `<div class="ed-bio-stat-sub">${s.sublabel}</div>` : ''}
         </div>`).join('');
-      statsEl.innerHTML = observedTile + staticTiles;
+      statsEl.innerHTML = obsTile + observedTile + staticTiles;
     }
-
-    // ---- iNaturalist observations: per-year stacked bars + species table --
-    let obs;
-    try {
-      obs = await fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations');
-    } catch { obs = null; }
 
     const svg = document.getElementById('ed-bio-yearbars');
     const legendEl = document.getElementById('ed-bio-yearbars-legend');
@@ -3554,8 +3573,10 @@ async function hydrateEnvironmentalDashboard() {
   });
 
   // ---- Sensors button + modal --------------------------------------------
-  // Pulls /api/regions/odemira/station-status (one row per SNIRH station) and
-  // lists every sensor grouped by type — name + parish only, no status.
+  // Reads /api/regions/odemira/stations (the SAME source as the map markers and
+  // the header count) and lists every sensor grouped by type — name + parish
+  // only, no status. Using one source keeps the header count, the map and this
+  // modal in agreement.
   (async () => {
     const btn   = document.getElementById('ed-sensor-status-btn');
     const modal = document.getElementById('ed-sensor-status-modal');
@@ -3564,28 +3585,39 @@ async function hydrateEnvironmentalDashboard() {
     const subEl  = document.getElementById('ed-sensor-status-sub');
     const bodyEl = document.getElementById('ed-sensor-status-body');
 
+    // source → type label, in the order shown on the map legend.
+    const SOURCE_TYPE = {
+      snirh_meteorologica: 'Weather Station',
+      snirh_hidrometrica:  'River Gauge',
+      snirh_piezometria:   'Piezometer',
+      snirh_qualidade_sub: 'Groundwater Quality',
+      snirh_nascentes:     'Spring',
+    };
+    const TYPE_ORDER = ['Weather Station', 'River Gauge', 'Piezometer', 'Groundwater Quality', 'Spring'];
+
     let data = null;
     try {
-      data = await fetchDashboard('/data/odemira/station-status.json', '/api/regions/odemira/station-status');
-      if (!data?.ok) throw new Error(data?.error || 'unknown');
+      data = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
+      if (!data?.ok || !Array.isArray(data.features)) throw new Error(data?.error || 'unknown');
     } catch (e) {
       if (subEl) subEl.textContent = 'Sensor inventory unavailable.';
       console.warn('[sensors] fetch failed:', e.message);
       return;
     }
 
-    // Group stations by type, preserving the sensor-legend ordering.
-    const TYPE_ORDER = ['Weather Station', 'River Gauge', 'Piezometer', 'Groundwater Quality', 'Spring'];
+    // Keep only the five sensor networks, group by type.
+    const sensors = data.features.filter(f => SOURCE_TYPE[f.source]);
     const grouped = {};
-    for (const s of data.stations) {
-      (grouped[s.type] = grouped[s.type] || []).push(s);
+    for (const s of sensors) {
+      const type = SOURCE_TYPE[s.source];
+      (grouped[type] = grouped[type] || []).push(s);
     }
     for (const t of Object.keys(grouped)) {
       grouped[t].sort((a, b) => (a.displayName || '').localeCompare(b.displayName || ''));
     }
 
     if (subEl) {
-      const total = data.stations.length;
+      const total = sensors.length;
       subEl.textContent = `${total} sensor${total === 1 ? '' : 's'} across Odemira`;
     }
     if (bodyEl) {

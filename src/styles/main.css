@@ -8201,18 +8201,19 @@ a {
 .ed-insights-count-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 0;
-  border: none;
-  background: none;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 6px 14px;
+  border: 1px solid #cdd8d1;
+  border-radius: 999px;
+  background: #fff;
   font-family: inherit;
+  font-size: 13px;
+  color: #555;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: #c9d6cf;
-  transition: text-decoration-color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.ed-insights-count-btn:hover { text-decoration-color: #1d9e75; }
+.ed-insights-count-btn:hover { border-color: #1d9e75; background: #f3faf6; }
 .ed-error-banner {
   background: #fef2f2;
   border: 1px solid #f3c1c1;
