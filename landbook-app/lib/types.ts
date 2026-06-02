@@ -317,6 +317,7 @@ export interface Meta {
 export interface Agriculture {
   landCover: string | null;
   systems: Array<{ name?: string; system?: string; description?: string; detail?: string; suitability?: string; rating?: string }>;
+  landCoverTimeSeries?: Array<{ year: number; classes: Record<string, number>; totalPx?: number }> | null;
 }
 
 export interface ReportData {

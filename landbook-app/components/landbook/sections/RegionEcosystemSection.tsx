@@ -1,4 +1,4 @@
-import type { Terrain, Water, Energy, Narratives } from "@/lib/types";
+import type { Terrain, Water, Energy, Agriculture, Narratives } from "@/lib/types";
 import { SectionTitle, Hairline } from "@/components/river";
 
 /* ── MetricRow ────────────────────────────────────────────── */
@@ -68,17 +68,25 @@ export function RegionEcosystemSection({
   terrain,
   water,
   energy,
+  agriculture,
   narratives,
 }: {
   terrain: Terrain;
   water: Water;
   energy: Energy;
+  agriculture: Agriculture;
   narratives?: Narratives["regionEcosystem"];
 }) {
   /* Derive display values from raw data */
   const slope = terrain.slope;
   const waterIdx = water.securityIndex;
   const solarScore = (energy.solar as { score?: number })?.score ?? null;
+
+  /* Canopy cover — latest year's "Trees" share from the Sentinel-2 land-cover
+     time series (same source the wiki renders for the parcel). */
+  const lcSeries = agriculture.landCoverTimeSeries ?? [];
+  const latestLandCover = lcSeries.length > 0 ? lcSeries[lcSeries.length - 1] : null;
+  const treesPct = latestLandCover?.classes?.Trees ?? null;
 
   const slopeValue = slope != null ? `${Math.round(slope)}%` : "\u2014";
   const waterValue = waterIdx != null ? `${Math.round((waterIdx / 10) * 100)}%` : "\u2014";
@@ -104,6 +112,19 @@ export function RegionEcosystemSection({
     : solarScore >= 70 ? "Strong solar potential"
     : solarScore >= 40 ? "Moderate solar potential"
     : "Limited solar potential";
+
+  const canopyValue = treesPct != null ? `${Math.round(treesPct)}%` : "—";
+  const canopyTitle =
+    treesPct == null ? "Tree cover data pending"
+    : treesPct >= 50 ? "Heavily wooded"
+    : treesPct >= 25 ? "Moderate canopy"
+    : treesPct >= 10 ? "Lightly wooded"
+    : "Largely open";
+  const canopyDesc =
+    treesPct == null
+      ? narratives?.treeCoverDesc
+      : narratives?.treeCoverDesc ??
+        `Sentinel-2 land cover (${latestLandCover?.year}): trees cover ${Math.round(treesPct)}% of the parcel.`;
 
   return (
     <section id="region-ecosystem">
@@ -153,11 +174,11 @@ export function RegionEcosystemSection({
 
       <MetricRow
         icon="forest"
-        value={"\u2014"}
+        value={canopyValue}
         label="Canopy cover"
-        title="Tree cover data pending"
-        description={narratives?.treeCoverDesc}
-        placeholder
+        title={canopyTitle}
+        description={canopyDesc}
+        placeholder={treesPct == null}
       />
 
       <Hairline />

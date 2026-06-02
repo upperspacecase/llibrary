@@ -249,6 +249,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               terrain={data.terrain}
               water={data.water}
               energy={data.energy}
+              agriculture={data.agriculture}
               narratives={n.regionEcosystem}
             />
           </div>
