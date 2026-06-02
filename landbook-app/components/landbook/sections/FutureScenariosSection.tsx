@@ -94,12 +94,6 @@ export function FutureScenariosSection({
 
   const baselineImplicitAnnual = byKey(implicitScenarios, "bau")?.total ?? economics.totalValue ?? 0;
 
-  // Active layers (realized + monetizable) per scenario for the cards.
-  const activeCards = SCENARIO_ORDER
-    .filter((k) => k !== "bau")
-    .map((k) => byKey(revenueLayers, k))
-    .filter((x): x is RevenueLayer => !!x);
-
   const stackedRows = SCENARIO_ORDER.map((key) => {
     const rev = byKey(revenueLayers, key);
     const imp = byKey(implicitScenarios, key);
@@ -147,7 +141,7 @@ export function FutureScenariosSection({
       {baselineImplicitAnnual > 0 && (
         <div className="mb-12 max-w-3xl text-[14px] leading-relaxed text-brand-charcoal">
           <p>
-            Land value is measured across three layers. <strong className="text-brand-forest">Realized revenue</strong> is cash from agricultural production today. <strong className="text-brand-forest">Monetizable natural capital</strong> is value available through enrollment in carbon credits, premium markets, and similar schemes. <strong className="text-brand-forest">Implicit ecosystem services</strong> &mdash; the €{Math.round(baselineImplicitAnnual).toLocaleString()}/yr established in{" "}
+            Land value is measured across three layers. <strong className="text-brand-forest">Realized agriculture</strong> is cash from production today. <strong className="text-brand-forest">Monetizable natural capital</strong> is value available through enrollment in carbon credits, premium markets, and similar schemes. <strong className="text-brand-forest">Implicit ecosystem services</strong> &mdash; the €{Math.round(baselineImplicitAnnual).toLocaleString()}/yr established in{" "}
             <a href="#value-benefits" className="underline decoration-brand-sage/40 underline-offset-2 hover:decoration-brand-forest">
               Value &amp; Benefits
             </a>{" "}
@@ -273,15 +267,17 @@ export function FutureScenariosSection({
                 />
                 <div className="mt-6">
                   <DataTable
-                    headers={["Scenario", "Realized agriculture", "Monetizable", "Implicit ecosystem services", "Total annual value", "Description"]}
-                    rows={scenarioGroups.map((g) => [
-                      g.label,
-                      g.segments.realized > 0 ? `€${Math.round(g.segments.realized).toLocaleString()}` : "—",
-                      g.segments.monetizable > 0 ? `€${Math.round(g.segments.monetizable).toLocaleString()}` : "—",
-                      `€${Math.round(g.segments.implicit).toLocaleString()}`,
-                      `€${Math.round(g.total).toLocaleString()}`,
-                      SCENARIO_DESCRIPTIONS[g.key] ?? "",
-                    ])}
+                    headers={["Scenario", "Total annual value", "Uplift vs do nothing", "Risk", "What it involves"]}
+                    rows={scenarioGroups.map((g) => {
+                      const uplift = g.total - bauTotal;
+                      return [
+                        g.label,
+                        `€${Math.round(g.total).toLocaleString()}`,
+                        uplift > 0 ? `+€${Math.round(uplift).toLocaleString()}/yr` : "—",
+                        SCENARIO_RISK[g.key] ?? "—",
+                        SCENARIO_DESCRIPTIONS[g.key] ?? "",
+                      ];
+                    })}
                   />
                 </div>
               </div>
@@ -338,7 +334,7 @@ export function FutureScenariosSection({
                     )}
                   </p>
                   <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
-                    Cumulative undiscounted value, constant annual rate
+                    Cumulative undiscounted value at a constant annual rate &mdash; doing nothing is the downside floor. Discounted present value (3.5%) appears on Value &amp; Benefits.
                   </p>
                   <CumulativeLineChart series={cumulativeSeries} years={30} />
                 </div>
@@ -350,37 +346,7 @@ export function FutureScenariosSection({
 
       <Hairline />
 
-      {/* 11.2 30-Year Cumulative — total stack across all three layers (undiscounted, matches the chart above) */}
-      <SubsectionHeader id="11.2" title="30-Year Cumulative — Total Stack" sources={["Computed"]} />
-      {stackedRows.length > 0 ? (
-        <DataTable
-          headers={["Scenario", "Realized (30y)", "Monetizable (30y)", "Implicit (30y)", "Total (30y)", "Uplift vs Do Nothing", "Risk Level"]}
-          rows={(() => {
-            const bauRow = stackedRows.find((r) => r.key === "bau");
-            const bauTotal30 = bauRow ? (bauRow.implicit + bauRow.realized + bauRow.monetizable) * 30 : 0;
-            return stackedRows.map((r) => {
-              const total30 = (r.implicit + r.realized + r.monetizable) * 30;
-              const uplift = total30 - bauTotal30;
-              return [
-                r.name,
-                `€${Math.round(r.realized * 30).toLocaleString()}`,
-                `€${Math.round(r.monetizable * 30).toLocaleString()}`,
-                `€${Math.round(r.implicit * 30).toLocaleString()}`,
-                `€${Math.round(total30).toLocaleString()}`,
-                uplift > 0 ? `+€${Math.round(uplift).toLocaleString()}` : "—",
-                SCENARIO_RISK[r.key] ?? "—",
-              ];
-            });
-          })()}
-        />
-      ) : (
-        <p className="text-sm text-brand-sage mb-6">Cumulative scenario data not yet computed.</p>
-      )}
-      <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-        Cumulative undiscounted value at constant annual rate (annual × 30). Numbers reconcile with the 30-year chart above. Discounted present value (3.5%) is shown on Value &amp; Benefits&rsquo; implicit-only NPV.
-      </p>
-
-      <Hairline />
+      <SubsectionHeader id="11.3" title="Assumptions & detail" sources={["Computed"]} />
 
       {/* 11.4 Pathway Details */}
       <PlaceholderBox
