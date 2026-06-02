@@ -237,9 +237,9 @@ export function FutureScenariosSection({
             {/* Block 1 — Today */}
             {bauRow && bauTotal > 0 && (
               <div className="mb-12">
-                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Today</p>
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Today · annual</p>
                 <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
-                  Your land delivers €{Math.round(bauTotal).toLocaleString()} in value this year
+                  Your land delivers €{Math.round(bauTotal).toLocaleString()} in value per year
                 </p>
                 <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
                   Two active layers today — implicit ecosystem services and realized agriculture. The third, monetizable enrollment (carbon + premium), unlocks under the scenarios below.
@@ -251,11 +251,11 @@ export function FutureScenariosSection({
             {/* Block 2 — By scenario */}
             {scenarioGroups.length > 0 && (
               <div className="mb-12">
-                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">By scenario</p>
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">By scenario · annual</p>
                 <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
-                  Interventions grow that to €{Math.round(optTotal).toLocaleString()} under Optimized
+                  Interventions grow that to €{Math.round(optTotal).toLocaleString()}/yr under Optimized
                   {annualUplift > 0 && (
-                    <span className="text-brand-sage font-body font-medium text-lg"> &mdash; a €{Math.round(annualUplift).toLocaleString()} annual uplift</span>
+                    <span className="text-brand-sage font-body font-medium text-lg"> &mdash; a €{Math.round(annualUplift).toLocaleString()}/yr uplift</span>
                   )}
                 </p>
                 <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
@@ -325,7 +325,7 @@ export function FutureScenariosSection({
                   {donutData.map((sc) => (
                     <div key={sc.key} className="flex flex-col">
                       <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">
-                        {sc.name} · €{Math.round(sc.total).toLocaleString()}
+                        {sc.name} · €{Math.round(sc.total).toLocaleString()}/yr
                       </p>
                       <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} showLegend={false} />
                     </div>
@@ -385,30 +385,25 @@ export function FutureScenariosSection({
         title="Investment requirements and phasing"
         status="DERIVED FROM revenue scenarios (est. 1–3× annual revenue)"
         variant="mixed"
-        note="Revenue scenarios are real. Phase costs apply hardcoded multipliers (×0.5, ×1.5, ×2) to those revenues — illustrative phasing, not a costed plan."
+        note="Revenue scenarios are real. Phase costs apply hardcoded multipliers (×0.5, ×1.5, ×2) to those revenues — illustrative phasing, not a costed plan. Payback = investment ÷ the incremental annual revenue it unlocks."
       >
         <DataTable
-          headers={["Phase", "Timeline", "Est. Investment", "Target Scenario"]}
-          rows={[
-            [
-              "Phase 1 — Quick Wins",
-              "Year 1",
-              cons > 0 ? `€${Math.round(cons * 0.5).toLocaleString()}` : "—",
-              "Conservative baseline",
-            ],
-            [
-              "Phase 2 — Core Development",
-              "Years 2–3",
-              mod > 0 ? `€${Math.round((mod - cons) * 1.5).toLocaleString()}` : "—",
-              "Moderate diversification",
-            ],
-            [
-              "Phase 3 — Full Optimization",
-              "Years 3–5",
-              opt > 0 ? `€${Math.round((opt - mod) * 2).toLocaleString()}` : "—",
-              "Optimized potential",
-            ],
-          ]}
+          headers={["Phase", "Timeline", "Est. Investment", "Est. Annual Return", "Payback", "Target Scenario"]}
+          rows={(() => {
+            const phases = [
+              { name: "Phase 1 — Quick Wins", timeline: "Year 1", inv: cons > 0 ? cons * 0.5 : 0, ret: cons, target: "Conservative baseline" },
+              { name: "Phase 2 — Core Development", timeline: "Years 2–3", inv: mod > 0 ? (mod - cons) * 1.5 : 0, ret: mod - cons, target: "Moderate diversification" },
+              { name: "Phase 3 — Full Optimization", timeline: "Years 3–5", inv: opt > 0 ? (opt - mod) * 2 : 0, ret: opt - mod, target: "Optimized potential" },
+            ];
+            return phases.map((p) => [
+              p.name,
+              p.timeline,
+              p.inv > 0 ? `€${Math.round(p.inv).toLocaleString()}` : "—",
+              p.ret > 0 ? `+€${Math.round(p.ret).toLocaleString()}/yr` : "—",
+              p.inv > 0 && p.ret > 0 ? `${(p.inv / p.ret).toFixed(1)} yr` : "—",
+              p.target,
+            ]);
+          })()}
         />
       </PlaceholderBox>
 
@@ -417,69 +412,33 @@ export function FutureScenariosSection({
       {/* 11.5 Revenue Opportunities — with layer-targeted column */}
       <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
       {details.length > 0 && (
-        <DataTable
-          headers={["Scenario", "Systems", "Annual Revenue", "Investment", "Layer Targeted"]}
-          rows={details.map((item) => {
-            const isConservative = (item.scenario || "").toLowerCase().includes("conservative");
-            const layer = isConservative
-              ? "Realized + Monetizable"
-              : "Realized + Monetizable + Implicit";
-            return [
-              fmt(item.scenario),
-              fmt(item.systems),
-              `€${(item.annual ?? 0).toLocaleString()}`,
-              fmt(item.investment),
-              layer,
-            ];
-          })}
-        />
+        <>
+          <DataTable
+            headers={["Scenario", "Systems", "Annual Revenue", "Investment", "Payback", "Layer Targeted"]}
+            rows={details.map((item) => {
+              const isConservative = (item.scenario || "").toLowerCase().includes("conservative");
+              const layer = isConservative
+                ? "Realized + Monetizable"
+                : "Realized + Monetizable + Implicit";
+              const annual = item.annual ?? 0;
+              const invMatch = (item.investment || "").match(/[\d][\d,]*/);
+              const invNum = invMatch ? Number(invMatch[0].replace(/,/g, "")) : null;
+              const payback = invNum && invNum > 0 && annual > 0 ? `${(invNum / annual).toFixed(1)} yr` : "—";
+              return [
+                fmt(item.scenario),
+                fmt(item.systems),
+                `€${annual.toLocaleString()}/yr`,
+                fmt(item.investment),
+                payback,
+                layer,
+              ];
+            })}
+          />
+          <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
+            Payback = investment ÷ annual revenue (low end of any investment range).
+          </p>
+        </>
       )}
-
-      <Hairline />
-
-      {/* 11.6 Scenario Risk Profiles — operates on total-stack annuals */}
-      <PlaceholderBox
-        id="11.6"
-        title="Uncertainty quantification and scenario spread"
-        status="DERIVED FROM total-stack scenario range (Do nothing to Optimized)"
-        variant="mixed"
-        note="Operates on total annual value (realized + monetizable + implicit) to match the layered scenario model. Downside floor uses the Do nothing scenario; confidence band is centered on Moderate as a ±spread/2 heuristic."
-      >
-        {(() => {
-          const totalAnnual = (key: string) => {
-            const row = stackedRows.find((r) => r.key === key);
-            if (!row) return 0;
-            return row.implicit + row.realized + row.monetizable;
-          };
-          const totalBau = totalAnnual("bau");
-          const totalCons = totalAnnual("conservative");
-          const totalMod = totalAnnual("moderate");
-          const totalOpt = totalAnnual("optimized");
-          const spread = totalOpt - totalBau;
-          const spreadPct = totalBau > 0 ? Math.round((spread / totalBau) * 100) : 0;
-          const upsidePct = totalBau > 0 ? Math.round(((totalOpt - totalBau) / totalBau) * 100) : 0;
-          const consDelta = totalCons - totalBau;
-          return (
-            <div className="space-y-3 text-sm text-brand-charcoal">
-              <DataTable
-                headers={["Metric", "Value"]}
-                rows={[
-                  ["Scenario spread (Optimized − Do nothing, total stack)", spread > 0 ? `€${spread.toLocaleString()} (${spreadPct}% range)` : "—"],
-                  ["Downside floor (Do nothing total)", totalBau > 0 ? `€${totalBau.toLocaleString()}/yr` : "—"],
-                  ["Conservative delta vs Do nothing", consDelta > 0 ? `+€${consDelta.toLocaleString()}/yr` : "—"],
-                  ["Upside potential vs Do nothing", totalBau > 0 && totalOpt > 0 ? `${upsidePct}% improvement` : "—"],
-                  ["Confidence band", spread > 0 ? `±${Math.round(spread / 2).toLocaleString()} around Moderate (€${totalMod.toLocaleString()})` : "—"],
-                ]}
-              />
-              {spread > 0 && (
-                <p className="text-brand-sage text-xs">
-                  Spread is narrower as a percentage than on active revenue alone because the implicit baseline anchors all scenarios &mdash; the more honest picture.
-                </p>
-              )}
-            </div>
-          );
-        })()}
-      </PlaceholderBox>
 
     </section>
   );

@@ -6,7 +6,6 @@ import type {
   Property,
   ServiceBreakdownRow,
   ServiceSensitivity,
-  ImplicitScenarioRow,
 } from "@/lib/types";
 import {
   SectionTitle, DataTable,
@@ -100,27 +99,6 @@ export function ValueBenefitsSection({
     fill: ES_FILLS[b.key] ?? "#8B9A7E",
   }));
 
-  // Implicit-only NPV scenarios for the Long Term Value table — same source
-  // of truth as Future Scenarios' implicit decomposition. Annuity factor
-  // ≈ 18.392 (HM Treasury Green Book 3.5% over 30 years).
-  const annuityFactor = economics.premiumMethodology?.annuityFactor ?? 18.392;
-  const implicitScenarios: ImplicitScenarioRow[] = economics.implicitScenarios ?? [];
-  const baselineImplicit = implicitScenarios.find((s) => s.key === "bau")?.total ?? total;
-  const implicitNpvRows = implicitScenarios.map((s) => {
-    const npv = Math.round(s.total * annuityFactor);
-    const upliftAnnual = s.total - baselineImplicit;
-    return {
-      name: s.name,
-      npv,
-      uplift: Math.round(upliftAnnual * annuityFactor),
-      riskLevel:
-        s.key === "bau" ? "Low"
-        : s.key === "conservative" ? "Low"
-        : s.key === "moderate" ? "Medium"
-        : "Medium-High",
-    };
-  });
-
   return (
     <section id="value-benefits">
       <SectionTitle title="Value & Benefits" />
@@ -197,168 +175,6 @@ export function ValueBenefitsSection({
             />
           </>
         )}
-      </div>
-
-      {/* ── Natural Capital Premium Estimates ── */}
-      <div className="mb-20">
-        <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">
-          Natural Capital Premium Estimates
-        </h3>
-        <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
-          TEEB DE 2018 Benefit Transfer · Per-Hectare Annual Uplift
-        </p>
-
-        {economics.premiums && economics.premiums.length > 0 ? (
-          <>
-            <DataTable
-              headers={["Intervention", "Annual €/ha (low–high)", "Annual Uplift", "30-Yr NPV Uplift", "Source"]}
-              rows={economics.premiums.map((p) => {
-                const nameCell = p.matchType === "analogue" ? `${p.name} *` : p.name;
-                if (p.basis === "per-hectare" && p.annualMid != null) {
-                  const lowHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.low;
-                  const highHa = (p as { annualPerHa?: { low: number; high: number } }).annualPerHa?.high;
-                  return [
-                    nameCell,
-                    lowHa != null && highHa != null
-                      ? `€${lowHa.toLocaleString()}–${highHa.toLocaleString()}`
-                      : "—",
-                    `€${(p.annualMid ?? 0).toLocaleString()}/yr`,
-                    `€${(p.thirtyYearNpvMid ?? 0).toLocaleString()}`,
-                    p.source ?? "—",
-                  ];
-                }
-                return [
-                  nameCell,
-                  p.benefitCostRatio ? `${p.benefitCostRatio}:1 BCR` : "—",
-                  "qualitative",
-                  "qualitative",
-                  p.source ?? "—",
-                ];
-              })}
-            />
-
-            {/* Notes for BCR-only rows */}
-            {economics.premiums.some((p) => p.basis === "benefit-cost-ratio") && (
-              <div className="mt-6 space-y-2">
-                {economics.premiums
-                  .filter((p) => p.basis === "benefit-cost-ratio")
-                  .map((p) => (
-                    <p key={p.id} className="text-[11px] text-brand-sage italic font-body leading-relaxed">
-                      <strong className="text-brand-forest not-italic">{p.name}:</strong>{" "}
-                      {p.valueComposition}
-                    </p>
-                  ))}
-              </div>
-            )}
-
-            {/* Analogue note — when any row is an analogue match */}
-            {economics.premiums.some((p) => p.matchType === "analogue") && (
-              <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-                <span className="not-italic">*</span> Analogue rows apply a TEEB DE intervention&rsquo;s per-hectare values to a biome outside the original case-study scope; treat the figures as benchmarks rather than direct estimates. See per-row notes below.
-              </p>
-            )}
-
-            {/* Per-row analogue notes */}
-            {economics.premiums.some((p) => p.matchType === "analogue") && (
-              <div className="mt-3 space-y-2">
-                {economics.premiums
-                  .filter((p) => p.matchType === "analogue")
-                  .map((p) => {
-                    const note = p.valueComposition?.split("— Analogue note: ")[1];
-                    if (!note) return null;
-                    return (
-                      <p key={p.id} className="text-[11px] text-brand-sage italic font-body leading-relaxed">
-                        <strong className="text-brand-forest not-italic">{p.name}:</strong>{" "}
-                        {note}
-                      </p>
-                    );
-                  })}
-              </div>
-            )}
-
-            {/* Confidence note for any "lower" confidence rows */}
-            {economics.premiums.some((p) => p.confidence === "lower") && (
-              <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-                Lower-confidence rows derive from aggregate national values rather than per-site case studies; treat as indicative.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-brand-sage italic">
-            Premium estimates not yet computed — re-run the pipeline to populate.
-          </p>
-        )}
-      </div>
-
-
-      {/* ── Long Term Value (Implicit-layer NPV) ── */}
-      <div className="mb-20">
-        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-12">
-          Long Term Value
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 items-center">
-          <div className="flex flex-col justify-center">
-            <span className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-2 font-body">
-              Thirty-Year Implicit NPV
-            </span>
-            <h2 className="font-serif font-bold text-brand-forest leading-tight tracking-tighter text-4xl lg:text-[2.6rem]">
-              {economics.npv.thirtyYear != null
-                ? `€${economics.npv.thirtyYear.toLocaleString()}`
-                : "—"}
-            </h2>
-            {total > 0 && economics.npv.thirtyYear != null && (
-              <p className="text-xs mt-4 leading-relaxed text-brand-forest/70 font-body max-w-xs">
-                The 30-year NPV of the implicit ecosystem services layer alone
-                (€{Math.round(total).toLocaleString()}/yr discounted at 3.5%).{" "}
-                <a href="#future-scenarios" className="underline decoration-brand-sage/40 underline-offset-2 hover:decoration-brand-forest">
-                  Future Scenarios
-                </a>{" "}
-                extends this with realized and monetizable layers and shows
-                scenarios where the implicit baseline itself grows.
-              </p>
-            )}
-          </div>
-          {narratives?.assetCallout && (
-            <div className="flex items-center">
-              <div className="border-l-4 border-brand-terracotta pl-8 py-4">
-                <blockquote className="font-serif italic text-xl text-brand-forest leading-relaxed">
-                  &ldquo;{narratives.assetCallout}&rdquo;
-                </blockquote>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {implicitNpvRows.length > 0 ? (
-          <DataTable
-            headers={["Scenario", "30-Year Implicit NPV", "Uplift vs Baseline", "Risk Level"]}
-            rows={implicitNpvRows.map((row) => [
-              row.name,
-              `€${row.npv.toLocaleString()}`,
-              row.uplift > 0 ? `+€${row.uplift.toLocaleString()}` : row.uplift < 0 ? `−€${Math.abs(row.uplift).toLocaleString()}` : "—",
-              row.riskLevel,
-            ])}
-          />
-        ) : economics.npv?.scenarios?.length > 0 ? (
-          <DataTable
-            headers={["Scenario", "30-Year NPV", "Uplift vs Baseline", "Risk Level"]}
-            rows={economics.npv.scenarios.map((s) => [
-              s.name,
-              s.npv != null ? `€${s.npv.toLocaleString()}` : "—",
-              s.uplift30yr != null && s.uplift30yr > 0
-                ? `+€${s.uplift30yr.toLocaleString()}`
-                : s.intervention === null ? "—" : "",
-              s.riskLevel ?? "—",
-            ])}
-          />
-        ) : (
-          <p className="text-sm text-brand-sage mb-6">Scenario NPV data not yet computed.</p>
-        )}
-
-        <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-          Implicit NPV unchanged under the Do nothing scenario; Conservative shows a small uplift from passive stewardship; Moderate and Optimized apply TEEB DE interventions at mid and high uplift respectively. Future Scenarios overlays realized and monetizable layers on this baseline.
-        </p>
       </div>
 
       {/* ── Scenario Assumptions ── */}
