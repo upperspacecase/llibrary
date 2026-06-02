@@ -31,6 +31,7 @@ export function Donut({
   centerLabel,
   centerValue,
   showLegend = true,
+  showPercentages = false,
 }: {
   segments: DonutSegment[];
   size?: number;
@@ -38,6 +39,7 @@ export function Donut({
   centerLabel?: string;
   centerValue?: string;
   showLegend?: boolean;
+  showPercentages?: boolean;
 }) {
   const filtered = segments.filter((s) => s.value > 0);
   const total = filtered.reduce((a, s) => a + s.value, 0);
@@ -75,6 +77,31 @@ export function Donut({
               />
             ))
           )}
+          {showPercentages &&
+            arcs.map((a) => {
+              // Label only slices large enough to fit a readable % on the ring.
+              if (a.frac < 0.05) return null;
+              const mid = (a.startAngle + a.endAngle) / 2;
+              const labelR = (outerR + innerR) / 2;
+              const p = polar(cx, cy, labelR, mid);
+              return (
+                <text
+                  key={`pct-${a.name}`}
+                  x={p.x}
+                  y={p.y}
+                  fontSize={Math.max(9, Math.round(size * 0.05))}
+                  fontWeight={700}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="#ffffff"
+                  stroke="rgba(0,0,0,0.35)"
+                  strokeWidth={3}
+                  paintOrder="stroke"
+                >
+                  {Math.round(a.frac * 100)}%
+                </text>
+              );
+            })}
         </svg>
         {(centerLabel || centerValue) && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">

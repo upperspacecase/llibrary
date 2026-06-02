@@ -1,10 +1,5 @@
-import type { Trends, FireData, Narratives } from "@/lib/types";
-import { SectionTitle, Hairline, DataTable, SubsectionHeader } from "@/components/river";
-
-function fmt(v: unknown): string {
-  if (v == null || v === "") return "—";
-  return String(v);
-}
+import type { Trends, Narratives } from "@/lib/types";
+import { SectionTitle, Hairline } from "@/components/river";
 
 /* ── MetricRow (mirrors Region & Ecosystem) ───────────────── */
 
@@ -71,11 +66,9 @@ function MetricRow({ icon, value, label, title, description, tip, placeholder }:
 
 export function HistoryTrendsSection({
   trends,
-  fire,
   narratives,
 }: {
   trends: Trends;
-  fire: FireData;
   narratives?: Narratives["historyTrends"];
 }) {
   const temp = trends.tempPerDecade;
@@ -137,12 +130,6 @@ export function HistoryTrendsSection({
           ? "Mild precipitation decline — seasonal availability may shift, but annual totals remain broadly adequate."
           : "Stable or increasing precipitation supports consistent water resource availability.";
 
-  const fireHistory = fire.historical || [];
-  const disturbanceDesc =
-    fireHistory.length > 0
-      ? `Fire detections recorded across ${fireHistory.length} year(s). Post-fire landscapes are more susceptible to flash flooding due to reduced soil infiltration.`
-      : "No fire disturbance recorded — flood risk driven primarily by terrain and precipitation intensity.";
-
   return (
     <section id="history-trends">
       <SectionTitle title="History & Trends" />
@@ -191,27 +178,6 @@ export function HistoryTrendsSection({
       <Hairline />
 
       <MetricRow icon="water_drop" value={waterValue} label="Water resource" title="Water resource trajectory" description={waterDesc} />
-
-      <Hairline />
-
-      <MetricRow
-        icon="local_fire_department"
-        value={fireHistory.length > 0 ? String(fireHistory.length) : "—"}
-        label="Fire years"
-        title="Disturbance & flood interaction"
-        description={disturbanceDesc}
-      />
-
-      {/* Disturbance Events — historical fire record */}
-      <SubsectionHeader id="9.5" title="Disturbance Events" sources={["Pipeline"]} />
-      {fireHistory.length > 0 ? (
-        <DataTable
-          headers={["Year", "Fire Detections"]}
-          rows={fireHistory.map((h) => [String(h.year), fmt(h.count)])}
-        />
-      ) : (
-        <p className="text-sm text-brand-sage mb-6">No historical fire data available.</p>
-      )}
     </section>
   );
 }

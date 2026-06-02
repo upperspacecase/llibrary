@@ -262,16 +262,19 @@ export function FutureScenariosSection({
                   Same three layers, four management paths
                 </p>
                 {optRow && bauRow && annualUplift > 0 && (() => {
+                  const dImplicit = Math.round(optRow.implicit - bauRow.implicit);
                   const dRealized = Math.round(optRow.realized - bauRow.realized);
                   const dMonetizable = Math.round(optRow.monetizable - bauRow.monetizable);
+                  const cashUplift = dRealized + dMonetizable;
                   const contributors = [
-                    { label: "more realized agriculture", value: dRealized, fill: LAYER_FILLS.realized },
-                    { label: "newly monetizable (carbon + premium)", value: dMonetizable, fill: LAYER_FILLS.monetizable },
+                    { label: "higher implicit ecosystem services (long-term, modeled)", value: dImplicit, fill: LAYER_FILLS.implicit },
+                    { label: "more realized agriculture (cash)", value: dRealized, fill: LAYER_FILLS.realized },
+                    { label: "newly monetizable — carbon + premium (cash)", value: dMonetizable, fill: LAYER_FILLS.monetizable },
                   ].filter((c) => c.value > 0);
                   return (
                     <div className="mb-6">
                       <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-3 font-body">
-                        Where the €{Math.round(annualUplift).toLocaleString()} uplift comes from
+                        Where the €{Math.round(annualUplift).toLocaleString()}/yr uplift comes from
                       </p>
                       <div className="flex flex-wrap gap-x-8 gap-y-2">
                         {contributors.map((c) => (
@@ -282,13 +285,12 @@ export function FutureScenariosSection({
                             </span>
                           </div>
                         ))}
-                        <div className="flex items-center gap-2">
-                          <span className="inline-block w-2.5 h-2.5" style={{ background: LAYER_FILLS.implicit }} aria-hidden="true" />
-                          <span className="text-[13px] text-brand-sage/80 font-body italic">
-                            implicit ecosystem services unchanged (€{Math.round(bauRow.implicit).toLocaleString()})
-                          </span>
-                        </div>
                       </div>
+                      {dImplicit > 0 && (
+                        <p className="text-[12px] text-brand-sage italic font-body mt-3 leading-relaxed max-w-[640px]">
+                          Near-term cash is the realized + monetizable layers (+€{cashUplift.toLocaleString()}/yr). The implicit increase is modeled ecosystem-service value (carbon storage, soil, water regulation) that builds as the land matures over years &mdash; it is not year-one cash.
+                        </p>
+                      )}
                     </div>
                   );
                 })()}
@@ -327,7 +329,7 @@ export function FutureScenariosSection({
                       <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">
                         {sc.name} · €{Math.round(sc.total).toLocaleString()}/yr
                       </p>
-                      <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} showLegend={false} />
+                      <Donut segments={sc.segments.filter((s) => s.value > 0)} size={200} thickness={42} showLegend={false} showPercentages />
                     </div>
                   ))}
                 </div>
