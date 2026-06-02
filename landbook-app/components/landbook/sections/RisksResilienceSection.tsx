@@ -140,6 +140,13 @@ export function RisksResilienceSection({
         <div className="text-center"><RiskBadge level={drought.riskLevel} /></div>
       </div>
 
+      <p className="text-[10px] text-brand-sage italic font-body mb-8 max-w-[640px] leading-relaxed">
+        Levels are computed risk scores, not third-party ratings &mdash; fire from forecast
+        temperature, recent rainfall, season, wind and Mediterranean location; drought from
+        the ratio of recent to normal precipitation; flood from forecast rainfall intensity
+        and recent precipitation. Source: Open-Meteo forecast &amp; climate data.
+      </p>
+
       {/* Risk Scoring Matrix — moved under the risk indicators */}
       {(() => {
         const hazards = [
@@ -170,38 +177,6 @@ export function RisksResilienceSection({
           />
         );
       })()}
-
-      <Hairline />
-
-      <PlaceholderBox
-        id="10.1"
-        title="Pest/disease risks, market volatility, regulatory change risks"
-        status="DERIVED FROM climate zone, risk scores, regional context"
-        variant="mixed"
-        note="Pest level is derived from the average of fire and drought risk scores (real). Market Volatility and Regulatory Change are hardcoded as 'Moderate' — defaults, not assessments."
-      >
-        <DataTable
-          headers={["Risk Category", "Estimated Level", "Basis"]}
-          rows={[
-            [
-              "Pest / Disease",
-              (() => {
-                const fireScore = fire.riskScore ?? 0;
-                const droughtScoreRaw = drought.riskScore ?? 0;
-                const avg = (fireScore + droughtScoreRaw) / 2;
-                return avg >= 3.5 ? "High" : avg >= 2 ? "Moderate" : "Low";
-              })(),
-              "Warmer / drier climates correlate with higher pest pressure",
-            ],
-            ["Market Volatility", "Moderate", "Default estimate for rural land assets"],
-            [
-              "Regulatory Change",
-              "Moderate",
-              "Standard baseline — refine with local protected-area status",
-            ],
-          ]}
-        />
-      </PlaceholderBox>
 
       <Hairline />
 
@@ -252,6 +227,39 @@ export function RisksResilienceSection({
             </p>
           )}
         </div>
+      </PlaceholderBox>
+
+      <Hairline />
+
+      {/* Other Risks */}
+      <PlaceholderBox
+        id="10.1"
+        title="Other Risks"
+        status="DERIVED FROM climate zone, risk scores, regional context"
+        variant="mixed"
+        note="Pest level is derived from the average of fire and drought risk scores (real). Market Volatility and Regulatory Change are hardcoded as 'Moderate' — defaults, not assessments."
+      >
+        <DataTable
+          headers={["Risk Category", "Estimated Level", "Basis"]}
+          rows={[
+            [
+              "Pest / Disease",
+              (() => {
+                const fireScore = fire.riskScore ?? 0;
+                const droughtScoreRaw = drought.riskScore ?? 0;
+                const avg = (fireScore + droughtScoreRaw) / 2;
+                return avg >= 3.5 ? "High" : avg >= 2 ? "Moderate" : "Low";
+              })(),
+              "Warmer / drier climates correlate with higher pest pressure",
+            ],
+            ["Market Volatility", "Moderate", "Default estimate for rural land assets"],
+            [
+              "Regulatory Change",
+              "Moderate",
+              "Standard baseline — refine with local protected-area status",
+            ],
+          ]}
+        />
       </PlaceholderBox>
 
       <Hairline />
