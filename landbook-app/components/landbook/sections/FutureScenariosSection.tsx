@@ -242,7 +242,7 @@ export function FutureScenariosSection({
                   Your land delivers €{Math.round(bauTotal).toLocaleString()} in value this year
                 </p>
                 <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
-                  Three layers: implicit ecosystem services, realized agriculture, monetizable enrollment
+                  Two active layers today — implicit ecosystem services and realized agriculture. The third, monetizable enrollment (carbon + premium), unlocks under the scenarios below.
                 </p>
                 <HorizontalStackedBar segments={todaySegments} />
               </div>
@@ -261,6 +261,37 @@ export function FutureScenariosSection({
                 <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
                   Same three layers, four management paths
                 </p>
+                {optRow && bauRow && annualUplift > 0 && (() => {
+                  const dRealized = Math.round(optRow.realized - bauRow.realized);
+                  const dMonetizable = Math.round(optRow.monetizable - bauRow.monetizable);
+                  const contributors = [
+                    { label: "more realized agriculture", value: dRealized, fill: LAYER_FILLS.realized },
+                    { label: "newly monetizable (carbon + premium)", value: dMonetizable, fill: LAYER_FILLS.monetizable },
+                  ].filter((c) => c.value > 0);
+                  return (
+                    <div className="mb-6">
+                      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-3 font-body">
+                        Where the €{Math.round(annualUplift).toLocaleString()} uplift comes from
+                      </p>
+                      <div className="flex flex-wrap gap-x-8 gap-y-2">
+                        {contributors.map((c) => (
+                          <div key={c.label} className="flex items-center gap-2">
+                            <span className="inline-block w-2.5 h-2.5" style={{ background: c.fill }} aria-hidden="true" />
+                            <span className="text-[13px] text-brand-charcoal font-body">
+                              <strong className="text-brand-forest">+€{c.value.toLocaleString()}</strong> {c.label}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-2">
+                          <span className="inline-block w-2.5 h-2.5" style={{ background: LAYER_FILLS.implicit }} aria-hidden="true" />
+                          <span className="text-[13px] text-brand-sage/80 font-body italic">
+                            implicit ecosystem services unchanged (€{Math.round(bauRow.implicit).toLocaleString()})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
                 <VerticalStackedBars
                   groups={scenarioGroups}
                   segmentKeys={layerKeys}
