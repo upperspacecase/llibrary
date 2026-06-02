@@ -70,19 +70,6 @@ export function BiodiversityHabitatSection({
     return "Weak";
   })();
 
-  const insectCount = groups
-    .filter((g) => (g.name || g.group || "").toLowerCase().includes("insect"))
-    .reduce((s, g) => s + Number(g.count ?? g.value ?? 0), 0);
-  const birdCount = groups
-    .filter((g) => {
-      const n = (g.name || g.group || "").toLowerCase();
-      return n.includes("aves") || n.includes("bird");
-    })
-    .reduce((s, g) => s + Number(g.count ?? g.value ?? 0), 0);
-  const totalObs = groups.reduce((s, g) => s + Number(g.count ?? g.value ?? 0), 0);
-  const insectConfidence = totalObs > 0 ? Math.min(95, Math.round((insectCount / totalObs) * 100 + 40)) : null;
-  const birdConfidence = totalObs > 0 ? Math.min(95, Math.round((birdCount / totalObs) * 100 + 40)) : null;
-
   return (
     <section id="biodiversity-habitat">
       <SectionTitle title="Biodiversity & Habitat" />
@@ -368,15 +355,15 @@ export function BiodiversityHabitatSection({
         </PlaceholderBox>
       </section>
 
-      {/* 5.4 Habitat Restoration Potential — restyled shell over existing Conservation Assessment data */}
-      <section className="mb-20 p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20">
+      {/* 5.4 Habitat Restoration Potential */}
+      <section className="mb-20">
         <h3 className="font-serif text-xl font-bold text-brand-forest mb-1">Habitat Restoration Potential</h3>
         <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
-          Conservation Assessment &mdash; derived from biodiversity score + protected area status
+          Derived from biodiversity score + protected area status
         </p>
         <PlaceholderBox
           id="5.4"
-          title="Conservation Assessment"
+          title=""
           status="DERIVED FROM BIODIVERSITY SCORE + PROTECTED AREA STATUS"
           variant="plausible"
         >
@@ -416,106 +403,6 @@ export function BiodiversityHabitatSection({
         </PlaceholderBox>
       </section>
 
-      {/* 5.5 Audit Methodology */}
-      <section className="mb-20">
-        <div className="mb-8">
-          <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body">
-            Audit Methodology
-          </h3>
-        </div>
-        <div className="p-8 bg-[#FAF7F2] border-[0.5px] border-brand-sage/20 space-y-4">
-          <h4 className="font-serif text-lg font-bold text-brand-forest">Verification Frameworks</h4>
-          <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase pb-4 border-b border-brand-sage/20">
-            Active pipeline sources
-          </p>
-          <div className="space-y-4 pt-4 text-xs leading-relaxed text-on-surface">
-            <p>
-              <span className="inline-block bg-brand-forest text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase mr-2">Active</span>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">iNaturalist Observations:</strong>
-              Community-sourced species records within a 15km radius; counts feed Recent Species Observations above.
-            </p>
-            <p>
-              <span className="inline-block bg-brand-forest text-white text-[9px] font-bold px-1.5 py-0.5 tracking-widest uppercase mr-2">Active</span>
-              <strong className="text-brand-forest font-bold uppercase tracking-tighter mr-2">GBIF Taxonomy:</strong>
-              Global Biodiversity Information Facility occurrence records and canonical nomenclature.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* 5.6 Indicator Confidence & Sensitivity */}
-      <section className="mb-20">
-        <PlaceholderBox
-          id="5.6"
-          title="Indicator Confidence"
-          status="PARTIALLY DERIVED FROM OBSERVATION COUNTS; PER-INDICATOR CONFIDENCE NOT YET COMPUTED"
-          variant="plausible"
-          note="Insect and bird confidence come from real iNaturalist/GBIF observation counts, with a +40 baseline offset capped at 95%."
-        >
-          <div className="w-full font-body text-brand-forest">
-            <div className="grid grid-cols-12 border-b-[0.5px] border-brand-sage/40 pb-4 text-[9px] font-bold uppercase tracking-widest text-brand-sage">
-              <div className="col-span-4">Indicator</div>
-              <div className="col-span-5 px-4">Observation Confidence</div>
-              <div className="col-span-3 text-right">Ecosystem Sensitivity</div>
-            </div>
-            <IndicatorRow
-              name="Insect Population Health"
-              confidenceLabel={insectConfidence != null ? (insectConfidence > 70 ? "High Confidence" : insectConfidence > 40 ? "Medium Confidence" : "Low Confidence") : "Data pending"}
-              confidencePct={insectConfidence}
-              sensitivity="High"
-              source="derived"
-            />
-            <IndicatorRow
-              name="Avian Nesting Success"
-              confidenceLabel={birdConfidence != null ? (birdConfidence > 70 ? "High Confidence" : birdConfidence > 40 ? "Medium Confidence" : "Low Confidence") : "Data pending"}
-              confidencePct={birdConfidence}
-              sensitivity="Medium"
-              source="derived"
-            />
-          </div>
-        </PlaceholderBox>
-      </section>
     </section>
-  );
-}
-
-function IndicatorRow({
-  name,
-  confidenceLabel,
-  confidencePct,
-  sensitivity,
-  source,
-}: {
-  name: string;
-  confidenceLabel: string;
-  confidencePct: number | null;
-  sensitivity: string;
-  source: "derived" | "synthetic";
-}) {
-  return (
-    <div className="grid grid-cols-12 items-center py-8 border-b-[0.5px] border-brand-sage/20">
-      <div className="col-span-4">
-        <h5 className="text-[11px] font-bold uppercase tracking-widest mb-1">{name}</h5>
-        <span className="text-[11px] italic text-brand-sage/80">
-          {confidenceLabel}
-          {source === "synthetic" && (
-            <span className="ml-2 not-italic bg-brand-terracotta/15 text-brand-terracotta text-[8px] font-black tracking-[0.15em] uppercase px-1.5 py-0.5">
-              Synthetic
-            </span>
-          )}
-        </span>
-      </div>
-      <div className="col-span-5 px-4 flex items-center gap-4">
-        <div className="flex-1 h-2 bg-slate-100 relative">
-          {confidencePct != null && (
-            <div className="absolute inset-y-0 left-0 bg-brand-forest" style={{ width: `${confidencePct}%` }}></div>
-          )}
-        </div>
-        <span className="text-lg font-serif font-bold">
-          {confidencePct != null ? `${confidencePct}%` : "\u2014"}
-        </span>
-      </div>
-      <div className="col-span-3 text-right font-bold">{sensitivity}</div>
-    </div>
   );
 }

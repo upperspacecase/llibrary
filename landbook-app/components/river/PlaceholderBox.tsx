@@ -56,9 +56,11 @@ export function PlaceholderBox({
           {styles.label}
         </span>
       )}
-      <h3 className="font-serif text-2xl font-bold text-brand-forest mb-2 leading-tight">
-        {title}
-      </h3>
+      {title && (
+        <h3 className="font-serif text-2xl font-bold text-brand-forest mb-2 leading-tight">
+          {title}
+        </h3>
+      )}
       <div className="text-[10px] text-brand-sage uppercase tracking-[0.15em] font-bold mb-6">
         {status}
       </div>
