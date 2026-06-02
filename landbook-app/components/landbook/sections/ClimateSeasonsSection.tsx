@@ -82,12 +82,24 @@ function ClimateChart({
         <div className="relative flex-1">
           {/* Centered Dual Y-Axis */}
           <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 z-10 flex flex-col justify-between py-2 text-[8px] font-bold font-body pointer-events-none w-24">
-            {tempSteps.map((t, i) => (
-              <div key={i} className="flex justify-between w-full px-2 bg-white/60 backdrop-blur-[2px]">
-                <span className="text-brand-sage/40">{t}&deg;C</span>
-                <span className="text-brand-sage/40">{precipSteps[i]}mm</span>
-              </div>
-            ))}
+            {tempSteps.map((t, i) => {
+              // Last step is always the zero baseline — keep the slot for
+              // gridline alignment but hide the 0°C / 0mm labels.
+              const isBaseline = i === tempSteps.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={`flex justify-between w-full px-2 ${isBaseline ? "" : "bg-white/60 backdrop-blur-[2px]"}`}
+                >
+                  {!isBaseline && (
+                    <>
+                      <span className="text-brand-sage/70">{t}&deg;C</span>
+                      <span className="text-brand-sage/70">{precipSteps[i]}mm</span>
+                    </>
+                  )}
+                </div>
+              );
+            })}
             <div className="absolute left-1/2 top-0 bottom-0 w-[0.5px] bg-outline-variant/50 -translate-x-1/2 -z-10" />
           </div>
 
@@ -225,9 +237,6 @@ export function ClimateSeasonsSection({
     <section id="climate-seasons">
       <SectionTitle title="Climate & Seasons" />
 
-      {/* ── Climate Chart ──────────────────────────────────── */}
-      <ClimateChart precip={precip} highs={highs} lows={lows} />
-
       {/* ── Editorial Grid: Callout + KPIs ─────────────────── */}
       <section className="mb-20">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
@@ -324,6 +333,9 @@ export function ClimateSeasonsSection({
           </div>
         </div>
       </section>
+
+      {/* ── Climate Chart ──────────────────────────────────── */}
+      <ClimateChart precip={precip} highs={highs} lows={lows} />
 
       {/* ── Seasonal Patterns ──────────────────────────────── */}
       <section className="mb-20">
