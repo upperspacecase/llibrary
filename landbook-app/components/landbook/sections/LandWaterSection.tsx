@@ -1,6 +1,6 @@
 import type { Terrain, Geology, Water, Climate, RiskData, FloodData, Narratives } from "@/lib/types";
 import {
-  SectionTitle, KPI, Hairline, PercentileCard, DataTable, RiskBadge,
+  SectionTitle, KPI, Hairline, DataTable, RiskBadge,
   SubsectionHeader, PlaceholderBox,
 } from "@/components/river";
 
@@ -81,14 +81,7 @@ export function LandWaterSection({
         <KPI value={aspectShort(terrain.aspect)} label="Aspect" />
         <KPI value={terrain.range} unit="m" label="Relief" />
       </div>
-      {terrain.slope != null && (
-        <PercentileCard
-          icon="terrain"
-          value={`${terrain.slope}%`}
-          suffix="Slope grade"
-          description="The slope profile influences water runoff patterns, erosion risk, and agricultural suitability."
-        />
-      )}
+      {/* Slope icon + description removed — slope grade already shown on Region & Ecosystem */}
       {/* 4.1 Microtopography — COMMENTED OUT: no micro-DEM data
       <PlaceholderBox
         id="4.1"
@@ -123,7 +116,17 @@ export function LandWaterSection({
       {/* 4.4 Water Resources Inventory */}
       <SubsectionHeader id="4.4" title="Water Resources Inventory" sources={["Pipeline"]} />
       {/* Water narrative removed — intro covers both terrain and water context */}
-      <div className="grid grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-5 gap-8 mb-8">
+        <KPI
+          value={water.securityIndex != null ? water.securityIndex.toFixed(1) : "—"}
+          unit="/10"
+          label="Water Security"
+        />
+        <KPI
+          value={climate.annualRainfall != null ? Math.round(climate.annualRainfall) : "—"}
+          unit="mm"
+          label="Annual Rainfall"
+        />
         <KPI value={water.springs} label="Springs" />
         <KPI value={water.wells} label="Wells" />
         <KPI value={water.waterways} label="Waterways" />
@@ -146,7 +149,6 @@ export function LandWaterSection({
           ["Water Bodies", fmt(water.waterBodies)],
           ["Flood Discharge", fmt(water.floodDischarge)],
           ["Flood Risk", <RiskBadge key="flood" level={flood.riskLevel} />],
-          ["Annual Rainfall", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm` : "\u2014"],
         ]}
       />
 
