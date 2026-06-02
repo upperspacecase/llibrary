@@ -1,12 +1,73 @@
 import type { Trends, FireData, Narratives } from "@/lib/types";
-import {
-  SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
-} from "@/components/river";
+import { SectionTitle, Hairline, DataTable, SubsectionHeader } from "@/components/river";
 
 function fmt(v: unknown): string {
-  if (v == null || v === "") return "\u2014";
+  if (v == null || v === "") return "—";
   return String(v);
 }
+
+/* ── MetricRow (mirrors Region & Ecosystem) ───────────────── */
+
+interface MetricRowProps {
+  icon: string;
+  value: string;
+  label: string;
+  title: string;
+  description?: string;
+  tip?: string;
+  placeholder?: boolean;
+}
+
+function MetricRow({ icon, value, label, title, description, tip, placeholder }: MetricRowProps) {
+  return (
+    <div className={`flex gap-10 items-start py-10 ${placeholder ? "opacity-40" : ""}`}>
+      {/* Left: icon + stat */}
+      <div className="flex items-center gap-5 shrink-0 w-[200px]">
+        <span className="material-symbols-outlined text-brand-forest text-2xl">
+          {icon}
+        </span>
+        <div>
+          <span className="block text-[43px] font-bold tracking-tighter leading-none text-brand-forest font-serif">
+            {value}
+          </span>
+          <span className="block text-[9px] font-bold uppercase tracking-[0.2em] text-brand-charcoal mt-1">
+            {label}
+          </span>
+        </div>
+      </div>
+
+      {/* Right: title + description + optional tip */}
+      <div className="flex-1 pt-1">
+        <p className="text-[15px] font-bold text-brand-charcoal mb-1">
+          {title}
+        </p>
+        {description ? (
+          <p className="text-sm text-brand-charcoal/80 leading-relaxed max-w-[420px]">
+            {description}
+          </p>
+        ) : (
+          <p className="text-sm text-brand-sage/30 leading-relaxed max-w-[420px] italic">
+            Generate narratives to add contextual insight for this metric.
+          </p>
+        )}
+        {tip ? (
+          <div className="border-l-4 border-brand-terracotta pl-4 mt-3">
+            <p className="text-sm italic text-brand-forest leading-relaxed">
+              {tip}
+            </p>
+          </div>
+        ) : null}
+        {placeholder && (
+          <p className="text-xs text-brand-sage mt-2 uppercase tracking-wider">
+            Data not yet available
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Section ──────────────────────────────────────────────── */
 
 export function HistoryTrendsSection({
   trends,
@@ -17,19 +78,84 @@ export function HistoryTrendsSection({
   fire: FireData;
   narratives?: Narratives["historyTrends"];
 }) {
+  const temp = trends.tempPerDecade;
+  const precip = trends.precipPerDecade;
+
+  /* Temperature trend */
+  const tempValue = temp != null ? `${temp > 0 ? "+" : ""}${temp.toFixed(2)}°C` : "—";
+  const tempTitle =
+    temp == null ? "Temperature trend pending"
+    : temp > 0.05 ? "Warming trend"
+    : temp < -0.05 ? "Cooling trend"
+    : "Stable temperatures";
+  const tempDesc =
+    temp == null ? undefined
+    : temp > 0.15
+      ? `Warming of ${temp > 0 ? "+" : ""}${temp.toFixed(2)}°C per decade raises evapotranspiration, reducing effective moisture for vegetation and water resources.`
+      : `Temperature shift of ${temp > 0 ? "+" : ""}${temp.toFixed(2)}°C per decade has limited impact on growing-season length.`;
+
+  /* Precipitation trend */
+  const precipValue = precip != null ? `${precip > 0 ? "+" : ""}${precip.toFixed(1)} mm` : "—";
+  const precipTitle =
+    precip == null ? "Precipitation trend pending"
+    : precip > 0 ? "Wetter trend"
+    : precip < 0 ? "Drier trend"
+    : "Stable rainfall";
+  const precipDesc =
+    precip == null ? undefined
+    : precip > 0
+      ? `Precipitation increasing at ${precip.toFixed(1)} mm per decade supports stable to improving conditions.`
+      : `Precipitation declining at ${Math.abs(precip).toFixed(1)} mm per decade signals growing seasonal water stress.`;
+
+  /* Forest cover change (derived from precipitation trend) */
+  const forestLoss = precip != null && precip < 0;
+  const forestValue = precip == null ? "—" : forestLoss ? "Loss" : "Stable";
+  const forestDesc =
+    precip == null
+      ? "Insufficient precipitation trend data to estimate canopy direction."
+      : forestLoss
+        ? "Declining precipitation suggests gradual canopy thinning and possible shrubland encroachment over recent decades."
+        : "Stable or increasing precipitation suggests maintained or expanding forest cover, though fire disturbance may offset gains.";
+
+  /* Vegetation health proxy (derived from precipitation trend) */
+  const vegValue = precip == null ? "—" : precip > 0 ? "Strong" : "Stress";
+  const vegDesc =
+    precip == null
+      ? "Insufficient precipitation trend data to estimate vegetation trajectory."
+      : precip > 0
+        ? `Precipitation increasing at ${precip.toFixed(1)} mm per decade — vegetation productivity likely stable or improving.`
+        : `Precipitation declining at ${Math.abs(precip).toFixed(1)} mm per decade — vegetation stress and lower NDVI values expected in recent years.`;
+
+  /* Water resource trajectory (derived from precipitation trend) */
+  const waterValue = precip == null ? "—" : precip < 0 ? "Lower" : "Stable";
+  const waterDesc =
+    precip == null
+      ? "No precipitation trend data available to estimate water resource trajectory."
+      : precip < -5
+        ? "Significant precipitation decline suggests reduced aquifer recharge and lower baseflows in local watercourses."
+        : precip < 0
+          ? "Mild precipitation decline — seasonal availability may shift, but annual totals remain broadly adequate."
+          : "Stable or increasing precipitation supports consistent water resource availability.";
+
+  const fireHistory = fire.historical || [];
+  const disturbanceDesc =
+    fireHistory.length > 0
+      ? `Fire detections recorded across ${fireHistory.length} year(s). Post-fire landscapes are more susceptible to flash flooding due to reduced soil infiltration.`
+      : "No fire disturbance recorded — flood risk driven primarily by terrain and precipitation intensity.";
+
   return (
     <section id="history-trends">
       <SectionTitle title="History & Trends" />
 
       {/* Body + callout side-by-side */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-4 items-start">
         {narratives?.intro ? (
           <p className="text-[14.6px] leading-relaxed text-brand-charcoal">
             {narratives.intro}
           </p>
         ) : (
           <p className="text-[14.6px] leading-relaxed text-brand-sage/30 italic">
-            Temperature and precipitation trends, their impact on long-term property value, and historical context will appear here once narratives are generated.
+            Temperature and precipitation trends and their historical context will appear here once narratives are generated.
           </p>
         )}
 
@@ -48,132 +174,44 @@ export function HistoryTrendsSection({
         )}
       </div>
 
-      {/* Climate Trend Summary — moved up to sit under body + callout */}
-      {(trends.tempPerDecade != null || trends.precipPerDecade != null) && (
-        <>
-          <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-3 mt-6">
-            Climate Trend Summary
-          </div>
-          <div className="grid grid-cols-2 gap-8 mb-6">
-            <div className="text-center">
-              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp / Decade</div>
-              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
-                {trends.tempPerDecade != null
-                  ? `${trends.tempPerDecade > 0 ? "+" : ""}${trends.tempPerDecade.toFixed(2)}\u00b0C`
-                  : "\u2014"}
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Precip / Decade</div>
-              <p className="text-[32px] font-black tracking-tighter text-brand-forest leading-none font-serif">
-                {trends.precipPerDecade != null
-                  ? `${trends.precipPerDecade > 0 ? "+" : ""}${trends.precipPerDecade.toFixed(1)} mm`
-                  : "\u2014"}
-              </p>
-            </div>
-          </div>
-        </>
-      )}
+      <MetricRow icon="thermostat" value={tempValue} label="Temp / decade" title={tempTitle} description={tempDesc} />
 
       <Hairline />
 
-      {/* 9.1 Land Cover Change */}
-      <PlaceholderBox
-        id="9.1"
-        title="Forest gain/loss estimate"
-        status="DERIVED FROM LAND COVER TYPE + CLIMATE TRENDS"
-        variant="plausible"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          {trends.precipPerDecade != null && trends.precipPerDecade < 0
-            ? "Declining precipitation trends suggest gradual canopy thinning and possible shrubland encroachment over the past two decades."
-            : "Stable or increasing precipitation suggests maintained or expanding forest cover, though fire disturbance may offset gains."}
-        </p>
-        <p className="text-xs text-brand-sage">
-          Estimated direction: {trends.precipPerDecade != null && trends.precipPerDecade < 0 ? "Net loss" : "Stable to slight gain"}
-          {trends.tempPerDecade != null && trends.tempPerDecade > 0.2 && " — elevated warming may accelerate drought stress."}
-        </p>
-      </PlaceholderBox>
+      <MetricRow icon="rainy" value={precipValue} label="Precip / decade" title={precipTitle} description={precipDesc} />
 
       <Hairline />
 
-      {/* 9.2 Vegetation Trends */}
-      <PlaceholderBox
-        id="9.2"
-        title="Vegetation health proxy"
-        status="DERIVED FROM PRECIPITATION TRENDS"
-        variant="plausible"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          {trends.precipPerDecade != null
-            ? trends.precipPerDecade > 0
-              ? `Precipitation increasing at ${trends.precipPerDecade.toFixed(1)} mm/decade — vegetation productivity likely stable or improving.`
-              : `Precipitation declining at ${Math.abs(trends.precipPerDecade).toFixed(1)} mm/decade — vegetation stress and lower NDVI values expected in recent years.`
-            : "Insufficient precipitation trend data to estimate vegetation trajectory."}
-        </p>
-        {trends.tempPerDecade != null && (
-          <p className="text-xs text-brand-sage">
-            Temperature shift of {trends.tempPerDecade > 0 ? "+" : ""}{trends.tempPerDecade.toFixed(2)}°C/decade
-            {trends.tempPerDecade > 0.15 ? " may increase evapotranspiration, reducing effective moisture for vegetation." : " has minimal impact on growing-season length."}
-          </p>
-        )}
-      </PlaceholderBox>
+      <MetricRow icon="forest" value={forestValue} label="Forest cover" title="Forest cover change" description={forestDesc} />
 
       <Hairline />
 
-      {/* 9.3 Water Resource Trends */}
-      <PlaceholderBox
-        id="9.3"
-        title="Water resource trajectory"
-        status="DERIVED FROM PRECIPITATION TRENDS + CLIMATE DATA"
-        variant="plausible"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          {trends.precipPerDecade != null
-            ? trends.precipPerDecade < -5
-              ? "Significant precipitation decline suggests reduced aquifer recharge and lower baseflows in local watercourses."
-              : trends.precipPerDecade < 0
-                ? "Mild precipitation decline — seasonal water availability may shift but annual totals remain broadly adequate."
-                : "Stable or increasing precipitation supports consistent water resource availability."
-            : "No precipitation trend data available to estimate water resource trajectory."}
-        </p>
-        <p className="text-xs text-brand-sage">
-          {trends.tempPerDecade != null && trends.tempPerDecade > 0
-            ? `Warming of +${trends.tempPerDecade.toFixed(2)}°C/decade increases evaporative demand, potentially reducing effective water surplus.`
-            : "Temperature trends neutral for evaporative demand."}
-        </p>
-      </PlaceholderBox>
+      <MetricRow icon="grass" value={vegValue} label="Vegetation" title="Vegetation health proxy" description={vegDesc} />
 
       <Hairline />
 
-      {/* 9.5 Disturbance Events */}
+      <MetricRow icon="water_drop" value={waterValue} label="Water resource" title="Water resource trajectory" description={waterDesc} />
+
+      <Hairline />
+
+      <MetricRow
+        icon="local_fire_department"
+        value={fireHistory.length > 0 ? String(fireHistory.length) : "—"}
+        label="Fire years"
+        title="Disturbance & flood interaction"
+        description={disturbanceDesc}
+      />
+
+      {/* Disturbance Events — historical fire record */}
       <SubsectionHeader id="9.5" title="Disturbance Events" sources={["Pipeline"]} />
-      {(fire.historical || []).length > 0 ? (
+      {fireHistory.length > 0 ? (
         <DataTable
           headers={["Year", "Fire Detections"]}
-          rows={fire.historical.map((h) => [String(h.year), fmt(h.count)])}
+          rows={fireHistory.map((h) => [String(h.year), fmt(h.count)])}
         />
       ) : (
         <p className="text-sm text-brand-sage mb-6">No historical fire data available.</p>
       )}
-      <PlaceholderBox
-        id="9.5"
-        title="Flood & drought event estimate"
-        status="DERIVED FROM FIRE HISTORY + CLIMATE TRENDS"
-        variant="plausible"
-      >
-        <p className="text-sm text-brand-charcoal mb-2">
-          {(fire.historical || []).length > 0
-            ? `Fire detections recorded across ${fire.historical.length} year(s). Post-fire landscapes are more susceptible to flash flooding due to reduced soil infiltration.`
-            : "No fire disturbance recorded — flood risk driven primarily by terrain and precipitation intensity."}
-        </p>
-        <p className="text-xs text-brand-sage">
-          {trends.precipPerDecade != null && trends.precipPerDecade < -3
-            ? "Drying trend increases drought frequency; intense rainfall events on dry soils elevate flash-flood risk."
-            : "Current precipitation trends do not indicate elevated drought or flood frequency beyond baseline."}
-        </p>
-      </PlaceholderBox>
-
     </section>
   );
 }

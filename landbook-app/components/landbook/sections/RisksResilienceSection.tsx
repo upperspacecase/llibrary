@@ -48,101 +48,6 @@ function fmt(v: unknown): string {
   return String(v);
 }
 
-/* ── Fire-Prone Days line graph (mirrors ClimateSeasonsSection) ── */
-
-const FP_SVG_W = 1000;
-const FP_SVG_H = 260;
-const FP_PAD_X = 40;
-
-function fpNiceMax(max: number, step: number): number {
-  return Math.max(step, Math.ceil(max / step) * step);
-}
-
-function fpSmoothPath(points: Array<{ x: number; y: number }>): string {
-  if (points.length < 2) return "";
-  let d = `M${points[0].x},${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    const cpx = (prev.x + curr.x) / 2;
-    d += ` C${cpx},${prev.y} ${cpx},${curr.y} ${curr.x},${curr.y}`;
-  }
-  return d;
-}
-
-function FireProneDecadesChart({
-  decades,
-}: {
-  decades: Array<{ label: string; value: number }>;
-}) {
-  if (decades.length < 2) return null;
-
-  const max = fpNiceMax(Math.max(...decades.map((d) => d.value), 1), 10);
-  const ySteps = Array.from({ length: 5 }, (_, i) => Math.round(max - (i * max) / 4));
-  const gridYs = [0, 0.25, 0.5, 0.75, 1].map((f) => f * FP_SVG_H);
-
-  const points = decades.map((d, i) => ({
-    x: FP_PAD_X + (i * (FP_SVG_W - 2 * FP_PAD_X)) / (decades.length - 1),
-    y: FP_SVG_H - (d.value / max) * FP_SVG_H,
-  }));
-
-  return (
-    <section className="mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-6 h-0.5 bg-brand-terracotta" />
-        <span className="text-[9px] font-bold text-brand-sage/60 uppercase tracking-wider">
-          Fire-Prone Days / Year
-        </span>
-      </div>
-
-      <div className="relative flex flex-col justify-end h-[300px]">
-        <div className="relative flex-1">
-          {/* Y-axis labels (left) */}
-          <div className="absolute inset-y-0 left-0 z-10 flex flex-col justify-between py-2 text-[8px] font-bold font-body pointer-events-none w-10">
-            {ySteps.map((t, i) => (
-              <span key={i} className="text-brand-sage/40">
-                {t}
-              </span>
-            ))}
-          </div>
-
-          {/* Graph */}
-          <div className="relative h-full w-full">
-            <svg className="w-full h-full" preserveAspectRatio="none" viewBox={`0 0 ${FP_SVG_W} ${FP_SVG_H}`}>
-              <g stroke="#8B9A7E" strokeOpacity={0.1} strokeWidth={0.5}>
-                {gridYs.map((y) => (
-                  <line key={y} x1={0} x2={FP_SVG_W} y1={y} y2={y} />
-                ))}
-              </g>
-              <path
-                d={fpSmoothPath(points)}
-                fill="none"
-                stroke="#C4705A"
-                strokeLinecap="round"
-                strokeWidth={3}
-              />
-              <g fill="#C4705A">
-                {points.map((p, i) => (
-                  <circle key={i} cx={p.x} cy={p.y} r={5} />
-                ))}
-              </g>
-            </svg>
-          </div>
-        </div>
-
-        <div className="flex justify-between px-10 text-[10px] font-bold text-brand-sage uppercase tracking-widest mt-4">
-          {decades.map((d) => (
-            <span key={d.label}>{d.label.replace(/s$/, "")}</span>
-          ))}
-        </div>
-      </div>
-      <p className="text-[11px] text-brand-sage mt-4 italic font-body text-center">
-        Average fire-prone days per year, by decade
-      </p>
-    </section>
-  );
-}
-
 export function RisksResilienceSection({
   fire,
   flood,
@@ -164,15 +69,6 @@ export function RisksResilienceSection({
     { label: "Micro-Hydro", data: energy.microHydro || {} },
     { label: "Biomass", data: energy.biomass || {} },
   ];
-  const fireDecadesRaw = trends.fireProneByDecade || [];
-  const fireDecades = fireDecadesRaw
-    .map((t) => {
-      const label = t.decade || t.label || "";
-      const value = t.avgDays ?? t.days ?? t.value;
-      return value != null && label ? { label, value } : null;
-    })
-    .filter((d): d is { label: string; value: number } => d !== null);
-
   // Resilience scores (computed)
   const droughtScore = drought.riskScore ?? 3;
   const waterSecurity = Math.max(1, 10 - droughtScore * 2);
@@ -329,18 +225,10 @@ export function RisksResilienceSection({
           </p>
         </div>
       </div>
-      {fireDecades.length >= 2 ? (
-        <FireProneDecadesChart decades={fireDecades} />
-      ) : fireDecades.length === 1 ? (
-        <DataTable
-          headers={["Decade", "Fire-Prone Days"]}
-          rows={fireDecades.map((d) => [d.label, fmt(d.value)])}
-        />
-      ) : null}
       <PlaceholderBox
         id="10.3"
         title="Heat stress projections, extreme-event probability"
-        status="DERIVED FROM trends.tempPerDecade, fire-prone days"
+        status="DERIVED FROM trends.tempPerDecade"
         variant="plausible"
       >
         <div className="space-y-3 text-sm text-brand-charcoal">
@@ -356,19 +244,6 @@ export function RisksResilienceSection({
                 <span className="text-brand-sage ml-1">(~8 days per °C above threshold)</span>
               </p>
             </>
-          )}
-          {fireDecades.length >= 2 && (
-            <p>
-              <span className="font-bold">Fire-prone trend:</span>{" "}
-              {(() => {
-                const first = fireDecades[0];
-                const last = fireDecades[fireDecades.length - 1];
-                const diff = last.value - first.value;
-                return diff > 0
-                  ? `+${diff.toFixed(0)} fire-prone days from ${first.label} to ${last.label}`
-                  : `${diff.toFixed(0)} fire-prone days (stable or improving)`;
-              })()}
-            </p>
           )}
           {trends.precipPerDecade != null && trends.precipPerDecade < 0 && (
             <p>
