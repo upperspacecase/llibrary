@@ -1,88 +1,76 @@
-import type { Narratives } from "@/lib/types";
-import {
-  SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
-} from "@/components/river";
+import { SectionTitle, Hairline, DataTable, SubsectionHeader } from "@/components/river";
 
-const DATA_SOURCES = [
-  { name: "GBIF", desc: "Global Biodiversity Information Facility" },
-  { name: "SoilGrids", desc: "ISRIC — global soil predictions at 250m" },
-  { name: "ERA5", desc: "ECMWF — climate reanalysis" },
-  { name: "Copernicus", desc: "EU Earth Observation — land cover" },
-  { name: "OpenStreetMap", desc: "Water features and infrastructure" },
-  { name: "FIRMS", desc: "NASA Fire Information" },
-  { name: "Macrostrat", desc: "Geological data" },
-  { name: "iNaturalist", desc: "Species occurrence records" },
+/* Per-section data provenance: which sources feed each report page and how
+ * its figures are produced. Mirrors the pipeline's apiStatus → section map. */
+const SECTION_SOURCES: Array<{ section: string; sources: string; methodology: string }> = [
+  {
+    section: "Overview",
+    sources: "All sources (aggregated)",
+    methodology: "Roll-up of section scores and data-source status — no new data",
+  },
+  {
+    section: "Region & Ecosystem",
+    sources: "Open-Meteo (elevation, solar/wind); OpenStreetMap (water features)",
+    methodology: "Derived: slope, water-security index and solar exposure compared to the bioregion",
+  },
+  {
+    section: "Land & Water",
+    sources: "Open-Meteo (elevation); Macrostrat (geology); OpenStreetMap (springs/wells/waterways)",
+    methodology: "Direct terrain/geology/water-feature data; water-security index derived from drought + surface/groundwater + rainfall",
+  },
+  {
+    section: "Biodiversity & Habitat",
+    sources: "iNaturalist; GBIF; OpenStreetMap (protected areas)",
+    methodology: "Species counts queried over the parcel area; pollination & biodiversity scores derived from group composition",
+  },
+  {
+    section: "Climate & Seasons",
+    sources: "Open-Meteo Climate Averages (ERA5, 30-yr normals); Open-Meteo Solar/Wind",
+    methodology: "30-year climate normals; solar/wind potential derived from irradiance & wind speed",
+  },
+  {
+    section: "Value & Benefits",
+    sources: "Derived (no direct API)",
+    methodology: "Derived: ecosystem-service benefit-transfer valuation from verified inputs",
+  },
+  {
+    section: "History & Trends",
+    sources: "Open-Meteo 50-yr Archive; NASA FIRMS (fire)",
+    methodology: "Linear regression on 50-yr temp & precipitation; forest/vegetation/water trajectories derived from the precipitation trend",
+  },
+  {
+    section: "Risks & Resilience",
+    sources: "NASA FIRMS (fire); Open-Meteo Solar/Wind; computed risk scores",
+    methodology: "Hazard risk scoring; resilience capacity derived from risk scores, energy & climate trends",
+  },
+  {
+    section: "Future Scenarios",
+    sources: "Derived from economics",
+    methodology: "Scenario projections derived from natural-capital revenue layers",
+  },
 ];
 
-export function SourcesMethodologySection({
-  narratives,
-}: {
-  narratives?: Narratives["sourcesMethodology"];
-}) {
+export function SourcesMethodologySection() {
   return (
     <section id="sources-methodology">
       <SectionTitle title="Sources & Methodology" />
 
-      {narratives?.intro ? (
-        <p className="text-[14.6px] leading-relaxed text-brand-charcoal mb-8 max-w-[500px]">
-          {narratives.intro}
-        </p>
-      ) : (
-        <p className="text-[14.6px] leading-relaxed text-brand-sage/30 mb-8 max-w-[500px] italic">
-          SEEA-EA framework basis, scoring methodology, and data source context will appear here once narratives are generated.
-        </p>
-      )}
-
-      {/* 14.7 Important Disclaimers */}
-      <SubsectionHeader id="14.7" title="Important Disclaimers" sources={["AI", "Static"]} />
-      {narratives?.disclaimer ? (
-        <p className="text-[12px] italic text-brand-sage">{narratives.disclaimer}</p>
-      ) : (
-        <p className="text-[12px] italic text-brand-sage">
-          This assessment represents conditions at time of documentation.
-          Land characteristics evolve; verify critical details before decisions.
-          Scale approximations apply. Professional verification recommended for
-          legal, financial, or planning purposes.
-        </p>
-      )}
+      <p className="text-[12px] font-bold text-brand-forest uppercase tracking-widest mb-2">
+        Important Disclaimer
+      </p>
+      <p className="text-[12px] italic text-brand-sage mb-10 max-w-[600px] leading-relaxed">
+        This Landbook assessment provides informational guidance only. Consult qualified
+        forestry, agricultural, and investment professionals before making property
+        acquisition, management, or development decisions.
+      </p>
 
       <Hairline />
 
-      {/* 14.1 Data Source Inventory */}
-      <SubsectionHeader id="14.1" title="Data Source Inventory" sources={["Pipeline"]} />
+      <SubsectionHeader id="14.1" title="Sources & Methodology by Section" sources={["Pipeline"]} />
       <DataTable
-        headers={["Source", "Description"]}
-        rows={DATA_SOURCES.map((s) => [s.name, s.desc])}
+        headers={["Section", "Sources", "Methodology"]}
+        rows={SECTION_SOURCES.map((s) => [s.section, s.sources, s.methodology])}
       />
-
-      <Hairline />
-
-      {/* 14.3 Data Quality Matrix */}
-      <PlaceholderBox
-        id="14.3"
-        title="Data quality classification by section"
-        status="DERIVED FROM API STATUS"
-        variant="plausible"
-      >
-        <DataTable
-          headers={["Section", "Classification", "Basis"]}
-          rows={[
-            ["Climate & Weather", "Verified", "ERA5 API data"],
-            ["Soil & Geology", "Verified", "SoilGrids + Macrostrat API data"],
-            ["Biodiversity", "Verified", "GBIF + iNaturalist API data"],
-            ["Fire Risk", "Verified", "NASA FIRMS API data"],
-            ["Water Features", "Verified", "OpenStreetMap API data"],
-            ["Land Cover", "Verified", "Copernicus API data"],
-            ["Ecosystem Valuation", "Synthetic", "Derived from verified inputs via benefit-transfer"],
-            ["History & Trends", "Synthetic", "Derived from climate trends + fire data"],
-            ["Recommendations", "Synthetic", "AI-generated from verified inputs"],
-          ]}
-        />
-        <p className="text-xs text-brand-sage mt-2">
-          Verified = direct API data; Synthetic = algorithmically derived from verified inputs; Missing = no data source available.
-        </p>
-      </PlaceholderBox>
-
     </section>
   );
 }
