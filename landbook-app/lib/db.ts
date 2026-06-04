@@ -3,11 +3,16 @@ import { MongoClient, Db, Collection, Document } from "mongodb";
 const uri = process.env.MONGODB_URI;
 if (!uri) throw new Error("MONGODB_URI environment variable is not set");
 
+// Mirrors api/_db.js: tiny pool + idle-socket reaping so warm-but-idle
+// serverless instances release their Atlas connection (M0 caps at 500).
 const OPTIONS = {
   serverSelectionTimeoutMS: 5000,
   connectTimeoutMS: 5000,
   socketTimeoutMS: 30000,
   maxPoolSize: 1,
+  minPoolSize: 0,
+  maxIdleTimeMS: 30000,
+  waitQueueTimeoutMS: 5000,
 };
 
 const globalForMongo = globalThis as unknown as {
@@ -24,10 +29,9 @@ function createConnection(): Promise<MongoClient> {
   return promise;
 }
 
-if (!globalForMongo.__mongoClientPromise) {
-  createConnection();
-}
-
+// Lazy: connect only when a query actually runs. Connecting at module load
+// meant every cold-started function instance held a socket even when its
+// route never touched Mongo.
 export async function getDb(): Promise<Db> {
   if (!globalForMongo.__mongoClientPromise) createConnection();
   const client = await globalForMongo.__mongoClientPromise!;
