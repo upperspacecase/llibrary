@@ -44,6 +44,7 @@
 
       <div class="admin-tabs">
         <button class="admin-tab active" data-tab="submissions">Submissions</button>
+        <button class="admin-tab" data-tab="waitlist">Waitlist</button>
         <button class="admin-tab" data-tab="contributions">Contributions</button>
         <button class="admin-tab" data-tab="resources">Resources</button>
         <button class="admin-tab" data-tab="regions">Regions</button>
@@ -114,6 +115,19 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- Edit record modal -->
+  <div id="edit-modal" class="admin-modal-overlay" style="display:none;">
+    <div class="admin-modal">
+      <h3 id="edit-modal-title">Edit</h3>
+      <div id="edit-modal-fields"></div>
+      <p id="edit-modal-error" class="admin-error"></p>
+      <div class="admin-modal-actions">
+        <button id="edit-modal-cancel" class="admin-modal-btn">Cancel</button>
+        <button id="edit-modal-save" class="admin-modal-btn primary">Save</button>
+      </div>
     </div>
   </div>
 

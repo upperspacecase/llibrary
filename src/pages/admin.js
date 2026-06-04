@@ -24,6 +24,12 @@ const columns = {
             if (!id) return '';
             return `__EXPAND__${id}`;
         }},
+        { key: '_actions', label: '', format: () => '__ROW_ACTIONS__' },
+    ],
+    waitlist: [
+        { key: 'email', label: 'Email', format: (v, row) => v || row.contact || '-' },
+        { key: '_date', label: 'Signed up', format: formatDate },
+        { key: '_actions', label: '', format: () => '__ROW_ACTIONS__' },
     ],
     contributions: [
         { key: 'section', label: 'Section' },
@@ -185,9 +191,9 @@ async function loadData() {
     pipelineStatusIndex = raw.pipelineStatus || {};
     shareIndex = raw.shareIndex || {};
 
-    // Merge waitlist, landbooks, submissions into one unified list
+    // Submissions tab = the run-capable records (landbooks + submissions).
+    // Waitlist lives in its own tab and cannot run landbooks.
     const merged = [
-        ...(raw.waitlist || []).map(r => ({ ...r, _type: 'waitlist', _date: r.createdAt || r.created })),
         ...(raw.landbooks || []).map(r => ({ ...r, _type: 'landbook', _date: r.created })),
         ...(raw.submissions || []).map(r => ({ ...r, _type: 'submission', _date: r.created })),
     ];
@@ -195,6 +201,9 @@ async function loadData() {
 
     data = {
         submissions: merged,
+        waitlist: (raw.waitlist || [])
+            .map(r => ({ ...r, _type: 'waitlist', _date: r.createdAt || r.created }))
+            .sort((a, b) => new Date(b._date) - new Date(a._date)),
         contributions: raw.contributions || [],
         resources: raw.resources || [],
     };
@@ -224,6 +233,7 @@ async function loadData() {
 function renderStats() {
     const stats = [
         { label: 'Submissions', count: data.submissions?.length || 0 },
+        { label: 'Waitlist', count: data.waitlist?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
         { label: 'Regions', count: data.regions?.length || 0 },
@@ -389,6 +399,17 @@ function renderTable() {
                     <button class="admin-region-btn reject" data-region="${name}" data-action="rejected">Reject</button>
                 </td>`;
             }
+            if (str === '__ROW_ACTIONS__') {
+                const t = row._type;
+                const collection = t === 'waitlist' ? 'waitlist' : t === 'landbook' ? 'landbooks' : 'submissions';
+                const recId = t === 'waitlist' ? (row._id || '') : (row.id || row._id || '');
+                if (!recId) return '<td></td>';
+                const idAttr = escapeHtml(String(recId));
+                return `<td class="admin-row-actions">
+                    <button class="admin-row-btn edit" data-collection="${collection}" data-id="${idAttr}" data-type="${t}">Edit</button>
+                    <button class="admin-row-btn delete" data-collection="${collection}" data-id="${idAttr}">Delete</button>
+                </td>`;
+            }
             return `<td>${escapeHtml(str)}</td>`;
         }).join('');
 
@@ -451,7 +472,122 @@ function renderTable() {
             }
         });
     });
+
+    // Bind edit/delete row actions
+    body.querySelectorAll('.admin-row-btn.delete').forEach(btn => {
+        btn.addEventListener('click', () => deleteRecord(btn.dataset.collection, btn.dataset.id, btn));
+    });
+    body.querySelectorAll('.admin-row-btn.edit').forEach(btn => {
+        btn.addEventListener('click', () => openEditModal(btn.dataset.collection, btn.dataset.id, btn.dataset.type));
+    });
 }
+
+// ---- Edit / Delete records ----
+const EDIT_FIELDS = {
+    waitlist: [{ key: 'email', label: 'Email' }],
+    submission: [
+        { key: 'propertyTitle', label: 'Property title' },
+        { key: 'name', label: 'Name' },
+        { key: 'contact', label: 'Contact' },
+        { key: 'postcode', label: 'Postcode' },
+    ],
+    landbook: [
+        { key: 'propertyName', label: 'Property title' },
+        { key: 'clientName', label: 'Client name' },
+        { key: 'contact', label: 'Contact' },
+        { key: 'postcode', label: 'Postcode' },
+    ],
+};
+let editContext = null; // { collection, id }
+
+function findRow(type, id) {
+    const list = type === 'waitlist' ? (data.waitlist || []) : (data.submissions || []);
+    return type === 'waitlist'
+        ? list.find(r => String(r._id) === String(id))
+        : list.find(r => String(r.id) === String(id));
+}
+
+async function deleteRecord(collection, id, btn) {
+    const label = collection === 'waitlist' ? 'this waitlist entry' : 'this record';
+    if (!confirm(`Delete ${label}? This cannot be undone.`)) return;
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+    try {
+        const res = await fetch(`/api/admin/records?collection=${encodeURIComponent(collection)}&id=${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ collection, id }),
+        });
+        if (!res.ok) {
+            const e = await res.json().catch(() => ({}));
+            throw new Error(e.error || `HTTP ${res.status}`);
+        }
+        await loadData();
+    } catch (err) {
+        alert(`Delete failed: ${err.message}`);
+        if (btn) { btn.disabled = false; btn.textContent = 'Delete'; }
+    }
+}
+
+function openEditModal(collection, id, type) {
+    const row = findRow(type, id);
+    if (!row) return;
+    const fields = EDIT_FIELDS[type] || [];
+    editContext = { collection, id };
+    document.getElementById('edit-modal-title').textContent =
+        type === 'waitlist' ? 'Edit waitlist entry' : 'Edit submission';
+    document.getElementById('edit-modal-error').textContent = '';
+    document.getElementById('edit-modal-fields').innerHTML = fields.map(f => `
+        <label class="admin-modal-field">
+            <span>${f.label}</span>
+            <input type="text" data-key="${f.key}" value="${escapeHtml(row[f.key] != null ? String(row[f.key]) : '')}" />
+        </label>
+    `).join('');
+    document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    editContext = null;
+}
+
+async function saveEditModal() {
+    if (!editContext) return;
+    const updates = {};
+    document.querySelectorAll('#edit-modal-fields input[data-key]').forEach(inp => {
+        updates[inp.dataset.key] = inp.value;
+    });
+    const saveBtn = document.getElementById('edit-modal-save');
+    const errEl = document.getElementById('edit-modal-error');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    errEl.textContent = '';
+    try {
+        const res = await fetch('/api/admin/records', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ ...editContext, updates }),
+        });
+        if (!res.ok) {
+            const e = await res.json().catch(() => ({}));
+            throw new Error(e.error || `HTTP ${res.status}`);
+        }
+        closeEditModal();
+        await loadData();
+    } catch (err) {
+        errEl.textContent = `Save failed: ${err.message}`;
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save';
+    }
+}
+
+document.getElementById('edit-modal-cancel').addEventListener('click', closeEditModal);
+document.getElementById('edit-modal-save').addEventListener('click', saveEditModal);
+document.getElementById('edit-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'edit-modal') closeEditModal();
+});
 
 // ---- Expandable Detail Panel ----
 
@@ -1795,5 +1931,97 @@ style.textContent = `
     .pip-empty {
         font-size: 11px;
     }
+
+    /* Row edit/delete actions */
+    .admin-row-actions {
+        display: flex;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    .admin-row-btn {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-family: inherit;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        background: var(--white, #fff);
+        color: var(--muted);
+        transition: all 0.15s;
+    }
+    .admin-row-btn:hover { color: var(--black); border-color: var(--black); }
+    .admin-row-btn:disabled { opacity: 0.5; cursor: default; }
+    .admin-row-btn.delete:hover {
+        color: var(--coral, #e74c3c);
+        border-color: var(--coral, #e74c3c);
+    }
+
+    /* Edit modal */
+    .admin-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+    }
+    .admin-modal {
+        background: var(--white, #fff);
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .admin-modal h3 { margin: 0 0 16px; }
+    .admin-modal-field {
+        display: block;
+        margin-bottom: 14px;
+    }
+    .admin-modal-field span {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        margin-bottom: 4px;
+    }
+    .admin-modal-field input {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+        font-family: inherit;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-sizing: border-box;
+    }
+    .admin-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .admin-modal-btn {
+        padding: 8px 18px;
+        font-size: 13px;
+        font-family: inherit;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        background: var(--white, #fff);
+        color: var(--black);
+        transition: all 0.15s;
+    }
+    .admin-modal-btn:hover { border-color: var(--black); }
+    .admin-modal-btn:disabled { opacity: 0.5; cursor: default; }
+    .admin-modal-btn.primary {
+        background: var(--black);
+        color: var(--white, #fff);
+        border-color: var(--black);
+    }
+    .admin-modal-btn.primary:hover { opacity: 0.85; }
 `;
 document.head.appendChild(style);
