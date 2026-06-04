@@ -208,7 +208,7 @@ export function OverviewSection({
               Water Security
             </span>
             <p className="text-[32px] font-bold tracking-tighter text-brand-forest leading-none font-serif">
-              {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
+              {water.securityIndex != null ? water.securityIndex.toFixed(1).replace(/\.0$/, "") : "\u2014"}
               <span className="text-base ml-1 text-brand-sage">/10</span>
             </p>
           </div>

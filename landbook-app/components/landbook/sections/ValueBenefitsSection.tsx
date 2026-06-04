@@ -38,7 +38,7 @@ const FALLBACK_SENSITIVITY: Record<string, ServiceSensitivity> = {
 function sensitivityFor(esClass: string, fromData: ServiceSensitivity | undefined, waterSecurity10: number | null): ServiceSensitivity {
   if (fromData) return fromData;
   if (esClass === "water" && waterSecurity10 != null && waterSecurity10 >= 9) {
-    return { tier: "Low", note: `Already at site maximum (Water Security ${waterSecurity10.toFixed(1)}/10)` };
+    return { tier: "Low", note: `Already at site maximum (Water Security ${waterSecurity10.toFixed(1).replace(/\.0$/, "")}/10)` };
   }
   return FALLBACK_SENSITIVITY[esClass] ?? { tier: "—", note: "" };
 }
@@ -172,7 +172,7 @@ export function ValueBenefitsSection({
       {/* ── Scenario Assumptions ── */}
       <div className="mb-20">
         <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mb-2">
-          Scenario assumptions
+          Scenario Assumptions
         </h2>
         <PlaceholderBox
           id="7.4"

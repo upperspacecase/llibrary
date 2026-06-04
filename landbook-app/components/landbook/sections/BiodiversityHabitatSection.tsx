@@ -361,46 +361,39 @@ export function BiodiversityHabitatSection({
         <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase mb-8">
           Derived from biodiversity score + protected area status
         </p>
-        <PlaceholderBox
-          id="5.4"
-          title=""
-          status="DERIVED FROM BIODIVERSITY SCORE + PROTECTED AREA STATUS"
-          variant="plausible"
-        >
-          <DataTable
-            headers={["Metric", "Value", "Notes"]}
-            rows={[
-              [
-                "Biodiversity Score",
-                scores.biodiversity != null ? `${scores.biodiversity}/100` : "\u2014",
-                scores.biodiversity != null
-                  ? scores.biodiversity > 60 ? "High conservation value"
-                  : scores.biodiversity > 30 ? "Moderate value"
-                  : "Low \u2014 restoration priority"
-                  : "\u2014",
-              ],
-              [
-                "Protected Area Overlap",
-                areas.length > 0 ? `${areas.length} designated areas` : "None detected",
-                areas.length > 0 ? "Legal protection applies" : "No formal protection",
-              ],
-              [
-                "Restoration Potential",
-                scores.biodiversity != null
-                  ? scores.biodiversity < 50 ? "High"
-                  : scores.biodiversity < 75 ? "Moderate"
-                  : "Low (already high quality)"
-                  : "\u2014",
-                "Based on gap to regional ceiling",
-              ],
-              [
-                "Habitat Connectivity",
-                areas.length >= 2 ? "Corridor potential" : "Isolated fragment",
-                "Inferred from protected area proximity",
-              ],
-            ]}
-          />
-        </PlaceholderBox>
+        <DataTable
+          headers={["Metric", "Value", "Notes"]}
+          rows={[
+            [
+              "Biodiversity Score",
+              scores.biodiversity != null ? `${scores.biodiversity}/100` : "\u2014",
+              scores.biodiversity != null
+                ? scores.biodiversity > 60 ? "High conservation value"
+                : scores.biodiversity > 30 ? "Moderate value"
+                : "Low \u2014 restoration priority"
+                : "\u2014",
+            ],
+            [
+              "Protected Area Overlap",
+              areas.length > 0 ? `${areas.length} designated areas` : "None detected",
+              areas.length > 0 ? "Legal protection applies" : "No formal protection",
+            ],
+            [
+              "Restoration Potential",
+              scores.biodiversity != null
+                ? scores.biodiversity < 50 ? "High"
+                : scores.biodiversity < 75 ? "Moderate"
+                : "Low (already high quality)"
+                : "\u2014",
+              "Based on gap to regional ceiling",
+            ],
+            [
+              "Habitat Connectivity",
+              areas.length >= 2 ? "Corridor potential" : "Isolated fragment",
+              "Inferred from protected area proximity",
+            ],
+          ]}
+        />
       </section>
 
     </section>

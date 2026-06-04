@@ -9,6 +9,16 @@ const SECTION_SOURCES: Array<{ section: string; sources: string; methodology: st
     methodology: "Roll-up of section scores and data-source status — no new data",
   },
   {
+    section: "Value & Benefits",
+    sources: "Derived (no direct API)",
+    methodology: "Derived: ecosystem-service benefit-transfer valuation from verified inputs",
+  },
+  {
+    section: "Future Scenarios",
+    sources: "Derived from economics",
+    methodology: "Scenario projections derived from natural-capital revenue layers",
+  },
+  {
     section: "Region & Ecosystem",
     sources: "Open-Meteo (elevation, solar/wind); OpenStreetMap (water features)",
     methodology: "Derived: slope, water-security index and solar exposure compared to the bioregion",
@@ -29,11 +39,6 @@ const SECTION_SOURCES: Array<{ section: string; sources: string; methodology: st
     methodology: "30-year climate normals; solar/wind potential derived from irradiance & wind speed",
   },
   {
-    section: "Value & Benefits",
-    sources: "Derived (no direct API)",
-    methodology: "Derived: ecosystem-service benefit-transfer valuation from verified inputs",
-  },
-  {
     section: "History & Trends",
     sources: "Open-Meteo 50-yr Archive; NASA FIRMS (fire)",
     methodology: "Linear regression on 50-yr temp & precipitation; forest/vegetation/water trajectories derived from the precipitation trend",
@@ -42,11 +47,6 @@ const SECTION_SOURCES: Array<{ section: string; sources: string; methodology: st
     section: "Risks & Resilience",
     sources: "NASA FIRMS (fire); Open-Meteo Solar/Wind; computed risk scores",
     methodology: "Hazard risk scoring; resilience capacity derived from risk scores, energy & climate trends",
-  },
-  {
-    section: "Future Scenarios",
-    sources: "Derived from economics",
-    methodology: "Scenario projections derived from natural-capital revenue layers",
   },
 ];
 

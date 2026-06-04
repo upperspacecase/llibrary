@@ -379,7 +379,7 @@ export function FutureScenariosSection({
       {/* 11.4 Pathway Details */}
       <PlaceholderBox
         id="11.4"
-        title="Investment requirements and phasing"
+        title="Investment requirements"
         status="DERIVED FROM revenue scenarios (est. 1–3× annual revenue)"
         variant="mixed"
         note="Revenue scenarios are real. Phase costs apply hardcoded multipliers (×0.5, ×1.5, ×2) to those revenues — illustrative phasing, not a costed plan. Payback = investment ÷ the incremental annual revenue it unlocks."

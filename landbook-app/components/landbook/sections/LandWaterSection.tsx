@@ -1,7 +1,6 @@
-import type { Terrain, Geology, Water, Climate, RiskData, FloodData, Narratives } from "@/lib/types";
+import type { Terrain, Geology, Water, Climate, RiskData, Narratives } from "@/lib/types";
 import {
-  SectionTitle, KPI, Hairline, DataTable, RiskBadge,
-  SubsectionHeader, PlaceholderBox,
+  SectionTitle, KPI, Hairline, DataTable,
 } from "@/components/river";
 
 function fmt(v: unknown): string {
@@ -31,7 +30,6 @@ export function LandWaterSection({
   water,
   climate,
   drought,
-  flood,
   narratives,
 }: {
   terrain: Terrain;
@@ -39,7 +37,6 @@ export function LandWaterSection({
   water: Water;
   climate: Climate;
   drought: RiskData;
-  flood: FloodData;
   narratives?: Narratives["landWater"];
 }) {
   return (
@@ -73,8 +70,9 @@ export function LandWaterSection({
         )}
       </div>
 
-      {/* 4.1 Terrain Analysis */}
-      <SubsectionHeader id="4.1" title="Terrain Analysis" sources={["Pipeline"]} />
+      <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mt-10 mb-6">
+        Land
+      </h2>
       <div className="grid grid-cols-4 gap-8 mb-8">
         <KPI value={terrain.elevation} unit="m" label="Elevation" />
         <KPI value={terrain.slope} unit="%" label="Slope" />
@@ -92,8 +90,6 @@ export function LandWaterSection({
 
       <Hairline />
 
-      {/* 4.2 Geological Foundation */}
-      <SubsectionHeader id="4.2" title="Geological Foundation" sources={["Pipeline"]} />
       <DataTable
         headers={["Geology", "Value"]}
         rows={[
@@ -114,11 +110,16 @@ export function LandWaterSection({
       <Hairline />
 
       {/* 4.4 Water Resources Inventory */}
-      <SubsectionHeader id="4.4" title="Water Resources Inventory" sources={["Pipeline"]} />
+      <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mt-10 mb-2">
+        Water
+      </h2>
+      <p className="text-[10px] font-bold tracking-[0.15em] text-brand-sage uppercase mb-6">
+        DERIVED FROM WATER INDEX + DROUGHT RISK + PRECIPITATION
+      </p>
       {/* Water narrative removed — intro covers both terrain and water context */}
       <div className="grid grid-cols-5 gap-8 mb-8">
         <KPI
-          value={water.securityIndex != null ? water.securityIndex.toFixed(1) : "—"}
+          value={water.securityIndex != null ? water.securityIndex.toFixed(1).replace(/\.0$/, "") : "—"}
           unit="/10"
           label="Water Security"
         />
@@ -141,55 +142,16 @@ export function LandWaterSection({
 
       <Hairline />
 
-      {/* 4.5 Hydrological Systems */}
-      <SubsectionHeader id="4.5" title="Hydrological Systems" sources={["Pipeline"]} />
       <DataTable
-        headers={["Metric", "Value"]}
+        headers={["Component", "Indicator", "Assessment"]}
         rows={[
-          ["Water Bodies", fmt(water.waterBodies)],
-          ["Flood Discharge", fmt(water.floodDischarge)],
-          ["Flood Risk", <RiskBadge key="flood" level={flood.riskLevel} />],
+          ["Drought Resilience", drought.riskLevel ?? "\u2014", drought.riskScore != null && drought.riskScore <= 2 ? "Good" : "At risk"],
+          ["Surface Water", `${water.waterways ?? 0} waterways, ${water.waterBodies ?? 0} bodies`, (water.waterways ?? 0) + (water.waterBodies ?? 0) > 2 ? "Adequate" : "Limited"],
+          ["Groundwater Access", `${water.springs ?? 0} springs, ${water.wells ?? 0} wells`, (water.springs ?? 0) + (water.wells ?? 0) > 0 ? "Available" : "Unknown"],
+          ["Annual Recharge", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm/yr` : "\u2014",
+            climate.annualRainfall != null ? (climate.annualRainfall > 600 ? "Good" : climate.annualRainfall > 400 ? "Moderate" : "Low") : "\u2014"],
         ]}
       />
-
-      <Hairline />
-
-      {/* 4.6 Water Security Assessment */}
-      <SubsectionHeader id="4.6" title="Water Security Assessment" sources={["Computed"]} />
-      <div className="mb-8 max-w-[280px]">
-        <div className="flex justify-between items-end mb-2">
-          <p className="text-[10px] font-bold tracking-widest text-brand-forest uppercase font-body">
-            Water Security
-          </p>
-          <span className="text-xl font-bold font-serif text-brand-forest">
-            {water.securityIndex != null ? water.securityIndex.toFixed(1) : "\u2014"}
-          </span>
-        </div>
-        <div className="h-2 w-full bg-brand-sage/20">
-          <div
-            className="h-full bg-brand-forest"
-            style={{ width: `${Math.min((water.securityIndex || 0) * 10, 100)}%` }}
-          />
-        </div>
-        <p className="text-[11px] text-brand-sage mt-3 italic font-body">Catchment Resilience</p>
-      </div>
-      <PlaceholderBox
-        id="4.6"
-        title="Water Security Breakdown"
-        status="DERIVED FROM WATER INDEX + DROUGHT RISK + PRECIPITATION"
-        variant="plausible"
-      >
-        <DataTable
-          headers={["Component", "Indicator", "Assessment"]}
-          rows={[
-            ["Drought Resilience", drought.riskLevel ?? "\u2014", drought.riskScore != null && drought.riskScore <= 2 ? "Good" : "At risk"],
-            ["Surface Water", `${water.waterways ?? 0} waterways, ${water.waterBodies ?? 0} bodies`, (water.waterways ?? 0) + (water.waterBodies ?? 0) > 2 ? "Adequate" : "Limited"],
-            ["Groundwater Access", `${water.springs ?? 0} springs, ${water.wells ?? 0} wells`, (water.springs ?? 0) + (water.wells ?? 0) > 0 ? "Available" : "Unknown"],
-            ["Annual Recharge", climate.annualRainfall != null ? `${Math.round(climate.annualRainfall)} mm/yr` : "\u2014",
-              climate.annualRainfall != null ? (climate.annualRainfall > 600 ? "Good" : climate.annualRainfall > 400 ? "Moderate" : "Low") : "\u2014"],
-          ]}
-        />
-      </PlaceholderBox>
     </section>
   );
 }

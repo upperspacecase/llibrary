@@ -127,8 +127,6 @@ export function RisksResilienceSection({
         )}
       </div>
 
-      {/* 10.1 Risk Identification */}
-      <SubsectionHeader id="10.1" title="Risk Identification" sources={["Pipeline"]} />
       <div className="grid grid-cols-3 gap-8 mb-8">
         <RiskBar label="Fire Risk" value={fire.riskScore} max={5} barColor="bg-brand-terracotta" />
         <RiskBar label="Flood Risk" value={flood.riskScore} max={5} barColor="bg-brand-amber" />
@@ -180,8 +178,9 @@ export function RisksResilienceSection({
 
       <Hairline />
 
-      {/* 10.3 Climate Risks */}
-      <SubsectionHeader id="10.3" title="Climate Risks" sources={["Pipeline"]} />
+      <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mt-10 mb-6">
+        Climate Risks
+      </h2>
       <div className="grid grid-cols-2 gap-8 mb-6">
         <div className="text-center">
           <div className="text-[10px] uppercase tracking-widest text-brand-sage mb-2">Temp Trend / Decade</div>

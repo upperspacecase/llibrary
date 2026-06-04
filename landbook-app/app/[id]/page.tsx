@@ -260,7 +260,6 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
               water={data.water}
               climate={data.climate}
               drought={data.drought}
-              flood={data.flood}
               narratives={n.landWater}
             />
           </div>
