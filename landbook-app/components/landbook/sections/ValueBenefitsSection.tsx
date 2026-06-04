@@ -171,7 +171,7 @@ export function ValueBenefitsSection({
 
       {/* ── Scenario Assumptions ── */}
       <div className="mb-20">
-        <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mb-2">
+        <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mb-2">
           Scenario assumptions
         </h2>
         <PlaceholderBox
@@ -212,7 +212,7 @@ export function ValueBenefitsSection({
 
       {/* ── 7.6 Valuation Methodology ── */}
       <div className="mb-20">
-        <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mb-2">
+        <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mb-2">
           Valuation Methodology
         </h2>
         <div className="space-y-4">

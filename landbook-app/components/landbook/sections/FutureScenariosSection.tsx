@@ -5,17 +5,12 @@ import type {
   ImplicitScenarioRow,
 } from "@/lib/types";
 import {
-  SectionTitle, Hairline, DataTable, SubsectionHeader, PlaceholderBox,
+  SectionTitle, Hairline, DataTable, PlaceholderBox,
   Donut,
   HorizontalStackedBar,
   VerticalStackedBars,
   CumulativeLineChart,
 } from "@/components/river";
-
-function fmt(v: unknown): string {
-  if (v == null || v === "") return "—";
-  return String(v);
-}
 
 const SCENARIO_ORDER = ["bau", "conservative", "moderate", "optimized"] as const;
 const SCENARIO_LABELS: Record<string, string> = {
@@ -151,7 +146,7 @@ export function FutureScenariosSection({
       )}
 
       {/* 11.1 Scenario Details — four visualization blocks (one story, three zoom levels) */}
-      <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mt-10 mb-6">
+      <h2 className="font-serif text-[1.8525rem] font-bold text-brand-forest leading-tight mt-10 mb-6">
         Scenario Details
       </h2>
 
@@ -381,8 +376,6 @@ export function FutureScenariosSection({
 
       <Hairline />
 
-      <SubsectionHeader id="11.3" title="Assumptions & detail" sources={["Computed"]} />
-
       {/* 11.4 Pathway Details */}
       <PlaceholderBox
         id="11.4"
@@ -410,39 +403,6 @@ export function FutureScenariosSection({
           })()}
         />
       </PlaceholderBox>
-
-      <Hairline />
-
-      {/* 11.5 Revenue Opportunities — with layer-targeted column */}
-      <SubsectionHeader id="11.5" title="Revenue Opportunities" sources={["Computed"]} />
-      {details.length > 0 && (
-        <>
-          <DataTable
-            headers={["Scenario", "Systems", "Annual Revenue", "Investment", "Payback", "Layer Targeted"]}
-            rows={details.map((item) => {
-              const isConservative = (item.scenario || "").toLowerCase().includes("conservative");
-              const layer = isConservative
-                ? "Realized + Monetizable"
-                : "Realized + Monetizable + Implicit";
-              const annual = item.annual ?? 0;
-              const invMatch = (item.investment || "").match(/[\d][\d,]*/);
-              const invNum = invMatch ? Number(invMatch[0].replace(/,/g, "")) : null;
-              const payback = invNum && invNum > 0 && annual > 0 ? `${(invNum / annual).toFixed(1)} yr` : "—";
-              return [
-                fmt(item.scenario),
-                fmt(item.systems),
-                `€${annual.toLocaleString()}/yr`,
-                fmt(item.investment),
-                payback,
-                layer,
-              ];
-            })}
-          />
-          <p className="text-[11px] text-brand-sage italic font-body mt-4 leading-relaxed">
-            Payback = investment ÷ annual revenue (low end of any investment range).
-          </p>
-        </>
-      )}
 
     </section>
   );
