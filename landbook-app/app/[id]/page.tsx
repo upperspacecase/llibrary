@@ -4,6 +4,7 @@ import { applyOverrides, loadOverrideFields } from "@/lib/landbook-overrides";
 import type { Landbook, ReportData } from "@/lib/types";
 
 import { SideNav } from "@/components/landbook/SideNav";
+import { FitToWidth } from "@/components/landbook/FitToWidth";
 import { CoverSection } from "@/components/landbook/CoverSection";
 import { RegenerateButton } from "@/components/landbook/RegenerateButton";
 import {
@@ -182,7 +183,8 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
   return (
     <div className="flex min-h-screen">
       <SideNav propertyName={propertyName} />
-      <main className="flex-1 min-h-screen bg-brand-cream p-12 lg:p-24 overflow-y-auto print:p-0 print:bg-white">
+      <main className="flex-1 min-h-screen bg-brand-cream p-4 sm:p-12 lg:p-24 overflow-y-auto print:p-0 print:bg-white">
+        <FitToWidth>
         {/* Cover page */}
         <div className="max-w-[800px] mx-auto shadow-2xl bg-white mb-12 print:shadow-none print:mb-0">
           <CoverSection
@@ -313,6 +315,7 @@ export default async function LandbookPage({ params }: { params: Promise<{ id: s
             <span>{data.property.name}</span>
           </div>
         </div>
+        </FitToWidth>
       </main>
     </div>
   );
