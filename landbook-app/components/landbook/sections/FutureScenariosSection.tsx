@@ -320,7 +320,7 @@ export function FutureScenariosSection({
                 <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-5">
                   Component composition by scenario
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-6">
                   {donutData.map((sc) => (
                     <div key={sc.key} className="flex flex-col">
                       <p className="text-[11px] font-bold tracking-widest uppercase text-brand-sage text-center mb-3 font-body">

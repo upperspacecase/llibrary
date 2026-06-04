@@ -238,7 +238,7 @@ export function OverviewSection({
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mb-10 font-body">
           Risk Identification
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-8">
+        <div className="grid grid-cols-3 gap-12 mb-8">
           {/* Fire Risk */}
           <div>
             <div className="flex justify-between items-end mb-2">
@@ -293,7 +293,7 @@ export function OverviewSection({
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-3 gap-12">
           <div className="text-center"><RiskBadge level={fire.riskLevel} /></div>
           <div className="text-center"><RiskBadge level={flood.riskLevel} /></div>
           <div className="text-center"><RiskBadge level={drought.riskLevel} /></div>

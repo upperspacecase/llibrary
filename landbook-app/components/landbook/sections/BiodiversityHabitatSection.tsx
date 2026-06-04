@@ -222,7 +222,7 @@ export function BiodiversityHabitatSection({
             <h3 className="font-serif text-2xl font-bold text-brand-forest">Key Species</h3>
             <div className="flex-1 h-[0.5px] bg-brand-sage/40"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-6">
             {top10.slice(0, 3).map((s) => (
               <div key={s.name} className="flex flex-col">
                 <div className="aspect-square w-full mb-4 overflow-hidden bg-brand-sage/20 flex items-center justify-center">

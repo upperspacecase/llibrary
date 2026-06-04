@@ -343,7 +343,7 @@ export function ClimateSeasonsSection({
         <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-sage uppercase mt-10 mb-10 font-body">
           SEASONAL PATTERNS
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-4">
+        <div className="grid grid-cols-4">
           {SEASONS.map((s) => {
             const seasonalRain =
               precip.length === 12
