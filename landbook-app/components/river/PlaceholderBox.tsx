@@ -49,7 +49,7 @@ export function PlaceholderBox({
 
   return (
     <div className={`${borderClass} ${paddingClass}`}>
-      {styles && (
+      {styles && !isAiInsight && (
         <span
           className={`inline-block text-[10px] font-bold tracking-[0.15em] uppercase px-2 py-1 mb-5 ${styles.tagBg} ${styles.tagText}`}
         >

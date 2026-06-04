@@ -150,8 +150,10 @@ export function FutureScenariosSection({
         </div>
       )}
 
-      {/* 11.1 Scenario Framework — four visualization blocks (one story, three zoom levels) */}
-      <SubsectionHeader id="11.1" title="Scenario Framework" sources={["Computed"]} />
+      {/* 11.1 Scenario Details — four visualization blocks (one story, three zoom levels) */}
+      <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mt-10 mb-6">
+        Scenario Details
+      </h2>
 
       {(() => {
         const bauRow = stackedRows.find((r) => r.key === "bau");
@@ -239,10 +241,10 @@ export function FutureScenariosSection({
               <div className="mb-12">
                 <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-brand-sage mb-2 font-body">Today · annual</p>
                 <p className="font-serif text-2xl font-bold text-brand-forest leading-tight mb-2">
-                  Your land delivers €{Math.round(bauTotal).toLocaleString()} in value per year
+                  Your land has the potential to deliver €{Math.round(bauTotal).toLocaleString()} in value per year
                 </p>
                 <p className="text-[13px] text-brand-charcoal/80 font-body mb-5">
-                  Two active layers today — implicit ecosystem services and realized agriculture. The third, monetizable enrollment (carbon + premium), unlocks under the scenarios below.
+                  Two active layers today — implicit ecosystem services and realized agriculture.
                 </p>
                 <HorizontalStackedBar segments={todaySegments} />
               </div>

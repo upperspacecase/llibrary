@@ -3,7 +3,6 @@ import type {
   Scores,
   Narratives,
   Meta,
-  Property,
   ServiceBreakdownRow,
   ServiceSensitivity,
 } from "@/lib/types";
@@ -45,13 +44,11 @@ function sensitivityFor(esClass: string, fromData: ServiceSensitivity | undefine
 }
 
 export function ValueBenefitsSection({
-  property,
   economics,
   scores,
   meta,
   narratives,
 }: {
-  property: Property;
   economics: Economics;
   scores: Scores;
   meta: Meta;
@@ -126,11 +123,6 @@ export function ValueBenefitsSection({
               </p>
             )}
           </div>
-          {property.area > 0 && economics.totalValue != null && economics.valuePerHa != null && (
-            <p className="text-[11px] text-brand-sage italic font-body mt-3">
-              €{economics.totalValue.toLocaleString()} ÷ {property.area.toFixed(2)} ha = €{economics.valuePerHa.toLocaleString()}/ha
-            </p>
-          )}
         </div>
         {narratives?.callout && (
           <div className="border-l-4 border-brand-terracotta pl-6 py-2">
@@ -179,9 +171,12 @@ export function ValueBenefitsSection({
 
       {/* ── Scenario Assumptions ── */}
       <div className="mb-20">
+        <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mb-2">
+          Scenario assumptions
+        </h2>
         <PlaceholderBox
           id="7.4"
-          title="Scenario assumptions"
+          title=""
           status="DERIVED FROM revenue scenarios, NPV data, carbon values"
           variant="mixed"
           note="Carbon prices are computed from real economics data when available, with €25/€35/€50 fallbacks. Growth rates (0–6%), discount rates (4–8%), management intensity and climate-risk levels are hardcoded scenario labels."
@@ -217,12 +212,12 @@ export function ValueBenefitsSection({
 
       {/* ── 7.6 Valuation Methodology ── */}
       <div className="mb-20">
-        <h3 className="text-[10px] font-bold tracking-[0.3em] text-brand-forest uppercase font-body mb-8">
+        <h2 className="font-serif text-[1.95rem] font-bold text-brand-forest leading-tight mb-2">
           Valuation Methodology
-        </h3>
+        </h2>
         <div className="space-y-4">
           <p className="text-[10px] font-bold tracking-widest text-brand-sage uppercase pb-4 border-b border-brand-sage/20">
-            Derived from Pipeline Methodology
+            Derived from the following frameworks
           </p>
           <div className="space-y-4 pt-4 text-xs leading-relaxed text-on-surface">
             <p>
