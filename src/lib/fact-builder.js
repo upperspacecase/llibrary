@@ -9,6 +9,7 @@
 import { getObservations } from './observation-store.js';
 import { saveFacts, reportDataToFacts } from './fact-store.js';
 import { processRawData, buildMapUrls } from './report-data-pipeline.js';
+import { resolvePropertyName } from './property-name.js';
 import { getCollection } from '../../api/_db.js';
 
 /**
@@ -64,7 +65,7 @@ export async function rebuildFacts(landbookId, options = {}) {
 
   // 4. Run existing normalization
   const submission = {
-    name: landbook.address?.split(',')[0]?.trim() || 'Untitled',
+    name: resolvePropertyName(landbook),
     address: landbook.address || '',
     coords: [lat, lng],
     boundary,

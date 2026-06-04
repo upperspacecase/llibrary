@@ -20,6 +20,7 @@ import { generateNarrativesV2 } from '../../src/lib/report-narratives.js';
 import { newRunId } from '../../src/lib/pipeline-errors.js';
 import { createRun, finalizeRun, getRun } from '../../src/lib/pipeline-runs.js';
 import { updateLandbookStatus } from '../../src/lib/landbook-status.js';
+import { resolvePropertyName } from '../../src/lib/property-name.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -121,7 +122,7 @@ export default async function handler(req, res) {
     const areaM2 = landbook.area || 0;
     const areaHa = areaM2 > 10000 ? areaM2 / 10000 : areaM2;
     const submission = {
-      name: landbook.address?.split(',')[0]?.trim() || 'Untitled',
+      name: resolvePropertyName(landbook),
       address: landbook.address || '',
       coords: [lat, lng],
       boundary: landbook.boundary || [],

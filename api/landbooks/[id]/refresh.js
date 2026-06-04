@@ -13,6 +13,7 @@ import { saveReport } from '../../../src/lib/report-store.js';
 import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 import { newRunId } from '../../../src/lib/pipeline-errors.js';
 import { createRun, finalizeRun } from '../../../src/lib/pipeline-runs.js';
+import { resolvePropertyName } from '../../../src/lib/property-name.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
 
     // 4. Normalize into canonical shape
     const submission = {
-      name: landbook.address?.split(',')[0]?.trim() || 'Untitled',
+      name: resolvePropertyName(landbook),
       address: landbook.address || '',
       coords: [lat, lng],
       boundary,
