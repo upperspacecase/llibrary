@@ -276,7 +276,6 @@ if (nlForm) {
 
 const lbSlider = document.getElementById('landbook-slider');
 if (lbSlider) {
-    const track = lbSlider.querySelector('.report-slider-track');
     const slides = lbSlider.querySelectorAll('.report-slide');
     const dots = lbSlider.querySelectorAll('.report-slider-dot');
     const prevBtn = lbSlider.querySelector('.report-slider-arrow.prev');
@@ -286,7 +285,7 @@ if (lbSlider) {
 
     function go(i) {
         index = (i + slides.length) % slides.length;
-        track.style.transform = `translateX(-${index * 100}%)`;
+        slides.forEach((s, si) => s.classList.toggle('is-active', si === index));
         dots.forEach((d, di) => d.classList.toggle('is-active', di === index));
     }
     function start() { stop(); timer = setInterval(() => go(index + 1), 6000); }

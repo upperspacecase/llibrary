@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  { src: "/landbook-slide-cover.jpg", alt: "LandBook cover page" },
-  { src: "/landbook-slide-overview.jpg", alt: "LandBook overview page" },
-  { src: "/landbook-slide-value.jpg", alt: "LandBook value and benefits page" },
-  { src: "/landbook-slide-biodiversity.jpg", alt: "LandBook biodiversity and habitat page" },
+  { src: "/landbook-slide-cover.jpg", alt: "LandBook cover page", w: 1000, h: 1049 },
+  { src: "/landbook-slide-overview.jpg", alt: "LandBook overview page", w: 1000, h: 864 },
+  { src: "/landbook-slide-value.jpg", alt: "LandBook value and benefits page", w: 1000, h: 868 },
+  { src: "/landbook-slide-biodiversity.jpg", alt: "LandBook biodiversity and habitat page", w: 1000, h: 996 },
 ];
 
 const arrowClass =
@@ -36,24 +36,24 @@ export function SampleSlider({ label }: { label: string }) {
       aria-roledescription="carousel"
       aria-label={label}
     >
-      <div className="overflow-hidden rounded-lg bg-white shadow-2xl">
-        <div
-          className="flex transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${index * 100}%)` }}
-        >
-          {SLIDES.map((s, i) => (
-            <Image
-              key={s.src}
-              src={s.src}
-              alt={s.alt}
-              width={1000}
-              height={1294}
-              priority={i === 0}
-              sizes="(min-width: 1400px) 900px, 100vw"
-              className="w-full flex-[0_0_100%]"
-            />
-          ))}
-        </div>
+      {/* Height follows the active slide so there's no dead whitespace. */}
+      <div className="relative overflow-hidden rounded-lg bg-white shadow-2xl">
+        {SLIDES.map((s, i) => (
+          <Image
+            key={s.src}
+            src={s.src}
+            alt={s.alt}
+            width={s.w}
+            height={s.h}
+            priority={i === 0}
+            sizes="(min-width: 1400px) 900px, 100vw"
+            className={
+              i === index
+                ? "relative h-auto w-full opacity-100 transition-opacity duration-500"
+                : "pointer-events-none absolute left-0 top-0 h-auto w-full opacity-0 transition-opacity duration-500"
+            }
+          />
+        ))}
       </div>
 
       <button

@@ -1170,6 +1170,7 @@ a {
 }
 
 .report-slider-frame {
+  position: relative;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: #fff;
@@ -1177,15 +1178,27 @@ a {
 }
 
 .report-slider-track {
-  display: flex;
-  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
+/* The active slide sits in normal flow so the frame height matches it;
+   the others stack behind it, faded out. No dead whitespace below. */
 .report-slide {
-  flex: 0 0 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: auto;
   display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.report-slide.is-active {
+  position: relative;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .report-slider-arrow {
