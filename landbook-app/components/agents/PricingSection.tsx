@@ -20,6 +20,7 @@ import { PricingCard } from "@/components/ui/price";
 import type { AgentsCopy } from "./copy";
 
 const CREATE_URL = "/agent/signin";
+const CONTACT_URL = "mailto:hi@landlibrary.co?subject=LandBook%20Agent%20Plans";
 
 const containerVariants = {
   hidden: {},
@@ -122,7 +123,7 @@ export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
               billingCycle={copy.steward.billingCycle}
               features={zip(copy.steward.features, STEWARD_ICONS)}
               buttonText={copy.steward.button}
-              href={CREATE_URL}
+              href={CONTACT_URL}
             />
           </motion.div>
 
@@ -134,7 +135,7 @@ export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
               billingCycle={copy.engine.billingCycle}
               features={zip(copy.engine.features, ENGINE_ICONS)}
               buttonText={copy.engine.button}
-              href={CREATE_URL}
+              href={CONTACT_URL}
             />
           </motion.div>
         </motion.div>
