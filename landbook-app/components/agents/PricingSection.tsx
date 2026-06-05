@@ -19,7 +19,6 @@ import {
 import { PricingCard } from "@/components/ui/price";
 import type { AgentsCopy } from "./copy";
 
-const CREATE_URL = "/agent/signin";
 const CONTACT_URL = "mailto:hi@landlibrary.co?subject=LandBook%20Agent%20Plans";
 
 const containerVariants = {
@@ -83,12 +82,13 @@ export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
           <h2 className="serif-title mt-6 text-3xl leading-[1.1] text-brand-charcoal sm:text-4xl lg:text-5xl">
             {copy.title}
           </h2>
-          <div className="mt-8 flex flex-col items-center gap-4">
-            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-charcoal/5">
-              <ShieldCheck className="h-7 w-7 text-brand-charcoal" />
-            </span>
-            <p className="max-w-2xl text-lg font-light italic leading-relaxed text-brand-charcoal/80 md:text-xl">
-              &ldquo;{copy.guarantee}&rdquo;
+          <div className="mx-auto mt-8 flex max-w-2xl items-start gap-3 text-left">
+            <ShieldCheck className="mt-1 h-6 w-6 shrink-0 text-brand-charcoal" />
+            <p className="text-base leading-relaxed text-brand-charcoal/80">
+              <strong className="font-semibold text-brand-charcoal">
+                {copy.guaranteeLabel}:
+              </strong>{" "}
+              {copy.guarantee}
             </p>
           </div>
         </motion.div>
@@ -110,7 +110,7 @@ export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
               freeLabel={copy.freeLabel}
               features={zip(copy.report.features, REPORT_ICONS)}
               buttonText={copy.report.button}
-              href={CREATE_URL}
+              href={CONTACT_URL}
             />
           </motion.div>
 

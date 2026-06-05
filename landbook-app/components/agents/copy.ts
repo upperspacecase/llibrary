@@ -24,7 +24,9 @@ export interface AgentsCopy {
   pricing: {
     eyebrow: string;
     title: string;
-    /** The LandBook Guarantee, now shown as the section description. */
+    /** Bold label prefix for the guarantee line, e.g. "LandBook Guarantee". */
+    guaranteeLabel: string;
+    /** The LandBook Guarantee, shown under the pricing title. */
     guarantee: string;
     freeLabel: string;
     report: CardCopy;
@@ -49,6 +51,7 @@ export const COPY: Record<Lang, AgentsCopy> = {
     pricing: {
       eyebrow: "LandBook Agent Pricing",
       title: "Stop Overlooking Value in Every Deal",
+      guaranteeLabel: "LandBook Guarantee",
       guarantee:
         "If our report doesn't uncover at least €10,000 in additional natural capital value, you don't pay.",
       freeLabel: "Free",
@@ -103,6 +106,7 @@ export const COPY: Record<Lang, AgentsCopy> = {
     pricing: {
       eyebrow: "Preços LandBook para Agentes",
       title: "Deixe de Ignorar Valor em Cada Negócio",
+      guaranteeLabel: "Garantia LandBook",
       guarantee:
         "Se o nosso relatório não revelar pelo menos €10.000 em valor adicional de capital natural, não paga.",
       freeLabel: "Grátis",

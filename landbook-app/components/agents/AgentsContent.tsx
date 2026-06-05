@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { COPY, type Lang } from "./copy";
 import { SampleSlider } from "./SampleSlider";
@@ -12,7 +12,19 @@ export function AgentsContent({
   complimentaryLeft: number;
 }) {
   const [lang, setLang] = useState<Lang>("en");
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
   const c = COPY[lang];
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   function scrollToPricing() {
     document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
@@ -21,22 +33,51 @@ export function AgentsContent({
   return (
     <main className="min-h-screen overflow-x-clip bg-brand-cream">
       <div className="mx-auto flex max-w-[1600px] justify-end px-4 pt-6 sm:px-6 lg:px-12">
-        <div className="inline-flex items-center gap-1 rounded-full border border-brand-sage/40 bg-white p-1 text-xs font-semibold uppercase tracking-[0.1em]">
-          {(["en", "pt"] as Lang[]).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => setLang(l)}
-              aria-pressed={lang === l}
-              className={`rounded-full px-3 py-1 transition ${
-                lang === l
-                  ? "bg-brand-charcoal text-brand-cream"
-                  : "text-brand-charcoal/60 hover:text-brand-charcoal"
-              }`}
+        <div ref={langRef} className="relative text-[13px]">
+          <button
+            type="button"
+            onClick={() => setLangOpen((o) => !o)}
+            aria-expanded={langOpen}
+            className="flex items-center gap-1 rounded-full border border-brand-sage/40 bg-white px-3 py-1.5 font-semibold text-brand-charcoal transition hover:bg-black/[0.04]"
+          >
+            {lang.toUpperCase()}
+            <svg
+              className={`transition-transform ${langOpen ? "rotate-180" : ""}`}
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              {l}
-            </button>
-          ))}
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+          <div
+            className={`absolute right-0 top-[calc(100%+6px)] min-w-full overflow-hidden rounded-lg border border-brand-sage/40 bg-white shadow-lg transition ${
+              langOpen
+                ? "visible translate-y-0 opacity-100"
+                : "invisible -translate-y-1 opacity-0"
+            }`}
+          >
+            {(["en", "pt"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => {
+                  setLang(l);
+                  setLangOpen(false);
+                }}
+                className={`block w-full px-4 py-2 text-left font-medium text-brand-charcoal transition hover:bg-black/[0.04] ${
+                  lang === l ? "pointer-events-none font-bold opacity-40" : ""
+                }`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
