@@ -463,36 +463,70 @@ if (btnSubmit) {
     if (!hasContact) { showError(errContact, contactInput, true); valid = false; }
     if (!valid) return;
 
-    btnSubmit.disabled = true;
-    btnSubmit.textContent = 'Submitting...';
-
-    const calculatedArea = polygonArea(boundaryPoints);
-    const overrideHa = areaOverride ? parseFloat(areaOverride.value) : 0;
-    const area = overrideHa > 0 ? overrideHa * 10000 : calculatedArea;
-
-    try {
-      const result = await saveSubmission({
-        boundary: boundaryPoints,
-        center: polygonCentroid(boundaryPoints),
-        area,
-        areaOverride: overrideHa > 0 ? overrideHa : null,
-        perimeter: polygonPerimeter(boundaryPoints),
-        postcode: postcodeInput.value.trim(),
-        propertyTitle: propertyTitleInput.value.trim(),
-        name: nameInput ? nameInput.value.trim() : '',
-        contactMethod: getPillValue('contact-method'),
-        contact: contactInput ? contactInput.value.trim() : '',
-      });
-      submissionId = result.id;
-      if (extrasModal) extrasModal.style.display = 'flex';
-    } catch (err) {
-      console.error('Failed to save submission:', err);
-      btnSubmit.disabled = false;
-      btnSubmit.textContent = 'Submit';
-      alert(`Failed to submit: ${err.message}`);
-    }
+    // Informational area limits — they inform but don't reject the submission.
+    const overrideHaCheck = areaOverride ? parseFloat(areaOverride.value) : 0;
+    const effHa = overrideHaCheck > 0 ? overrideHaCheck : sqmToHectares(polygonArea(boundaryPoints));
+    if (effHa < 4) { showAreaModal('small'); return; }
+    if (effHa > 250) { showAreaModal('large'); return; }
+    doSubmit();
   });
 }
+
+async function doSubmit() {
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = 'Submitting...';
+
+  const calculatedArea = polygonArea(boundaryPoints);
+  const overrideHa = areaOverride ? parseFloat(areaOverride.value) : 0;
+  const area = overrideHa > 0 ? overrideHa * 10000 : calculatedArea;
+
+  try {
+    const result = await saveSubmission({
+      boundary: boundaryPoints,
+      center: polygonCentroid(boundaryPoints),
+      area,
+      areaOverride: overrideHa > 0 ? overrideHa : null,
+      perimeter: polygonPerimeter(boundaryPoints),
+      postcode: postcodeInput.value.trim(),
+      propertyTitle: propertyTitleInput.value.trim(),
+      name: nameInput ? nameInput.value.trim() : '',
+      contactMethod: getPillValue('contact-method'),
+      contact: contactInput ? contactInput.value.trim() : '',
+    });
+    submissionId = result.id;
+    if (extrasModal) extrasModal.style.display = 'flex';
+  } catch (err) {
+    console.error('Failed to save submission:', err);
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = 'Submit';
+    alert(`Failed to submit: ${err.message}`);
+  }
+}
+
+// Area-limit popups — < 4 ha notice, > 250 ha custom-quote prompt. Neither blocks.
+const areaModalEl = document.getElementById('area-limit-modal');
+const areaModalTitle = document.getElementById('area-limit-title');
+const areaModalMsg = document.getElementById('area-limit-msg');
+const areaQuoteBtn = document.getElementById('btn-area-quote');
+const areaCancelBtn = document.getElementById('btn-area-cancel');
+const areaContinueBtn = document.getElementById('btn-area-continue');
+
+function showAreaModal(kind) {
+  if (!areaModalEl) { doSubmit(); return; }
+  if (kind === 'small') {
+    if (areaModalTitle) areaModalTitle.textContent = 'Small parcel';
+    if (areaModalMsg) areaModalMsg.textContent = 'We only assess land parcels bigger than 4 ha. You can still submit this one, but some natural-capital layers may be limited.';
+    if (areaQuoteBtn) areaQuoteBtn.style.display = 'none';
+  } else {
+    if (areaModalTitle) areaModalTitle.textContent = 'Large parcel';
+    if (areaModalMsg) areaModalMsg.textContent = 'We assess land up to 250 ha. For anything larger we provide a custom quote — would you like to submit this land for a quote?';
+    if (areaQuoteBtn) areaQuoteBtn.style.display = '';
+  }
+  areaModalEl.style.display = 'flex';
+}
+
+if (areaCancelBtn) areaCancelBtn.addEventListener('click', () => { areaModalEl.style.display = 'none'; });
+if (areaContinueBtn) areaContinueBtn.addEventListener('click', () => { areaModalEl.style.display = 'none'; doSubmit(); });
 
 // ---------------------------------------------------------------------------
 // Chip grid helpers — collect checked values + other text

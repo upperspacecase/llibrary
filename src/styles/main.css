@@ -3232,8 +3232,9 @@ a {
 /* Reset Boundary button (map overlay — top-left) */
 .btn-map-reset {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 50;
   padding: 8px 20px;
   font-size: 13px;
@@ -3241,18 +3242,15 @@ a {
   font-weight: 500;
   border-radius: var(--pill, 999px);
   border: none;
-  background: rgba(255, 255, 255, 0.92);
-  color: #555;
+  background: var(--black, #1a1a1a);
+  color: var(--cream, #faf8f1);
   cursor: pointer;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  transition: background 0.15s, color 0.15s;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  transition: background 0.15s;
 }
 
 .btn-map-reset:hover {
-  background: var(--black, #1a1a1a);
-  color: var(--cream, #faf8f1);
-  z-index: 5;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: #2c2c2c;
 }
 
 .create-map-instructions {
@@ -3283,8 +3281,8 @@ a {
 
 .create-map-style-toggle {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 10px;
+  right: 60px;
   display: flex;
   background: rgba(255, 255, 255, 0.95);
   border-radius: var(--pill);
@@ -3936,6 +3934,26 @@ a {
   flex-direction: column;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
   animation: slideUp 0.25s ease-out;
+}
+
+.create-modal-area {
+  max-width: 440px;
+}
+
+.create-modal-area .create-modal-body {
+  padding: 32px;
+}
+
+.create-modal-area h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  margin: 0 0 10px;
+  color: var(--black);
+}
+
+.create-modal-area #area-limit-msg {
+  font-size: 14px;
+  line-height: 1.6;
 }
 
 .create-modal-header {
