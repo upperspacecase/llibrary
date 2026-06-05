@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  { src: "/landbook-slide-cover.jpg", alt: "LandBook cover page", w: 1000, h: 1049 },
-  { src: "/landbook-slide-overview.jpg", alt: "LandBook overview page", w: 1000, h: 864 },
-  { src: "/landbook-slide-value.jpg", alt: "LandBook value and benefits page", w: 1000, h: 868 },
-  { src: "/landbook-slide-biodiversity.jpg", alt: "LandBook biodiversity and habitat page", w: 1000, h: 996 },
+  { src: "/landbook-slide-cover.jpg", alt: "LandBook cover page", w: 1000, h: 1101 },
+  { src: "/landbook-slide-overview.jpg", alt: "LandBook overview page", w: 1000, h: 1391 },
+  { src: "/landbook-slide-value.jpg", alt: "LandBook value and benefits page", w: 1000, h: 1359 },
+  { src: "/landbook-slide-biodiversity.jpg", alt: "LandBook biodiversity and habitat page", w: 1000, h: 1378 },
 ];
 
 const arrowClass =
