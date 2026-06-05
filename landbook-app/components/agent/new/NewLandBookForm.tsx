@@ -20,7 +20,7 @@ import {
 } from "@/components/agent/primitives";
 import { LocationFinder, type LocationResult } from "./LocationFinder";
 import { MapPanel, type MapPanelHandle } from "./MapPanel";
-import { createLandbook } from "@/app/agent/new/actions";
+import { createLandbook, type CreateLandbookInput } from "@/app/agent/new/actions";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -80,8 +80,10 @@ export function NewLandBookForm() {
   const [boundary, setBoundary] = useState<number[][] | null>(null);
   const [areaOverride, setAreaOverride] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [areaModal, setAreaModal] = useState<null | "small" | "large">(null);
   const [isPending, startTransition] = useTransition();
 
+  const pendingPayload = useRef<CreateLandbookInput | null>(null);
   const mapRef = useRef<MapPanelHandle | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -162,6 +164,18 @@ export function NewLandBookForm() {
     mapRef.current?.setPolygon(ring);
   }
 
+  function doSubmit(payload: CreateLandbookInput) {
+    setAreaModal(null);
+    setError(null);
+    startTransition(async () => {
+      try {
+        await createLandbook(payload);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save LandBook.");
+      }
+    });
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!boundary) {
@@ -181,30 +195,40 @@ export function NewLandBookForm() {
       return;
     }
     const overrideHa = areaOverride.trim() ? Number(areaOverride) : NaN;
-    const payload = {
+    const finalOverride =
+      Number.isFinite(overrideHa) && overrideHa > 0 ? overrideHa : null;
+    const payload: CreateLandbookInput = {
       name,
       address: address.trim(),
       cadastralRef: String(fd.get("cadastralRef") ?? ""),
       clientName: String(fd.get("clientName") ?? ""),
       email: String(fd.get("email") ?? ""),
       boundary,
-      areaOverrideHa: Number.isFinite(overrideHa) && overrideHa > 0 ? overrideHa : null,
+      areaOverrideHa: finalOverride,
     };
     setError(null);
-    startTransition(async () => {
-      try {
-        await createLandbook(payload);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to save LandBook.");
-      }
-    });
+
+    // Informational area gates — these inform but don't reject (the agent can
+    // continue, or request a custom quote for very large parcels).
+    const effectiveHa = finalOverride ?? metrics?.areaHa ?? null;
+    if (effectiveHa != null && effectiveHa < 4) {
+      pendingPayload.current = payload;
+      setAreaModal("small");
+      return;
+    }
+    if (effectiveHa != null && effectiveHa > 250) {
+      pendingPayload.current = payload;
+      setAreaModal("large");
+      return;
+    }
+    doSubmit(payload);
   }
 
   return (
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[1.05fr_1fr]"
+      className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(360px,420px)_1fr]"
     >
       <div className="space-y-6 rounded-lg border border-brand-sage/30 bg-white p-8">
         <Field label="Property title" hint="Shown as the LandBook name in your dashboard.">
@@ -268,13 +292,13 @@ export function NewLandBookForm() {
 
         <div className="border-t border-brand-sage/20 pt-6">
           <Eyebrow>Boundary</Eyebrow>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
             <button
               type="button"
               onClick={handleDrawClick}
               className="flex-1 rounded border border-brand-charcoal bg-brand-charcoal px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-cream hover:bg-transparent hover:text-brand-charcoal transition"
             >
-              Draw on map
+              {boundary ? "Redraw" : "Draw on map"}
             </button>
             <button
               type="button"
@@ -334,7 +358,7 @@ export function NewLandBookForm() {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative lg:sticky lg:top-6 lg:self-start">
         <MapPanel
           ref={mapRef}
           token={MAPBOX_TOKEN}
@@ -347,6 +371,86 @@ export function NewLandBookForm() {
           </div>
         )}
       </div>
+
+      {areaModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4"
+          onClick={() => setAreaModal(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {areaModal === "small" ? (
+              <>
+                <h3 className="font-serif text-xl text-brand-forest">
+                  Small parcel
+                </h3>
+                <p className="mt-3 text-sm text-brand-charcoal/70">
+                  We only assess land parcels bigger than 4&nbsp;ha. You can
+                  still submit this one, but some natural-capital layers may be
+                  limited.
+                </p>
+                <div className="mt-6 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAreaModal(null)}
+                    className="px-4 py-2 text-sm text-brand-charcoal/60 hover:text-brand-forest"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = pendingPayload.current;
+                      if (p) doSubmit(p);
+                    }}
+                    className="rounded-full bg-brand-charcoal px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-brand-cream"
+                  >
+                    Submit anyway
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="font-serif text-xl text-brand-forest">
+                  Large parcel
+                </h3>
+                <p className="mt-3 text-sm text-brand-charcoal/70">
+                  LandBook assesses land up to 250&nbsp;ha. For anything larger
+                  we provide a custom quote. Would you like to submit this land
+                  for a quote?
+                </p>
+                <div className="mt-6 flex flex-wrap justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAreaModal(null)}
+                    className="px-4 py-2 text-sm text-brand-charcoal/60 hover:text-brand-forest"
+                  >
+                    Cancel
+                  </button>
+                  <a
+                    href="mailto:hi@landlibrary.co?subject=Custom%20quote%20%E2%80%94%20parcel%20over%20250ha"
+                    className="rounded-full border border-brand-charcoal px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-brand-charcoal transition hover:bg-brand-charcoal hover:text-brand-cream"
+                  >
+                    Request a quote
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = pendingPayload.current;
+                      if (p) doSubmit(p);
+                    }}
+                    className="rounded-full bg-brand-charcoal px-5 py-2 text-xs font-semibold uppercase tracking-[0.15em] text-brand-cream"
+                  >
+                    Submit anyway
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </form>
   );
 }

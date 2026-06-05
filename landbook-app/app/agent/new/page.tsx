@@ -33,9 +33,9 @@ export default async function NewLandBookPage() {
   const steps = direct ? directSteps("property") : oneOffSteps("property");
 
   return (
-    <main className="min-h-screen bg-brand-cream">
+    <main className="min-h-screen overflow-x-hidden bg-brand-cream">
       <AgentHeader active="books" />
-      <div className="px-8 py-10">
+      <div className="px-4 py-8 sm:px-8 sm:py-10">
         <div className="mx-auto max-w-7xl">
           <div className="flex items-center gap-2 text-[11px] font-medium text-brand-charcoal/50">
             <Link href="/agent">My LandBooks</Link>

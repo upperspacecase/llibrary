@@ -77,6 +77,18 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       map.on("draw.update", emitPolygon);
       map.on("draw.delete", emitPolygon);
 
+      // Let agents draw by clicking the map straight away (like the create
+      // page) without first pressing a button.
+      map.once("load", () => {
+        if (draw.getAll().features.length === 0) {
+          try {
+            draw.changeMode("draw_polygon");
+          } catch {
+            // draw not ready — the "Draw on map" button is the fallback
+          }
+        }
+      });
+
       return () => {
         map.remove();
         mapRef.current = null;
@@ -149,6 +161,12 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
     function resetBoundary() {
       drawRef.current?.deleteAll();
       onPolygonChange(null);
+      // Re-arm drawing so the agent can immediately draw a new boundary.
+      try {
+        drawRef.current?.changeMode("draw_polygon");
+      } catch {
+        // ignore
+      }
     }
 
     if (!token) {
@@ -166,10 +184,17 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       <div className="relative">
         <div
           ref={containerRef}
-          className="relative min-h-[420px] overflow-hidden rounded-lg border border-brand-sage/30"
+          className="relative min-h-[460px] overflow-hidden rounded-lg border border-brand-sage/30 lg:min-h-[680px]"
         />
-        {/* Top map controls — hidden on mobile */}
-        <div className="pointer-events-none absolute inset-x-3 top-3 hidden items-start justify-between gap-3 md:flex">
+        {!hasPolygon && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
+            <span className="rounded-full bg-brand-charcoal/85 px-4 py-1.5 text-center text-[11px] font-medium text-brand-cream shadow backdrop-blur">
+              Click the map to drop points and draw your boundary
+            </span>
+          </div>
+        )}
+        {/* Top map controls */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-3">
           <div className="pointer-events-auto">
             {hasPolygon && (
               <button
