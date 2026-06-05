@@ -9,6 +9,7 @@ import {
   Icon,
 } from "@/components/agent/primitives";
 import { Stepper } from "@/components/agent/Stepper";
+import { oneOffSteps } from "@/lib/agent/steps";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import { findAgentBook } from "@/lib/agent-book";
 import { getPlanUsage, PLANS } from "@/lib/plan-usage";
@@ -61,14 +62,7 @@ export default async function PlanPage({
             <span className="text-brand-charcoal">Choose plan</span>
           </div>
 
-          <Stepper
-            steps={[
-              { n: "1", label: "Property", state: "done" },
-              { n: "2", label: "Plan", state: "active" },
-              { n: "3", label: "Payment", state: "todo" },
-              { n: "4", label: "Submitted", state: "todo" },
-            ]}
-          />
+          <Stepper steps={oneOffSteps("plan")} />
 
           <SerifTitle className="mt-8 text-3xl leading-tight">
             Choose how this LandBook is covered.

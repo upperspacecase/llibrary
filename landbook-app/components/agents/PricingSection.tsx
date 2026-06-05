@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { PricingCard } from "@/components/ui/price";
 
-const CREATE_URL = "https://www.landlibrary.co/create";
+const CREATE_URL = "/agent/signin";
 
 const containerVariants = {
   hidden: {},
@@ -73,7 +73,9 @@ export function PricingSection() {
             <PricingCard
               planName="Natural Capital Report"
               description="One property. Full intelligence. 48-hour turnaround."
-              price={1500}
+              price={0}
+              originalPrice={1500}
+              priceNote="First report free, then €1,500 each"
               features={[
                 {
                   icon: <Sprout className={featureIconClass} />,

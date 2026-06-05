@@ -4,12 +4,34 @@ import { AgentHeader } from "@/components/agent/AgentHeader";
 import { SerifTitle } from "@/components/agent/primitives";
 import { Stepper } from "@/components/agent/Stepper";
 import { NewLandBookForm } from "@/components/agent/new/NewLandBookForm";
+import { directSteps, oneOffSteps } from "@/lib/agent/steps";
+import { getCurrentUser } from "@/lib/firebase/admin";
+import { getPlanUsage, isFreeBookEligible } from "@/lib/plan-usage";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "New LandBook · Agents",
 };
 
-export default function NewLandBookPage() {
+export default async function NewLandBookPage() {
+  // Free first books and subscription-covered books skip Plan/Payment, so the
+  // stepper should reflect that up front rather than promising a purchase.
+  const user = await getCurrentUser();
+  let direct = false;
+  if (user) {
+    if (await isFreeBookEligible(user.uid)) {
+      direct = true;
+    } else {
+      const usage = await getPlanUsage(user.uid);
+      direct =
+        usage.active &&
+        usage.plan != null &&
+        (usage.remaining == null || usage.remaining > 0);
+    }
+  }
+  const steps = direct ? directSteps("property") : oneOffSteps("property");
+
   return (
     <main className="min-h-screen bg-brand-cream">
       <AgentHeader active="books" />
@@ -21,14 +43,7 @@ export default function NewLandBookPage() {
             <span className="text-brand-charcoal">New LandBook</span>
           </div>
 
-          <Stepper
-            steps={[
-              { n: "1", label: "Property", state: "active" },
-              { n: "2", label: "Plan", state: "todo" },
-              { n: "3", label: "Payment", state: "todo" },
-              { n: "4", label: "Submitted", state: "todo" },
-            ]}
-          />
+          <Stepper steps={steps} />
 
           <SerifTitle className="mt-8 text-3xl leading-tight">
             Tell us about the property.

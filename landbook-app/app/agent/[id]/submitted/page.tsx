@@ -9,8 +9,11 @@ import {
   Icon,
 } from "@/components/agent/primitives";
 import { Stepper } from "@/components/agent/Stepper";
+import { directSteps, oneOffSteps } from "@/lib/agent/steps";
+import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import { findAgentBook } from "@/lib/agent-book";
+import type { LandbookPayment } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +35,16 @@ export default async function SubmittedPage({
 
   const ready = Boolean(book.data);
 
+  // Free + subscription books skip Plan/Payment, so show the short
+  // Property -> Submitted confirmation. Anything else (a paid one-off, or a
+  // row not yet written by the Stripe webhook) shows the full four-step bar.
+  const payments = await getCollection<LandbookPayment>("landbook_payments");
+  const payment = await payments.findOne({ landbookId: id, ownerId: user.uid });
+  const steps =
+    payment?.source === "free" || payment?.source === "subscription"
+      ? directSteps("submitted")
+      : oneOffSteps("submitted");
+
   return (
     <main className="min-h-screen bg-brand-cream">
       <AgentHeader active="books" />
@@ -43,14 +56,7 @@ export default async function SubmittedPage({
             <span className="text-brand-charcoal">Submitted</span>
           </div>
 
-          <Stepper
-            steps={[
-              { n: "1", label: "Property", state: "done" },
-              { n: "2", label: "Plan", state: "done" },
-              { n: "3", label: "Payment", state: "done" },
-              { n: "4", label: "Submitted", state: "active" },
-            ]}
-          />
+          <Stepper steps={steps} />
 
           <div className="mt-8 rounded-lg border border-brand-sage/30 bg-white p-10 text-center">
             <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-brand-forest/40 bg-brand-forest/10 text-brand-forest">
