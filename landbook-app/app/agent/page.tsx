@@ -9,6 +9,7 @@ import {
 } from "@/components/agent/primitives";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
+import { getPlanUsage, isFreeBookEligible } from "@/lib/plan-usage";
 import type { Landbook, Submission } from "@/lib/types";
 import { bookDisplayName, deriveStatus } from "@/lib/landbook-status";
 import BooksList, { type AgentItem } from "./BooksList";
@@ -72,16 +73,31 @@ async function loadItems(): Promise<AgentItem[]> {
   return [...submissions, ...books];
 }
 
+async function nextBookHint(): Promise<string | null> {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  if (await isFreeBookEligible(user.uid)) return "Your first LandBook is free.";
+  const usage = await getPlanUsage(user.uid).catch(() => null);
+  if (
+    usage?.active &&
+    usage.plan &&
+    (usage.remaining == null || usage.remaining > 0)
+  ) {
+    return "Covered by your plan.";
+  }
+  return "Pay-per-book (€1,500) or subscribe.";
+}
+
 export default async function MyLandBooksPage() {
-  const items = await loadItems();
+  const [items, hint] = await Promise.all([loadItems(), nextBookHint()]);
   const total = items.length;
 
   return (
-    <main className="min-h-screen bg-brand-cream">
+    <main className="min-h-screen overflow-x-hidden bg-brand-cream">
       <AgentHeader active="books" />
-      <div className="px-8 py-10">
+      <div className="px-4 py-8 sm:px-8 sm:py-10">
         <div className="mx-auto max-w-7xl">
-          <div className="flex items-end justify-between gap-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-6">
             <div>
               <Eyebrow>
                 {total === 0
@@ -92,21 +108,26 @@ export default async function MyLandBooksPage() {
                 My LandBooks
               </SerifTitle>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 rounded-full border border-brand-sage/40 bg-white px-4 py-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-1 items-center gap-2 rounded-full border border-brand-sage/40 bg-white px-4 py-2 sm:flex-none">
                 <span className="text-brand-charcoal/40">
                   <Icon.Search />
                 </span>
                 <input
                   placeholder="Search by name, client, address…"
-                  className="w-72 bg-transparent text-sm outline-none placeholder:text-brand-charcoal/35"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-brand-charcoal/35 sm:w-72"
                 />
               </div>
-              <Link href="/agent/new">
-                <PillButton variant="primary" icon={<Icon.Plus />}>
-                  New LandBook
-                </PillButton>
-              </Link>
+              <div className="flex flex-col items-end gap-1">
+                <Link href="/agent/new">
+                  <PillButton variant="primary" icon={<Icon.Plus />}>
+                    New LandBook
+                  </PillButton>
+                </Link>
+                {hint && (
+                  <span className="text-[10px] text-brand-charcoal/45">{hint}</span>
+                )}
+              </div>
             </div>
           </div>
 
