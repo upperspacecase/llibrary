@@ -269,3 +269,34 @@ if (nlForm) {
         }
     });
 }
+
+// ==========================================================================
+// LandBook preview slider
+// ==========================================================================
+
+const lbSlider = document.getElementById('landbook-slider');
+if (lbSlider) {
+    const track = lbSlider.querySelector('.report-slider-track');
+    const slides = lbSlider.querySelectorAll('.report-slide');
+    const dots = lbSlider.querySelectorAll('.report-slider-dot');
+    const prevBtn = lbSlider.querySelector('.report-slider-arrow.prev');
+    const nextBtn = lbSlider.querySelector('.report-slider-arrow.next');
+    let index = 0;
+    let timer = null;
+
+    function go(i) {
+        index = (i + slides.length) % slides.length;
+        track.style.transform = `translateX(-${index * 100}%)`;
+        dots.forEach((d, di) => d.classList.toggle('is-active', di === index));
+    }
+    function start() { stop(); timer = setInterval(() => go(index + 1), 6000); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    if (prevBtn) prevBtn.addEventListener('click', () => { go(index - 1); start(); });
+    if (nextBtn) nextBtn.addEventListener('click', () => { go(index + 1); start(); });
+    dots.forEach((d, di) => d.addEventListener('click', () => { go(di); start(); }));
+    lbSlider.addEventListener('mouseenter', stop);
+    lbSlider.addEventListener('mouseleave', start);
+
+    start();
+}

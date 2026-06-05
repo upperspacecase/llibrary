@@ -1164,6 +1164,84 @@ a {
   opacity: 0.6;
 }
 
+/* Sample report slider */
+.report-slider {
+  position: relative;
+}
+
+.report-slider-frame {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+}
+
+.report-slider-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.report-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.report-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--black);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.report-slider-arrow:hover {
+  background: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+.report-slider-arrow.prev {
+  left: 12px;
+}
+
+.report-slider-arrow.next {
+  right: 12px;
+}
+
+.report-slider-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.report-slider-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--border);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.report-slider-dot.is-active {
+  background: var(--black);
+  transform: scale(1.25);
+}
+
 /* Chapter list */
 .report-chapters {
   display: flex;
