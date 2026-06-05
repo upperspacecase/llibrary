@@ -113,15 +113,6 @@ export function ValueBenefitsSection({
           </h2>
           <div className="space-y-4 text-sm leading-relaxed text-brand-forest/80 font-body max-w-2xl">
             {narratives?.intro && <p>{narratives.intro}</p>}
-            {total > 0 && (
-              <p>
-                This €{Math.round(total).toLocaleString()}/yr forms the implicit baseline layer of the property&rsquo;s total value stack &mdash; services delivered regardless of monetization.{" "}
-                <a href="#future-scenarios" className="text-brand-forest underline decoration-brand-sage/40 underline-offset-2 hover:decoration-brand-forest">
-                  Future Scenarios
-                </a>{" "}
-                shows how interventions can both enhance this baseline and unlock additional realized and monetizable layers on top.
-              </p>
-            )}
           </div>
         </div>
         {narratives?.callout && (
