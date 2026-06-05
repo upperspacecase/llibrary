@@ -515,8 +515,8 @@ export interface LandbookPayment {
   amount: number;
   currency: string;
   paidAt: string;
-  /** "one_off" = Stripe Checkout in payment mode. "subscription" = covered by an active sub. */
-  source: "one_off" | "subscription";
+  /** "one_off" = Stripe Checkout in payment mode. "subscription" = covered by an active sub. "free" = the agent's complimentary first book. */
+  source: "one_off" | "subscription" | "free";
   /** Stripe price id at the time of the charge (or the active sub price for subscription coverage). */
   priceId?: string;
 }
@@ -539,6 +539,8 @@ export interface Submission {
   contactMethod: string;
   contact: string;
   propertyName?: string;
+  /** Mirror of propertyName under the key the v1 admin/create flow uses, so agent rows are first-class there. */
+  propertyTitle?: string;
   clientName?: string;
   cadastralRef?: string;
   landCondition?: string[];

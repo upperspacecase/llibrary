@@ -32,6 +32,10 @@ export interface PricingCardProps extends VariantProps<typeof cardVariants> {
   description: string;
   price: number;
   billingCycle?: string;
+  /** When set, shown struck-through above the price (e.g. the normal price when the first one is free). */
+  originalPrice?: number;
+  /** Small note under the price, e.g. "First report free, then €1,500 each". */
+  priceNote?: string;
   features: PricingFeature[];
   buttonText: string;
   href?: string;
@@ -46,6 +50,8 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
       description,
       price,
       billingCycle,
+      originalPrice,
+      priceNote,
       features,
       buttonText,
       href,
@@ -91,24 +97,36 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
           </p>
         </div>
 
-        <div className="mb-12 flex items-baseline gap-1">
-          <span
-            className={cn(
-              "serif-title font-bold text-brand-charcoal",
-              isPopular ? "text-5xl" : "text-4xl"
-            )}
-          >
-            €{price.toLocaleString("en-US")}
-          </span>
-          {billingCycle && (
+        <div className="mb-12">
+          {originalPrice != null && (
+            <span className="block text-lg font-light text-brand-charcoal/40 line-through">
+              €{originalPrice.toLocaleString("en-US")}
+            </span>
+          )}
+          <div className="flex items-baseline gap-1">
             <span
               className={cn(
-                "font-light text-brand-charcoal/60",
-                isPopular ? "text-xl" : "text-lg"
+                "serif-title font-bold text-brand-charcoal",
+                isPopular ? "text-5xl" : "text-4xl"
               )}
             >
-              {billingCycle}
+              {price === 0 ? "Free" : `€${price.toLocaleString("en-US")}`}
             </span>
+            {billingCycle && price !== 0 && (
+              <span
+                className={cn(
+                  "font-light text-brand-charcoal/60",
+                  isPopular ? "text-xl" : "text-lg"
+                )}
+              >
+                {billingCycle}
+              </span>
+            )}
+          </div>
+          {priceNote && (
+            <p className="mt-2 text-sm font-light text-brand-charcoal/60">
+              {priceNote}
+            </p>
           )}
         </div>
 

@@ -86,4 +86,74 @@ export async function getPlanUsage(ownerId: string): Promise<PlanUsage> {
   };
 }
 
+/** True when the agent has never consumed their complimentary first book. */
+export async function isFreeBookEligible(ownerId: string): Promise<boolean> {
+  const payments = await getCollection<LandbookPayment>("landbook_payments");
+  const used = await payments.countDocuments({ ownerId, source: "free" });
+  return used === 0;
+}
+
+/**
+ * Claim the agent's one complimentary first book. Upsert keyed on
+ * (ownerId, source:"free") so two near-simultaneous first books can't both
+ * burn the credit. Returns true only when THIS call actually claimed it —
+ * the loser of a race gets false and should fall through to paid coverage.
+ */
+export async function consumeFreeBook(
+  ownerId: string,
+  landbookId: string
+): Promise<boolean> {
+  const payments = await getCollection<LandbookPayment>("landbook_payments");
+  // ownerId + source are the filter's equality fields — Mongo writes them on
+  // insert automatically, so they must NOT be repeated in $setOnInsert.
+  const res = await payments.updateOne(
+    { ownerId, source: "free" },
+    {
+      $setOnInsert: {
+        landbookId,
+        sessionId: null,
+        amount: 0,
+        currency: "eur",
+        paidAt: new Date().toISOString(),
+      },
+    },
+    { upsert: true }
+  );
+  return (res.upsertedCount ?? 0) > 0;
+}
+
+/**
+ * Cover a LandBook with the agent's active subscription by writing one
+ * idempotent `landbook_payments` row (source="subscription", amount 0).
+ * Re-checks allowance server-side. Callers own the pipeline kick + redirect.
+ */
+export async function coverWithSubscription(
+  ownerId: string,
+  landbookId: string,
+  usage: PlanUsage
+): Promise<void> {
+  if (!usage.plan || !usage.active) {
+    throw new Error("No active subscription");
+  }
+  if (usage.allowance != null && usage.remaining != null && usage.remaining <= 0) {
+    throw new Error("Subscription cap reached for this month");
+  }
+
+  // Idempotent: one coverage row per (landbookId, ownerId).
+  const payments = await getCollection<LandbookPayment>("landbook_payments");
+  const existing = await payments.findOne({ landbookId, ownerId });
+  if (!existing) {
+    await payments.insertOne({
+      landbookId,
+      ownerId,
+      sessionId: null,
+      amount: 0,
+      currency: usage.plan.currency.toLowerCase(),
+      paidAt: new Date().toISOString(),
+      source: "subscription",
+      priceId: usage.plan.priceId,
+    });
+  }
+}
+
 export { PLANS };

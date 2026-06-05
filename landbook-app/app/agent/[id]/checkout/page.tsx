@@ -9,6 +9,7 @@ import {
   Icon,
 } from "@/components/agent/primitives";
 import { Stepper } from "@/components/agent/Stepper";
+import { oneOffSteps } from "@/lib/agent/steps";
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import { PLANS } from "@/lib/stripe/server";
@@ -110,14 +111,7 @@ export default async function CheckoutPage({
             <span className="text-brand-charcoal">Payment</span>
           </div>
 
-          <Stepper
-            steps={[
-              { n: "1", label: "Property", state: "done" },
-              { n: "2", label: "Plan", state: "done" },
-              { n: "3", label: "Payment", state: "active" },
-              { n: "4", label: "Submitted", state: "todo" },
-            ]}
-          />
+          <Stepper steps={oneOffSteps("payment")} />
 
           {canceled && (
             <div className="mt-6 rounded border border-brand-sage/40 bg-white px-4 py-3 text-[12px] text-brand-charcoal/70">

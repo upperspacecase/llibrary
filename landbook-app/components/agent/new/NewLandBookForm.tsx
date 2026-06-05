@@ -18,7 +18,7 @@ import {
   TextInput,
   Icon,
 } from "@/components/agent/primitives";
-import { AddressSearch, type AddressSuggestion } from "./AddressSearch";
+import { LocationFinder, type LocationResult } from "./LocationFinder";
 import { MapPanel, type MapPanelHandle } from "./MapPanel";
 import { createLandbook } from "@/app/agent/new/actions";
 
@@ -125,7 +125,7 @@ export function NewLandBookForm() {
 
   const canSubmit = Boolean(boundary && address.trim().length > 0 && !isPending);
 
-  function handleAddressSelect(s: AddressSuggestion) {
+  function handleAddressSelect(s: LocationResult) {
     mapRef.current?.flyTo(s.center[0], s.center[1]);
   }
 
@@ -216,10 +216,10 @@ export function NewLandBookForm() {
 
         <div>
           <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60">
-            Address or parish
+            Postcode / Location
           </span>
           <div className="mt-2">
-            <AddressSearch
+            <LocationFinder
               value={address}
               onChange={setAddress}
               onSelect={handleAddressSelect}

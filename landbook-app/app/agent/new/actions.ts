@@ -8,6 +8,13 @@ import length from "@turf/length";
 import type { Feature, LineString, Polygon } from "geojson";
 import { getCollection } from "@/lib/db";
 import { requireCurrentUser } from "@/lib/firebase/admin";
+import {
+  consumeFreeBook,
+  coverWithSubscription,
+  getPlanUsage,
+  isFreeBookEligible,
+} from "@/lib/plan-usage";
+import { kickRefreshPipeline } from "@/lib/pipeline";
 import type { Submission } from "@/lib/types";
 
 export interface CreateLandbookInput {
@@ -88,6 +95,9 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
     contactMethod: "email",
     contact: email,
     propertyName: input.name.trim() || undefined,
+    // Mirror the title under the key the v1 admin/create flow reads, so agent
+    // submissions are first-class in admin.html and match the v1 shape.
+    propertyTitle: input.name.trim() || undefined,
     clientName: input.clientName.trim() || undefined,
     cadastralRef: input.cadastralRef.trim() || undefined,
     files: [],
@@ -113,8 +123,25 @@ export async function createLandbook(input: CreateLandbookInput): Promise<void> 
     );
   }
 
-  // Don't kick the pipeline yet — that happens after the agent picks a
-  // plan (subscription coverage) or pays (one-off Checkout). Move on to
-  // the Plan step.
+  // Decide what this book costs the agent:
+  //  1. Their first book ever is free — submit straight to the pipeline.
+  //  2. An active subscription with headroom covers it — no payment.
+  //  3. Otherwise it's a paid one-off — send them to the Plan/Payment flow.
+  if ((await isFreeBookEligible(user.uid)) && (await consumeFreeBook(user.uid, id))) {
+    kickRefreshPipeline(id);
+    redirect(`/agent/${id}/submitted`);
+  }
+
+  const usage = await getPlanUsage(user.uid);
+  const subCovers =
+    usage.active &&
+    usage.plan != null &&
+    (usage.remaining == null || usage.remaining > 0);
+  if (subCovers) {
+    await coverWithSubscription(user.uid, id, usage);
+    kickRefreshPipeline(id);
+    redirect(`/agent/${id}/submitted`);
+  }
+
   redirect(`/agent/${id}/plan`);
 }
