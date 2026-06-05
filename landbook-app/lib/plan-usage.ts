@@ -86,6 +86,15 @@ export async function getPlanUsage(ownerId: string): Promise<PlanUsage> {
   };
 }
 
+/** Count of complimentary (free) LandBooks issued this calendar month. */
+export async function freeLandbooksThisMonth(): Promise<number> {
+  const payments = await getCollection<LandbookPayment>("landbook_payments");
+  return payments.countDocuments({
+    source: "free",
+    paidAt: { $gte: monthStart().toISOString() },
+  });
+}
+
 /** True when the agent has never consumed their complimentary first book. */
 export async function isFreeBookEligible(ownerId: string): Promise<boolean> {
   const payments = await getCollection<LandbookPayment>("landbook_payments");

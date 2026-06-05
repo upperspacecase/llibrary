@@ -36,6 +36,8 @@ export interface PricingCardProps extends VariantProps<typeof cardVariants> {
   originalPrice?: number;
   /** Small note under the price, e.g. "First report free, then €1,500 each". */
   priceNote?: string;
+  /** Word shown when price is 0 (localizable, e.g. "Free" / "Grátis"). */
+  freeLabel?: string;
   features: PricingFeature[];
   buttonText: string;
   href?: string;
@@ -52,6 +54,7 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
       billingCycle,
       originalPrice,
       priceNote,
+      freeLabel = "Free",
       features,
       buttonText,
       href,
@@ -110,7 +113,7 @@ const PricingCard = React.forwardRef<HTMLDivElement, PricingCardProps>(
                 isPopular ? "text-5xl" : "text-4xl"
               )}
             >
-              {price === 0 ? "Free" : `€${price.toLocaleString("en-US")}`}
+              {price === 0 ? freeLabel : `€${price.toLocaleString("en-US")}`}
             </span>
             {billingCycle && price !== 0 && (
               <span

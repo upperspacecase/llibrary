@@ -1,10 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import {
   Sprout,
   Bird,
-  Cloud,
+  ShieldAlert,
   TrendingUp,
   BarChart3,
   Zap,
@@ -16,6 +17,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { PricingCard } from "@/components/ui/price";
+import type { AgentsCopy } from "./copy";
 
 const CREATE_URL = "/agent/signin";
 
@@ -39,9 +41,33 @@ const itemVariants = {
 
 const featureIconClass = "h-5 w-5";
 
-export function PricingSection() {
+const REPORT_ICONS: ReactNode[] = [
+  <Sprout key="sprout" className={featureIconClass} />,
+  <Bird key="bird" className={featureIconClass} />,
+  <ShieldAlert key="risk" className={featureIconClass} />,
+  <TrendingUp key="future" className={featureIconClass} />,
+];
+
+const STEWARD_ICONS: ReactNode[] = [
+  <BarChart3 key="reports" className={featureIconClass} />,
+  <Zap key="turnaround" className={featureIconClass} />,
+  <Headphones key="support" className={featureIconClass} />,
+];
+
+const ENGINE_ICONS: ReactNode[] = [
+  <InfinityIcon key="unlimited" className={featureIconClass} />,
+  <Stamp key="cobrand" className={featureIconClass} />,
+  <LayoutDashboard key="dashboard" className={featureIconClass} />,
+  <GraduationCap key="training" className={featureIconClass} />,
+];
+
+function zip(labels: string[], icons: ReactNode[]) {
+  return labels.map((label, i) => ({ label, icon: icons[i] }));
+}
+
+export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
   return (
-    <section className="border-t border-brand-sage/20">
+    <section id="pricing" className="scroll-mt-24 border-t border-brand-sage/20">
       <div className="mx-auto max-w-[1600px] px-4 py-16 sm:px-6 sm:py-24 lg:px-12">
         <motion.div
           className="mx-auto max-w-3xl text-center"
@@ -51,15 +77,19 @@ export function PricingSection() {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-charcoal">
-            LandBook Agent Pricing
+            {copy.eyebrow}
           </p>
           <h2 className="serif-title mt-6 text-3xl leading-[1.1] text-brand-charcoal sm:text-4xl lg:text-5xl">
-            Stop Overlooking Value in Every Deal
+            {copy.title}
           </h2>
-          <p className="mt-6 text-base leading-relaxed text-brand-charcoal/80">
-            LandBook reveals an average of €10,000–€100,000 of Natural Capital
-            Value in every rural property over 5ha in size.
-          </p>
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-charcoal/5">
+              <ShieldCheck className="h-7 w-7 text-brand-charcoal" />
+            </span>
+            <p className="max-w-2xl text-lg font-light italic leading-relaxed text-brand-charcoal/80 md:text-xl">
+              &ldquo;{copy.guarantee}&rdquo;
+            </p>
+          </div>
         </motion.div>
 
         <motion.div
@@ -71,30 +101,14 @@ export function PricingSection() {
         >
           <motion.div variants={itemVariants}>
             <PricingCard
-              planName="Natural Capital Report"
-              description="One property. Full intelligence. 48-hour turnaround."
+              planName={copy.report.name}
+              description={copy.report.description}
               price={0}
               originalPrice={1500}
-              priceNote="First report free, then €1,500 each"
-              features={[
-                {
-                  icon: <Sprout className={featureIconClass} />,
-                  label: "Natural capital valuation (soil, water, productivity)",
-                },
-                {
-                  icon: <Bird className={featureIconClass} />,
-                  label: "Biodiversity assessment",
-                },
-                {
-                  icon: <Cloud className={featureIconClass} />,
-                  label: "Carbon sequestration potential",
-                },
-                {
-                  icon: <TrendingUp className={featureIconClass} />,
-                  label: "Future Scenarios",
-                },
-              ]}
-              buttonText="Order Single Report"
+              priceNote={copy.report.priceNote}
+              freeLabel={copy.freeLabel}
+              features={zip(copy.report.features, REPORT_ICONS)}
+              buttonText={copy.report.button}
               href={CREATE_URL}
             />
           </motion.div>
@@ -102,80 +116,27 @@ export function PricingSection() {
           <motion.div variants={itemVariants}>
             <PricingCard
               variant="popular"
-              planName="Land Steward Partner"
-              description="For agents who steward every property fully."
+              planName={copy.steward.name}
+              description={copy.steward.description}
               price={2997}
-              billingCycle="/month"
-              features={[
-                {
-                  icon: <BarChart3 className={featureIconClass} />,
-                  label: "Up to 5 Natural Capital Reports/month",
-                },
-                {
-                  icon: <Zap className={featureIconClass} />,
-                  label: "24-hour priority turnaround",
-                },
-                {
-                  icon: <Headphones className={featureIconClass} />,
-                  label: "Direct support line",
-                },
-              ]}
-              buttonText="Partner With Us"
+              billingCycle={copy.steward.billingCycle}
+              features={zip(copy.steward.features, STEWARD_ICONS)}
+              buttonText={copy.steward.button}
               href={CREATE_URL}
             />
           </motion.div>
 
           <motion.div variants={itemVariants}>
             <PricingCard
-              planName="Agency Natural Capital Engine"
-              description="Transform your agency's rural intelligence."
+              planName={copy.engine.name}
+              description={copy.engine.description}
               price={7997}
-              billingCycle="/month"
-              features={[
-                {
-                  icon: <InfinityIcon className={featureIconClass} />,
-                  label: "Unlimited Natural Capital Reports",
-                },
-                {
-                  icon: <Stamp className={featureIconClass} />,
-                  label: "Co-branded Landbook reports",
-                },
-                {
-                  icon: <LayoutDashboard className={featureIconClass} />,
-                  label: "Custom agency dashboard",
-                },
-                {
-                  icon: <GraduationCap className={featureIconClass} />,
-                  label: "Quarterly team training on natural capital valuation",
-                },
-              ]}
-              buttonText="Contact Enterprise"
+              billingCycle={copy.engine.billingCycle}
+              features={zip(copy.engine.features, ENGINE_ICONS)}
+              buttonText={copy.engine.button}
               href={CREATE_URL}
             />
           </motion.div>
-        </motion.div>
-
-        <motion.div
-          className="relative mx-auto mt-32 max-w-4xl py-16 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-        >
-          <hr className="mb-16 border-brand-sage/30" />
-          <div className="mx-auto mb-8 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-charcoal/5">
-            <ShieldCheck className="h-8 w-8 text-brand-charcoal" />
-          </div>
-          <div className="mx-auto max-w-2xl">
-            <h3 className="serif-title text-2xl italic tracking-tight text-brand-charcoal md:text-3xl">
-              The LandBook Guarantee
-            </h3>
-            <p className="mt-4 text-xl font-light leading-relaxed text-brand-charcoal/80 md:text-2xl">
-              &ldquo;If our report doesn&rsquo;t uncover at least €10,000 in
-              additional natural capital value, you don&rsquo;t pay.&rdquo;
-            </p>
-          </div>
-          <hr className="mt-16 border-brand-sage/30" />
         </motion.div>
       </div>
     </section>
