@@ -68,8 +68,9 @@ export function CoverSection({
         <div className="border-t border-brand-sage/30 pt-3 mx-auto max-w-[400px]">
           <p className="text-[10px] font-bold text-brand-charcoal mb-1">Disclaimer</p>
           <p className="text-[9px] text-brand-sage leading-snug">
-            This assessment represents conditions at time of documentation.
-            Land characteristics evolve; verify critical details before decisions.
+            This is an informational tool for real estate professionals. It does
+            not replace legal due diligence, cadastral surveys, or engineering
+            assessments. Verify independently before any decision.
           </p>
         </div>
       </div>
