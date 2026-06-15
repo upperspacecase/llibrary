@@ -27,7 +27,8 @@ export interface MapPanelProps {
 }
 
 const STYLES = {
-  satellite: "mapbox://styles/mapbox/satellite-streets-v12",
+  // Label-free imagery so the zoomed-out globe reads as a clean round ball.
+  satellite: "mapbox://styles/mapbox/satellite-v9",
   terrain: "mapbox://styles/mapbox/outdoors-v12",
 } as const;
 type StyleKey = keyof typeof STYLES;
@@ -46,8 +47,9 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       const map = new mapboxgl.Map({
         container: containerRef.current,
         style: STYLES.satellite,
-        center: [0, 20],
-        zoom: 1.5,
+        projection: { name: "globe" },
+        center: [0, 0],
+        zoom: 0,
       });
       mapRef.current = map;
 
