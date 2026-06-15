@@ -20,6 +20,8 @@ import { PricingCard } from "@/components/ui/price";
 import type { AgentsCopy } from "./copy";
 
 const CONTACT_URL = "mailto:hi@landlibrary.co?subject=LandBook%20Agent%20Plans";
+// The free first LandBook is self-serve — send agents into sign-up, not email.
+const START_FREE_URL = "/agent/signin";
 
 const containerVariants = {
   hidden: {},
@@ -110,7 +112,7 @@ export function PricingSection({ copy }: { copy: AgentsCopy["pricing"] }) {
               freeLabel={copy.freeLabel}
               features={zip(copy.report.features, REPORT_ICONS)}
               buttonText={copy.report.button}
-              href={CONTACT_URL}
+              href={START_FREE_URL}
             />
           </motion.div>
 
