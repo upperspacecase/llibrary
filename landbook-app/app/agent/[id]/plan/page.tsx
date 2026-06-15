@@ -13,7 +13,8 @@ import { oneOffSteps } from "@/lib/agent/steps";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import { findAgentBook } from "@/lib/agent-book";
 import { getPlanUsage, PLANS } from "@/lib/plan-usage";
-import { coverWithSubscriptionAction } from "./actions";
+import { PayOnClosing } from "@/components/agent/plan/PayOnClosing";
+import { coverWithSubscriptionAction, startOnClosing } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +32,13 @@ function formatEur(amount: number): string {
 
 export default async function PlanPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ canceled?: string }>;
 }) {
   const { id } = await params;
+  const { canceled } = await searchParams;
   const user = await getCurrentUser();
   if (!user) notFound();
 
@@ -48,6 +52,7 @@ export default async function PlanPage({
     (usage.remaining == null || usage.remaining > 0);
 
   const coverAction = coverWithSubscriptionAction.bind(null, id);
+  const onClosingAction = startOnClosing.bind(null, id);
 
   return (
     <main className="min-h-screen bg-brand-cream">
@@ -68,8 +73,16 @@ export default async function PlanPage({
             Choose how this LandBook is covered.
           </SerifTitle>
           <p className="mt-2 max-w-xl text-sm text-brand-charcoal/65">
-            Pay per report, or use your monthly partner plan.
+            Pay upfront, use your monthly partner plan, or pay when the deal
+            closes.
           </p>
+
+          {canceled && (
+            <div className="mt-6 rounded border border-brand-sage/40 bg-white px-4 py-3 text-[12px] text-brand-charcoal/70">
+              Card setup canceled. No charge was made — pick an option below to
+              continue.
+            </div>
+          )}
 
           {/* Subscription coverage card — only when the user has an active plan */}
           {subscriptionCoversThis && usage.plan && (
@@ -187,6 +200,11 @@ export default async function PlanPage({
               );
             })}
           </div>
+
+          <PayOnClosing
+            action={onClosingAction}
+            amountLabel={formatEur(PLANS.report.amount)}
+          />
 
           <div className="mt-8 flex items-center gap-3 text-[11px] text-brand-charcoal/50">
             <Link href="/agent" className="underline underline-offset-2">

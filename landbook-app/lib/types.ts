@@ -517,6 +517,8 @@ export interface AgentStripe {
   currentPeriodEnd?: number;
   lastPaymentStatus?: "paid" | "failed";
   lastPaymentAt?: string;
+  /** Card saved via Stripe setup for charging a pay-on-closing fee later. */
+  onClosingPaymentMethodId?: string;
   updatedAt: string;
 }
 
@@ -527,11 +529,25 @@ export interface LandbookPayment {
   sessionId: string | null;
   amount: number;
   currency: string;
+  /** ISO time this row was recorded. For "on_closing" this is the agreement
+   *  time, not a collection time — see `status` for whether it's been paid. */
   paidAt: string;
-  /** "one_off" = Stripe Checkout in payment mode. "subscription" = covered by an active sub. "free" = the agent's complimentary first book. */
-  source: "one_off" | "subscription" | "free";
+  /** "one_off" = Stripe Checkout in payment mode. "subscription" = covered by an
+   *  active sub. "free" = the agent's complimentary first book. "on_closing" =
+   *  deferred: the book is produced now, the fee is charged when the deal closes. */
+  source: "one_off" | "subscription" | "free" | "on_closing";
   /** Stripe price id at the time of the charge (or the active sub price for subscription coverage). */
   priceId?: string;
+  /** For "on_closing": whether the fee has been collected yet. */
+  status?: "owed" | "paid";
+  /** For "on_closing": when the agent accepted the pay-on-closing terms. */
+  agreedTermsAt?: string;
+  /** For "on_closing": which terms version they accepted. */
+  termsVersion?: string;
+  /** For "on_closing": true once a card has been saved via Stripe setup. */
+  cardOnFile?: boolean;
+  /** For "on_closing": the Stripe setup-mode Checkout session id. */
+  setupSessionId?: string;
 }
 
 export interface Submission {

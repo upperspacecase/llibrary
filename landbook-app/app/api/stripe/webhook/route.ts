@@ -39,6 +39,58 @@ async function handleCheckoutCompleted(
     return;
   }
 
+  if (session.mode === "setup" && session.metadata?.intent === "on_closing") {
+    const landbookId = session.metadata?.landbookId;
+    if (!landbookId) return;
+    const customerId =
+      typeof session.customer === "string"
+        ? session.customer
+        : session.customer?.id;
+
+    // Resolve the card the agent saved and make it the customer's default so
+    // the pay-on-closing fee can be charged to it later.
+    const setupIntentId =
+      typeof session.setup_intent === "string"
+        ? session.setup_intent
+        : session.setup_intent?.id;
+    let paymentMethodId: string | undefined;
+    if (setupIntentId) {
+      const si = await stripe.setupIntents.retrieve(setupIntentId);
+      paymentMethodId =
+        typeof si.payment_method === "string"
+          ? si.payment_method
+          : si.payment_method?.id;
+    }
+    if (customerId && paymentMethodId) {
+      await stripe.customers.update(customerId, {
+        invoice_settings: { default_payment_method: paymentMethodId },
+      });
+      const col = await getCollection<AgentStripe>("agent_stripe");
+      await col.updateOne(
+        { ownerId },
+        {
+          $set: {
+            stripeCustomerId: customerId,
+            onClosingPaymentMethodId: paymentMethodId,
+            updatedAt: new Date().toISOString(),
+          },
+          $setOnInsert: { ownerId },
+        },
+        { upsert: true }
+      );
+    }
+
+    // Flag the commitment as card-on-file and kick the pipeline once (the
+    // `cardOnFile` guard makes Stripe retries idempotent).
+    const payments = await getCollection<LandbookPayment>("landbook_payments");
+    const flagged = await payments.updateOne(
+      { landbookId, ownerId, source: "on_closing", cardOnFile: { $ne: true } },
+      { $set: { cardOnFile: true, setupSessionId: session.id } }
+    );
+    if (flagged.modifiedCount > 0) kickRefreshPipeline(landbookId);
+    return;
+  }
+
   if (session.mode === "subscription") {
     const customerId =
       typeof session.customer === "string"
