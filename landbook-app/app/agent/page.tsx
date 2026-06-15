@@ -10,6 +10,7 @@ import {
 import { getCollection } from "@/lib/db";
 import { getCurrentUser } from "@/lib/firebase/admin";
 import { getPlanUsage, isFreeBookEligible } from "@/lib/plan-usage";
+import { recordUser } from "@/lib/users";
 import type { Landbook, Submission } from "@/lib/types";
 import { bookDisplayName, deriveStatus } from "@/lib/landbook-status";
 import BooksList, { type AgentItem } from "./BooksList";
@@ -89,6 +90,12 @@ async function nextBookHint(): Promise<string | null> {
 }
 
 export default async function MyLandBooksPage() {
+  // Record the signed-in agent so they're visible in the admin Users tab even
+  // if they never create a LandBook. The dashboard is where everyone lands
+  // after sign-in, so it doubles as the signup-tracking chokepoint.
+  const user = await getCurrentUser();
+  if (user) await recordUser(user);
+
   const [items, hint] = await Promise.all([loadItems(), nextBookHint()]);
   const total = items.length;
 

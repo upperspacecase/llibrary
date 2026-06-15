@@ -471,6 +471,19 @@ export interface LandbookShare {
   activity: ShareActivity[];
 }
 
+/** One row per agent who has signed in, written on dashboard load so signups
+ *  are visible in the admin before the agent creates a LandBook. Keyed on the
+ *  Firebase uid. `createdAt` is first-seen by this app — the true Firebase
+ *  signup time lives in Firebase Auth. */
+export interface User {
+  uid: string;
+  email: string | null;
+  name: string | null;
+  picture: string | null;
+  createdAt: string;
+  lastSeenAt: string;
+}
+
 export interface AgentSettings {
   ownerId: string;
   agencyName?: string;

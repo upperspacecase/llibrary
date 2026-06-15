@@ -31,6 +31,12 @@ const columns = {
         { key: '_date', label: 'Signed up', format: formatDate },
         { key: '_actions', label: '', format: () => '__ROW_ACTIONS__' },
     ],
+    users: [
+        { key: 'email', label: 'Email', format: v => v || '-' },
+        { key: 'name', label: 'Name', format: v => v || '-' },
+        { key: 'createdAt', label: 'Signed up', format: formatDate },
+        { key: 'lastSeenAt', label: 'Last seen', format: formatDate },
+    ],
     contributions: [
         { key: 'section', label: 'Section' },
         { key: 'type', label: 'Type' },
@@ -206,6 +212,7 @@ async function loadData() {
             .sort((a, b) => new Date(b._date) - new Date(a._date)),
         contributions: raw.contributions || [],
         resources: raw.resources || [],
+        users: raw.users || [],
     };
 
     // Aggregate region requests from waitlist
@@ -234,6 +241,7 @@ function renderStats() {
     const stats = [
         { label: 'Submissions', count: data.submissions?.length || 0 },
         { label: 'Waitlist', count: data.waitlist?.length || 0 },
+        { label: 'Users', count: data.users?.length || 0 },
         { label: 'Contributions', count: data.contributions?.length || 0 },
         { label: 'Resources', count: data.resources?.length || 0 },
         { label: 'Regions', count: data.regions?.length || 0 },

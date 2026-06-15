@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
 
     try {
-        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports, shares] = await Promise.all([
+        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports, shares, users] = await Promise.all([
             getCollection('waitlist').then(c => c.find({}).sort({ createdAt: -1 }).toArray()),
             getCollection('landbooks').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_contributions').then(c => c.find({}).sort({ created: -1 }).toArray()),
@@ -51,6 +51,8 @@ export default async function handler(req, res) {
                     { projection: { landbookId: 1, token: 1, createdAt: 1, expiresAt: 1, recipients: 1, activity: 1 } }
                 ).toArray()
             ).catch(() => []),
+            // Agent signups — written on dashboard load by landbook-app.
+            getCollection('users').then(c => c.find({}).sort({ createdAt: -1 }).toArray()).catch(() => []),
         ]);
 
         // Build per-landbook share summary
@@ -146,6 +148,7 @@ export default async function handler(req, res) {
             resources,
             submissions,
             reportVersions,
+            users,
             pipelineStatus,
             shareIndex,
         });
