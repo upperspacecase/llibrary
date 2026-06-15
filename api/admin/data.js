@@ -10,7 +10,7 @@ export default async function handler(req, res) {
     if (!requireAdmin(req, res)) return;
 
     try {
-        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports, shares, users] = await Promise.all([
+        const [waitlist, landbooks, contributions, resources, submissions, reportVersions, observations, facts, reports, shares, users, landbookPayments, agentStripe] = await Promise.all([
             getCollection('waitlist').then(c => c.find({}).sort({ createdAt: -1 }).toArray()),
             getCollection('landbooks').then(c => c.find({}).sort({ created: -1 }).toArray()),
             getCollection('wiki_contributions').then(c => c.find({}).sort({ created: -1 }).toArray()),
@@ -53,6 +53,13 @@ export default async function handler(req, res) {
             ).catch(() => []),
             // Agent signups — written on dashboard load by landbook-app.
             getCollection('users').then(c => c.find({}).sort({ createdAt: -1 }).toArray()).catch(() => []),
+            // Per-agent coverage signals for the Users tab.
+            getCollection('landbook_payments').then(c =>
+                c.find({}, { projection: { ownerId: 1, source: 1, status: 1, amount: 1 } }).toArray()
+            ).catch(() => []),
+            getCollection('agent_stripe').then(c =>
+                c.find({}, { projection: { ownerId: 1, status: 1 } }).toArray()
+            ).catch(() => []),
         ]);
 
         // Build per-landbook share summary
@@ -141,6 +148,51 @@ export default async function handler(req, res) {
             };
         }
 
+        // LandBooks created per agent: distinct book ids per ownerId across
+        // both collections (a submission promoted to a landbook shares its id,
+        // so a Set dedupes it rather than counting it twice). Also track the
+        // most recent book date per owner for the "Last book" column.
+        const bookIdsByOwner = {};
+        const lastBookByOwner = {};
+        for (const b of [...landbooks, ...submissions]) {
+            if (!b.ownerId) continue;
+            if (!bookIdsByOwner[b.ownerId]) bookIdsByOwner[b.ownerId] = new Set();
+            bookIdsByOwner[b.ownerId].add(b.id || String(b._id));
+            if (b.created && (!lastBookByOwner[b.ownerId] || b.created > lastBookByOwner[b.ownerId])) {
+                lastBookByOwner[b.ownerId] = b.created;
+            }
+        }
+
+        // Pay-on-closing money still owed, and whether the free book was used,
+        // per agent — from landbook_payments.
+        const owedByOwner = {};
+        const freeUsedByOwner = {};
+        for (const p of landbookPayments) {
+            if (!p.ownerId) continue;
+            if (p.source === 'on_closing' && p.status === 'owed') {
+                owedByOwner[p.ownerId] = (owedByOwner[p.ownerId] || 0) + (p.amount || 0);
+            }
+            if (p.source === 'free') freeUsedByOwner[p.ownerId] = true;
+        }
+
+        // Active subscription per agent — from agent_stripe.
+        const subActiveByOwner = {};
+        for (const s of agentStripe) {
+            if (s.ownerId && (s.status === 'active' || s.status === 'trialing')) {
+                subActiveByOwner[s.ownerId] = true;
+            }
+        }
+
+        const usersWithCounts = users.map(u => ({
+            ...u,
+            landbookCount: bookIdsByOwner[u.uid] ? bookIdsByOwner[u.uid].size : 0,
+            lastBookAt: lastBookByOwner[u.uid] || null,
+            owedOnClosing: owedByOwner[u.uid] || 0,
+            coverage: subActiveByOwner[u.uid]
+                ? 'Subscriber'
+                : freeUsedByOwner[u.uid] ? 'Free used' : '—',
+        }));
+
         return res.status(200).json({
             waitlist,
             landbooks,
@@ -148,7 +200,7 @@ export default async function handler(req, res) {
             resources,
             submissions,
             reportVersions,
-            users,
+            users: usersWithCounts,
             pipelineStatus,
             shareIndex,
         });

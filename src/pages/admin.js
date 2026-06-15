@@ -34,6 +34,10 @@ const columns = {
     users: [
         { key: 'email', label: 'Email', format: v => v || '-' },
         { key: 'name', label: 'Name', format: v => v || '-' },
+        { key: 'landbookCount', label: 'LandBooks', format: v => String(v ?? 0) },
+        { key: 'owedOnClosing', label: 'Owed (closing)', format: v => v ? `€${Number(v).toLocaleString('en-IE')}` : '—' },
+        { key: 'lastBookAt', label: 'Last book', format: formatDate },
+        { key: 'coverage', label: 'Coverage', format: v => v || '—' },
         { key: 'createdAt', label: 'Signed up', format: formatDate },
         { key: 'lastSeenAt', label: 'Last seen', format: formatDate },
     ],
