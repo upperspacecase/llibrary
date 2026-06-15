@@ -112,14 +112,6 @@ export function NewLandBookForm() {
     };
   }, [boundary]);
 
-  const vertexCount = boundary ? Math.max(0, boundary.length - 1) : 0;
-
-  function formatArea(ha: number): string {
-    if (ha >= 100) return `${ha.toFixed(1)} ha`;
-    if (ha >= 1) return `${ha.toFixed(2)} ha`;
-    return `${(ha * 10000).toFixed(0)} m²`;
-  }
-
   function formatPerimeter(m: number): string {
     if (m >= 1000) return `${(m / 1000).toFixed(2)} km`;
     return `${Math.round(m)} m`;
@@ -129,15 +121,6 @@ export function NewLandBookForm() {
 
   function handleAddressSelect(s: LocationResult) {
     mapRef.current?.flyTo(s.center[0], s.center[1]);
-  }
-
-  function handleDrawClick() {
-    if (!MAPBOX_TOKEN) {
-      setError("Mapbox token is not configured.");
-      return;
-    }
-    setError(null);
-    mapRef.current?.startDrawing();
   }
 
   function handleUploadClick() {
@@ -228,149 +211,153 @@ export function NewLandBookForm() {
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(360px,420px)_1fr]"
+      className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[1fr_minmax(380px,460px)]"
     >
-      <div className="space-y-6 rounded-lg border border-brand-sage/30 bg-white p-8">
-        <Field label="Property title" hint="Shown as the LandBook name in your dashboard.">
-          <TextInput
-            name="name"
-            placeholder="e.g. Quinta do Vale da Porca"
-          />
-        </Field>
-
-        <div>
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60">
-            Postcode / Location
-          </span>
-          <div className="mt-2">
-            <LocationFinder
-              value={address}
-              onChange={setAddress}
-              onSelect={handleAddressSelect}
-              token={MAPBOX_TOKEN}
-            />
-          </div>
-        </div>
-
-        <Field label="Cadastral ref. (optional)">
-          <TextInput name="cadastralRef" placeholder="—" />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-4 rounded border border-brand-sage/30 bg-brand-cream/40 p-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
-              Land size (ha)
-            </p>
-            <div className="mt-1 flex items-baseline gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
-                step="0.01"
-                min="0"
-                value={areaOverride}
-                onChange={(e) => setAreaOverride(e.target.value)}
-                placeholder={metrics ? metrics.areaHa.toFixed(2) : "—"}
-                className="w-full border-b border-brand-sage/40 bg-transparent pb-1 font-serif text-lg font-bold tabular-nums text-brand-charcoal outline-none placeholder:font-normal placeholder:text-brand-charcoal/55 focus:border-brand-charcoal"
-              />
-              <span className="text-[11px] text-brand-charcoal/55">ha</span>
-            </div>
-            <p className="mt-1 text-[10px] text-brand-charcoal/45">
-              {metrics
-                ? `Computed ${metrics.areaHa.toFixed(2)} ha — type to override.`
-                : "Auto-computed once you draw."}
-            </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
-              Perimeter
-            </p>
-            <p className="mt-1 font-serif text-lg font-bold text-brand-charcoal tabular-nums">
-              {metrics ? formatPerimeter(metrics.perimeterM) : "—"}
-            </p>
-          </div>
-        </div>
-
-        <div className="border-t border-brand-sage/20 pt-6">
-          <Eyebrow>Boundary</Eyebrow>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={handleDrawClick}
-              className="flex-1 rounded border border-brand-charcoal bg-brand-charcoal px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-cream hover:bg-transparent hover:text-brand-charcoal transition"
-            >
-              {boundary ? "Redraw" : "Draw on map"}
-            </button>
-            <button
-              type="button"
-              onClick={handleUploadClick}
-              className="flex-1 rounded border border-brand-sage/40 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-charcoal/70 hover:border-brand-charcoal transition"
-            >
-              Upload KML / GeoJSON
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".kml,.geojson,.json,application/vnd.google-earth.kml+xml,application/geo+json,application/json"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) void handleFile(file);
-                e.target.value = "";
-              }}
-            />
-          </div>
-        </div>
-
-        <div className="border-t border-brand-sage/20 pt-6">
-          <Eyebrow>Client / Seller</Eyebrow>
-          <div className="mt-3 grid grid-cols-2 gap-4">
-            <Field label="Name">
-              <TextInput name="clientName" placeholder="Client or seller name" />
-            </Field>
-            <Field label="Email (for sharing)">
-              <TextInput name="email" placeholder="optional" type="email" />
-            </Field>
-          </div>
-        </div>
-
-        {error && (
-          <p className="text-[11px] text-brand-terracotta" role="alert">
-            {error}
-          </p>
-        )}
-
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <button
-            type="button"
-            className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60"
-          >
-            Save draft &amp; close
-          </button>
-          <PillButton
-            variant="primary"
-            icon={<Icon.ArrowRight />}
-            type="submit"
-            disabled={!canSubmit}
-            className="disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isPending ? "Saving…" : "Save & continue"}
-          </PillButton>
-        </div>
-      </div>
-
-      <div className="relative lg:sticky lg:top-6 lg:self-start">
+      {/* Map pane — left, dominant */}
+      <div className="relative order-1 h-[55vh] min-h-[320px] lg:order-none lg:h-auto lg:min-h-0">
         <MapPanel
           ref={mapRef}
           token={MAPBOX_TOKEN}
           onPolygonChange={setBoundary}
-          hasPolygon={Boolean(boundary)}
         />
-        {boundary && metrics && (
-          <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-brand-charcoal px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-cream">
-            {formatArea(metrics.areaHa)} · {formatPerimeter(metrics.perimeterM)} · {vertexCount} vertices
-          </div>
-        )}
       </div>
+
+      {/* Sidebar — right, scrolls independently on desktop */}
+      <aside className="order-2 flex flex-col border-t border-brand-sage/20 bg-white lg:order-none lg:max-h-full lg:overflow-y-auto lg:border-l lg:border-t-0">
+        <div className="flex-1 space-y-6 p-6 sm:p-8">
+          <div>
+            <Eyebrow>New LandBook</Eyebrow>
+            <h2 className="serif-title mt-2 text-2xl leading-tight text-brand-charcoal">
+              Tell us about the property.
+            </h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-brand-charcoal/60">
+              Search the location or use your position, then click the map to draw
+              the boundary.
+            </p>
+          </div>
+
+          <Field label="Property title" hint="Shown as the LandBook name in your dashboard.">
+            <TextInput name="name" placeholder="e.g. Quinta do Vale da Porca" />
+          </Field>
+
+          <div>
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60">
+              Postcode / Location
+            </span>
+            <div className="mt-2">
+              <LocationFinder
+                value={address}
+                onChange={setAddress}
+                onSelect={handleAddressSelect}
+                token={MAPBOX_TOKEN}
+              />
+            </div>
+          </div>
+
+          <Field label="Cadastral ref. (optional)">
+            <TextInput name="cadastralRef" placeholder="—" />
+          </Field>
+
+          {/* Boundary result — area + perimeter + override */}
+          <div className="rounded border border-brand-sage/30 bg-brand-cream/40 p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
+                  Land size (ha)
+                </p>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={areaOverride}
+                    onChange={(e) => setAreaOverride(e.target.value)}
+                    placeholder={metrics ? metrics.areaHa.toFixed(2) : "—"}
+                    className="w-full border-b border-brand-sage/40 bg-transparent pb-1 font-serif text-lg font-bold tabular-nums text-brand-charcoal outline-none placeholder:font-normal placeholder:text-brand-charcoal/55 focus:border-brand-charcoal"
+                  />
+                  <span className="text-[11px] text-brand-charcoal/55">ha</span>
+                </div>
+                <p className="mt-1 text-[10px] text-brand-charcoal/45">
+                  {metrics
+                    ? `Computed ${metrics.areaHa.toFixed(2)} ha — type to override.`
+                    : "Auto-computed once you draw."}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/55">
+                  Perimeter
+                </p>
+                <p className="mt-1 font-serif text-lg font-bold tabular-nums text-brand-charcoal">
+                  {metrics ? formatPerimeter(metrics.perimeterM) : "—"}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 border-t border-brand-sage/20 pt-4">
+              <button
+                type="button"
+                onClick={handleUploadClick}
+                className="w-full rounded border border-brand-sage/40 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-brand-charcoal/70 transition hover:border-brand-charcoal"
+              >
+                Upload KML / GeoJSON
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".kml,.geojson,.json,application/vnd.google-earth.kml+xml,application/geo+json,application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleFile(file);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-brand-sage/20 pt-6">
+            <Eyebrow>Client / Seller</Eyebrow>
+            <div className="mt-3 grid grid-cols-2 gap-4">
+              <Field label="Name">
+                <TextInput name="clientName" placeholder="Client or seller name" />
+              </Field>
+              <Field label="Email (for sharing)">
+                <TextInput name="email" placeholder="optional" type="email" />
+              </Field>
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-[11px] text-brand-terracotta" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+
+        {/* Footer — sticky-feeling submit bar */}
+        <div className="border-t border-brand-sage/20 bg-white p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <button
+              type="button"
+              className="text-[11px] font-semibold uppercase tracking-[0.15em] text-brand-charcoal/60"
+            >
+              Save draft &amp; close
+            </button>
+            <PillButton
+              variant="primary"
+              icon={<Icon.ArrowRight />}
+              type="submit"
+              disabled={!canSubmit}
+              className="disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isPending ? "Saving…" : "Save & continue"}
+            </PillButton>
+          </div>
+          <p className="mt-3 text-[10px] text-brand-charcoal/45">
+            Your data stays private.
+          </p>
+        </div>
+      </aside>
 
       {areaModal && (
         <div
