@@ -33,6 +33,19 @@ const STYLES = {
 } as const;
 type StyleKey = keyof typeof STYLES;
 
+/** Dark "space" behind the globe so the zoomed-out view doesn't fall through
+ *  to the page's cream background. Must be re-applied after each basemap switch
+ *  because setStyle resets fog. */
+function applyGlobeBackdrop(map: mapboxgl.Map) {
+  map.setFog({
+    color: "#0a0f14",
+    "high-color": "#0a0f14",
+    "space-color": "#0a0f14",
+    "horizon-blend": 0.02,
+    "star-intensity": 0.15,
+  });
+}
+
 export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
   function MapPanel({ token, onPolygonChange, hasPolygon }, ref) {
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -82,6 +95,7 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       // Let agents draw by clicking the map straight away (like the create
       // page) without first pressing a button.
       map.once("load", () => {
+        applyGlobeBackdrop(map);
         if (draw.getAll().features.length === 0) {
           try {
             draw.changeMode("draw_polygon");
@@ -114,6 +128,7 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       const onLoad = () => {
         map.addControl(draw);
         if (saved.features.length) draw.set(saved);
+        applyGlobeBackdrop(map);
       };
       map.once("styledata", onLoad);
     }, [style]);
@@ -186,7 +201,7 @@ export const MapPanel = forwardRef<MapPanelHandle, MapPanelProps>(
       <div className="relative">
         <div
           ref={containerRef}
-          className="relative min-h-[460px] overflow-hidden rounded-lg border border-brand-sage/30 lg:min-h-[680px]"
+          className="relative min-h-[460px] overflow-hidden rounded-lg border border-brand-sage/30 bg-[#0a0f14] lg:min-h-[680px]"
         />
         {!hasPolygon && (
           <div className="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
