@@ -8,7 +8,6 @@ import { assertAgentOwns } from "@/lib/agent-book";
 import { coverWithSubscription, getPlanUsage } from "@/lib/plan-usage";
 import { kickRefreshPipeline } from "@/lib/pipeline";
 import { PLANS, stripe } from "@/lib/stripe/server";
-import { ON_CLOSING_TERMS_VERSION } from "@/lib/agent/on-closing-terms";
 import type { AgentStripe, LandbookPayment } from "@/lib/types";
 
 async function getOrigin(): Promise<string> {
@@ -93,8 +92,6 @@ export async function startOnClosing(landbookId: string): Promise<void> {
         paidAt: now,
         source: "on_closing",
         status: "owed",
-        agreedTermsAt: now,
-        termsVersion: ON_CLOSING_TERMS_VERSION,
         cardOnFile: false,
       },
     },

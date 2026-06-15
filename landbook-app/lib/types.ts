@@ -484,6 +484,21 @@ export interface User {
   lastSeenAt: string;
 }
 
+/** One row per agent acceptance of the LandBook Agent Agreement (append-only
+ *  for audit — keyed on uid + version). Records the §13.2 evidence fields. */
+export interface AgreementAcceptance {
+  uid: string;
+  email: string | null;
+  version: string;
+  /** UTC ISO timestamp of acceptance. */
+  acceptedAt: string;
+  ip: string | null;
+  /** Checkbox: holds a valid real estate license. */
+  licenseConfirmed: boolean;
+  /** Checkbox: read & agree to the Agreement. */
+  agreementConfirmed: boolean;
+}
+
 export interface AgentSettings {
   ownerId: string;
   agencyName?: string;
