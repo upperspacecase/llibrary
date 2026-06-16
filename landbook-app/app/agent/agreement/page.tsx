@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AgentHeader } from "@/components/agent/AgentHeader";
-import { AGENT_AGREEMENT_VERSION } from "@/lib/agent/agreement";
 
 export const metadata: Metadata = {
   title: "LandBook EU Agent Services Agreement",
@@ -34,21 +33,9 @@ export default function AgentAgreementPage() {
         <h1 className="serif-title mt-6 text-3xl leading-tight text-brand-charcoal">
           LandBook EU Agent Services Agreement
         </h1>
-        <p className="mt-3 text-[13px] text-brand-charcoal/60">
-          Version: {AGENT_AGREEMENT_VERSION} | Effective Date: [DATE]
-        </p>
-        <div className="mt-4 space-y-1 text-[13px] text-brand-charcoal/70">
-          <p>
-            Contracting Entity: LandBook OÜ, [Estonian Address], Registry Code
-            [XXXX], VAT EE[XXXX]
-          </p>
-          <p>Governing Law: Republic of Estonia</p>
-          <p>Forum: Harju County Court, Tallinn</p>
-          <p>Language: English (local language summary available on request)</p>
-        </div>
 
         <Clause n="1" title="Parties & Definitions">
-          <p>&ldquo;LandBook&rdquo; = LandBook OÜ, the provider of property intelligence services.</p>
+          <p>&ldquo;LandBook&rdquo; = LandBook, the provider of property intelligence services.</p>
           <p>&ldquo;Agent&rdquo; = The real estate professional or agency accepting these terms via the LandBook platform.</p>
           <p>&ldquo;Property&rdquo; = The specific land or real estate asset for which LandBook Services are ordered.</p>
           <p>&ldquo;Residential Transaction&rdquo; = A transaction where the buyer or seller is a natural person acting for purposes outside their trade, business, or profession.</p>

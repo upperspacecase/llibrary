@@ -27,16 +27,15 @@ type StyleKey = keyof typeof STYLES;
 const REGION_CENTER: [number, number] = [-8.64, 37.5967];
 const REGION_ZOOM = 10;
 
-// Brand-coloured draw layers — landlibrary.co/create uses yellow; we keep the
-// same point-by-point UX but in agent/new's palette (cream vertices/lines pop
-// on satellite, forest fill).
+// Draw layers in landlibrary.co/create's yellow — high-contrast on both the
+// satellite and terrain basemaps (brand cream washed out on satellite).
 const COLORS = {
-  point: "#F5F1E8",
-  pointStroke: "#2C2C2C",
-  firstStroke: "#1B3A2F",
-  line: "#F5F1E8",
-  fill: "#1B3A2F",
-  outline: "#F5F1E8",
+  point: "#FFDA03",
+  pointStroke: "#C8A800",
+  firstStroke: "#A08600",
+  line: "#FFDA03",
+  fill: "#FFDA03",
+  outline: "#FFDA03",
 } as const;
 
 const SRC = { points: "draw-points", first: "first-point", line: "draw-line", poly: "draw-polygon" } as const;
