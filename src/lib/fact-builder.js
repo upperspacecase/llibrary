@@ -11,6 +11,7 @@ import { saveFacts, reportDataToFacts } from './fact-store.js';
 import { processRawData, buildMapUrls } from './report-data-pipeline.js';
 import { resolvePropertyName } from './property-name.js';
 import { getCollection } from '../../api/_db.js';
+import { polygonArea, sqmToHectares } from './geo.js';
 
 /**
  * Rebuild facts for a landbook from stored observations.
@@ -47,8 +48,14 @@ export async function rebuildFacts(landbookId, options = {}) {
   const boundary = landbook.boundary || [];
   const lat = Array.isArray(center) ? center[0] : center?.lat;
   const lng = Array.isArray(center) ? center[1] : center?.lng;
-  const areaM2 = landbook.area || 0;
-  const areaHa = areaM2 > 10000 ? areaM2 / 10000 : areaM2;
+  // Derive the area in hectares. Prefer recomputing from the boundary so the
+  // value is unit-unambiguous; the previous `areaM2 > 10000 ? … : areaM2`
+  // heuristic skipped the m²→ha conversion for any plot under 1 ha (e.g. a
+  // 0.7 ha / 7000 m² plot was passed through as "7000 ha").
+  const areaM2 = (Array.isArray(boundary) && boundary.length >= 3)
+    ? polygonArea(boundary)
+    : (landbook.area || 0);
+  const areaHa = sqmToHectares(areaM2);
 
   // 2. Load all observations
   const observations = await getObservations(landbookId);
