@@ -14,6 +14,7 @@ import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 import { newRunId } from '../../../src/lib/pipeline-errors.js';
 import { createRun, finalizeRun } from '../../../src/lib/pipeline-runs.js';
 import { resolvePropertyName } from '../../../src/lib/property-name.js';
+import { polygonArea, sqmToHectares } from '../../../src/lib/geo.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -51,8 +52,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Landbook has no coordinates' });
     }
 
-    const areaM2 = landbook.area || 0;
-    const areaHa = areaM2 > 10000 ? areaM2 / 10000 : areaM2; // handle both m² and ha
+    // Recompute area from the boundary so units are unambiguous; the old
+    // `areaM2 > 10000 ? … : areaM2` heuristic left sub-hectare plots (< 10000 m²)
+    // unconverted, so a 0.7 ha / 7000 m² plot was treated as 7000 ha.
+    const areaM2 = (Array.isArray(boundary) && boundary.length >= 3)
+      ? polygonArea(boundary)
+      : (landbook.area || 0);
+    const areaHa = sqmToHectares(areaM2);
 
     // 3. Run the data pipeline
     await createRun({ runId, landbookId: id, trigger: 'refresh' });

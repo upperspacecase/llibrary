@@ -13,6 +13,7 @@
 
 import { requireAdmin } from '../_auth.js';
 import { getCollection } from '../_db.js';
+import { polygonArea, sqmToHectares } from '../../src/lib/geo.js';
 import { processRawData } from '../../src/lib/report-data-pipeline.js';
 import { saveFacts, reportDataToFacts, getFacts, factsToReportData } from '../../src/lib/fact-store.js';
 import { saveReport } from '../../src/lib/report-store.js';
@@ -119,8 +120,11 @@ export default async function handler(req, res) {
     const center = landbook.center;
     const lat = Array.isArray(center) ? center[0] : center?.lat;
     const lng = Array.isArray(center) ? center[1] : center?.lng;
-    const areaM2 = landbook.area || 0;
-    const areaHa = areaM2 > 10000 ? areaM2 / 10000 : areaM2;
+    const replayBoundary = landbook.boundary || [];
+    const areaM2 = (Array.isArray(replayBoundary) && replayBoundary.length >= 3)
+      ? polygonArea(replayBoundary)
+      : (landbook.area || 0);
+    const areaHa = sqmToHectares(areaM2);
     const submission = {
       name: resolvePropertyName(landbook),
       address: landbook.address || '',
