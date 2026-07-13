@@ -12,6 +12,7 @@ import { saveReport } from '../../../src/lib/report-store.js';
 import { generateNarrativesV2 } from '../../../src/lib/report-narratives.js';
 import { updateLandbookStatus } from '../../../src/lib/landbook-status.js';
 import { newRunId } from '../../../src/lib/pipeline-errors.js';
+import { NARRATIVE_MODEL } from '../../../src/lib/models.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
     }
 
     // 2. Generate narratives
-    const model = 'claude-sonnet-4-20250514';
+    const model = NARRATIVE_MODEL;
     const result = await generateNarrativesV2(data);
     const narratives = result.narratives;
     const usage = result.usage;

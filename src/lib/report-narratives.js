@@ -11,6 +11,7 @@ import {
   buildPromptSchema,
   buildEmptyNarratives,
 } from '../../landbook-app/lib/narrative-schema.js';
+import { NARRATIVE_MODEL } from './models.js';
 
 let _anthropic;
 function getClient() {
@@ -132,7 +133,7 @@ ${PROMPT_SCHEMA}`;
 
   try {
     const response = await getClient().messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: NARRATIVE_MODEL,
       max_tokens: 4096,
       messages: [{ role: 'user', content: prompt }],
     }, { timeout: 90_000 });

@@ -22,6 +22,7 @@ import { newRunId } from '../../src/lib/pipeline-errors.js';
 import { createRun, finalizeRun, getRun } from '../../src/lib/pipeline-runs.js';
 import { updateLandbookStatus } from '../../src/lib/landbook-status.js';
 import { resolvePropertyName } from '../../src/lib/property-name.js';
+import { NARRATIVE_MODEL } from '../../src/lib/models.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
         scores: data.scores || {},
         factSnapshotVersion: factDoc.version || null,
         factsContentHash: factDoc.contentHash || null,
-        model: 'claude-sonnet-4-20250514',
+        model: NARRATIVE_MODEL,
         promptVersion: 'v2-14section',
         runId: newId,
         narrativesError: narrativeError,
@@ -153,7 +154,7 @@ export default async function handler(req, res) {
       narratives,
       scores: data.scores || {},
       factsContentHash: factResult.contentHash,
-      model: 'claude-sonnet-4-20250514',
+      model: NARRATIVE_MODEL,
       promptVersion: 'v2-14section',
       runId: newId,
       narrativesError: narrativeError,

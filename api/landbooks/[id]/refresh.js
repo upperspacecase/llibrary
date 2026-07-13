@@ -15,6 +15,7 @@ import { newRunId } from '../../../src/lib/pipeline-errors.js';
 import { createRun, finalizeRun } from '../../../src/lib/pipeline-runs.js';
 import { resolvePropertyName } from '../../../src/lib/property-name.js';
 import { polygonArea, sqmToHectares } from '../../../src/lib/geo.js';
+import { NARRATIVE_MODEL } from '../../../src/lib/models.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -131,7 +132,7 @@ export default async function handler(req, res) {
         narratives: data.narratives || {},
         scores: data.scores || {},
         factsContentHash,
-        model: 'claude-sonnet-4-20250514',
+        model: NARRATIVE_MODEL,
         runId,
         narrativesStatus: narrativeStatus,
         narrativesError: narrativeError,
