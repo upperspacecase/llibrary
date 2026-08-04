@@ -1,6 +1,5 @@
 import { getCollection } from '../_db.js';
-
-const LANDBOOK_ID = 'region-odemira';
+import { resolveRegion } from '../../src/lib/regions/index.js';
 
 function unwrap(field) {
   if (field && typeof field === 'object' && 'value' in field) return field.value;
@@ -19,6 +18,12 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
+  const LANDBOOK_ID = region.landbookId;
 
   try {
     const facts = await getCollection('facts');
@@ -54,6 +59,7 @@ export default async function handler(req, res) {
 
     const payload = {
       ok: true,
+      region: region.slug,
       landbookId: LANDBOOK_ID,
       updatedAt: doc.updatedAt ?? null,
       runId: doc.runId ?? null,
@@ -80,7 +86,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=86400');
     return res.status(200).json(payload);
   } catch (err) {
-    console.error('GET /api/regions/odemira failed:', err);
+    console.error(`GET /api/regions/${req.query.region} failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

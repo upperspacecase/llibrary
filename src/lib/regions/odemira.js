@@ -1,12 +1,10 @@
 /**
- * Odemira — region #1.
+ * Odemira — region #1. Metadata only.
  *
- * Content still lives in ../wiki-data.js (and its PT counterpart). This module
- * only re-exports it in the shape the registry expects, so nothing about the
- * live Odemira wiki changes while the multi-region plumbing is built out.
+ * Content stays in ../wiki-data.js and is wired up in ./content.js. Keeping
+ * the two apart matters: the API functions import this registry, and pulling
+ * 78 kB of wiki prose into every serverless cold start would be waste.
  */
-
-export { ODEMIRA as REGION, SECTIONS, EVENTS_CALENDAR, LANDMARKS } from '../wiki-data.js';
 
 export const meta = {
   slug: 'odemira',
@@ -16,7 +14,7 @@ export const meta = {
   country: 'PT',
   kind: 'municipality',
 
-  // Synthetic region landbook driving the dashboard — see api/regions/odemira.js.
+  // Synthetic region landbook driving the dashboard.
   landbookId: 'region-odemira',
 
   center: [37.5967, -8.6400],
@@ -28,7 +26,12 @@ export const meta = {
 
   areaKm2: 1720.6,
 
-  // National networks that have coverage here. Drives which dashboard panels
-  // are expected to hold data.
+  // The municipality the region is named after. Station labels drop the
+  // municipality when it matches, so "Luzianes · Odemira" reads "Luzianes".
+  // Regions that are not a single municipality set this to null.
+  homeMunicipality: 'Odemira',
+
+  // National networks with coverage here — drives which dashboard panels are
+  // expected to hold data.
   dataSources: ['snirh', 'ipma', 'dgt', 'corine'],
 };

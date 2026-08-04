@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 const SENSOR_TYPES = new Set([
   'weather',
@@ -26,6 +27,11 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ ok: false, error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const body = req.body || {};
     const sensorType  = clean(body.sensorType, 32);
@@ -48,7 +54,7 @@ export default async function handler(req, res) {
 
     const proposals = await getCollection('sensor_proposals');
     const doc = {
-      region: 'odemira',
+      region: region.slug,
       sensorType,
       location,
       lat,
@@ -64,7 +70,7 @@ export default async function handler(req, res) {
 
     return res.status(201).json({ ok: true, id: result.insertedId });
   } catch (err) {
-    console.error('POST /api/regions/odemira/sensor-proposals failed:', err);
+    console.error(`POST /api/regions/${req.query.region}/sensor-proposals failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

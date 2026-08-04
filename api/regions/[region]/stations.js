@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,9 +7,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
+
   try {
     const c = await getCollection('stations');
-    const rows = await c.find({ region: 'odemira' }).toArray();
+    const rows = await c.find({ region: region.slug }).toArray();
 
     // Group by source so the map UI can render a tickbox per source.
     const sources = {};
@@ -47,13 +53,13 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).json({
       ok: true,
-      region: 'odemira',
+      region: region.slug,
       sources: Object.values(sources).sort((a, b) => b.count - a.count),
       features,
       count: features.length,
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/stations failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/stations failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

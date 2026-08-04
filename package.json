@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/bake-odemira-data.mjs && vite build",
-    "bake:odemira": "node scripts/bake-odemira-data.mjs",
+    "build": "node scripts/bake-region-data.mjs && vite build",
+    "bake:regions": "node scripts/bake-region-data.mjs",
     "preview": "vite preview",
     "generate-report": "node scripts/generate-report.js",
     "baseline:capture": "node scripts/capture-baseline.mjs",

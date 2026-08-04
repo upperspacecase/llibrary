@@ -127,22 +127,39 @@ shipped.
 
 These are Tay's calls, not mine. Everything downstream branches on them.
 
-**D1 — Basin or municipality framing?** Odemira's 10 sections are municipality-shaped:
-parish counts, resident population, the PDM, municipal governance. A watershed has
-none of those natively — the Lima basin spans Viana do Castelo, Ponte de Lima, Arcos
-de Valdevez, Ponte da Barca, Paredes de Coura and others. Either the section model
-generalizes (population becomes "population across N municipalities") or basins get a
-variant model. This is the single biggest content decision.
+**D1 — Basin or municipality framing? DECIDED 2026-08-04.** Keep the same ten
+sections; do not build a variant model for basins. Re-source three of them:
+
+- *Overview* leads with basin facts — river length, headwaters to estuary, the
+  municipalities crossed — instead of resident population and parish count.
+- *Community* is framed as the municipalities in the basin, with any population
+  figure clearly labelled approximate: it is a sum over municipalities that only
+  partly fall inside the line.
+- *Governance* covers river-basin management and the constituent municipalities
+  rather than a single council and PDM.
+
+Everything else — ecology, soil, climate, land use, risks — is unaffected. Water
+arguably gets *better*, since a watershed is the natural unit for it where Odemira's
+municipal boundary is slightly arbitrary against the Mira's actual catchment.
+
+This is a content-authoring decision with no engineering consequence. The registry
+carries `kind: 'basin'`, `homeMunicipality: null` and the municipality list to drive it.
+
+Verified footprint of Carolina's outline — all 27 vertices plus the centroid
+reverse-geocoded via Nominatim, 2026-08-04: **Melgaço, Arcos de Valdevez, Ponte da
+Barca, Vila Verde, Ponte de Lima, Viana do Castelo, Paredes de Coura, Terras de Bouro,
+Caminha, Monção** — ten Portuguese municipalities, plus Lobios, Lobeira and Entrimo
+in Galicia.
 
 **D2 — Cross-border scope.** The Lima rises in Galicia as the Limia. If the wiki
 claims the basin, the Spanish headwaters are part of it — and SNIRH, IPMA and DGT all
 stop at the border. Recommend scoping v1 to the Portuguese basin and saying so
 explicitly rather than showing a map with a silently empty upper third.
 
-**D3 — Keep the submitted boundary?** It is labelled "rough outline" by the submitter.
-For a public regional wiki I would replace it with a proper watershed polygon (APA
-river-basin district, or HydroBASINS) and keep Carolina's outline as the provenance
-record. Cheap to do, and it makes every area figure defensible.
+**D3 — Keep the submitted boundary? DECIDED 2026-08-04: yes, ship Carolina's outline.**
+Since she labelled it a rough outline, area figures are presented as approximate rather
+than quoted to a decimal. Recorded on the registry entry as `boundaryIsProvisional:
+false` with the reasoning alongside it.
 
 **D4 — Bilingual at launch?** Odemira ships EN + PT. Doubling Lima's content at launch
 roughly doubles the authoring cost. EN-first with PT to follow is a legitimate call.

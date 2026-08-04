@@ -1,29 +1,18 @@
 /**
  * Bacia do Lima — region #2, DRAFT.
  *
- * Metadata only. There is no content yet: the section model for a river basin
- * is still an open question (a basin has no parishes, no resident population
- * and no PDM of its own — it spans Viana do Castelo, Ponte de Lima, Arcos de
- * Valdevez and others). See REGION_PIPELINE_PLAN.md §4, decision D1.
+ * Metadata only, and no content authored yet.
+ *
+ * A basin is not an administrative unit: it has no council, no resident
+ * population and no master plan of its own. D1 (decided 2026-08-04) keeps the
+ * same ten sections as Odemira and re-sources three of them — overview leads
+ * with basin facts instead of population and parishes, community is framed as
+ * the municipalities in the basin, and governance covers river-basin
+ * management rather than one council. See REGION_PIPELINE_PLAN.md §4.
  *
  * `status: 'draft'` keeps this out of getLiveRegions(), so nothing surfaces it
  * until the flag is flipped.
  */
-
-// No content authored yet — the wiki renders nothing for a draft region.
-export const SECTIONS = {};
-export const EVENTS_CALENDAR = [];
-export const LANDMARKS = [];
-
-export const REGION = {
-  name: 'Bacia do Lima',
-  subtitle: 'Alto Minho, Portugal',
-  country: 'Portugal',
-  region: 'Alto Minho',
-  center: [41.86340, -8.37220],
-  bbox: [41.6798, -8.8288, 42.0797, -8.0871], // [south, west, north, east]
-  area: 1180.1, // km²
-};
 
 export const meta = {
   slug: 'bacia-do-lima',
@@ -46,10 +35,27 @@ export const meta = {
 
   areaKm2: 1180.1,
 
+  // No namesake municipality — the outline crosses ten of them, so station
+  // labels always carry "parish · municipality".
+  homeMunicipality: null,
+
   // SNIRH / IPMA / DGT all stop at the border, and the Lima rises in Galicia
   // as the Limia. Scope for v1 is the Portuguese basin only — see D2.
   dataSources: ['snirh', 'ipma', 'dgt', 'corine'],
   coverageNote: 'Portuguese basin only; Galician headwaters are out of scope for v1.',
+
+  // Municipalities the outline crosses, from reverse-geocoding all 27 boundary
+  // vertices plus the centroid (Nominatim, 2026-08-04). A basin is not an
+  // administrative unit — this list is what stands in for "the region" in any
+  // section that needs governance, population or community facts.
+  municipalities: [
+    'Melgaço', 'Arcos de Valdevez', 'Ponte da Barca', 'Vila Verde',
+    'Ponte de Lima', 'Viana do Castelo', 'Paredes de Coura',
+    'Terras de Bouro', 'Caminha', 'Monção',
+  ],
+  // 4 of 28 sample points landed in Galicia (Lobios, Lobeira, Entrimo), so the
+  // outline does cross the border even though v1 scopes data to Portugal.
+  municipalitiesES: ['Lobios', 'Lobeira', 'Entrimo'],
 
   // Provenance: submitted through the public form, not drawn in-house.
   source: {
@@ -58,8 +64,9 @@ export const meta = {
     title: 'Bacia do Lima (rough outline)',
     submittedBy: 'Carolina Carvalho',
     submittedAt: '2026-06-06T17:28:21.159Z',
-    // The submitter's own label says "rough outline" — D3 decides whether this
-    // polygon ships or is replaced with a proper watershed boundary.
-    boundaryIsProvisional: true,
+    // D3 decided 2026-08-04: ship Carolina's outline as-is. Labelled a "rough
+    // outline" by her, so area figures should be presented as approximate.
+    boundaryIsProvisional: false,
+    boundaryDecision: 'Use the submitted outline. Area is approximate; do not quote it to a decimal.',
   },
 };

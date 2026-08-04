@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 // Minimum readings to include a station on the chart — under this and the
 // line is just a couple of dots and adds visual noise.
@@ -14,12 +15,17 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const stationsCol = await getCollection('stations');
     const obsCol      = await getCollection('station_observations');
 
     const piezometers = await stationsCol
-      .find({ region: 'odemira', source: 'snirh_piezometria' })
+      .find({ region: region.slug, source: 'snirh_piezometria' })
       .toArray();
 
     const features = [];
@@ -62,10 +68,11 @@ export default async function handler(req, res) {
       // Piezometers don't carry a SNIRH name — only the cadastral code.
       // Best human label: "584/4 · Aljezur" (parish in the same municipality
       // as Odemira is implied; outside Odemira we include the municipality).
-      const inOdemira    = (municipality || '').toLowerCase() === 'odemira';
+      const isHome       = !!region.homeMunicipality
+        && (municipality || '').toLowerCase() === region.homeMunicipality.toLowerCase();
       // Dedupe so a station whose parish equals its municipality (e.g. Aljezur)
       // doesn't render "Aljezur · Aljezur".
-      const tailParts    = (inOdemira ? [parish] : [parish, municipality]).filter(Boolean);
+      const tailParts    = (isHome ? [parish] : [parish, municipality]).filter(Boolean);
       const tail         = tailParts.filter((part, i) =>
         tailParts.findIndex(p2 => p2.toLowerCase() === part.toLowerCase()) === i);
       const friendlyTail = tail.join(' · ');
@@ -101,7 +108,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).json({
       ok: true,
-      region: 'odemira',
+      region: region.slug,
       parameter: PARAM_NAME,
       parameterUid: PARAM_UID,
       unit: 'm below ground',
@@ -110,7 +117,7 @@ export default async function handler(req, res) {
       features,
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/groundwater failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/groundwater failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }
