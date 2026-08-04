@@ -9,11 +9,16 @@
  * lives in ./content.js, which is browser-side.
  *
  * Status gates visibility:
- *   'live'  — surfaced on the commons page and reachable in the wiki
- *   'draft' — exists in code, excluded from getLiveRegions(), invisible to users
+ *   'live'    — finished: listed on the commons page and fully reachable
+ *   'preview' — listed and reachable, but flagged as in progress. Its data is
+ *               real; its written sections may be thin or absent.
+ *   'draft'   — exists in code only. Never listed, never linked.
  *
  * A draft region can have its data piped and its dashboard verified without
- * anything appearing on the public site. Launching is a one-word change.
+ * anything appearing on the public site. Promoting it is a one-word change.
+ *
+ * `featured` is separate from status: it marks the regions the home page leads
+ * with. More than one may carry it.
  */
 
 import { meta as odemira } from './odemira.js';
@@ -36,14 +41,31 @@ export function getAllRegions() {
   return Object.values(REGIONS);
 }
 
-/** Only regions cleared for public display. For the commons page and nav. */
+/** Regions to list on the commons page — finished ones and in-progress ones,
+ *  featured first, then live, then preview. Drafts never appear. */
+export function getListedRegions() {
+  const rank = { live: 0, preview: 1 };
+  return ALL
+    .filter((r) => r.status === 'live' || r.status === 'preview')
+    .sort((a, b) => (b.featured === true) - (a.featured === true)
+      || rank[a.status] - rank[b.status]);
+}
+
+/** Only finished regions. */
 export function getLiveRegions() {
   return ALL.filter((r) => r.status === 'live');
 }
 
-/** True if the slug names a region that should be publicly reachable. */
-export function isLive(slug) {
-  return REGIONS[slug]?.status === 'live';
+/** The regions the home page leads with, in registry order. */
+export function getFeaturedRegions() {
+  const featured = ALL.filter((r) => r.featured);
+  return featured.length ? featured : [getRegion(DEFAULT_REGION)];
+}
+
+/** True if the slug names a region a visitor is allowed to open. */
+export function isReachable(slug) {
+  const s = REGIONS[slug]?.status;
+  return s === 'live' || s === 'preview';
 }
 
 /**

@@ -16,11 +16,23 @@
 
 export const meta = {
   slug: 'bacia-do-lima',
-  status: 'draft',
+  // 'preview' = listed and reachable, content still being written. It carries
+  // the same card badge as a live region by design decision (2026-08-04).
+  status: 'preview',
+  featured: true,
   name: 'Bacia do Lima',
   subtitle: 'Alto Minho, Portugal',
   country: 'PT',
   kind: 'basin',
+
+  // TODO: needs its own artwork — reusing the water illustration for now.
+  image: '/wiki/water.png',
+  // A basin has no resident population of its own, so the second stat counts
+  // municipalities instead of people. See D1.
+  cardStats: [
+    { value: '~1,180', unit: 'km²' },
+    { value: '10', unit: 'municipalities' },
+  ],
 
   // Synthetic region landbook — NOT created yet. Nothing writes to this id
   // until the boundary decision (D3) is settled and the pipeline is run.

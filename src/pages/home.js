@@ -1,21 +1,14 @@
 import '../styles/main.css';
 import { initI18n } from '../lib/i18n.js';
-import { ODEMIRA } from '../lib/wiki-data.js';
 import { createMap, mapboxgl, addMarker } from '../lib/mapbox.js';
 import { initRegionRequest } from '../lib/region-request.js';
+import { renderFeaturedRegions } from '../lib/region-cards.js';
 
 initI18n();
 initRegionRequest(document.getElementById('region-request-container'));
 
-// Populate featured commons card from ODEMIRA data
-const fcName = document.getElementById('fc-name');
-const fcLocation = document.getElementById('fc-location');
-const fcArea = document.getElementById('fc-area');
-const fcPop = document.getElementById('fc-pop');
-if (fcName) fcName.textContent = ODEMIRA.name;
-if (fcLocation) fcLocation.textContent = ODEMIRA.subtitle;
-if (fcArea) fcArea.textContent = ODEMIRA.area;
-if (fcPop) fcPop.textContent = ODEMIRA.population.toLocaleString();
+// Featured region cards come from the registry rather than hardcoded markup.
+renderFeaturedRegions(document.getElementById('featured-regions'));
 
 // Scroll-aware header: transparent on hero, solid once scrolled past
 const header = document.querySelector('.header');

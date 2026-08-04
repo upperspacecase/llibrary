@@ -1,20 +1,64 @@
 /**
  * wiki.js — Hash-routed regional wiki page.
  *
+ * URL:     /wiki            = the default region
+ *          /wiki/<slug>     = that region, e.g. /wiki/bacia-do-lima
+ *
  * Routes:  #hub (or empty) = hub overview
  *          #land | #water | #weather | #biodiversity | #agriculture
  *          #community | #history | #governance
+ *
+ * Sections are hash-routed, so the single path segment is free to carry the
+ * region slug.
  */
 
 import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
 import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
+import { getRegion, isReachable, DEFAULT_REGION } from '../lib/regions/index.js';
+import { getContent } from '../lib/regions/content.js';
 import {
-  ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
-  getAllSections, getSectionById,
-  getEventsCalendar, getLandmarks,
+  getAllSections as getAllSectionsPT, getSectionById as getSectionByIdPT,
+  getEventsCalendar as getEventsCalendarPT, getLandmarks as getLandmarksPT,
 } from '../lib/wiki-data.js';
+
+// ---- Active region, resolved from the path ------------------------------
+// /wiki/<slug> → slug; /wiki → the default. Unknown or draft slugs fall back
+// to the default rather than rendering a broken page.
+const slugFromPath = window.location.pathname.replace(/^\/wiki\/?/, '').replace(/\/$/, '');
+const ACTIVE_SLUG = slugFromPath && isReachable(slugFromPath) ? slugFromPath : DEFAULT_REGION;
+const REGION = getRegion(ACTIVE_SLUG);
+const CONTENT = getContent(ACTIVE_SLUG);
+
+// The rest of this file was written against a singleton called ODEMIRA. It is
+// now whichever region the URL asked for; the alias keeps ~65 call sites
+// working while they get renamed piecemeal.
+const ODEMIRA = CONTENT.REGION ?? {
+  name: REGION.name,
+  subtitle: REGION.subtitle,
+  country: REGION.country,
+  region: REGION.subtitle,
+  center: REGION.center,
+  bbox: [REGION.bbox.swLat, REGION.bbox.swLng, REGION.bbox.neLat, REGION.bbox.neLng],
+  area: REGION.areaKm2,
+};
+const SECTIONS = CONTENT.SECTIONS;
+const EVENTS_CALENDAR = CONTENT.EVENTS_CALENDAR;
+const LANDMARKS = CONTENT.LANDMARKS;
+
+// Where this region's dashboard data lives — baked JSON first, API as fallback.
+const DATA_BASE = `/data/${ACTIVE_SLUG}`;
+const API_BASE = `/api/regions/${ACTIVE_SLUG}`;
+
+// Odemira's content carries PT translations, and the wiki-data helpers switch
+// on the stored language. Regions without a translation read their sections
+// straight off the registry.
+const HAS_PT = ACTIVE_SLUG === DEFAULT_REGION;
+const getAllSections = () => (HAS_PT ? getAllSectionsPT() : Object.values(SECTIONS));
+const getSectionById = (id) => (HAS_PT ? getSectionByIdPT(id) : (SECTIONS[id] ?? null));
+const getEventsCalendar = () => (HAS_PT ? getEventsCalendarPT() : EVENTS_CALENDAR);
+const getLandmarks = () => (HAS_PT ? getLandmarksPT() : LANDMARKS);
 
 // Charts & dashboard
 import {
@@ -70,6 +114,14 @@ const drawerNav = document.getElementById('wiki-drawer-nav');
 
 // ---- State ----
 let currentMap = null;
+
+// wiki.html ships neutral meta so one page can serve any region; the active
+// region names itself here.
+document.title = `${REGION.name} Wiki — LandLibrary`;
+const _descEl = document.querySelector('meta[name="description"]');
+if (_descEl) _descEl.setAttribute('content', `Everything you need to know about ${REGION.name}.`);
+const _chatTitleEl = document.querySelector('.chat-panel-title');
+if (_chatTitleEl) _chatTitleEl.textContent = `Ask about ${REGION.name}`;
 
 // ---- Mobile drawer logic ----
 function openDrawer() {
@@ -347,15 +399,16 @@ async function renderHub() {
     <div class="wiki-hub-breadcrumb">
       <a href="/">${t('wiki.hub.breadcrumb.commons')}</a>
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-      <span>${t('wiki.hub.breadcrumb.odemira')}</span>
+      <span>${REGION.name}</span>
     </div>
 
     <section class="wiki-hub-hero">
       <div class="wiki-hub-hero-left">
-        <h1>${t('wiki.hub.hero.title')}</h1>
+        <h1>${REGION.name}</h1>
         <p class="wiki-hub-description">
-          ${ODEMIRA.subtitle} — A municipality in the Beja District of Portugal's Alentejo region,
-          encompassing approximately ${ODEMIRA.area.toLocaleString()} km² of coastal and inland ecosystems.
+          ${REGION.subtitle} — ${SECTIONS.bioregion?.intro
+            ? SECTIONS.bioregion.intro.split('. ').slice(0, 2).join('. ').replace(/\.?$/, '.')
+            : `Approximately ${REGION.areaKm2.toLocaleString()} km².`}
         </p>
         <div class="wiki-hub-meta">
           <span class="wiki-hub-meta-item">
@@ -539,7 +592,7 @@ function renderDashboard(section) {
 }
 
 // ---------------------------------------------------------------------------
-// Environmental Dashboard (custom render — Odemira region snapshot)
+// Environmental Dashboard (custom render — regional snapshot)
 // ---------------------------------------------------------------------------
 
 // Inline Lucide SVG icons (https://lucide.dev). Stroke-only paths kept
@@ -641,9 +694,9 @@ function renderEnvironmentalDashboard() {
     <section class="ed-root" id="environmental-dashboard">
 
       <header class="ed-insights-head">
-        <p class="ed-insights-sub">The following insights are derived from data from the sensor network of Odemira region.</p>
+        <p class="ed-insights-sub">The following insights are derived from data from the sensor network of the ${REGION.name} region.</p>
         <button type="button" class="ed-insights-count ed-insights-count-btn" id="ed-sensor-status-btn" aria-haspopup="dialog">
-          <strong id="ed-regional-sensor-count">—</strong> sensors live across Odemira
+          <strong id="ed-regional-sensor-count">—</strong> sensors live across ${REGION.name}
         </button>
       </header>
 
@@ -657,7 +710,7 @@ function renderEnvironmentalDashboard() {
            top-left view buttons (exclusive), legend underneath that swaps with
            the active view, LULC year scrubber bottom-center when Land Use is on. -->
       <section class="ed-region-map-block">
-        <div class="ed-region-map" id="ed-station-map" aria-label="Map of Odemira data stations"></div>
+        <div class="ed-region-map" id="ed-station-map" aria-label="Map of ${REGION.name} data stations"></div>
 
         <div class="ed-map-overlay">
           <div class="ed-map-views" role="group" aria-label="Map view">
@@ -863,7 +916,7 @@ function renderEnvironmentalDashboard() {
               <div class="ed-reservoirs-legend">
                 <span class="ed-reservoirs-leg-mean"><i></i>Regional trend</span>
                 <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-reservoirs-hero-label">Selected reservoir</span></span>
-                <span class="ed-reservoirs-leg-other"><i></i>Other Odemira reservoirs</span>
+                <span class="ed-reservoirs-leg-other"><i></i>Other ${REGION.name} reservoirs</span>
                 <span class="ed-reservoirs-leg-drought"><i></i>Drought year (SPI-12 &lt; −1.5)</span>
               </div>
               <svg class="ed-reservoirs-chart" id="ed-reservoirs-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
@@ -878,7 +931,7 @@ function renderEnvironmentalDashboard() {
               </div>
               <div class="ed-reservoirs-legend">
                 <span class="ed-reservoirs-leg-hero"><i></i><span id="ed-groundwater-hero-label">Selected piezometer</span></span>
-                <span class="ed-reservoirs-leg-other"><i></i>Other piezometers in Odemira</span>
+                <span class="ed-reservoirs-leg-other"><i></i>Other piezometers in ${REGION.name}</span>
                 <span class="ed-groundwater-axis-note">↓ deeper = water table further below surface</span>
               </div>
               <svg class="ed-reservoirs-chart" id="ed-groundwater-chart" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-hidden="true">
@@ -899,7 +952,7 @@ function renderEnvironmentalDashboard() {
                 <text x="500" y="110" text-anchor="middle" fill="#b91c1c" font-weight="900">DATA?</text>
               </svg>
               <div class="ed-wq-legend">
-                <span><i style="background:#3d6b8c"></i>Monthly median across Odemira quality stations</span>
+                <span><i style="background:#3d6b8c"></i>Monthly median across ${REGION.name} quality stations</span>
                 <span><i class="ed-wq-range"></i>Min–max spread that month</span>
                 <span><i class="ed-wq-threshold"></i>WHO / EU guideline (50 mg/l)</span>
               </div>
@@ -923,7 +976,7 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--bio">
           <div class="ed-panel-head">${lucide('sprout')} Biodiversity</div>
 
-          <p class="ed-card-desc">Odemira spans a rich gradient of ecosystems from Atlantic cliffs to Mediterranean woodlands.</p>
+          <p class="ed-card-desc">${SECTIONS.ecology?.intro ?? ''}</p>
 
           <!-- Wiki ecology stats -->
           <div class="ed-bio-stats" id="ed-bio-stats"></div>
@@ -940,7 +993,7 @@ function renderEnvironmentalDashboard() {
 
           <!-- Flora & Fauna quadrants: most observed + most endangered, per column -->
           <div class="ed-weather-block">
-            <div class="ed-card-title">Flora &amp; Fauna <span>(observed in Odemira)</span></div>
+            <div class="ed-card-title">Flora &amp; Fauna <span>(observed in ${REGION.name})</span></div>
             <div class="ed-bio-quad">
               <div class="ed-bio-quad-col">
                 <div class="ed-bio-quad-col-head">Flora</div>
@@ -973,7 +1026,7 @@ function renderEnvironmentalDashboard() {
       </div>
 
       <!-- Add Sensor modal: simple proposal form posted to
-           /api/regions/odemira/sensor-proposals — a curator follows up. -->
+           /api/regions/<slug>/sensor-proposals — a curator follows up. -->
       <div class="ed-modal" id="ed-add-sensor-modal" role="dialog" aria-modal="true" aria-labelledby="ed-add-sensor-title" hidden>
         <div class="ed-modal-backdrop" data-close></div>
         <div class="ed-modal-card ed-modal-card--narrow">
@@ -1102,13 +1155,13 @@ function renderDashboardError(message) {
   }
 }
 
-// Hydrate the dashboard cells with real values from /api/regions/odemira.
+// Hydrate the dashboard cells with real values from /api/regions/<slug>.
 // Every cell tagged with [data-cell="<dot.path>"] is resolved against the
 // response; null/undefined values keep their DATA? placeholder.
 async function hydrateEnvironmentalDashboard() {
   let payload;
   try {
-    payload = await fetchDashboard('/data/odemira/facts.json', '/api/regions/odemira');
+    payload = await fetchDashboard(`${DATA_BASE}/facts.json`, `/api/regions/${ACTIVE_SLUG}`);
     if (!payload?.ok) throw new Error(payload?.error || 'payload not ok');
   } catch (e) {
     console.warn('[dashboard] fetch failed:', e.message);
@@ -1557,7 +1610,7 @@ async function hydrateEnvironmentalDashboard() {
     let coords = payload.property?.coords;
     if (Array.isArray(coords)) coords = { lat: coords[0], lng: coords[1] };
     if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
-      // Fall back to Odemira town centre.
+      // Fall back to the region's centre.
       coords = { lat: 37.55, lng: -8.64 };
     }
 
@@ -1713,7 +1766,7 @@ async function hydrateEnvironmentalDashboard() {
     if (!container || !legendEl || !togglesEl) return;
     let payloadStations;
     try {
-      payloadStations = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
+      payloadStations = await fetchDashboard(`${DATA_BASE}/stations.json`, `${API_BASE}/stations`);
       if (!payloadStations?.ok || !Array.isArray(payloadStations.features)) return;
     } catch { return; }
 
@@ -1927,7 +1980,7 @@ async function hydrateEnvironmentalDashboard() {
     let rainfallPromise = null;
     const loadRainfallStations = () => {
       if (rainfallPromise) return rainfallPromise;
-      rainfallPromise = fetchDashboard('/data/odemira/rainfall-stations.json', '/api/regions/odemira/rainfall-stations')
+      rainfallPromise = fetchDashboard(`${DATA_BASE}/rainfall-stations.json`, `${API_BASE}/rainfall-stations`)
         .catch(() => null)
         .then(d => {
           if (!d || !d.ok || !Array.isArray(d.features) || !d.features.length) return null;
@@ -2097,7 +2150,7 @@ async function hydrateEnvironmentalDashboard() {
 
     const loadBioGeoJson = () => {
       if (bioGeoJsonPromise) return bioGeoJsonPromise;
-      bioGeoJsonPromise = fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations')
+      bioGeoJsonPromise = fetchDashboard(`${DATA_BASE}/observations.json`, `${API_BASE}/observations`)
         .then(d => (d && d.ok && d.geojson?.features?.length) ? d : null)
         .catch(() => null);
       return bioGeoJsonPromise;
@@ -2480,7 +2533,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let payloadResv;
     try {
-      payloadResv = await fetchDashboard('/data/odemira/reservoirs.json', '/api/regions/odemira/reservoirs');
+      payloadResv = await fetchDashboard(`${DATA_BASE}/reservoirs.json`, `${API_BASE}/reservoirs`);
       if (!payloadResv?.ok || !Array.isArray(payloadResv.features) || !payloadResv.features.length) return;
     } catch { return; }
     const features = payloadResv.features;
@@ -2627,7 +2680,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchDashboard('/data/odemira/groundwater.json', '/api/regions/odemira/groundwater');
+      data = await fetchDashboard(`${DATA_BASE}/groundwater.json`, `${API_BASE}/groundwater`);
       if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
@@ -2732,7 +2785,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchDashboard('/data/odemira/rainfall.json', '/api/regions/odemira/rainfall');
+      data = await fetchDashboard(`${DATA_BASE}/rainfall.json`, `${API_BASE}/rainfall`);
       if (!data?.ok || !Array.isArray(data.years) || !data.years.length) return;
     } catch { return; }
 
@@ -2795,7 +2848,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data;
     try {
-      data = await fetchDashboard('/data/odemira/reservoirs.json', '/api/regions/odemira/reservoirs');
+      data = await fetchDashboard(`${DATA_BASE}/reservoirs.json`, `${API_BASE}/reservoirs`);
       if (!data?.ok || !Array.isArray(data.features) || !data.features.length) return;
     } catch { return; }
     const features = data.features;
@@ -2872,14 +2925,14 @@ async function hydrateEnvironmentalDashboard() {
   })();
 
   // Water quality cards — Nitrate (single series + spread) and Heavy metals
-  // (one line per element). Both hydrate from /api/regions/odemira/water-quality.
+  // (one line per element). Both hydrate from /api/regions/<slug>/water-quality.
   (async () => {
     const nChart = document.getElementById('ed-wq-nitrate-chart');
     const mChart = document.getElementById('ed-wq-metals-chart');
     if (!nChart && !mChart) return;
     let data;
     try {
-      data = await fetchDashboard('/data/odemira/water-quality.json', '/api/regions/odemira/water-quality');
+      data = await fetchDashboard(`${DATA_BASE}/water-quality.json`, `${API_BASE}/water-quality`);
       if (!data?.ok) return;
     } catch { return; }
 
@@ -3003,7 +3056,7 @@ async function hydrateEnvironmentalDashboard() {
     if (!grid) return;
     let stations;
     try {
-      const data = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
+      const data = await fetchDashboard(`${DATA_BASE}/stations.json`, `${API_BASE}/stations`);
       if (!data?.ok || !Array.isArray(data.features)) return;
       stations = data.features;
     } catch { return; }
@@ -3048,7 +3101,7 @@ async function hydrateEnvironmentalDashboard() {
         : '';
       card.querySelector('[data-snirh-stations]').innerHTML = codes.length
         ? `<span class="ed-snirh-card-pname">Stations</span> ${codes.join(', ')}${overflow ? ` <span class="ed-snirh-card-overflow">+ ${overflow} more</span>` : ''}`
-        : '<span class="ed-snirh-card-empty">No stations in Odemira bbox.</span>';
+        : `<span class="ed-snirh-card-empty">No stations in ${REGION.name} bbox.</span>`;
     });
     hydrated += 1;
   })();
@@ -3061,7 +3114,7 @@ async function hydrateEnvironmentalDashboard() {
       || (payload.maps && (payload.maps.regional || payload.maps.overview));
     if (!url) return;
     wrap.innerHTML = `
-      <img class="ed-fire-img" src="${url}" alt="Static map of Odemira region with 50km reference ring" loading="lazy" />
+      <img class="ed-fire-img" src="${url}" alt="Static map of the ${REGION.name} region with 50km reference ring" loading="lazy" />
       <div class="ed-fire-ring"></div>
       <div class="ed-fire-marker">${lucide('home', 18)}</div>
     `;
@@ -3197,7 +3250,7 @@ async function hydrateEnvironmentalDashboard() {
     // the total observation count) ------------------------------------------
     let obs;
     try {
-      obs = await fetchDashboard('/data/odemira/observations.json', '/api/regions/odemira/observations');
+      obs = await fetchDashboard(`${DATA_BASE}/observations.json`, `${API_BASE}/observations`);
     } catch { obs = null; }
 
     // ---- Wiki ecology stats + live counts ----------------------------------
@@ -3560,8 +3613,8 @@ async function hydrateEnvironmentalDashboard() {
   }
 
   hydrateAnnualLinesCard({
-    staticEndpoint: '/data/odemira/rainfall-stations.json',
-    endpoint: '/api/regions/odemira/rainfall-stations',
+    staticEndpoint: `${DATA_BASE}/rainfall-stations.json`,
+    endpoint: `${API_BASE}/rainfall-stations`,
     ids: {
       chart: 'ed-met-rainfall-chart',
       select: 'ed-met-rainfall-select',
@@ -3573,7 +3626,7 @@ async function hydrateEnvironmentalDashboard() {
   });
 
   // ---- Sensors button + modal --------------------------------------------
-  // Reads /api/regions/odemira/stations (the SAME source as the map markers and
+  // Reads /api/regions/<slug>/stations (the SAME source as the map markers and
   // the header count) and lists every sensor grouped by type — name + parish
   // only, no status. Using one source keeps the header count, the map and this
   // modal in agreement.
@@ -3597,7 +3650,7 @@ async function hydrateEnvironmentalDashboard() {
 
     let data = null;
     try {
-      data = await fetchDashboard('/data/odemira/stations.json', '/api/regions/odemira/stations');
+      data = await fetchDashboard(`${DATA_BASE}/stations.json`, `${API_BASE}/stations`);
       if (!data?.ok || !Array.isArray(data.features)) throw new Error(data?.error || 'unknown');
     } catch (e) {
       if (subEl) subEl.textContent = 'Sensor inventory unavailable.';
@@ -3618,7 +3671,7 @@ async function hydrateEnvironmentalDashboard() {
 
     if (subEl) {
       const total = sensors.length;
-      subEl.textContent = `${total} sensor${total === 1 ? '' : 's'} across Odemira`;
+      subEl.textContent = `${total} sensor${total === 1 ? '' : 's'} across ${REGION.name}`;
     }
     if (bodyEl) {
       bodyEl.innerHTML = TYPE_ORDER
@@ -3688,7 +3741,7 @@ async function hydrateEnvironmentalDashboard() {
       msg.className = 'ed-form-msg';
       const data = Object.fromEntries(new FormData(form).entries());
       try {
-        const res = await fetch('/api/regions/odemira/sensor-proposals', {
+        const res = await fetch(`${API_BASE}/sensor-proposals`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -3712,7 +3765,7 @@ async function hydrateEnvironmentalDashboard() {
     });
   })();
 
-  console.log(`[dashboard] hydrated ${hydrated} cell${hydrated === 1 ? '' : 's'} from /api/regions/odemira (runId ${payload.runId})`);
+  console.log(`[dashboard] hydrated ${hydrated} cell${hydrated === 1 ? '' : 's'} from ${API_BASE} (runId ${payload.runId})`);
 }
 
 // ---------------------------------------------------------------------------
@@ -3737,7 +3790,7 @@ async function renderSection(sectionId) {
       <div class="wiki-section-breadcrumb">
         <a href="/">${t('wiki.hub.breadcrumb.commons')}</a>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-        <a href="#hub">${t('wiki.hub.breadcrumb.odemira')}</a>
+        <a href="#hub">${REGION.name}</a>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
         <span>${t('wiki.sections.' + section.id) || section.title}</span>
       </div>
@@ -4133,7 +4186,7 @@ function renderContribute(preselectedSection) {
   content.innerHTML = `
     <section class="wiki-hero">
       <h1>Share Your Knowledge</h1>
-      <p class="wiki-intro">Help build the wiki. Share a story, tip, event, place, or resource about the Odemira region. All fields are optional except your message.</p>
+      <p class="wiki-intro">Help build the wiki. Share a story, tip, event, place, or resource about the ${REGION.name} region. All fields are optional except your message.</p>
     </section>
 
     <section class="wiki-contribute-form">
@@ -4377,7 +4430,7 @@ async function loadLandData(container) {
     reverseGeocode(lat, lng).catch(() => null),
   ]);
 
-  const address = geoResult ? geoResult.display_name : 'Odemira, Portugal';
+  const address = geoResult ? geoResult.display_name : `${REGION.name}, ${REGION.subtitle}`;
 
   container.innerHTML = `
     <h2>Live Data &mdash; The Land</h2>
@@ -4724,7 +4777,7 @@ function loadGovernanceData(container) {
     <p>The map above shows Natura 2000 designations (SCI and SPA) from the European Environment Agency.</p>
     <div class="wiki-data-grid">
       <div class="wiki-data-card wiki-data-card-wide">
-        <h3>Protected Areas in Odemira</h3>
+        <h3>Protected Areas in ${REGION.name}</h3>
         <table class="wiki-governance-table">
           <thead>
             <tr><th>Name</th><th>Type</th><th>Designation</th><th>Code</th><th>Description</th></tr>

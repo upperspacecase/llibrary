@@ -9,10 +9,18 @@
 export const meta = {
   slug: 'odemira',
   status: 'live',
+  featured: true,
   name: 'Odemira',
   subtitle: 'Southwest Alentejo, Portugal',
   country: 'PT',
   kind: 'municipality',
+
+  // Card artwork and the two stats the home/commons cards show.
+  image: '/wiki/bioregion.png',
+  cardStats: [
+    { value: '1,720.6', unit: 'km²' },
+    { value: '31,488', unit: 'population' },
+  ],
 
   // Synthetic region landbook driving the dashboard.
   landbookId: 'region-odemira',
