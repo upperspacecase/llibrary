@@ -280,7 +280,29 @@ before them against hardcoded copies, but that doubles the mess.
   practical regression net.
 
 ### Phase 5 — Run the pipeline for Lima
-*Small, mostly waiting. Nothing here is new code.*
+*Facts DONE 2026-08-04. Station ingest still outstanding.*
+
+Done: the `region-bacia-do-lima` landbook was created from Carolina's 27-point
+boundary via `POST /api/landbooks`, with `center` set to the sample point
+**Refóios do Lima (41.7830, -8.5450)** — valley floor at 39 m. The centroid was
+rejected at 306 m on high ground, which would have sampled soil and geology off the
+uplands. `POST /api/landbooks/region-bacia-do-lima/refresh` then ran the full
+pipeline: **42 of 45 sources OK**, 21 data sections, 13 narratives, scores written,
+and all three layers (observations / facts / report v2) persisted.
+
+Two known gaps from that run:
+
+- `historicalFires` fails with **NASA FIRMS HTTP 400**, persistently, across both a
+  full run and a single-source retry. Worth checking whether Odemira hits the same —
+  it may be a key or date-range problem affecting every region, not a Lima issue.
+- The **SNIRH station ingest has not run.** `snirh.apambiente.pt` was unreachable
+  from this machine (connect timeout on 443), so basin instrumentation could not be
+  verified, and the ingest scripts write to Mongo directly — they need `MONGODB_URI`,
+  which lives in `.env.local`. Until that runs, `stations`, `groundwater`,
+  `reservoirs`, `water-quality` and `rainfall-stations` return empty for Lima and
+  those dashboard panels stay blank.
+
+Original steps, for reference:
 
 1. Resolve D3 (boundary), then create the `region-bacia-do-lima` landbook doc with the
    chosen polygon and a representative sample point — the Odemira precedent picks an

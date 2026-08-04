@@ -34,16 +34,18 @@ export const meta = {
     { value: '10', unit: 'municipalities' },
   ],
 
-  // Synthetic region landbook — NOT created yet. Nothing writes to this id
-  // until the boundary decision (D3) is settled and the pipeline is run.
+  // Synthetic region landbook, created 2026-08-04 from Carolina's boundary and
+  // piped the same day (42/45 sources, 13 narratives).
   landbookId: 'region-bacia-do-lima',
 
   center: [41.86340, -8.37220],
   bbox: { swLat: 41.6798, swLng: -8.8288, neLat: 42.0797, neLng: -8.0871 },
 
-  // Not chosen yet. Odemira uses an agricultural point rather than the
-  // centroid; the equivalent call for the basin is still open.
-  samplePoint: null,
+  // Refóios do Lima — valley floor at 39 m, in the agricultural middle of the
+  // basin. The polygon centroid was rejected: it lands at 306 m on high ground,
+  // which would have sampled soil and geology off the uplands rather than the
+  // farmed valley. Mirrors Odemira's "sampled at São Teotónio agri" choice.
+  samplePoint: [41.7830, -8.5450],
 
   areaKm2: 1180.1,
 
