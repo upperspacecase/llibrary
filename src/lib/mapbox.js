@@ -259,7 +259,10 @@ export function addWmsLayer(map, wmsUrl, wmsParams, opts = {}) {
         visible = false,
     } = opts;
 
-    // Build WMS tile URL template
+    // Build WMS tile URL template.
+    // STYLES is required by the spec even when empty. Omitting it made every
+    // overlay on this site — EFFIS, CORINE and Natura2000 — return a
+    // ServiceException instead of tiles.
     const params = new URLSearchParams({
         service: 'WMS',
         request: 'GetMap',
@@ -267,6 +270,7 @@ export function addWmsLayer(map, wmsUrl, wmsParams, opts = {}) {
         format: wmsParams.format || 'image/png',
         transparent: 'true',
         srs: 'EPSG:3857',
+        styles: '',
         width: '256',
         height: '256',
         bbox: '{bbox-epsg-3857}',
