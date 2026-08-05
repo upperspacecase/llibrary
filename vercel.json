@@ -16,7 +16,7 @@
     },
     {
       "source": "/wiki/:region",
-      "destination": "/wiki.html"
+      "destination": "/wiki"
     },
     {
       "source": "/report/:slug",

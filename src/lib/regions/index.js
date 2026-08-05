@@ -78,3 +78,17 @@ export function resolveRegion(req) {
   const slug = typeof req?.query?.region === 'string' ? req.query.region : null;
   return slug ? getRegion(slug) : null;
 }
+
+/**
+ * Resolve the active region in the browser, from either URL form:
+ *   /wiki?region=<slug>   — needs no rewrite, always works
+ *   /wiki/<slug>          — prettier, depends on the vercel.json rewrite
+ * Unknown, unreachable or missing slugs fall back to the default rather than
+ * rendering a broken page.
+ */
+export function resolveRegionFromUrl(loc = window.location) {
+  const fromQuery = new URLSearchParams(loc.search).get('region');
+  const fromPath = loc.pathname.replace(/^\/wiki\/?/, '').replace(/\/$/, '');
+  const slug = fromQuery || fromPath;
+  return slug && isReachable(slug) ? slug : DEFAULT_REGION;
+}

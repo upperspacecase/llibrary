@@ -6,15 +6,14 @@
 
 import { initI18n, t } from '../lib/i18n.js';
 import { escapeHtml } from '../lib/utils.js';
-import { getRegion, isReachable, DEFAULT_REGION } from '../lib/regions/index.js';
+import { getRegion, resolveRegionFromUrl } from '../lib/regions/index.js';
 
 initI18n();
 
 const MAX_MESSAGES = 50;
 
-// Same path resolution as wiki.js — /wiki/<slug>, falling back to the default.
-const _slug = window.location.pathname.replace(/^\/wiki\/?/, '').replace(/\/$/, '');
-const activeRegion = _slug && isReachable(_slug) ? _slug : DEFAULT_REGION;
+// Same resolution as wiki.js — ?region= or /wiki/<slug>, default otherwise.
+const activeRegion = resolveRegionFromUrl();
 const regionName = getRegion(activeRegion).name;
 
 // Per-region history — Pinecone namespaces the two regions apart, so their

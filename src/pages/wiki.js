@@ -16,18 +16,17 @@ import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
 import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
-import { getRegion, isReachable, DEFAULT_REGION } from '../lib/regions/index.js';
+import { getRegion, resolveRegionFromUrl, DEFAULT_REGION } from '../lib/regions/index.js';
 import { getContent } from '../lib/regions/content.js';
 import {
   getAllSections as getAllSectionsPT, getSectionById as getSectionByIdPT,
   getEventsCalendar as getEventsCalendarPT, getLandmarks as getLandmarksPT,
 } from '../lib/wiki-data.js';
 
-// ---- Active region, resolved from the path ------------------------------
-// /wiki/<slug> → slug; /wiki → the default. Unknown or draft slugs fall back
-// to the default rather than rendering a broken page.
-const slugFromPath = window.location.pathname.replace(/^\/wiki\/?/, '').replace(/\/$/, '');
-const ACTIVE_SLUG = slugFromPath && isReachable(slugFromPath) ? slugFromPath : DEFAULT_REGION;
+// ---- Active region, resolved from the URL -------------------------------
+// Accepts /wiki?region=<slug> and /wiki/<slug>; falls back to the default for
+// anything unknown, draft or missing.
+const ACTIVE_SLUG = resolveRegionFromUrl();
 const REGION = getRegion(ACTIVE_SLUG);
 const CONTENT = getContent(ACTIVE_SLUG);
 

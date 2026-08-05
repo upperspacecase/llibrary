@@ -8,16 +8,24 @@
  * Only listed regions (live or preview) ever render; drafts are invisible.
  */
 
-import { getListedRegions, getFeaturedRegions } from './regions/index.js';
+import { getListedRegions, getFeaturedRegions, DEFAULT_REGION } from './regions/index.js';
 
 const PIN_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';
 const DOT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5" fill="currentColor"/></svg>';
 const ARROW_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
-/** Every listed region links to /wiki/<slug>; the default keeps the bare /wiki
- *  URL it has always had, so existing links and any indexed pages still work. */
+/**
+ * The default region keeps the bare /wiki URL it has always had.
+ *
+ * Others use ?region=<slug> rather than /wiki/<slug>. The path form depends on
+ * a vercel.json rewrite that has never actually worked — with cleanUrls on,
+ * /wiki.html 308-redirects to /wiki, so it was not a usable rewrite
+ * destination and /wiki/<anything> 404s. The destination is fixed now, but the
+ * query form needs no rewrite at all and cannot 404, so links use it until the
+ * path form is confirmed working on a deploy. wiki.js accepts both.
+ */
 function href(region) {
-  return region.slug === 'odemira' ? '/wiki' : `/wiki/${region.slug}`;
+  return region.slug === DEFAULT_REGION ? '/wiki' : `/wiki?region=${encodeURIComponent(region.slug)}`;
 }
 
 function escHTML(str) {
