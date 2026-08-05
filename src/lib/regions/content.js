@@ -12,33 +12,16 @@
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
 } from '../wiki-data.js';
+import { LIMA, LIMA_SECTIONS } from './bacia-do-lima-content.js';
 
 const EMPTY = { REGION: null, SECTIONS: {}, EVENTS_CALENDAR: [], LANDMARKS: [] };
 
-/**
- * The dashboard renders entirely from piped data, so a region has one useful
- * section the moment its pipeline has run — before a word is written. Without
- * it a content-less region shows an empty page despite having real data.
- */
-const DASHBOARD_SECTION = {
-  id: 'dashboard',
-  title: 'Regional Dashboard',
-  subtitle: '',
-  color: '#1B3A2F',
-  icon: 'activity',
-  description: '',
-  accentColor: '#1B3A2F',
-  intro: '',
-  articles: [],
-  mapLayers: [],
-  visuals: {},
-  references: [],
-};
-
 const CONTENT = {
   odemira: { REGION: ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS },
-  // No prose written yet — the dashboard is all it has, and that is honest.
-  'bacia-do-lima': { ...EMPTY, SECTIONS: { dashboard: DASHBOARD_SECTION } },
+  // The regional dashboard is deliberately not carried over — it depends on a
+  // station network this region does not have ingested, and it is a nice-to-have
+  // rather than the point of the wiki.
+  'bacia-do-lima': { ...EMPTY, REGION: LIMA, SECTIONS: LIMA_SECTIONS },
 };
 
 /** Content for a slug. Unknown or unauthored regions get the empty set. */
