@@ -15,7 +15,7 @@ const BASE = 'https://firms.modaps.eosdis.nasa.gov/api/area/csv';
  * Get active fires within a bounding box for the last N days.
  * Uses the VIIRS SNPP sensor (375m resolution, from 2012).
  * @param {number[]} bbox - [south, west, north, east]
- * @param {number} days - Number of days to look back (1-10)
+ * @param {number} days - Number of days to look back (1-5; FIRMS caps it there)
  * @returns {Promise<Object[]>} Array of fire detections
  */
 export async function getActiveFires(bbox, days = 2) {

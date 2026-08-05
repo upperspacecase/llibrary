@@ -94,7 +94,7 @@ function getFetchFn(source, lat, lng, boundary) {
     infrastructure: bbox ? () => getInfrastructure(bbox) : null,
     protectedAreas: bbox ? () => getProtectedAreas(bbox) : null,
     activeFires: () => getActiveFiresNearby(lat, lng, 50, 2),
-    historicalFires: () => getActiveFiresNearby(lat, lng, 25, 10),
+    historicalFires: () => getActiveFiresNearby(lat, lng, 25, 5),
     riskScores: () => fetchRiskScores(lat, lng),
     admin: () => getAdminUnit(lat, lng),
     ipmaLocation: () => getNearestForecastLocation(lat, lng),

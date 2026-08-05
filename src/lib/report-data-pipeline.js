@@ -262,7 +262,8 @@ async function _fetchAllDataInner(lat, lng, boundary, areaHa) {
     ['infrastructure', () => getInfrastructure(bbox)],
     ['protectedAreas', () => getProtectedAreas(bbox)],
     ['activeFires', () => getActiveFiresNearby(lat, lng, 50, 2)],
-    ['historicalFires', () => getActiveFiresNearby(lat, lng, 25, 10)],
+    // FIRMS caps day_range at 5 — asking for 10 returns HTTP 400 for every region.
+    ['historicalFires', () => getActiveFiresNearby(lat, lng, 25, 5)],
     ['riskScores', () => fetchRiskScores(lat, lng)],
     ['admin', () => getAdminUnit(lat, lng)],
     ['ipmaLocation', () => getNearestForecastLocation(lat, lng)],
