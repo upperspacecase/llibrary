@@ -410,10 +410,11 @@ async function renderHub() {
             : `Approximately ${REGION.areaKm2.toLocaleString()} km².`}
         </p>
         <div class="wiki-hub-meta">
+          ${ODEMIRA.population ? `
           <span class="wiki-hub-meta-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             ${ODEMIRA.population.toLocaleString()} ${t('wiki.hub.residents')}
-          </span>
+          </span>` : ''}
           <span class="wiki-hub-meta-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             ${t('wiki.hub.updated')} ${lastUpdatedText}
@@ -422,18 +423,11 @@ async function renderHub() {
       </div>
       <div class="wiki-hub-stats">
         <div class="wiki-hub-stats-grid">
+          ${(REGION.hubStats || []).map(st => `
           <div class="wiki-hub-stat">
-            <span class="wiki-hub-stat-value">${ODEMIRA.area}</span>
-            <span class="wiki-hub-stat-label">${t('wiki.hub.kmArea')}</span>
-          </div>
-          <div class="wiki-hub-stat">
-            <span class="wiki-hub-stat-value">44%</span>
-            <span class="wiki-hub-stat-label">${t('wiki.hub.protected')}</span>
-          </div>
-          <div class="wiki-hub-stat">
-            <span class="wiki-hub-stat-value">110 km</span>
-            <span class="wiki-hub-stat-label">${t('wiki.hub.coastline')}</span>
-          </div>
+            <span class="wiki-hub-stat-value">${st.value}</span>
+            <span class="wiki-hub-stat-label">${st.label}</span>
+          </div>`).join('')}
           <div class="wiki-hub-stat">
             <span class="wiki-hub-stat-value">${sections.length}</span>
             <span class="wiki-hub-stat-label">${t('wiki.hub.wikiSections')}</span>

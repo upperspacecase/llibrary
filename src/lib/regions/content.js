@@ -15,9 +15,30 @@ import {
 
 const EMPTY = { REGION: null, SECTIONS: {}, EVENTS_CALENDAR: [], LANDMARKS: [] };
 
+/**
+ * The dashboard renders entirely from piped data, so a region has one useful
+ * section the moment its pipeline has run — before a word is written. Without
+ * it a content-less region shows an empty page despite having real data.
+ */
+const DASHBOARD_SECTION = {
+  id: 'dashboard',
+  title: 'Regional Dashboard',
+  subtitle: '',
+  color: '#1B3A2F',
+  icon: 'activity',
+  description: '',
+  accentColor: '#1B3A2F',
+  intro: '',
+  articles: [],
+  mapLayers: [],
+  visuals: {},
+  references: [],
+};
+
 const CONTENT = {
   odemira: { REGION: ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS },
-  'bacia-do-lima': EMPTY,
+  // No prose written yet — the dashboard is all it has, and that is honest.
+  'bacia-do-lima': { ...EMPTY, SECTIONS: { dashboard: DASHBOARD_SECTION } },
 };
 
 /** Content for a slug. Unknown or unauthored regions get the empty set. */

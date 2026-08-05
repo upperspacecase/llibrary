@@ -34,6 +34,14 @@ export const meta = {
     { value: '10', unit: 'municipalities' },
   ],
 
+  // Elevation from the pipeline's terrain profile for this boundary
+  // (min 10 m, max 1,252 m) — not an estimate.
+  hubStats: [
+    { value: '~1,180', label: 'km² area' },
+    { value: '10', label: 'municipalities' },
+    { value: '10–1,252 m', label: 'elevation' },
+  ],
+
   // Synthetic region landbook, created 2026-08-04 from Carolina's boundary and
   // piped the same day (42/45 sources, 13 narratives).
   landbookId: 'region-bacia-do-lima',

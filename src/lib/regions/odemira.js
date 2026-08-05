@@ -22,6 +22,14 @@ export const meta = {
     { value: '31,488', unit: 'population' },
   ],
 
+  // Stat tiles on the wiki hub. These were hardcoded into the page, which meant
+  // every region claimed Odemira's protected share and coastline.
+  hubStats: [
+    { value: '1,720.6', label: 'km² area' },
+    { value: '44%', label: 'protected' },
+    { value: '110 km', label: 'coastline' },
+  ],
+
   // Synthetic region landbook driving the dashboard.
   landbookId: 'region-odemira',
 
