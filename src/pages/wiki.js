@@ -195,7 +195,7 @@ async function fetchStats(forceRefresh = false) {
     return _statsCache;
   }
   try {
-    const res = await fetch('/api/wiki/contributions/stats');
+    const res = await fetch(`/api/wiki/contributions/stats?region=${ACTIVE_SLUG}`);
     if (!res.ok) throw new Error('Stats fetch failed');
     _statsCache = await res.json();
     _statsCacheTime = now;
@@ -5001,7 +5001,7 @@ async function loadContributions(sectionId) {
   if (!listEl) return;
 
   try {
-    const res = await fetch(`/api/wiki/contributions?section=${sectionId}`);
+    const res = await fetch(`/api/wiki/contributions?section=${sectionId}&region=${ACTIVE_SLUG}`);
     if (!res.ok) throw new Error('Failed to fetch');
     const contributions = await res.json();
 
@@ -5063,6 +5063,7 @@ function setupContributionForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          region: ACTIVE_SLUG,
           section: sectionId || 'general',
           type: type || 'story',
           title: title || '',
@@ -5124,7 +5125,7 @@ function initContribViewerClicks(sectionId) {
     overlay.style.display = 'flex';
 
     try {
-      const res = await fetch('/api/wiki/contributions?section=' + sectionId + '&type=' + typeFilter + '&limit=30');
+      const res = await fetch('/api/wiki/contributions?section=' + sectionId + '&type=' + typeFilter + '&limit=30&region=' + ACTIVE_SLUG);
       if (!res.ok) throw new Error('Failed to fetch');
       const items = await res.json();
 
@@ -5236,7 +5237,7 @@ async function loadRecentActivity(sectionId) {
   if (!listEl) return;
 
   try {
-    const res = await fetch(`/api/wiki/contributions?section=${sectionId}&limit=4`);
+    const res = await fetch(`/api/wiki/contributions?section=${sectionId}&limit=4&region=${ACTIVE_SLUG}`);
     if (!res.ok) throw new Error('Failed to fetch');
     const items = await res.json();
 
@@ -5469,7 +5470,7 @@ function initTextSelectionToolbar(sectionId) {
         const res = await fetch('/api/wiki/contributions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, region: ACTIVE_SLUG }),
         });
 
         if (!res.ok) {
@@ -5806,7 +5807,7 @@ function openContribModal(sectionId) {
         const res = await fetch('/api/wiki/contributions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, region: ACTIVE_SLUG }),
         });
 
         if (!res.ok) {

@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { getRegion, DEFAULT_REGION } from '../../../src/lib/regions/index.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -9,8 +10,15 @@ export default async function handler(req, res) {
     const contributions = await getCollection('wiki_contributions');
 
     // Aggregate counts per section and type
+    // Counts are per region. Legacy documents carry no region field and belong
+    // to the default one.
+    const slug = getRegion(req.query.region) ? req.query.region : DEFAULT_REGION;
+    const regionMatch = slug === DEFAULT_REGION
+        ? { $or: [{ region: slug }, { region: { $exists: false } }] }
+        : { region: slug };
+
     const pipeline = [
-        { $match: { status: 'active' } },
+        { $match: { status: 'active', ...regionMatch } },
         {
             $group: {
                 _id: { section: '$section', type: '$type' },

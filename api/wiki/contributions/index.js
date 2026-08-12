@@ -1,12 +1,25 @@
 import { getCollection } from '../../_db.js';
 import { notifyError } from '../../_notify.js';
+import { getRegion, DEFAULT_REGION } from '../../../src/lib/regions/index.js';
+
+/**
+ * Contributions were originally stored with no region, back when there was only
+ * one. Those documents belong to the default region, so a query for it must
+ * also match documents with no region field at all.
+ */
+function regionFilter(slug) {
+  return slug === DEFAULT_REGION
+    ? { $or: [{ region: slug }, { region: { $exists: false } }] }
+    : { region: slug };
+}
 
 export default async function handler(req, res) {
     const contributions = await getCollection('wiki_contributions');
 
     if (req.method === 'GET') {
         const { section, type, limit } = req.query;
-        const filter = { status: 'active' };
+        const slug = getRegion(req.query.region) ? req.query.region : DEFAULT_REGION;
+        const filter = { status: 'active', ...regionFilter(slug) };
 
         if (section) filter.section = section;
         if (type) {
@@ -33,7 +46,7 @@ export default async function handler(req, res) {
                 return res.status(400).json({ error: 'section, type, and content are required' });
             }
 
-            const validSections = ['bioregion', 'ecology', 'land', 'soil', 'water', 'climate', 'landuse', 'risks', 'culture', 'community', 'general'];
+            const validSections = ['bioregion', 'dashboard', 'ecology', 'land', 'soil', 'water', 'climate', 'landuse', 'risks', 'fires', 'culture', 'community', 'general'];
             const validTypes = ['story', 'tip', 'event', 'place', 'resource', 'edit', 'comment', 'flag'];
 
             if (!validSections.includes(body.section)) {
@@ -45,6 +58,7 @@ export default async function handler(req, res) {
 
             const doc = {
                 id: crypto.randomUUID(),
+                region: getRegion(body.region) ? body.region : DEFAULT_REGION,
                 section: body.section,
                 type: body.type,
                 title: body.title || '',
