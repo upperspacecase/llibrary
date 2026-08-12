@@ -16,6 +16,7 @@ import '../styles/main.css';
 import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '../lib/mapbox.js';
 import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
+import { escapeHtml } from '../lib/utils.js';
 import { getRegion, resolveRegionFromUrl, DEFAULT_REGION } from '../lib/regions/index.js';
 import {
   getContent, getSections, getEvents, getLandmarks as getRegionLandmarks,
@@ -408,6 +409,128 @@ function renderImageCredits() {
       <p class="wiki-hub-credits-note">Section photographs from Wikimedia Commons, reused under their stated licences.</p>
       <ul class="wiki-hub-credits-list">${items}</ul>
     </section>`;
+}
+
+
+// ---------------------------------------------------------------------------
+// Fire history (fires section)
+//
+// Reads the committed EFFIS extract at /data/<slug>/fires.json. That file is
+// produced by scripts/fetch-fire-history.mjs, not at build time: EFFIS has no
+// WFS, so perimeters take hundreds of requests to enumerate. Burnt-area history
+// changes about once a season, so it is fetched on demand and committed.
+// ---------------------------------------------------------------------------
+
+function renderFirePanel() {
+  return `
+    <section class="fire-panel" id="fire-panel">
+      <div class="fire-panel-loading" id="fire-loading">
+        <span class="loading-spinner"></span> Loading fire history…
+      </div>
+      <div class="fire-panel-body" id="fire-body" hidden>
+        <div class="fire-stats" id="fire-stats"></div>
+
+        <div class="fire-block">
+          <h3 class="fire-block-title">Hectares burnt by year</h3>
+          <canvas id="fire-year-chart"></canvas>
+        </div>
+
+        <div class="fire-block">
+          <h3 class="fire-block-title">Largest recorded fires</h3>
+          <div class="fire-table-wrap">
+            <table class="fire-table" id="fire-table"></table>
+          </div>
+        </div>
+
+        <p class="fire-method" id="fire-method"></p>
+      </div>
+      <div class="fire-panel-empty" id="fire-empty" hidden></div>
+    </section>`;
+}
+
+function fireStatCard(value, label, sublabel, color) {
+  return `
+    <div class="fire-stat">
+      <span class="fire-stat-value"${color ? ` style="color:${color}"` : ''}>${value}</span>
+      <span class="fire-stat-label">${label}</span>
+      ${sublabel ? `<span class="fire-stat-sub">${sublabel}</span>` : ''}
+    </div>`;
+}
+
+async function hydrateFireHistory() {
+  const loading = document.getElementById('fire-loading');
+  const body = document.getElementById('fire-body');
+  const empty = document.getElementById('fire-empty');
+  if (!loading || !body) return;
+
+  let payload;
+  try {
+    const res = await fetch(`${DATA_BASE}/fires.json`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    payload = await res.json();
+  } catch (err) {
+    loading.hidden = true;
+    if (empty) {
+      empty.hidden = false;
+      empty.innerHTML = `<p>No fire history has been compiled for this region yet.
+        Run <code>node scripts/fetch-fire-history.mjs ${ACTIVE_SLUG}</code> to build it.</p>`;
+    }
+    console.warn('[fires] no data:', err.message);
+    return;
+  }
+
+  const { summary, fires, method } = payload;
+  loading.hidden = true;
+  body.hidden = false;
+
+  // Headline numbers. Every one is a lower bound, and says so.
+  const worst = [...(summary.byYear || [])].sort((a, b) => b.ha - a.ha)[0];
+  document.getElementById('fire-stats').innerHTML = [
+    fireStatCard(`${summary.count}+`, 'recorded fires', `since ${summary.byYear?.[0]?.year ?? '2000'}`, '#CC6633'),
+    fireStatCard(`${summary.totalHa.toLocaleString()}+`, 'hectares burnt', 'lower bound'),
+    worst ? fireStatCard(worst.year, 'worst year', `${worst.ha.toLocaleString()} ha`) : '',
+    summary.largest ? fireStatCard(`${summary.largest.ha.toLocaleString()} ha`, 'largest fire',
+      String(summary.largest.date).slice(0, 10)) : '',
+  ].join('');
+
+  // Hectares by year.
+  const canvas = document.getElementById('fire-year-chart');
+  if (canvas && summary.byYear?.length) {
+    drawBarChart(canvas, summary.byYear.map(y => ({
+      label: y.year,
+      value: y.ha,
+      color: '#CC6633',
+    })), { width: Math.min(canvas.parentElement.clientWidth || 640, 720) });
+  }
+
+  // Largest fires, with the share inside Natura 2000 — the point of the section.
+  const rows = [...fires].sort((a, b) => (b.AREA_HA || 0) - (a.AREA_HA || 0)).slice(0, 12);
+  document.getElementById('fire-table').innerHTML = `
+    <thead>
+      <tr><th>Date</th><th>Hectares</th><th>Where</th><th>In Natura 2000</th></tr>
+    </thead>
+    <tbody>
+      ${rows.map(f => {
+        const n2k = Math.round(f.PERCNA2K || 0);
+        return `<tr>
+          <td>${String(f.FIREDATE).slice(0, 10)}</td>
+          <td class="fire-td-num">${(f.AREA_HA || 0).toLocaleString()}</td>
+          <td>${escapeHtml(f.COMMUNE || '—')}${f.COUNTRY && f.COUNTRY !== 'PT' ? ` <span class="fire-flag">${escapeHtml(f.COUNTRY)}</span>` : ''}</td>
+          <td class="fire-td-num">
+            <span class="fire-n2k-bar"><i style="width:${Math.min(n2k, 100)}%"></i></span>
+            ${n2k}%
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>`;
+
+  const methodEl = document.getElementById('fire-method');
+  if (methodEl && method) {
+    methodEl.innerHTML = `Source: ${escapeHtml(payload.source)}, retrieved ${String(payload.fetchedAt).slice(0, 10)}.
+      ${escapeHtml(method.note)} Grid step ${method.gridStepDegrees}° over ${method.gridPoints} points, so counts are a
+      <strong>lower bound</strong> — fires smaller than roughly ${method.smallestReliablyDetectedHa.toLocaleString()} ha
+      may fall between sample points.`;
+  }
 }
 
 async function renderHub() {
@@ -3865,6 +3988,9 @@ async function renderSection(sectionId) {
         <!-- Map (bioregion only) -->
         ${sectionId === 'bioregion' ? '<div class="wiki-map" id="wiki-section-map" style="height:400px;border-radius:8px;margin:1.5rem 0;"></div>' : ''}
 
+        <!-- Fire history (fires section only) -->
+        ${sectionId === 'fires' ? renderFirePanel() : ''}
+
         ${sectionId === 'dashboard' ? '' : `
         <!-- Community Contributions -->
         <section class="wiki-contributions" id="wiki-contributions">
@@ -4152,6 +4278,9 @@ async function renderSection(sectionId) {
     // Environmental dashboard hydration — fetch real data from the regional facts endpoint
     if (sectionId === 'dashboard') {
       hydrateEnvironmentalDashboard();
+    }
+    if (sectionId === 'fires') {
+      hydrateFireHistory();
     }
     const helpTrigger = document.getElementById('wiki-help-trigger');
     const helpPopover = document.getElementById('wiki-help-popover');

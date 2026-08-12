@@ -23,6 +23,7 @@ export const IMAGE_CREDITS = [
   { section: 'community', author: 'Krzysztof Golik', license: 'CC BY-SA 4.0', source: 'https://commons.wikimedia.org/wiki/File:Monte_de_Santa_Luzia_sanctuary_in_Viana_do_Castelo_05.jpg' },
   { section: 'culture', author: 'Mário José Martins', license: 'CC BY 2.0', source: 'https://commons.wikimedia.org/wiki/File:Ponte_de_Lima_47.jpg' },
   { section: 'ecology', author: 'Ruben Minderico', license: 'CC BY-SA 4.0', source: 'https://commons.wikimedia.org/wiki/File:Parque_Nacional_da_Peneda-Ger%C3%AAs_1.jpg' },
+  { section: 'fires', author: 'DianaCleto', license: 'CC BY-SA 4.0', source: 'https://commons.wikimedia.org/wiki/File:Burned_Life.jpg' },
   { section: 'land', author: 'manjerix', license: 'CC BY-SA 2.0', source: 'https://commons.wikimedia.org/wiki/File:Serra_Amarela_(3998066989)_(2).jpg' },
   { section: 'landuse', author: 'Xauxa Håkan Svensson', license: 'CC BY-SA 3.0', source: 'https://commons.wikimedia.org/wiki/File:ArcozeloPTL_Stone_fence.jpg' },
   { section: 'risks', author: 'User:PatríciaR / Patrícia', license: 'CC BY-SA 3.0', source: 'https://commons.wikimedia.org/wiki/File:BarragemLindoso2.jpg' },
@@ -347,6 +348,34 @@ export const LIMA_SECTIONS = {
       ],
     },
     references: [REF.effis, REF.lima, REF.icnf],
+  },
+
+  fires: {
+    id: 'fires',
+    title: 'Fire',
+    subtitle: 'Twenty-five years of burnt ground, and where it burned',
+    color: '#CC6633',
+    icon: 'alert',
+    description: 'Twenty-five years of burnt ground, and where it burned',
+    accentColor: '#CC6633',
+    intro: `Fire is the best-recorded hazard in this basin and the one that has reshaped most ground. The table below is drawn from EFFIS burnt-area perimeters — the European mapping of where fire actually reached, rather than where a satellite detected heat — for the boundary used throughout this wiki.`,
+    articles: [
+      {
+        title: 'What this records, and what it misses',
+        content: `EFFIS maps the perimeter of a burnt area after the fact, which is a different thing from a live thermal detection: it is what burned, not what was burning. The figures here are a lower bound. EFFIS publishes no queryable feature service, so perimeters are found by sampling across a grid, and a fire small enough to fall between sample points is missed entirely. Large fires are all captured; the count of small ones is not complete.`,
+      },
+      {
+        title: 'Fire and protected land are the same map',
+        content: `The share of each fire falling inside Natura 2000 is shown alongside its size, because in this basin the two are not independent. The largest fires of the last decade have burned through the Peneda-Gerês uplands, and conservation designation has not kept fire out of them. A fire that is 100% inside protected territory is not an anomaly here.`,
+      },
+      {
+        title: 'The border cuts the record, not the fire',
+        content: `Some perimeters listed here lie on the Spanish side of the basin. They appear because EFFIS is a European dataset; Portuguese national fire statistics would not include them, even though the ground they burned drains into the same river. Where a fire is recorded outside Portugal it is marked.`,
+      },
+    ],
+    mapLayers: ['fire'],
+    visuals: {},
+    references: [REF.effis, REF.icnf, REF.pnpg],
   },
 
   culture: {

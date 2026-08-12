@@ -315,6 +315,34 @@ export const LIMA_SECTIONS_PT = {
     references: [REF.effis, REF.lima, REF.icnf],
   },
 
+  fires: {
+    id: 'fires',
+    title: 'Fogo',
+    subtitle: 'Vinte e cinco anos de área ardida, e onde ardeu',
+    color: '#CC6633',
+    icon: 'alert',
+    description: 'Vinte e cinco anos de área ardida, e onde ardeu',
+    accentColor: '#CC6633',
+    intro: `O fogo é o risco mais bem documentado desta bacia e o que mais território transformou. A tabela abaixo baseia-se nos perímetros de área ardida do EFFIS — a cartografia europeia de onde o fogo chegou efectivamente, e não de onde um satélite detectou calor — para o limite usado ao longo desta wiki.`,
+    articles: [
+      {
+        title: 'O que isto regista, e o que lhe escapa',
+        content: `O EFFIS cartografa o perímetro da área ardida depois do facto, o que é diferente de uma detecção térmica em tempo real: é o que ardeu, não o que estava a arder. Os valores aqui apresentados são mínimos. O EFFIS não publica um serviço de consulta de entidades, pelo que os perímetros são encontrados por amostragem numa grelha, e um incêndio pequeno o suficiente para cair entre pontos de amostragem escapa por completo. Os grandes incêndios estão todos captados; a contagem dos pequenos não está completa.`,
+      },
+      {
+        title: 'Fogo e área protegida são o mesmo mapa',
+        content: `A percentagem de cada incêndio dentro da Rede Natura 2000 é apresentada a par da sua dimensão, porque nesta bacia as duas coisas não são independentes. Os maiores incêndios da última década arderam nos planaltos do Peneda-Gerês, e a classificação para conservação não manteve o fogo afastado deles. Um incêndio com 100% da área dentro de território protegido não é aqui uma anomalia.`,
+      },
+      {
+        title: 'A fronteira corta o registo, não o fogo',
+        content: `Alguns dos perímetros listados situam-se do lado espanhol da bacia. Aparecem porque o EFFIS é um conjunto de dados europeu; as estatísticas nacionais portuguesas de incêndios não os incluiriam, ainda que o terreno que arderam drene para o mesmo rio. Sempre que um incêndio está registado fora de Portugal, isso é assinalado.`,
+      },
+    ],
+    mapLayers: ['fire'],
+    visuals: {},
+    references: [REF.effis, REF.icnf, REF.pnpg],
+  },
+
   culture: {
     id: 'culture',
     title: 'Cultura',
