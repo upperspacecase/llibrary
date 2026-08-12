@@ -327,6 +327,7 @@ export const pt = {
   "wiki.sections.climate": "Clima",
   "wiki.sections.landuse": "Uso do Solo",
   "wiki.sections.risks": "Riscos",
+  "wiki.sections.fires": "Fogo",
   "wiki.sections.culture": "Cultura",
   "wiki.sections.community": "Comunidade",
 

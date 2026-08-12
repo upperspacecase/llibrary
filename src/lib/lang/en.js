@@ -351,6 +351,7 @@ export const en = {
   "wiki.sections.climate": "Climate",
   "wiki.sections.landuse": "Land Use",
   "wiki.sections.risks": "Risks",
+  "wiki.sections.fires": "Fire",
   "wiki.sections.culture": "Culture",
   "wiki.sections.community": "Community",
 

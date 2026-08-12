@@ -61,8 +61,20 @@ export function applyTranslations() {
   });
 }
 
+// The region page loads two entry modules that both call initI18n(). Binding
+// twice made every trigger click toggle `is-open` on and straight back off, so
+// the language menu could never be opened.
+let listenersBound = false;
+
 export function initI18n() {
   document.documentElement.lang = currentLang;
+
+  if (listenersBound) {
+    updateToggles(currentLang);
+    applyTranslations();
+    return;
+  }
+  listenersBound = true;
 
   document.querySelectorAll('.lang-toggle').forEach(toggle => {
     const trigger = toggle.querySelector('.lang-toggle-trigger');

@@ -45,14 +45,17 @@ const ODEMIRA = CONTENT.REGION ?? {
 // Read through a function, not a snapshot: the language toggle re-renders via
 // the `langchange` event, and a const captured at import time would keep
 // serving whichever language happened to be stored on first load.
-const sections = () => getSections(ACTIVE_SLUG);
+// Named sectionMap, not `sections`: four render functions declare a local
+// `const sections = getAllSections()` array, which shadowed the accessor and
+// made the hub call an array as a function.
+const sectionMap = () => getSections(ACTIVE_SLUG);
 
 // Where this region's dashboard data lives — baked JSON first, API as fallback.
 const DATA_BASE = `/data/${ACTIVE_SLUG}`;
 const API_BASE = `/api/regions/${ACTIVE_SLUG}`;
 
-const getAllSections = () => Object.values(sections());
-const getSectionById = (id) => sections()[id] ?? null;
+const getAllSections = () => Object.values(sectionMap());
+const getSectionById = (id) => sectionMap()[id] ?? null;
 const getEventsCalendar = () => getEvents(ACTIVE_SLUG);
 const getLandmarks = () => getRegionLandmarks(ACTIVE_SLUG);
 
@@ -582,8 +585,8 @@ async function renderHub() {
       <div class="wiki-hub-hero-left">
         <h1>${REGION.name}</h1>
         <p class="wiki-hub-description">
-          ${REGION.subtitle} — ${sections().bioregion?.intro
-            ? sections().bioregion.intro.split('. ').slice(0, 2).join('. ').replace(/\.?$/, '.')
+          ${REGION.subtitle} — ${sectionMap().bioregion?.intro
+            ? sectionMap().bioregion.intro.split('. ').slice(0, 2).join('. ').replace(/\.?$/, '.')
             : `Approximately ${REGION.areaKm2.toLocaleString()} km².`}
         </p>
         <div class="wiki-hub-meta">
@@ -1149,7 +1152,7 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--bio">
           <div class="ed-panel-head">${lucide('sprout')} Biodiversity</div>
 
-          <p class="ed-card-desc">${sections().ecology?.intro ?? ''}</p>
+          <p class="ed-card-desc">${sectionMap().ecology?.intro ?? ''}</p>
 
           <!-- Wiki ecology stats -->
           <div class="ed-bio-stats" id="ed-bio-stats"></div>
