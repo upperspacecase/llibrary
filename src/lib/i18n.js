@@ -8,8 +8,17 @@ const SUPPORTED_LANGS = Object.keys(translations);
 const stored = localStorage.getItem('lll-lang');
 let currentLang = (stored && SUPPORTED_LANGS.includes(stored)) ? stored : 'en';
 
-export function t(key) {
-  return (translations[currentLang] && translations[currentLang][key]) || translations.en[key] || key;
+/**
+ * Look up a string, optionally interpolating {placeholders}.
+ *   t('chat.title', { region: 'Bacia do Lima' })
+ * Region names used to be baked into the string table, which meant every
+ * region's chat said "Ask about Odemira".
+ */
+export function t(key, vars) {
+  const raw = (translations[currentLang] && translations[currentLang][key])
+    || translations.en[key] || key;
+  if (!vars) return raw;
+  return raw.replace(/\{(\w+)\}/g, (m, name) => (name in vars ? vars[name] : m));
 }
 
 function updateToggles(lang) {

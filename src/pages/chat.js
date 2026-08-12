@@ -1,5 +1,6 @@
 import '../styles/main.css';
 import { initI18n, t } from '../lib/i18n.js';
+import { getRegion, DEFAULT_REGION } from '../lib/regions/index.js';
 import { escapeHtml } from '../lib/utils.js';
 
 initI18n();
@@ -178,5 +179,5 @@ initFromParams();
 renderSuggestions();
 
 if (messagesEl) {
-  addMessage('assistant', t('chat.welcome'));
+  addMessage('assistant', t('chat.welcome', { region: getRegion(DEFAULT_REGION).name }));
 }

@@ -62,7 +62,7 @@ function renderSuggestions() {
   }
   suggestionsEl.style.display = '';
   suggestionsEl.innerHTML = SUGGESTIONS.map(key =>
-    `<button class="chat-panel-suggestion">${escapeHtml(t(key))}</button>`
+    `<button class="chat-panel-suggestion">${escapeHtml(t(key, { region: regionName }))}</button>`
   ).join('');
   suggestionsEl.querySelectorAll('.chat-panel-suggestion').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -77,7 +77,7 @@ function renderMessages() {
   if (!messagesEl) return;
 
   if (messages.length === 0) {
-    messagesEl.innerHTML = `<div class="chat-panel-welcome">${escapeHtml(t('chat.welcome'))}</div>`;
+    messagesEl.innerHTML = `<div class="chat-panel-welcome">${escapeHtml(t('chat.welcome', { region: regionName }))}</div>`;
     renderSuggestions();
     return;
   }

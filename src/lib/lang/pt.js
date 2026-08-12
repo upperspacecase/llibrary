@@ -76,7 +76,7 @@ export const pt = {
 
   // P\u00E1gina inicial \u2014 Hero
   "hero.tagline": "Conhece a tua terra.<br>Conhece os teus vizinhos.",
-  "hero.sub": "Uma plataforma regional para Odemira, Portugal \u2014 wiki p\u00FAblica gratuita, relat\u00F3rios privados de terrenos.",
+  "hero.sub": "Uma plataforma regional para os lugares onde vives \u2014 wiki p\u00FAblica gratuita, relat\u00F3rios privados de terrenos.",
   "hero.text": "Tudo o que precisas para te tornares um bom vizinho rapidamente. A terra, a \u00E1gua, o clima, as esp\u00E9cies, as pessoas, a hist\u00F3ria, as regras \u2014 tudo num s\u00F3 lugar. Mais um cofre de dados privado para a tua parcela.",
   "hero.cta.wiki": "Explorar a Wiki",
   "hero.cta.create": "Criar o Teu Landbook",
@@ -87,7 +87,7 @@ export const pt = {
   "products.desc": "A Libraries combina uma wiki regional gratuita com um passaporte privado de terrenos. A wiki \u00E9 para todos \u2014 o landbook \u00E9 s\u00F3 teu.",
   "products.wiki.type": "Gratuito e P\u00FAblico",
   "products.wiki.title": "Wiki Regional",
-  "products.wiki.desc": "Se te mudasses para Odemira, que informa\u00E7\u00E3o precisarias para te tornares um bom vizinho rapidamente? Essa \u00E9 a wiki. Artigos curtos e objetivos sobre tudo, desde tipos de solo a festivais locais \u2014 com interface de chat para fazeres perguntas.",
+  "products.wiki.desc": "Se te mudasses para uma nova regi\u00E3o, que informa\u00E7\u00E3o precisarias para te tornares um bom vizinho rapidamente? Essa \u00E9 a wiki. Artigos curtos e objetivos sobre tudo, desde tipos de solo a festivais locais \u2014 com interface de chat para fazeres perguntas.",
   "products.wiki.li1": "A Terra \u2014 geologia, limites, eleva\u00E7\u00E3o",
   "products.wiki.li2": "A \u00C1gua \u2014 rios, nascentes, qualidade da \u00E1gua",
   "products.wiki.li3": "O Clima \u2014 clima, risco de inc\u00EAndio, \u00E9pocas de cultivo",
@@ -133,14 +133,14 @@ export const pt = {
 
   // P\u00E1gina inicial \u2014 CTA
   "cta.title": "Come\u00E7a pela wiki. \u00C9 gratu\u00EDta.",
-  "cta.desc": "Explora o que sabemos sobre Odemira. Pergunta o que quiseres ao chat. Depois decide se queres um landbook privado.",
-  "cta.wiki": "Explorar Wiki de Odemira",
+  "cta.desc": "Explora o que sabemos sobre cada regi\u00E3o. Pergunta o que quiseres ao chat. Depois decide se queres um landbook privado.",
+  "cta.wiki": "Explorar o Comum Regional",
   "cta.chat": "Fazer uma Pergunta",
 
   // P\u00E1gina de Chat
-  "chat.title": "Perguntar sobre Odemira",
+  "chat.title": "Perguntar sobre {region}",
   "chat.desc": "Pergunta o que quiseres sobre a regi\u00E3o \u2014 terra, \u00E1gua, clima, biodiversidade, agricultura, comunidade, hist\u00F3ria ou governan\u00E7a.",
-  "chat.placeholder": "Perguntar sobre Odemira...",
+  "chat.placeholder": "Perguntar sobre {region}...",
   "chat.send": "Enviar",
 
   // P\u00E1gina de Cria\u00E7\u00E3o
@@ -213,9 +213,9 @@ export const pt = {
   "create.fail": "Falha ao guardar. Tenta novamente.",
 
   // P\u00E1gina de Chat \u2014 strings din\u00E2micas
-  "chat.welcome": "Bem-vindo ao chat da wiki de Odemira. Posso responder a perguntas sobre a regi\u00E3o \u2014 terra, \u00E1gua, clima, biodiversidade, agricultura, comunidade, hist\u00F3ria e governan\u00E7a. O que gostarias de saber?\n\nDica: Tamb\u00E9m podes explorar a wiki diretamente para artigos detalhados e dados ao vivo.",
+  "chat.welcome": "Bem-vindo ao chat da wiki de {region}. Posso responder a perguntas sobre a regi\u00E3o \u2014 terra, \u00E1gua, clima, biodiversidade, agricultura, comunidade, hist\u00F3ria e governan\u00E7a. O que gostarias de saber?\n\nDica: Tamb\u00E9m podes explorar a wiki diretamente para artigos detalhados e dados ao vivo.",
   "chat.error": "Desculpa, tive dificuldade em processar isso. Tenta novamente.",
-  "chat.sug.water": "Qual \u00E9 a situa\u00E7\u00E3o da \u00E1gua em Odemira?",
+  "chat.sug.water": "Qual \u00E9 a situa\u00E7\u00E3o da \u00E1gua em {region}?",
   "chat.sug.fire": "Fala-me sobre o risco de inc\u00EAndio na regi\u00E3o",
   "chat.sug.species": "Que esp\u00E9cies s\u00E3o \u00FAnicas desta \u00E1rea?",
   "chat.sug.greenhouse": "Como a agricultura em estufas mudou as coisas?",
@@ -271,7 +271,7 @@ export const pt = {
   "wiki.hub.title": "Conhecimento Regional",
   "wiki.hub.breadcrumb.commons": "Comuns",
   "wiki.hub.breadcrumb.odemira": "Odemira",
-  "wiki.hub.hero.title": "Regi\u00E3o de Odemira",
+  "wiki.hub.hero.title": "{region}",
   "wiki.hub.residents": "residentes",
   "wiki.hub.updated": "Atualizado",
   "wiki.hub.kmArea": "km\u00B2 de \u00E1rea",
