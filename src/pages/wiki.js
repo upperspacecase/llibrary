@@ -17,11 +17,9 @@ import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '.
 import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
 import { getRegion, resolveRegionFromUrl, DEFAULT_REGION } from '../lib/regions/index.js';
-import { getContent } from '../lib/regions/content.js';
 import {
-  getAllSections as getAllSectionsPT, getSectionById as getSectionByIdPT,
-  getEventsCalendar as getEventsCalendarPT, getLandmarks as getLandmarksPT,
-} from '../lib/wiki-data.js';
+  getContent, getSections, getEvents, getLandmarks as getRegionLandmarks,
+} from '../lib/regions/content.js';
 
 // ---- Active region, resolved from the URL -------------------------------
 // Accepts /wiki?region=<slug> and /wiki/<slug>; falls back to the default for
@@ -42,22 +40,19 @@ const ODEMIRA = CONTENT.REGION ?? {
   bbox: [REGION.bbox.swLat, REGION.bbox.swLng, REGION.bbox.neLat, REGION.bbox.neLng],
   area: REGION.areaKm2,
 };
-const SECTIONS = CONTENT.SECTIONS;
-const EVENTS_CALENDAR = CONTENT.EVENTS_CALENDAR;
-const LANDMARKS = CONTENT.LANDMARKS;
+// Read through a function, not a snapshot: the language toggle re-renders via
+// the `langchange` event, and a const captured at import time would keep
+// serving whichever language happened to be stored on first load.
+const sections = () => getSections(ACTIVE_SLUG);
 
 // Where this region's dashboard data lives — baked JSON first, API as fallback.
 const DATA_BASE = `/data/${ACTIVE_SLUG}`;
 const API_BASE = `/api/regions/${ACTIVE_SLUG}`;
 
-// Odemira's content carries PT translations, and the wiki-data helpers switch
-// on the stored language. Regions without a translation read their sections
-// straight off the registry.
-const HAS_PT = ACTIVE_SLUG === DEFAULT_REGION;
-const getAllSections = () => (HAS_PT ? getAllSectionsPT() : Object.values(SECTIONS));
-const getSectionById = (id) => (HAS_PT ? getSectionByIdPT(id) : (SECTIONS[id] ?? null));
-const getEventsCalendar = () => (HAS_PT ? getEventsCalendarPT() : EVENTS_CALENDAR);
-const getLandmarks = () => (HAS_PT ? getLandmarksPT() : LANDMARKS);
+const getAllSections = () => Object.values(sections());
+const getSectionById = (id) => sections()[id] ?? null;
+const getEventsCalendar = () => getEvents(ACTIVE_SLUG);
+const getLandmarks = () => getRegionLandmarks(ACTIVE_SLUG);
 
 // Charts & dashboard
 import {
@@ -434,8 +429,8 @@ async function renderHub() {
       <div class="wiki-hub-hero-left">
         <h1>${REGION.name}</h1>
         <p class="wiki-hub-description">
-          ${REGION.subtitle} — ${SECTIONS.bioregion?.intro
-            ? SECTIONS.bioregion.intro.split('. ').slice(0, 2).join('. ').replace(/\.?$/, '.')
+          ${REGION.subtitle} — ${sections().bioregion?.intro
+            ? sections().bioregion.intro.split('. ').slice(0, 2).join('. ').replace(/\.?$/, '.')
             : `Approximately ${REGION.areaKm2.toLocaleString()} km².`}
         </p>
         <div class="wiki-hub-meta">
@@ -1001,7 +996,7 @@ function renderEnvironmentalDashboard() {
         <section class="ed-panel ed-panel--bio">
           <div class="ed-panel-head">${lucide('sprout')} Biodiversity</div>
 
-          <p class="ed-card-desc">${SECTIONS.ecology?.intro ?? ''}</p>
+          <p class="ed-card-desc">${sections().ecology?.intro ?? ''}</p>
 
           <!-- Wiki ecology stats -->
           <div class="ed-bio-stats" id="ed-bio-stats"></div>
