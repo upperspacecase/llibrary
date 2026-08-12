@@ -10,7 +10,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         about: resolve(__dirname, 'about.html'),
         commons: resolve(__dirname, 'commons.html'),
-        wiki: resolve(__dirname, 'wiki.html'),
+        region: resolve(__dirname, 'region.html'),
         chat: resolve(__dirname, 'chat.html'),
         create: resolve(__dirname, 'create.html'),
         preview: resolve(__dirname, 'preview.html'),

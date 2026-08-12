@@ -111,7 +111,7 @@ const drawerNav = document.getElementById('wiki-drawer-nav');
 // ---- State ----
 let currentMap = null;
 
-// wiki.html ships neutral meta so one page can serve any region; the active
+// region.html ships neutral meta so one page can serve any region; the active
 // region names itself here.
 document.title = `${REGION.name} Wiki — LandLibrary`;
 const _descEl = document.querySelector('meta[name="description"]');

@@ -16,11 +16,11 @@
     },
     {
       "source": "/odemira",
-      "destination": "/wiki"
+      "destination": "/region"
     },
     {
       "source": "/lima",
-      "destination": "/wiki"
+      "destination": "/region"
     },
     {
       "source": "/report/:slug",
