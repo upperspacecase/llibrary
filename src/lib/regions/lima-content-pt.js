@@ -337,6 +337,26 @@ export const LIMA_SECTIONS_PT = {
         title: 'A fronteira corta o registo, não o fogo',
         content: `Alguns dos perímetros listados situam-se do lado espanhol da bacia. Aparecem porque o EFFIS é um conjunto de dados europeu; as estatísticas nacionais portuguesas de incêndios não os incluiriam, ainda que o terreno que arderam drene para o mesmo rio. Sempre que um incêndio está registado fora de Portugal, isso é assinalado.`,
       },
+      {
+        title: 'Até onde recua o registo',
+        content: `A cartografia de área ardida do EFFIS começa em 2000, pelo que uma perspectiva de cinquenta anos não é possível a partir desta fonte — e, dentro deste limite, não há qualquer perímetro registado antes de 2016. Essa ausência deve ser lida com cuidado: significa que o EFFIS não cartografou aqui um incêndio nesses anos, não que nenhum tenha ardido. As estatísticas nacionais portuguesas recuam mais do que o conjunto europeu de perímetros, e cruzar as duas fontes é o caminho para obter uma série mais longa. O que o registo mostra com clareza é que 2016 e 2025 representam a grande maioria do território ardido na última década.`,
+      },
+      {
+        title: 'Corta-fogos produtivos, não corta-fogos nus',
+        content: `A abordagem que ganha terreno de ambos os lados desta fronteira é o corta-fogos produtivo — substituir faixas limpas por terra em produção. Agricultura, pastoreio extensivo, exploração florestal, silvicultura preventiva e fogo controlado são tratados como instrumentos de prevenção que gerem simultaneamente os recursos naturais. É a quebra da continuidade do combustível que trava o fogo; fazê-la com terra que produz alguma coisa significa que a faixa se mantém porque compensa, e fixa pessoas na paisagem em vez de as afastar dela. O projecto FIREPOCTEP, realizado conjuntamente por Portugal e Espanha, publica um manual de desenho destes corta-fogos.`,
+      },
+      {
+        title: 'Faixas vivas e escolha de espécies',
+        content: `Uma prática relacionada substitui os corta-fogos nus por faixas de espécies pouco inflamáveis — as faixas vivas. Quais as espécies que funcionam é uma questão de investigação em aberto e não uma lista fechada; trabalhos recentes de avaliação analisam candidatas precisamente para este uso, e projectos espanhóis testaram-nas com grupos de proprietários. Para uma bacia cujos incêndios atravessam o Peneda-Gerês, espécies que retêm humidade e resistem à ignição são mais úteis do que faixas que têm de ser limpas todos os anos.`,
+      },
+      {
+        title: 'A discussão sobre os incentivos',
+        content: `Nem toda a prática recomendada é consensual. Em Abril de 2026, a Aliança pela Floresta Autóctone criticou a decisão do Governo português de pagar 300 a 365 euros por hectare intervencionado com fogo controlado, argumentando que pagar à área recompensa hectares ardidos e não a qualidade ecológica da intervenção, a recuperação do solo ou a redução comprovada do risco a médio e longo prazo. A sua tese é que isto trata o sintoma — o excesso de combustível — e não a causa estrutural dos grandes incêndios, que é a própria forma da paisagem. É um desacordo em curso e esta página não o resolve.`,
+      },
+      {
+        title: 'Depois do fogo',
+        content: `O trabalho pós-incêndio é uma disciplina própria. As medidas de estabilização de emergência procuram segurar o solo nas encostas durante as primeiras chuvas, quando uma bacia ardida perde muito mais material do que uma bacia intacta — uma preocupação directa numa bacia tão declivosa e tão húmida como esta. A orientação sobre estabilização de emergência e gestão do solo pós-incêndio está listada nos recursos abaixo.`,
+      },
     ],
     mapLayers: ['fire'],
     visuals: {},

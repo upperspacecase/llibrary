@@ -17,8 +17,8 @@ import {
 import {
   SECTIONS_PT, EVENTS_CALENDAR_PT, LANDMARKS_PT,
 } from '../wiki-data-pt.js';
-import { LIMA, LIMA_SECTIONS, IMAGE_CREDITS as LIMA_CREDITS } from './bacia-do-lima-content.js';
-import { LIMA_SECTIONS_PT } from './bacia-do-lima-content-pt.js';
+import { LIMA, LIMA_SECTIONS, IMAGE_CREDITS as LIMA_CREDITS } from './lima-content.js';
+import { LIMA_SECTIONS_PT } from './lima-content-pt.js';
 
 const EMPTY = {
   REGION: null, SECTIONS: {}, EVENTS_CALENDAR: [], LANDMARKS: [], IMAGE_CREDITS: [],
@@ -34,7 +34,7 @@ const CONTENT = {
   // The regional dashboard is deliberately not carried over — it depends on a
   // station network this region does not have ingested, and it is a nice-to-have
   // rather than the point of the wiki.
-  'bacia-do-lima': {
+  lima: {
     ...EMPTY,
     REGION: LIMA,
     SECTIONS: LIMA_SECTIONS,

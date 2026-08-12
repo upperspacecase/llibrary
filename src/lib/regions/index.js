@@ -22,9 +22,9 @@
  */
 
 import { meta as odemira } from './odemira.js';
-import { meta as baciaDoLima } from './bacia-do-lima.js';
+import { meta as lima } from './lima.js';
 
-const ALL = [odemira, baciaDoLima];
+const ALL = [odemira, lima];
 
 export const REGIONS = Object.fromEntries(ALL.map((r) => [r.slug, r]));
 
@@ -87,8 +87,10 @@ export function resolveRegion(req) {
  * rendering a broken page.
  */
 export function resolveRegionFromUrl(loc = window.location) {
+  // Region slug is the first path segment: /odemira, /lima. The legacy
+  // /wiki?region=<slug> form still resolves so older links keep working.
+  const first = loc.pathname.split('/').filter(Boolean)[0] || '';
   const fromQuery = new URLSearchParams(loc.search).get('region');
-  const fromPath = loc.pathname.replace(/^\/wiki\/?/, '').replace(/\/$/, '');
-  const slug = fromQuery || fromPath;
+  const slug = (isReachable(first) && first) || fromQuery || '';
   return slug && isReachable(slug) ? slug : DEFAULT_REGION;
 }

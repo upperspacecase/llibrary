@@ -10710,3 +10710,55 @@ a {
 @media (max-width: 640px) {
   .fire-stat-value { font-size: 22px; }
 }
+
+/* Further resources — the shared research list, per section. */
+.wiki-resources-extra { margin-top: 32px; }
+
+.wiki-resources-extra-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.wiki-resources-extra-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.wiki-resources-extra-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.wiki-resources-extra-list li {
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
+.wiki-resources-extra-list a {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--black);
+}
+
+.wiki-resources-extra-list a:hover { text-decoration: underline; }
+
+.wiki-resources-extra-desc {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 2px;
+}

@@ -372,6 +372,26 @@ export const LIMA_SECTIONS = {
         title: 'The border cuts the record, not the fire',
         content: `Some perimeters listed here lie on the Spanish side of the basin. They appear because EFFIS is a European dataset; Portuguese national fire statistics would not include them, even though the ground they burned drains into the same river. Where a fire is recorded outside Portugal it is marked.`,
       },
+      {
+        title: 'How far back the record goes',
+        content: `EFFIS burnt-area mapping begins in 2000, so a fifty-year view is not available from this source — and within this boundary no perimeter is recorded before 2016. That absence is worth reading carefully: it means EFFIS did not map a fire here in those years, not that none burned. Portuguese national statistics reach further back than the European perimeter dataset, and pairing the two is the way to get a longer series. What the record does show clearly is that 2016 and 2025 account for the great majority of ground burned in the last decade.`,
+      },
+      {
+        title: 'Productive firebreaks, not bare ones',
+        content: `The approach gaining ground on both sides of this border is the productive firebreak — replacing cleared strips with working land. Agriculture, extensive grazing, forestry, preventive silviculture and prescribed burning are all treated as fire-prevention instruments that simultaneously manage natural resources. Breaking the continuity of fuel is what slows a fire; doing it with land that produces something means the break is maintained because it pays, and keeps people in the landscape rather than clearing it of them. The FIREPOCTEP project, run jointly across Portugal and Spain, publishes a design manual for these.`,
+      },
+      {
+        title: 'Living firebreaks and species choice',
+        content: `A related practice replaces bare firebreaks with strips of low-flammability species — faixas vivas, or living firebreaks. Which species work is an active research question rather than a settled list; recent evaluation work assesses candidates for exactly this use, and Spanish projects have trialled them with groups of landowners. For a basin whose fires run through Peneda-Gerês, species that hold moisture and resist ignition are more useful than strips that must be re-cleared every year.`,
+      },
+      {
+        title: 'The argument about incentives',
+        content: `Not all recommended practice is settled. In April 2026 the Aliança pela Floresta Autóctone criticised the Portuguese government's decision to pay 300 to 365 euros per hectare treated with prescribed burning, arguing that paying by the hectare rewards area burned rather than ecological quality, soil recovery, or demonstrated reduction in risk over the medium and long term. Their case is that this treats the symptom — excess fuel — rather than the structural cause of large fires, which is the shape of the landscape itself. It is a live disagreement and this page does not resolve it.`,
+      },
+      {
+        title: 'After the fire',
+        content: `Post-fire work is its own discipline. Emergency stabilisation measures aim to hold soil on slopes through the first rains, when a burnt catchment loses far more material than an unburnt one — a direct concern in a basin this steep and this wet. Guidance on emergency stabilisation and post-fire soil management is listed in the resources below.`,
+      },
     ],
     mapLayers: ['fire'],
     visuals: {},

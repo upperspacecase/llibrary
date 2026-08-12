@@ -17,6 +17,7 @@ import { createMap, mapboxgl, addMarker, addWmsLayer, setGeoJSONSource } from '.
 import { fetchJson, fetchDashboard } from '../lib/dashboard-fetch.js';
 import { initI18n, t } from '../lib/i18n.js';
 import { escapeHtml } from '../lib/utils.js';
+import { SECTION_RESOURCES } from '../lib/regions/shared-resources.js';
 import { getRegion, resolveRegionFromUrl, DEFAULT_REGION } from '../lib/regions/index.js';
 import {
   getContent, getSections, getEvents, getLandmarks as getRegionLandmarks,
@@ -389,7 +390,7 @@ function getIconSvg(icon) {
  * this every region showed Odemira's photographs.
  */
 function sectionImage(sectionId) {
-  return REGION.hasSectionImages ? `/wiki/${ACTIVE_SLUG}/${sectionId}.png` : `/wiki/${sectionId}.png`;
+  return REGION.hasSectionImages ? `/wiki/${REGION.slug}/${sectionId}.png` : `/wiki/${sectionId}.png`;
 }
 
 /**
@@ -533,6 +534,33 @@ async function hydrateFireHistory() {
       <strong>lower bound</strong> — fires smaller than roughly ${method.smallestReliablyDetectedHa.toLocaleString()} ha
       may fall between sample points.`;
   }
+}
+
+/**
+ * Further resources for a section — the project's shared research list, mapped
+ * onto the section it belongs to. Distinct from references: references are what
+ * the section cites, these are where to read further. Curator descriptions are
+ * shown in their original Portuguese.
+ */
+function renderSectionResources(sectionId) {
+  const items = SECTION_RESOURCES[sectionId];
+  if (!items?.length) return '';
+  return `
+    <section class="wiki-resources-extra">
+      <h2 class="wiki-resources-extra-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        ${t('wiki.section.furtherResources') || 'Further resources'}
+        <span class="wiki-resources-extra-count">${items.length}</span>
+      </h2>
+      <ul class="wiki-resources-extra-list">
+        ${items.map(r => `
+          <li>
+            <a href="${r.url}" target="_blank" rel="noopener noreferrer">${escapeHtml(r.name)}</a>
+            ${r.desc ? `<span class="wiki-resources-extra-desc">${escapeHtml(r.desc)}</span>` : ''}
+          </li>
+        `).join('')}
+      </ul>
+    </section>`;
 }
 
 async function renderHub() {
@@ -4210,6 +4238,8 @@ async function renderSection(sectionId) {
       </ol>
     </section>
     ` : ''}
+
+    ${renderSectionResources(sectionId)}
   `;
 
   // Initialise map, contributions, sidebar, and toolbar after DOM insertion

@@ -15,7 +15,7 @@
  */
 
 export const meta = {
-  slug: 'bacia-do-lima',
+  slug: 'lima',
   // 'preview' = listed and reachable, content still being written. It carries
   // the same card badge as a live region by design decision (2026-08-04).
   status: 'preview',
@@ -29,7 +29,7 @@ export const meta = {
   // and can be switched back on by flipping this to true.
   hasChat: false,
 
-  image: '/wiki/bacia-do-lima/water.png',
+  image: '/wiki/lima/water.png',
 
   // This region has its own section photographs under public/wiki/<slug>/.
   // Without this every region rendered Odemira's photographs.
@@ -51,6 +51,8 @@ export const meta = {
 
   // Synthetic region landbook, created 2026-08-04 from Carolina's boundary and
   // piped the same day (42/45 sources, 13 narratives).
+  // Slug is 'lima' (the public URL) but the landbook keeps its original id —
+  // the document already exists in the database under this name.
   landbookId: 'region-bacia-do-lima',
 
   center: [41.86340, -8.37220],

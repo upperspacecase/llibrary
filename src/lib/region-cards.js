@@ -15,17 +15,12 @@ const DOT_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" str
 const ARROW_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
 /**
- * The default region keeps the bare /wiki URL it has always had.
- *
- * Others use ?region=<slug> rather than /wiki/<slug>. The path form depends on
- * a vercel.json rewrite that has never actually worked — with cleanUrls on,
- * /wiki.html 308-redirects to /wiki, so it was not a usable rewrite
- * destination and /wiki/<anything> 404s. The destination is fixed now, but the
- * query form needs no rewrite at all and cannot 404, so links use it until the
- * path form is confirmed working on a deploy. wiki.js accepts both.
+ * Every region has a top-level clean URL: /odemira, /lima. The old /wiki path
+ * redirects to the default region so existing links and anything indexed still
+ * resolve.
  */
 function href(region) {
-  return region.slug === DEFAULT_REGION ? '/wiki' : `/wiki?region=${encodeURIComponent(region.slug)}`;
+  return `/${region.slug}`;
 }
 
 function escHTML(str) {
