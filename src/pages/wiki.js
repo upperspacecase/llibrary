@@ -386,6 +386,35 @@ function getIconSvg(icon) {
   return icons[icon] || icons.globe;
 }
 
+/**
+ * Section card artwork. Regions with their own photographs use them; anything
+ * without falls back to the shared illustration, and the onerror handler on the
+ * tag covers a region that declares artwork but is missing one file. Without
+ * this every region showed Odemira's photographs.
+ */
+function sectionImage(sectionId) {
+  return REGION.hasSectionImages ? `/wiki/${ACTIVE_SLUG}/${sectionId}.png` : `/wiki/${sectionId}.png`;
+}
+
+/**
+ * Photo attribution. The section photographs are Creative Commons licensed,
+ * which obliges us to credit the photographer — so the credit renders on the
+ * page rather than sitting in a file nobody reads.
+ */
+function renderImageCredits() {
+  const credits = CONTENT.IMAGE_CREDITS;
+  if (!credits?.length) return '';
+  const items = credits.map(c =>
+    `<li><a href="${c.source}" target="_blank" rel="noopener">${c.section}</a> — ${c.author} (${c.license})</li>`
+  ).join('');
+  return `
+    <section class="wiki-hub-credits">
+      <h2 class="wiki-hub-credits-title">Photo credits</h2>
+      <p class="wiki-hub-credits-note">Section photographs from Wikimedia Commons, reused under their stated licences.</p>
+      <ul class="wiki-hub-credits-list">${items}</ul>
+    </section>`;
+}
+
 async function renderHub() {
   destroyMap();
   const sections = getAllSections();
@@ -446,7 +475,8 @@ async function renderHub() {
       ${sections.map(s => `
         <a href="#${s.id}" class="wiki-hub-card">
           <div class="wiki-hub-card-image" style="border-top: 3px solid ${s.accentColor || s.color}">
-            <img src="/wiki/${s.id}.png" alt="${t('wiki.sections.' + s.id) || s.title}" loading="lazy" />
+            <img src="${sectionImage(s.id)}" alt="${t('wiki.sections.' + s.id) || s.title}" loading="lazy"
+                 onerror="this.onerror=null;this.src='/wiki/${s.id}.png'" />
           </div>
           <div class="wiki-hub-card-body">
             <div class="wiki-hub-card-icon" style="color: ${s.accentColor || s.color}">
@@ -482,6 +512,8 @@ async function renderHub() {
         <div class="loading-block"><span class="loading-spinner"></span> ${t('wiki.hub.loadingResources')}</div>
       </div>
     </section>
+
+    ${renderImageCredits()}
   `;
 
   // Load hub resources accordion after DOM insertion

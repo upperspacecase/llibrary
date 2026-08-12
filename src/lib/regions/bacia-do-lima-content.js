@@ -16,6 +16,20 @@
  * Structure mirrors src/lib/wiki-data.js. No PT translation yet.
  */
 
+
+export const IMAGE_CREDITS = [
+  { section: 'bioregion', author: 'Feliciano Guimarães from Guimarães, Portugal', license: 'CC BY 2.0', source: 'https://commons.wikimedia.org/wiki/File:Ponte_de_Lima_(1806522070).jpg' },
+  { section: 'climate', author: 'manjerix', license: 'CC BY-SA 2.0', source: 'https://commons.wikimedia.org/wiki/File:Serra_Amarela_(3998828848)_(2).jpg' },
+  { section: 'community', author: 'Krzysztof Golik', license: 'CC BY-SA 4.0', source: 'https://commons.wikimedia.org/wiki/File:Monte_de_Santa_Luzia_sanctuary_in_Viana_do_Castelo_05.jpg' },
+  { section: 'culture', author: 'Mário José Martins', license: 'CC BY 2.0', source: 'https://commons.wikimedia.org/wiki/File:Ponte_de_Lima_47.jpg' },
+  { section: 'ecology', author: 'Ruben Minderico', license: 'CC BY-SA 4.0', source: 'https://commons.wikimedia.org/wiki/File:Parque_Nacional_da_Peneda-Ger%C3%AAs_1.jpg' },
+  { section: 'land', author: 'manjerix', license: 'CC BY-SA 2.0', source: 'https://commons.wikimedia.org/wiki/File:Serra_Amarela_(3998066989)_(2).jpg' },
+  { section: 'landuse', author: 'Xauxa Håkan Svensson', license: 'CC BY-SA 3.0', source: 'https://commons.wikimedia.org/wiki/File:ArcozeloPTL_Stone_fence.jpg' },
+  { section: 'risks', author: 'User:PatríciaR / Patrícia', license: 'CC BY-SA 3.0', source: 'https://commons.wikimedia.org/wiki/File:BarragemLindoso2.jpg' },
+  { section: 'soil', author: 'Vitor Oliveira from Torres Vedras, PORTUGAL', license: 'CC BY-SA 2.0', source: 'https://commons.wikimedia.org/wiki/File:Anta_do_Mezio_-_Portugal_(30337760538).jpg' },
+  { section: 'water', author: 'Francisco Restivo from Porto, Portugal', license: 'CC BY 2.0', source: 'https://commons.wikimedia.org/wiki/File:Lima_river_-_rio_lima_(4468859940).jpg' },
+];
+
 export const LIMA = {
   name: 'Bacia do Lima',
   subtitle: 'Alto Minho, Portugal',

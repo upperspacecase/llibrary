@@ -12,16 +12,16 @@
 import {
   ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS,
 } from '../wiki-data.js';
-import { LIMA, LIMA_SECTIONS } from './bacia-do-lima-content.js';
+import { LIMA, LIMA_SECTIONS, IMAGE_CREDITS as LIMA_CREDITS } from './bacia-do-lima-content.js';
 
-const EMPTY = { REGION: null, SECTIONS: {}, EVENTS_CALENDAR: [], LANDMARKS: [] };
+const EMPTY = { REGION: null, SECTIONS: {}, EVENTS_CALENDAR: [], LANDMARKS: [], IMAGE_CREDITS: [] };
 
 const CONTENT = {
   odemira: { REGION: ODEMIRA, SECTIONS, EVENTS_CALENDAR, LANDMARKS },
   // The regional dashboard is deliberately not carried over — it depends on a
   // station network this region does not have ingested, and it is a nice-to-have
   // rather than the point of the wiki.
-  'bacia-do-lima': { ...EMPTY, REGION: LIMA, SECTIONS: LIMA_SECTIONS },
+  'bacia-do-lima': { ...EMPTY, REGION: LIMA, SECTIONS: LIMA_SECTIONS, IMAGE_CREDITS: LIMA_CREDITS },
 };
 
 /** Content for a slug. Unknown or unauthored regions get the empty set. */

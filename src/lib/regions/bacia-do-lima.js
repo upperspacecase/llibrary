@@ -25,8 +25,11 @@ export const meta = {
   country: 'PT',
   kind: 'basin',
 
-  // TODO: needs its own artwork — reusing the water illustration for now.
-  image: '/wiki/water.png',
+  image: '/wiki/bacia-do-lima/water.png',
+
+  // This region has its own section photographs under public/wiki/<slug>/.
+  // Without this every region rendered Odemira's photographs.
+  hasSectionImages: true,
   // A basin has no resident population of its own, so the second stat counts
   // municipalities instead of people. See D1.
   cardStats: [
