@@ -284,11 +284,11 @@ export const LIMA_SECTIONS_PT = {
     articles: [
       {
         title: 'Histórico de incêndios registado',
-        content: `Os perímetros de área ardida do EFFIS para este limite registam pelo menos 17 incêndios entre 2000 e 2026, totalizando pelo menos 36.264 hectares. São valores mínimos: o EFFIS não publica um serviço de consulta de entidades, pelo que os perímetros são encontrados por amostragem numa grelha e os incêndios pequenos o suficiente para caírem entre pontos de amostragem escapam. O número real é mais elevado; os grandes incêndios estão todos captados.`,
+        content: `Os perímetros de área ardida do EFFIS para este limite registam pelo menos 49 incêndios entre 2000 e 2026, totalizando pelo menos 49.842 hectares. São valores mínimos: o EFFIS não publica um serviço de consulta de entidades, pelo que os perímetros são encontrados por amostragem numa grelha e os incêndios pequenos o suficiente para caírem entre pontos de amostragem escapam. O número real é mais elevado; os grandes incêndios estão todos captados.`,
       },
       {
         title: '2016, o pior ano',
-        content: `2016 representa cerca de 22.500 dos hectares registados. Foram cartografados quatro perímetros distintos num único dia, 8 de Agosto de 2016: 9.224 ha em Estorãos, 5.720 ha no Soajo, 2.698 ha em Nogueira, Meixedo e Vilar de Murteda, e 942 ha em Cabreiro. Arderam ainda 3.074 ha em Entrimo, do lado espanhol da fronteira, a 7 de Setembro.`,
+        content: `2016 representa 29.338 dos hectares registados, repartidos por 13 incêndios distintos. Foram cartografados quatro perímetros num único dia, 8 de Agosto de 2016: 9.224 ha em Estorãos, 5.720 ha no Soajo, 2.698 ha em Nogueira, Meixedo e Vilar de Murteda, e 942 ha em Cabreiro. Arderam ainda 3.074 ha em Entrimo, do lado espanhol da fronteira, a 7 de Setembro.`,
       },
       {
         title: 'Fogo dentro de área protegida',
@@ -306,9 +306,9 @@ export const LIMA_SECTIONS_PT = {
     mapLayers: ['fire', 'flood'],
     visuals: {
       stats: [
-        { label: 'Incêndios registados', value: '17+', sublabel: 'desde 2000', color: '#CC6633' },
-        { label: 'Área ardida', value: '36.264+', sublabel: 'hectares' },
-        { label: 'Pior ano', value: '2016', sublabel: '~22.500 ha' },
+        { label: 'Incêndios registados', value: '49+', sublabel: 'desde 2000', color: '#CC6633' },
+        { label: 'Área ardida', value: '49.842+', sublabel: 'hectares' },
+        { label: 'Pior ano', value: '2016', sublabel: '29.338 ha' },
         { label: 'Maior incêndio', value: '9.224 ha', sublabel: 'Estorãos, Ago 2016' },
       ],
     },

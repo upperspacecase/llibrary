@@ -486,7 +486,9 @@ async function hydrateFireHistory() {
   // Headline numbers. Every one is a lower bound, and says so.
   const worst = [...(summary.byYear || [])].sort((a, b) => b.ha - a.ha)[0];
   document.getElementById('fire-stats').innerHTML = [
-    fireStatCard(`${summary.count}+`, 'recorded fires', `since ${summary.byYear?.[0]?.year ?? '2000'}`, '#CC6633'),
+    // The window searched, not the first year with a hit — no perimeters before
+    // 2016 is a finding about this basin, not a limit of the record.
+    fireStatCard(`${summary.count}+`, 'recorded fires', '2000 onward', '#CC6633'),
     fireStatCard(`${summary.totalHa.toLocaleString()}+`, 'hectares burnt', 'lower bound'),
     worst ? fireStatCard(worst.year, 'worst year', `${worst.ha.toLocaleString()} ha`) : '',
     summary.largest ? fireStatCard(`${summary.largest.ha.toLocaleString()} ha`, 'largest fire',

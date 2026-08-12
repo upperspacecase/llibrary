@@ -319,11 +319,11 @@ export const LIMA_SECTIONS = {
     articles: [
       {
         title: 'Recorded fire history',
-        content: `EFFIS burnt-area perimeters for this boundary record at least 17 fires between 2000 and 2026, totalling at least 36,264 hectares. These are lower bounds: EFFIS publishes no queryable feature service, so perimeters are found by sampling on a grid and fires small enough to fall between sample points are missed. The true count is higher; the large fires are all captured.`,
+        content: `EFFIS burnt-area perimeters for this boundary record at least 49 fires between 2000 and 2026, totalling at least 49,842 hectares. These are lower bounds: EFFIS publishes no queryable feature service, so perimeters are found by sampling on a grid and fires small enough to fall between sample points are missed. The true count is higher; the large fires are all captured.`,
       },
       {
         title: '2016, the worst year',
-        content: `2016 accounts for roughly 22,500 of the recorded hectares. Four separate perimeters were mapped on a single day, 8 August 2016: 9,224 ha at Estorãos, 5,720 ha at Soajo, 2,698 ha across Nogueira, Meixedo e Vilar de Murteda, and 942 ha at Cabreiro. A further 3,074 ha burnt at Entrimo, across the Spanish border, on 7 September.`,
+        content: `2016 accounts for 29,338 of the recorded hectares across 13 separate fires. Four perimeters were mapped on a single day, 8 August 2016: 9,224 ha at Estorãos, 5,720 ha at Soajo, 2,698 ha across Nogueira, Meixedo e Vilar de Murteda, and 942 ha at Cabreiro. A further 3,074 ha burnt at Entrimo, across the Spanish border, on 7 September.`,
       },
       {
         title: 'Fire inside protected land',
@@ -341,9 +341,9 @@ export const LIMA_SECTIONS = {
     mapLayers: ['fire', 'flood'],
     visuals: {
       stats: [
-        { label: 'Recorded fires', value: '17+', sublabel: 'since 2000', color: '#CC6633' },
-        { label: 'Area burnt', value: '36,264+', sublabel: 'hectares' },
-        { label: 'Worst year', value: '2016', sublabel: '~22,500 ha' },
+        { label: 'Recorded fires', value: '49+', sublabel: 'since 2000', color: '#CC6633' },
+        { label: 'Area burnt', value: '49,842+', sublabel: 'hectares' },
+        { label: 'Worst year', value: '2016', sublabel: '29,338 ha' },
         { label: 'Largest fire', value: '9,224 ha', sublabel: 'Estorãos, Aug 2016' },
       ],
     },
