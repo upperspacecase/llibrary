@@ -14,7 +14,15 @@ const MAX_MESSAGES = 50;
 
 // Same resolution as wiki.js — ?region= or /wiki/<slug>, default otherwise.
 const activeRegion = resolveRegionFromUrl();
-const regionName = getRegion(activeRegion).name;
+const region = getRegion(activeRegion);
+const regionName = region.name;
+
+// Regions can opt out of the chat. Remove the trigger and the panel rather
+// than leaving a button that opens an empty conversation.
+if (region.hasChat === false) {
+  document.getElementById('chat-toggle')?.remove();
+  document.getElementById('chat-panel')?.remove();
+}
 
 // Per-region history — Pinecone namespaces the two regions apart, so their
 // conversations should not share a transcript either.
@@ -168,24 +176,24 @@ function closePanel() {
   toggle.classList.remove('active');
 }
 
-toggle.addEventListener('click', () => {
+toggle?.addEventListener('click', () => {
   if (isOpen) closePanel();
   else openPanel();
 });
 
-closeBtn.addEventListener('click', closePanel);
+closeBtn?.addEventListener('click', closePanel);
 
 // ---- Input handlers ----
-sendBtn.addEventListener('click', handleSend);
+sendBtn?.addEventListener('click', handleSend);
 
-inputEl.addEventListener('keydown', (e) => {
+inputEl?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     handleSend();
   }
 });
 
-inputEl.addEventListener('input', () => {
+inputEl?.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
 });

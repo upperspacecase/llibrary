@@ -25,6 +25,10 @@ export const meta = {
   country: 'PT',
   kind: 'basin',
 
+  // Chat is off for this region by choice. Its Pinecone namespace is seeded
+  // and can be switched back on by flipping this to true.
+  hasChat: false,
+
   image: '/wiki/bacia-do-lima/water.png',
 
   // This region has its own section photographs under public/wiki/<slug>/.

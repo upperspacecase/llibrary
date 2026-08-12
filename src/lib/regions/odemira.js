@@ -15,6 +15,9 @@ export const meta = {
   country: 'PT',
   kind: 'municipality',
 
+  // "Chat with Land" — backed by this region's Pinecone namespace.
+  hasChat: true,
+
   // Card artwork and the two stats the home/commons cards show.
   image: '/wiki/bioregion.png',
   cardStats: [
