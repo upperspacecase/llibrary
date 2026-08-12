@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 // Annual pan evaporation in mm — sum monthly readings into yearly totals.
 // Piche pan is more widely deployed than Class-A tina in Odemira, so we
@@ -44,10 +45,15 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const stns = await getCollection('stations');
     const obs  = await getCollection('station_observations');
-    const list = await stns.find({ region: 'odemira', source: SOURCE }).toArray();
+    const list = await stns.find({ region: region.slug, source: SOURCE }).toArray();
 
     const features = [];
     for (const s of list) {
@@ -71,8 +77,9 @@ export default async function handler(req, res) {
 
       const parish       = s.metadata?.parish       || null;
       const municipality = s.metadata?.municipality || null;
-      const inOdemira    = (municipality || '').toLowerCase() === 'odemira';
-      const tail         = inOdemira ? parish : [parish, municipality].filter(Boolean).join(' · ');
+      const isHome       = !!region.homeMunicipality
+        && (municipality || '').toLowerCase() === region.homeMunicipality.toLowerCase();
+      const tail         = isHome ? parish : [parish, municipality].filter(Boolean).join(' · ');
       const displayName  = tidy(s.name) || (tail ? `${s.code} · ${tail}` : (s.code || s.externalId));
 
       features.push({
@@ -99,14 +106,14 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).json({
       ok: true,
-      region: 'odemira',
+      region: region.slug,
       parameter: 'Pan evaporation (annual, Piche/Class-A tank)',
       unit: 'mm/yr',
       stationCount: features.length,
       features,
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/evaporation failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/evaporation failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

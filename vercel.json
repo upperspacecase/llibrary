@@ -15,12 +15,23 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/wiki/:section",
-      "destination": "/wiki.html"
+      "source": "/odemira",
+      "destination": "/region"
+    },
+    {
+      "source": "/lima",
+      "destination": "/region"
     },
     {
       "source": "/report/:slug",
       "destination": "/api/report/:slug"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/wiki",
+      "destination": "/odemira",
+      "permanent": true
     }
   ]
 }

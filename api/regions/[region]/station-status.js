@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 const SENSOR_SOURCES = [
   'snirh_meteorologica',
@@ -52,12 +53,17 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const stnsCol = await getCollection('stations');
     const obsCol  = await getCollection('station_observations');
 
     const stationList = await stnsCol
-      .find({ region: 'odemira', source: { $in: SENSOR_SOURCES } })
+      .find({ region: region.slug, source: { $in: SENSOR_SOURCES } })
       .toArray();
 
     // One aggregation pass: per (source, externalId), find the most recent
@@ -111,13 +117,13 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=3600');
     return res.status(200).json({
       ok: true,
-      region: 'odemira',
+      region: region.slug,
       generatedAt: new Date().toISOString(),
       counts,
       stations,
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/station-status failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/station-status failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

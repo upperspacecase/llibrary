@@ -76,7 +76,7 @@ export const en = {
 
   // Homepage — Hero
   "hero.tagline": "Know your land.<br>Know your neighbors.",
-  "hero.sub": "A regional platform for Odemira, Portugal \u2014 free public wiki, private land reports.",
+  "hero.sub": "A regional platform for the places you live \u2014 free public wiki, private land reports.",
   "hero.text": "Everything you need to become a good neighbor quickly. The land, the water, the weather, the species, the people, the history, the rules \u2014 all in one place. Plus a private data vault for your own parcel.",
   "hero.cta.wiki": "Explore the Wiki",
   "hero.cta.create": "Create Your Landbook",
@@ -87,7 +87,7 @@ export const en = {
   "products.desc": "Libraries combines a free regional wiki with a paid private land passport. The wiki is for everyone \u2014 the landbook is yours alone.",
   "products.wiki.type": "Free & Public",
   "products.wiki.title": "Regional Wiki",
-  "products.wiki.desc": "If you were to move to Odemira, what\u2019s all the information you\u2019d need to become a good neighbor quickly? That\u2019s the wiki. Short, scannable articles about everything from soil types to local festivals \u2014 with a chat interface so you can just ask questions.",
+  "products.wiki.desc": "If you were to move to a new region, what\u2019s all the information you\u2019d need to become a good neighbor quickly? That\u2019s the wiki. Short, scannable articles about everything from soil types to local festivals \u2014 with a chat interface so you can just ask questions.",
   "products.wiki.li1": "The Land \u2014 geology, boundaries, elevation",
   "products.wiki.li2": "The Water \u2014 rivers, springs, water quality",
   "products.wiki.li3": "The Weather \u2014 climate, fire risk, growing seasons",
@@ -133,14 +133,14 @@ export const en = {
 
   // Homepage — CTA
   "cta.title": "Start with the wiki. It\u2019s free.",
-  "cta.desc": "Browse what we know about Odemira. Ask the chat anything. Then decide if you want a private landbook.",
-  "cta.wiki": "Explore Odemira Wiki",
+  "cta.desc": "Browse what we know about each region. Ask the chat anything. Then decide if you want a private landbook.",
+  "cta.wiki": "Explore the Regional Commons",
   "cta.chat": "Ask a Question",
 
   // Chat page
-  "chat.title": "Ask about Odemira",
+  "chat.title": "Ask about {region}",
   "chat.desc": "Ask anything about the region \u2014 land, water, weather, biodiversity, agriculture, community, history, or governance.",
-  "chat.placeholder": "Ask about Odemira...",
+  "chat.placeholder": "Ask about {region}...",
   "chat.send": "Send",
 
   // Create page
@@ -211,9 +211,9 @@ export const en = {
   "create.fail": "Failed to save. Please try again.",
 
   // Chat page — dynamic strings
-  "chat.welcome": "Welcome to the Odemira wiki chat. I can answer questions about the region — the land, water, weather, biodiversity, agriculture, community, history, and governance. What would you like to know?\n\nTip: You can also browse the wiki directly for detailed articles and live data.",
+  "chat.welcome": "Welcome to the {region} wiki chat. I can answer questions about the region — the land, water, weather, biodiversity, agriculture, community, history, and governance. What would you like to know?\n\nTip: You can also browse the wiki directly for detailed articles and live data.",
   "chat.error": "Sorry, I had trouble processing that. Please try again.",
-  "chat.sug.water": "What's the water situation in Odemira?",
+  "chat.sug.water": "What's the water situation in {region}?",
   "chat.sug.fire": "Tell me about fire risk in the region",
   "chat.sug.species": "What species are unique to this area?",
   "chat.sug.greenhouse": "How has greenhouse agriculture changed things?",
@@ -295,7 +295,7 @@ export const en = {
   "wiki.hub.title": "Regional Knowledge",
   "wiki.hub.breadcrumb.commons": "Commons",
   "wiki.hub.breadcrumb.odemira": "Odemira",
-  "wiki.hub.hero.title": "Odemira Region",
+  "wiki.hub.hero.title": "{region}",
   "wiki.hub.residents": "residents",
   "wiki.hub.updated": "Updated",
   "wiki.hub.kmArea": "km² area",

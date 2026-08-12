@@ -6,13 +6,27 @@
 
 import { initI18n, t } from '../lib/i18n.js';
 import { escapeHtml } from '../lib/utils.js';
+import { getRegion, resolveRegionFromUrl } from '../lib/regions/index.js';
 
 initI18n();
 
-const STORAGE_KEY = 'lll-chat-messages';
 const MAX_MESSAGES = 50;
-const activeRegion = 'odemira';
-const regionName = activeRegion.charAt(0).toUpperCase() + activeRegion.slice(1);
+
+// Same resolution as wiki.js — ?region= or /wiki/<slug>, default otherwise.
+const activeRegion = resolveRegionFromUrl();
+const region = getRegion(activeRegion);
+const regionName = region.name;
+
+// Regions can opt out of the chat. Remove the trigger and the panel rather
+// than leaving a button that opens an empty conversation.
+if (region.hasChat === false) {
+  document.getElementById('chat-toggle')?.remove();
+  document.getElementById('chat-panel')?.remove();
+}
+
+// Per-region history — Pinecone namespaces the two regions apart, so their
+// conversations should not share a transcript either.
+const STORAGE_KEY = `lll-chat-messages-${activeRegion}`;
 
 // DOM
 const toggle = document.getElementById('chat-toggle');
@@ -56,7 +70,7 @@ function renderSuggestions() {
   }
   suggestionsEl.style.display = '';
   suggestionsEl.innerHTML = SUGGESTIONS.map(key =>
-    `<button class="chat-panel-suggestion">${escapeHtml(t(key))}</button>`
+    `<button class="chat-panel-suggestion">${escapeHtml(t(key, { region: regionName }))}</button>`
   ).join('');
   suggestionsEl.querySelectorAll('.chat-panel-suggestion').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -71,7 +85,7 @@ function renderMessages() {
   if (!messagesEl) return;
 
   if (messages.length === 0) {
-    messagesEl.innerHTML = `<div class="chat-panel-welcome">${escapeHtml(t('chat.welcome'))}</div>`;
+    messagesEl.innerHTML = `<div class="chat-panel-welcome">${escapeHtml(t('chat.welcome', { region: regionName }))}</div>`;
     renderSuggestions();
     return;
   }
@@ -162,24 +176,24 @@ function closePanel() {
   toggle.classList.remove('active');
 }
 
-toggle.addEventListener('click', () => {
+toggle?.addEventListener('click', () => {
   if (isOpen) closePanel();
   else openPanel();
 });
 
-closeBtn.addEventListener('click', closePanel);
+closeBtn?.addEventListener('click', closePanel);
 
 // ---- Input handlers ----
-sendBtn.addEventListener('click', handleSend);
+sendBtn?.addEventListener('click', handleSend);
 
-inputEl.addEventListener('keydown', (e) => {
+inputEl?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     handleSend();
   }
 });
 
-inputEl.addEventListener('input', () => {
+inputEl?.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
 });

@@ -1,4 +1,5 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
 const HERO_CODE_PREFIX = '28G/01A'; // Santa Clara — longest record, matches the dam landmark
 
@@ -33,19 +34,24 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const stationsCol = await getCollection('stations');
     const obsCol      = await getCollection('station_observations');
 
     // 1. Find reservoir stations — hidrométrica with code ending in A / AE.
     const stationsAll = await stationsCol
-      .find({ region: 'odemira', source: 'snirh_hidrometrica' })
+      .find({ region: region.slug, source: 'snirh_hidrometrica' })
       .toArray();
     const reservoirs = stationsAll.filter(s => /A[E]?$/.test(s.code || ''));
 
     // 2. Landmark lookup (wiki landmarks already in `stations` collection).
     const landmarks = await stationsCol
-      .find({ region: 'odemira', source: 'wiki_landmark' })
+      .find({ region: region.slug, source: 'wiki_landmark' })
       .toArray();
 
     // 3. Pull each reservoir's monthly volume series, normalise to its own max.
@@ -138,13 +144,13 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).json({
       ok: true,
-      region: 'odemira',
+      region: region.slug,
       parameter: 'Volume armazenado mensal (final do mês)',
       reservoirCount: features.length,
       features,
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/reservoirs failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/reservoirs failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

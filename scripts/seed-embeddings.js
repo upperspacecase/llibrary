@@ -1,6 +1,11 @@
 /**
- * One-time script to seed the Pinecone land-library index with wiki data.
- * Run: node scripts/seed-embeddings.js
+ * Seed the Pinecone land-library index with a region's wiki content.
+ *
+ * Run: node scripts/seed-embeddings.js [region-slug]
+ *      node scripts/seed-embeddings.js bacia-do-lima
+ *
+ * Each region is written to its own Pinecone namespace, which is how the chat
+ * keeps regions apart — see api/chat/index.js.
  */
 import { readFileSync } from 'fs';
 
@@ -12,12 +17,13 @@ for (const line of lines) {
 }
 
 import { Pinecone } from '@pinecone-database/pinecone';
-import { SECTIONS, LANDMARKS, EVENTS_CALENDAR, ODEMIRA } from '../src/lib/wiki-data.js';
+import { getContent } from '../src/lib/regions/content.js';
+import { getRegion } from '../src/lib/regions/index.js';
 
 const INDEX_NAME = 'land-library';
 const BATCH_SIZE = 50;
 
-function chunkWikiSections(sections) {
+function chunkWikiSections(sections, { LANDMARKS, EVENTS_CALENDAR, meta }) {
   const chunks = [];
 
   for (const [sectionId, section] of Object.entries(sections)) {
@@ -104,25 +110,35 @@ function chunkWikiSections(sections) {
     });
   }
 
-  // Add events as a single chunk
-  const eventsText = EVENTS_CALENDAR
-    .map(e => `${e.name} — ${e.month} in ${e.location} (${e.type})`)
-    .join('. ');
-  chunks.push({
-    id: 'events-calendar',
-    section: 'events',
-    title: 'Events & Festivals',
-    type: 'events',
-    text: `Odemira events and festivals: ${eventsText}`,
-  });
+  // Events, if the region has a calendar.
+  if (EVENTS_CALENDAR.length) {
+    const eventsText = EVENTS_CALENDAR
+      .map(e => `${e.name} — ${e.month} in ${e.location} (${e.type})`)
+      .join('. ');
+    chunks.push({
+      id: 'events-calendar',
+      section: 'events',
+      title: 'Events & Festivals',
+      type: 'events',
+      text: `${meta.name} events and festivals: ${eventsText}`,
+    });
+  }
 
-  // Add municipality overview
+  // Region overview, built from whichever facts this region actually has —
+  // a river basin has no population or parish count.
+  const facts = [
+    `${meta.name}, ${meta.subtitle}`,
+    meta.areaKm2 ? `Area: ${meta.areaKm2} km²` : null,
+    meta.kind ? `Type: ${meta.kind}` : null,
+    meta.municipalities?.length ? `Municipalities: ${meta.municipalities.join(', ')}` : null,
+  ].filter(Boolean).join('. ');
+
   chunks.push({
-    id: 'odemira-overview',
+    id: `${meta.slug}-overview`,
     section: 'overview',
-    title: 'Odemira Municipality',
+    title: meta.name,
     type: 'wiki',
-    text: `Odemira municipality overview: ${ODEMIRA.name}, ${ODEMIRA.subtitle}, ${ODEMIRA.country}. Region: ${ODEMIRA.region}. Area: ${ODEMIRA.area} km². Population: ~${ODEMIRA.population}. Parishes: ${ODEMIRA.parishes}. Elevation: ${ODEMIRA.elevation.min}m to ${ODEMIRA.elevation.max}m. Coastline: ${ODEMIRA.coastline}.`,
+    text: `${meta.name} overview: ${facts}.`,
   });
 
   return chunks;
@@ -156,8 +172,23 @@ async function main() {
 
   console.log('Index is ready!');
 
-  const chunks = chunkWikiSections(SECTIONS);
-  console.log(`Generated ${chunks.length} chunks from wiki data`);
+  const meta = getRegion(region);
+  if (!meta) {
+    console.error(`Unknown region '${region}'. Nothing seeded.`);
+    process.exit(1);
+  }
+  const content = getContent(region);
+  if (!Object.keys(content.SECTIONS).length) {
+    console.error(`Region '${region}' has no written sections. Nothing to seed.`);
+    process.exit(1);
+  }
+
+  const chunks = chunkWikiSections(content.SECTIONS, {
+    LANDMARKS: content.LANDMARKS,
+    EVENTS_CALENDAR: content.EVENTS_CALENDAR,
+    meta,
+  });
+  console.log(`Generated ${chunks.length} chunks from ${region} wiki data`);
 
   let upserted = 0;
 

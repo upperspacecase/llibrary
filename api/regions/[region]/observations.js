@@ -1,18 +1,23 @@
 import { getCollection } from '../../_db.js';
+import { resolveRegion } from '../../../src/lib/regions/index.js';
 
-const REGION = 'odemira';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const region = resolveRegion(req);
+  if (!region) {
+    return res.status(404).json({ ok: false, error: `Unknown region '${req.query.region}'` });
+  }
   try {
     const c = await getCollection('inat_observations');
     // Drop rows without lat/lng or a year — they can't go on a time-binned
     // heatmap anyway.
     const docs = await c.find(
-      { region: REGION, year: { $ne: null }, lat: { $ne: null }, lng: { $ne: null } },
+      { region: region.slug, year: { $ne: null }, lat: { $ne: null }, lng: { $ne: null } },
       { projection: { _id: 0, id: 1, taxonName: 1, iconicTaxon: 1, lat: 1, lng: 1, year: 1, obscured: 1, qualityGrade: 1 } },
     ).toArray();
 
@@ -43,7 +48,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).json({
       ok: true,
-      region: REGION,
+      region: region.slug,
       count: docs.length,
       minYear: Number.isFinite(minYear) ? minYear : null,
       maxYear: Number.isFinite(maxYear) ? maxYear : null,
@@ -51,7 +56,7 @@ export default async function handler(req, res) {
       geojson: { type: 'FeatureCollection', features },
     });
   } catch (err) {
-    console.error('GET /api/regions/odemira/observations failed:', err);
+    console.error(`GET /api/regions/${req.query.region}/observations failed:`, err);
     return res.status(500).json({ ok: false, error: err.message });
   }
 }

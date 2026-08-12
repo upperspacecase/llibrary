@@ -640,10 +640,32 @@ a {
   margin-bottom: 24px;
 }
 
+/* Holds the featured region cards. One card stays centred at its original
+   width; two or more sit side by side and stack on narrow screens. */
+.featured-commons-grid {
+  display: grid;
+  gap: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.featured-commons-grid.featured-commons-multi {
+  max-width: 1100px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .featured-commons-grid.featured-commons-multi {
+    grid-template-columns: 1fr;
+    max-width: 640px;
+  }
+}
+
 .featured-commons-card {
   display: block;
   max-width: 640px;
   margin: 0 auto;
+  width: 100%;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--white);
@@ -10537,3 +10559,206 @@ a {
 }
 .ed-snirh-card-overflow { color: #888; }
 .ed-snirh-card-empty { color: #888; font-style: italic; }
+/* Photo credits on the wiki hub — CC-licensed section photographs oblige
+   attribution, so it renders on the page rather than hiding in a file. */
+.wiki-hub-credits {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.wiki-hub-credits-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.wiki-hub-credits-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.wiki-hub-credits-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 4px 20px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.wiki-hub-credits-list a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Fire history panel (fires section) ─────────────────────────────── */
+.fire-panel { margin: 1.5rem 0 2rem; }
+
+.fire-panel-loading,
+.fire-panel-empty {
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.fire-panel-empty code {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.fire-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.fire-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+
+.fire-stat-value { font-size: 26px; font-weight: 600; line-height: 1.1; }
+.fire-stat-label { font-size: 13px; color: var(--muted); }
+.fire-stat-sub   { font-size: 11px; color: var(--muted); opacity: 0.75; }
+
+.fire-block { margin-bottom: 28px; }
+
+.fire-block-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Wide tables scroll inside their own container rather than the page. */
+.fire-table-wrap { overflow-x: auto; }
+
+.fire-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 520px;
+}
+
+.fire-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fire-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.fire-td-num { white-space: nowrap; }
+
+.fire-flag {
+  font-size: 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  color: var(--muted);
+}
+
+/* Share of a fire's footprint inside protected land. */
+.fire-n2k-bar {
+  display: inline-block;
+  width: 54px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.08);
+  margin-right: 8px;
+  vertical-align: middle;
+  overflow: hidden;
+}
+
+.fire-n2k-bar i {
+  display: block;
+  height: 100%;
+  background: #2E8B57;
+}
+
+.fire-method {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .fire-stat-value { font-size: 22px; }
+}
+
+/* Further resources — the shared research list, per section. */
+.wiki-resources-extra { margin-top: 32px; }
+
+.wiki-resources-extra-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.wiki-resources-extra-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.wiki-resources-extra-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.wiki-resources-extra-list li {
+  padding-left: 12px;
+  border-left: 2px solid var(--border);
+}
+
+.wiki-resources-extra-list a {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--black);
+}
+
+.wiki-resources-extra-list a:hover { text-decoration: underline; }
+
+.wiki-resources-extra-desc {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 2px;
+}
