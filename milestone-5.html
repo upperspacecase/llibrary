@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <title>Milestone 5 — LandLibrary</title>
+  <meta name="description" content="Milestone 5: does adding sensor readings and community voices to the library give landowners better answers? Three questions, three systems, recorded answers.">
+  <meta property="og:title" content="Milestone 5 — LandLibrary">
+  <meta property="og:description" content="Milestone 5: does adding sensor readings and community voices to the library give landowners better answers? Three questions, three systems, recorded answers.">
+  <meta property="og:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://llibrary-eight.vercel.app/metaimage.png">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <header class="header page-header">
+    <a href="/" class="logo">
+      <img src="/logo.svg" alt="LandLibrary" class="logo-img">
+    </a>
+    <div class="header-nav">
+      <a href="/about">About</a>
+      <a href="/commons">Regional Commons</a>
+      <div class="lang-toggle">
+        <button class="lang-toggle-trigger" aria-expanded="false">
+          <span class="lang-toggle-label">EN</span>
+          <svg class="lang-toggle-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div class="lang-toggle-menu">
+          <button data-lang="en">EN</button>
+          <button data-lang="pt">PT</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Icons used by the three system columns -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="m5-ico-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="m5-ico-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></symbol>
+    <symbol id="m5-ico-leaf" viewBox="0 0 24 24"><path d="M5 19c8 0 14-6 14-14-8 0-14 6-14 14z"/><path d="M5 19c3-5 7-9 12-12"/></symbol>
+  </svg>
+
+  <div class="page-body">
+    <div class="m5-page">
+      <div class="container">
+
+        <div class="m5-topline">
+          <span>Milestone 5 · Improved AI model</span>
+          <span>Baseline and delta</span>
+        </div>
+
+        <!-- 01 -->
+        <section class="m5-panel" id="summary">
+          <div class="m5-kicker">01 / Executive summary</div>
+          <h1 class="m5-h1">Do sensors and community voices make the library's advice better?</h1>
+          <div class="m5-summary-grid">
+            <div>
+              <h2 class="m5-h2">The hypothesis</h2>
+              <p class="m5-lead">Putting station readings and what residents said at workshops and festivals beside the published sources will give landowners answers that are more specific to their place, easier to trace to a source, and end in a clear next step.</p>
+              <p class="m5-body"><strong>The test:</strong> ask the same three questions of a web search, of Chat with Land as it runs today, and of Chat with Land after the milestone 3 material and station readings are added.</p>
+              <p class="m5-body"><strong>What we measure:</strong> local specificity, whether each claim can be traced to a source, and whether the answer ends in something the landowner can do next.</p>
+              <div class="m5-rule"></div>
+              <p class="m5-fine">Answers on this page are copied from recorded sessions. Where a session has not happened yet, the column says so.</p>
+            </div>
+            <aside class="m5-key">
+              <h3 class="m5-key-title">Evidence key</h3>
+              <div class="m5-key-row">
+                <span class="m5-ico m5-ico-search"><svg><use href="#m5-ico-search"/></svg></span>
+                <div><strong>Web search</strong><span>You assemble the answer yourself</span></div>
+              </div>
+              <div class="m5-key-row">
+                <span class="m5-ico m5-ico-doc"><svg><use href="#m5-ico-doc"/></svg></span>
+                <div><strong>Current system</strong><span>Published sources, as written in the region wiki</span></div>
+              </div>
+              <div class="m5-key-row">
+                <span class="m5-ico m5-ico-leaf"><svg><use href="#m5-ico-leaf"/></svg></span>
+                <div><strong>Embedded system</strong><span>Published sources + station readings + community voices</span></div>
+              </div>
+            </aside>
+          </div>
+          <div class="m5-statusbar">
+            <span class="m5-dot"></span>
+            <span>Status, 16 September 2026: the chat endpoint is blocked by an exhausted Anthropic credit balance, so no baseline answer has been recorded yet. The milestone 3 material is staged in the repository and has not been added to any database.</span>
+          </div>
+        </section>
+
+        <!-- 02 -->
+        <section class="m5-panel" id="fire">
+          <div class="m5-kicker">02 / Fire preparation</div>
+          <h2 class="m5-q">How should I prepare my land for fire this year?<span class="m5-q-sub">(when, how, and with what)</span></h2>
+          <div class="m5-cols">
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-search"><svg><use href="#m5-ico-search"/></svg></span>
+                <div><strong>Web search</strong><span>You assemble the answer</span></div>
+              </header>
+              <div class="m5-col-body">
+                <p><strong>When:</strong> the legal clearing deadline comes from national news and the municipality's notices, each found separately.</p>
+                <p><strong>How:</strong> ICNF guidance on fuel-management strips is written for the whole country, not this slope.</p>
+                <p><strong>With what:</strong> contractors, grazing and firebreak methods sit in unrelated results.</p>
+              </div>
+              <footer class="m5-col-foot">Still missing: anything about this basin, or this parcel.</footer>
+            </article>
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-doc"><svg><use href="#m5-ico-doc"/></svg></span>
+                <div><strong>Current system</strong><span>Published sources synthesised</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER fire/current: paste the recorded baseline answer here -->
+                <p class="m5-pending">Baseline answer not yet recorded.</p>
+                <p class="m5-draws">What it can draw on: the Fire section for Bacia do Lima, built from EFFIS burnt-area perimeters (49 recorded fires and 49,842 ha since 2016), and its articles on productive firebreaks, living firebreaks, the prescribed-burning incentive debate and post-fire soil stabilisation.</p>
+              </div>
+              <footer class="m5-col-foot">Still missing: what residents here say works, and any current reading from the ground.</footer>
+            </article>
+            <article class="m5-col m5-col-embedded">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-leaf"><svg><use href="#m5-ico-leaf"/></svg></span>
+                <div><strong>Embedded system</strong><span>Local evidence shapes the plan</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER fire/embedded: paste the recorded answer here -->
+                <p class="m5-pending">Answer not yet recorded. Runs after the staged material is added.</p>
+                <p class="m5-draws">What it adds: nine workshop suggestions on fire from September 2026 (flocks and wolves, paying shepherds, forest guards, oak law, park permits, cadastre), sixteen festival wishes on firebreaks, access paths, rangers and clearing, and the Ermida survey where 22 respondents named fire risk and 18 chose native plant rings.</p>
+              </div>
+              <footer class="m5-col-foot">Check current restrictions with the municipality and ICNF before scheduling work.</footer>
+            </article>
+          </div>
+          <div class="m5-delta"><span class="m5-delta-arrow"></span><strong>Expected change:</strong> a national checklist becomes a work plan shaped by what neighbours have tried here.</div>
+        </section>
+
+        <!-- 03 -->
+        <section class="m5-panel" id="funding">
+          <div class="m5-kicker">03 / Land use and funding</div>
+          <h2 class="m5-q">What can I do with my land and what money is available to help me do it?</h2>
+          <div class="m5-cols">
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-search"><svg><use href="#m5-ico-search"/></svg></span>
+                <div><strong>Web search</strong><span>You assemble the answer</span></div>
+              </header>
+              <div class="m5-col-body">
+                <p>Permitted uses, restoration ideas and funding programmes each need their own search, and the funding pages are written for applicants who already know the scheme names.</p>
+              </div>
+              <footer class="m5-col-foot">You match the eligibility rules to your own land.</footer>
+            </article>
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-doc"><svg><use href="#m5-ico-doc"/></svg></span>
+                <div><strong>Current system</strong><span>Published sources synthesised</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER funding/current -->
+                <p class="m5-pending">Baseline answer not yet recorded.</p>
+                <p class="m5-draws">What it can draw on: the Land Use, Land and Risks sections for the basin. The wiki has no article on funding schemes, so the model would be answering this part from general knowledge.</p>
+              </div>
+              <footer class="m5-col-foot">Parcel constraints and eligibility still need checking.</footer>
+            </article>
+            <article class="m5-col m5-col-embedded">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-leaf"><svg><use href="#m5-ico-leaf"/></svg></span>
+                <div><strong>Embedded system</strong><span>Local evidence shapes the options</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER funding/embedded -->
+                <p class="m5-pending">Answer not yet recorded. Runs after the staged material is added.</p>
+                <p class="m5-draws">What it adds: residents' accounts of the obstacles (licences refused inside the Natural Park, dead oaks that may not be felled, parcels not yet in the cadastre and the BUPI opportunity), and the survey where 17 asked for more flexible collaboration with authorities and 19 for reforestation projects.</p>
+              </div>
+              <footer class="m5-col-foot">Eligibility remains subject to official confirmation.</footer>
+            </article>
+          </div>
+          <div class="m5-delta"><span class="m5-delta-arrow"></span><strong>Expected change:</strong> a list of possibilities becomes a shortlist that names the local obstacles first.</div>
+        </section>
+
+        <!-- 04 -->
+        <section class="m5-panel" id="eucalyptus">
+          <div class="m5-kicker">04 / Alternatives to eucalyptus</div>
+          <h2 class="m5-q">What should I plant instead of eucalyptus?</h2>
+          <div class="m5-cols">
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-search"><svg><use href="#m5-ico-search"/></svg></span>
+                <div><strong>Web search</strong><span>You assemble the answer</span></div>
+              </header>
+              <div class="m5-col-body">
+                <p>Lists of alternative species and general planting advice, most of it written for other climates or for the country as a whole.</p>
+              </div>
+              <footer class="m5-col-foot">You decide which advice fits the site.</footer>
+            </article>
+            <article class="m5-col">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-doc"><svg><use href="#m5-ico-doc"/></svg></span>
+                <div><strong>Current system</strong><span>Published sources synthesised</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER eucalyptus/current -->
+                <p class="m5-pending">Baseline answer not yet recorded.</p>
+                <p class="m5-draws">What it can draw on: the Ecology, Soil and Climate sections for the basin, and the Fire section's note that species choice for living firebreaks is an open research question. The wiki does not mention eucalyptus.</p>
+              </div>
+              <footer class="m5-col-foot">Local survival and management experience are missing.</footer>
+            </article>
+            <article class="m5-col m5-col-embedded">
+              <header class="m5-col-head">
+                <span class="m5-ico m5-ico-leaf"><svg><use href="#m5-ico-leaf"/></svg></span>
+                <div><strong>Embedded system</strong><span>Local evidence shapes the shortlist</span></div>
+              </header>
+              <div class="m5-col-body">
+                <!-- ANSWER eucalyptus/embedded -->
+                <p class="m5-pending">Answer not yet recorded. Runs after the staged material is added.</p>
+                <p class="m5-draws">What it adds: the wish that people "stopped planting eucalyptus", the wish to plant hazelnut trees, the contribution on keeping oak woodland, and the survey where 14 asked for seeds and planting knowledge and 12 for shared forest nurseries. Station readings for soil and rainfall once Lima stations are catalogued.</p>
+              </div>
+              <footer class="m5-col-foot">Trade-offs, evidence gaps and care needs stated with the shortlist.</footer>
+            </article>
+          </div>
+          <div class="m5-delta"><span class="m5-delta-arrow"></span><strong>Expected change:</strong> a regional species list becomes a shortlist residents have opinions about.</div>
+        </section>
+
+        <p class="m5-footnote">Nothing on this page is illustrative. Each column is either a recorded answer or says that it is pending.</p>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/pages/milestone-5.js"></script>
+</body>
+
+</html>

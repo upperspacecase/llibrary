@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         about: resolve(__dirname, 'about.html'),
+        milestone5: resolve(__dirname, 'milestone-5.html'),
         commons: resolve(__dirname, 'commons.html'),
         region: resolve(__dirname, 'region.html'),
         chat: resolve(__dirname, 'chat.html'),
