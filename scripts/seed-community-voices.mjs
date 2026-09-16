@@ -4,9 +4,10 @@
  * the wiki text that scripts/seed-embeddings.js already put there.
  *
  * Two sources:
- *   1. wiki_contributions in MongoDB for the region (the suggestions people
- *      leave on the wiki). Filtered by region — api/chat/embed.js does not
- *      filter, which would mix Odemira's contributions into Lima's namespace.
+ *   1. The region's wiki contributions (the suggestions people leave on the
+ *      wiki), read from the live /api/wiki/contributions endpoint, which
+ *      filters by region — api/chat/embed.js does not, and would mix
+ *      Odemira's contributions into Lima's namespace.
  *   2. src/lib/regions/<slug>-voices.js, if the region has one: the Milestone 3
  *      voice recordings, survey tallies and facilitator summary.
  *
@@ -14,22 +15,18 @@
  *       node scripts/seed-community-voices.mjs lima --dry   (print chunks, write nothing)
  *
  * Idempotent: chunk ids are stable, so re-running overwrites rather than
- * duplicates. Nothing here touches MongoDB except a read.
+ * duplicates. Only PINECONE_API_KEY is needed in .env.local.
  */
-import { readFileSync } from 'fs';
-
-const lines = readFileSync(new URL('../.env.local', import.meta.url), 'utf8').split('\n');
-for (const line of lines) {
-  const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.+)$/);
-  if (m) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-}
-
+import './_env.mjs';
 import { Pinecone } from '@pinecone-database/pinecone';
-import { getCollection } from '../api/_db.js';
-import { getRegion, DEFAULT_REGION } from '../src/lib/regions/index.js';
+import { getRegion } from '../src/lib/regions/index.js';
 
 const INDEX_NAME = 'land-library';
 const BATCH_SIZE = 50;
+// Contributions are read from the live site rather than MongoDB: the public
+// endpoint already applies the region rule, and the workstation needs no
+// database credentials to seed.
+const CONTRIBUTIONS_URL = 'https://landlibrary.co/api/wiki/contributions';
 
 const slug = process.argv.find((a) => !a.startsWith('--') && a !== process.argv[0] && a !== process.argv[1]);
 const dry = process.argv.includes('--dry');
@@ -45,17 +42,10 @@ function slugify(s) {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-// Same rule as api/wiki/contributions/index.js: early contributions carry no
-// region field and belong to the default region.
-function regionFilter(s) {
-  return s === DEFAULT_REGION
-    ? { $or: [{ region: s }, { region: { $exists: false } }] }
-    : { region: s };
-}
-
 async function contributionChunks() {
-  const col = await getCollection('wiki_contributions');
-  const docs = await col.find({ status: 'active', ...regionFilter(region.slug) }).toArray();
+  const res = await fetch(`${CONTRIBUTIONS_URL}?region=${region.slug}&limit=100`);
+  if (!res.ok) throw new Error(`Contributions fetch failed: ${res.status}`);
+  const docs = await res.json();
   return docs.map((c) => ({
     id: `contrib-${c.id}`,
     section: c.section || 'general',
