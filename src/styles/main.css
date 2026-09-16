@@ -11242,3 +11242,97 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+/* Milestone 5 — stacked bands */
+.m5-stack {
+  display: grid;
+  gap: 14px;
+}
+.m5-band {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 8px 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  background: var(--white);
+}
+.m5-band-leaf {
+  background: #F1F8F1;
+  border-color: #CFE5CF;
+}
+.m5-band-who {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.m5-band-who div {
+  display: flex;
+  flex-direction: column;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.m5-band-who strong {
+  font-size: 15px;
+}
+.m5-band-who span:not(.m5-ico) {
+  color: var(--muted);
+}
+.m5-band-total {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.m5-band-total b {
+  font-family: 'DM Serif Display', serif;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 400;
+}
+.m5-band-total span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.m5-band-score .m5-bar {
+  height: 10px;
+}
+.m5-band-answer {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.m5-band-answer .m5-read {
+  margin-bottom: 4px;
+}
+.m5-band-answer .m5-col-foot {
+  margin-top: 12px;
+}
+.m5-crit {
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.m5-band-leaf .m5-crit {
+  border-top-color: #CFE5CF;
+}
+.m5-crit li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.m5-panel .m5-score-note {
+  margin-top: 14px;
+}
+@media (max-width: 800px) {
+  .m5-band {
+    grid-template-columns: 1fr;
+  }
+}
