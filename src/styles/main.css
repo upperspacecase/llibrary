@@ -11042,3 +11042,222 @@ a {
     gap: 4px;
   }
 }
+
+/* Milestone 5 — scores, coverage matrix, recorded runs */
+.m5-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.m5-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.m5-d {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid #2F6B3A;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+.d-full {
+  background: #2F6B3A;
+}
+.d-half {
+  background: linear-gradient(90deg, #2F6B3A 50%, transparent 50%);
+}
+.d-none {
+  border-color: var(--card-border);
+}
+.d-na {
+  border: none;
+  border-radius: 0;
+  height: 2px;
+  width: 12px;
+  background: var(--card-border);
+}
+.m5-scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 24px;
+  margin-bottom: 20px;
+}
+.m5-score-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.m5-ico-sm {
+  width: 26px;
+  height: 26px;
+}
+.m5-ico-sm svg {
+  width: 13px;
+  height: 13px;
+}
+.m5-bars {
+  display: grid;
+  gap: 6px;
+}
+.m5-bar {
+  position: relative;
+  height: 22px;
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.m5-bar i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #2F6B3A;
+  opacity: 0.85;
+}
+.m5-bar b {
+  position: absolute;
+  right: 8px;
+  top: 0;
+  line-height: 22px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.m5-bar-na {
+  border-style: dashed;
+}
+.m5-bar-na b {
+  color: var(--muted);
+  font-weight: 500;
+  right: auto;
+  left: 8px;
+}
+.m5-score-note {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+}
+.m5-matrix-wrap {
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+.m5-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 520px;
+}
+.m5-matrix th,
+.m5-matrix td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.m5-matrix th:first-child,
+.m5-matrix td:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+.m5-matrix thead tr:first-child th {
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+.m5-matrix thead tr:first-child th:nth-child(n+2) {
+  border-left: 1px solid var(--border);
+}
+.m5-matrix thead tr:first-child th:last-child {
+  color: #2F6B3A;
+}
+.m5-matrix .m5-runs th {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  padding-top: 0;
+}
+.m5-matrix tbody td:nth-child(2),
+.m5-matrix tbody td:nth-child(4),
+.m5-matrix tbody td:nth-child(6),
+.m5-matrix .m5-runs th:nth-child(2),
+.m5-matrix .m5-runs th:nth-child(4),
+.m5-matrix .m5-runs th:nth-child(6) {
+  border-left: 1px solid var(--border);
+}
+.m5-matrix tbody td:nth-child(6),
+.m5-matrix tbody td:nth-child(7) {
+  background: #F1F8F1;
+}
+.m5-matrix tbody tr:last-child td {
+  border-bottom: none;
+}
+.m5-read {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.m5-run {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+}
+.m5-run summary {
+  cursor: pointer;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.m5-run summary::-webkit-details-marker {
+  display: none;
+}
+.m5-run summary::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-right: 1.5px solid var(--black);
+  border-bottom: 1.5px solid var(--black);
+  transform: rotate(-45deg);
+  transition: transform 0.15s;
+}
+.m5-run[open] summary::before {
+  transform: rotate(45deg);
+}
+.m5-run > p,
+.m5-run > ul {
+  padding: 0 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.m5-run > ul {
+  padding-left: 30px;
+}
+.m5-run > ul li {
+  margin-bottom: 4px;
+}
+.m5-run > p strong {
+  color: var(--black);
+}
+.m5-run-note {
+  font-style: italic;
+  font-size: 12.5px;
+}
+@media (max-width: 900px) {
+  .m5-scores {
+    grid-template-columns: 1fr;
+  }
+}
