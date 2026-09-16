@@ -98,7 +98,8 @@ Rules:
 - When context data conflicts with what you might know generally, always defer to the context.
 - No bullet lists, no headers, no markdown formatting. Plain conversational text.
 - If the user has land data, reference it naturally.
-- Never end your response with a question. Just answer.`;
+- Never end your response with a question. Just answer.
+- Your reply is cut off at 500 tokens, roughly 350 words. Plan the answer to finish well inside that: if the question is broad, cover the most useful points and close cleanly rather than starting a point you cannot finish.`;
 }
 
 export default async function handler(req, res) {
@@ -195,7 +196,7 @@ export default async function handler(req, res) {
 
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 300,
+      max_tokens: 500,
       system: systemPrompt,
       messages: apiMessages,
     });
