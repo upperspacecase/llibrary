@@ -11068,13 +11068,10 @@ a {
   vertical-align: middle;
   box-sizing: border-box;
 }
-.d-full {
-  background: #2F6B3A;
+.d-p {
+  background: conic-gradient(#2F6B3A var(--p), transparent 0);
 }
-.d-half {
-  background: linear-gradient(90deg, #2F6B3A 50%, transparent 50%);
-}
-.d-none {
+.d-p[style*="--p:0%"] {
   border-color: var(--card-border);
 }
 .d-na {
@@ -11167,34 +11164,18 @@ a {
   text-align: left;
   padding-left: 0;
 }
-.m5-matrix thead tr:first-child th {
+.m5-matrix thead th {
   font-size: 12px;
   font-weight: 600;
-  border-bottom: none;
-  padding-bottom: 2px;
 }
-.m5-matrix thead tr:first-child th:nth-child(n+2) {
+.m5-matrix thead th:nth-child(n+2),
+.m5-matrix tbody td:nth-child(n+2) {
   border-left: 1px solid var(--border);
 }
-.m5-matrix thead tr:first-child th:last-child {
+.m5-matrix thead th:last-child {
   color: #2F6B3A;
 }
-.m5-matrix .m5-runs th {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--muted);
-  padding-top: 0;
-}
-.m5-matrix tbody td:nth-child(2),
-.m5-matrix tbody td:nth-child(4),
-.m5-matrix tbody td:nth-child(6),
-.m5-matrix .m5-runs th:nth-child(2),
-.m5-matrix .m5-runs th:nth-child(4),
-.m5-matrix .m5-runs th:nth-child(6) {
-  border-left: 1px solid var(--border);
-}
-.m5-matrix tbody td:nth-child(6),
-.m5-matrix tbody td:nth-child(7) {
+.m5-matrix tbody td:last-child {
   background: #F1F8F1;
 }
 .m5-matrix tbody tr:last-child td {
